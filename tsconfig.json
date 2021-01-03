@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "jsx": "react",
+    "allowJs": true,
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "es2015",
+      "es2016",
+      "es2017",
+      "dom"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "downlevelIteration": true,
+    "moduleResolution": "node",
+    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "module": "ESNext",
+    "noEmitOnError": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strictNullChecks": true,
+    "target": "ES5",
+    "outDir": "dist",
+    "baseUrl": "src",
+    "paths": {
+      "client/*": ["client/*"],
+      "types/*": ["../types/*"],
+      "scss/*": ["assets/scss/"]
+      // "redux": ["typings/redux"], // use for redux 3.X
+      // "@src/*": ["src/*"] // will enable -> import { ... } from '@src/components'
+      // in webpack you need to add -> resolve: { alias: { '@src': PATH_TO_SRC } }
+    },
+  },
+  "include": [
+    "./types/**/*",
+    "./src/client/**/*",
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules",
+  ]
+}
