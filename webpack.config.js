@@ -2,6 +2,7 @@ const webpack = require('webpack')
 const path = require('path')
 
 // S: REQUIRED PLUGINS
+const CopyPlugin = require("copy-webpack-plugin")
 const HtmlWebPackPlugin = require('html-webpack-plugin')
 const { InjectManifest } = require('workbox-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
@@ -14,7 +15,8 @@ const VERSION = require('./package.json').version
 const EXECUTE_ENV_ARGV = process.argv ? process.argv.find(str => str.startsWith('--env=')) : ''
 const EXECUTE_ENV = EXECUTE_ENV_ARGV.length > 0 ? EXECUTE_ENV_ARGV.replace('--env=', '') : 'development'
 const IS_DEVELOPMENT = EXECUTE_ENV === 'development'
-const EXECUTE_MODE = EXECUTE_ENV === 'production' ? 'production' : 'development'
+const IS_SSR = EXECUTE_ENV === 'ssr'
+const EXECUTE_MODE = EXECUTE_ENV === 'production' || IS_SSR ? 'production' : 'development'
 // E: constants
 
 // S: plugins
@@ -36,29 +38,45 @@ const PLUGINS_LIST = [
   new webpack.EnvironmentPlugin({
     ...CUSTOM_NODE_ENV,
   }),
+  new CopyPlugin({
+    patterns: [
+      {
+        from: path.join(__dirname, 'src', 'assets', 'images'),
+        to: path.join(__dirname, 'dist', 'assets', VERSION, 'images'),
+      },
+      {
+        from: path.join(__dirname, 'src', 'assets', 'static'),
+        to: path.join(__dirname, 'dist', 'static'),
+      },
+      {
+        from: path.join(__dirname, 'src', 'assets', 'root'),
+        to: path.join(__dirname, 'dist'),
+      },
+    ],
+  }),
+]
+
+const ALL_PLUGINS_LIST = IS_DEVELOPMENT ? [
+  ...PLUGINS_LIST,
+] : [
+  !IS_SSR && new InjectManifest({
+    swSrc: path.join(__dirname, 'src', 'client', 'sw.ts'),
+    swDest: path.join(__dirname, 'service-worker.js'),
+    maximumFileSizeToCacheInBytes: 7e+6,
+    // Ignore all URL parameters.
+    // exclude: [/.*/],
+  }),
   new CleanWebpackPlugin({
     allowExternal: false,
     exclude:  [],
     verbose:  false,
     dry:      false,
   }),
-]
-
-const ALL_PLUGINS_LIST = IS_DEVELOPMENT ? [
-    ...PLUGINS_LIST,
-  ] : [
-    new InjectManifest({
-      swSrc: path.join(__dirname, 'src', 'client', 'sw.ts'),
-      swDest: 'service-worker.js',
-      maximumFileSizeToCacheInBytes: 7e+6,
-      // Ignore all URL parameters.
-      // exclude: [/.*/],
-    }),
-    ...PLUGINS_LIST,
-  ]
+  ...PLUGINS_LIST,
+].filter(Boolean)
 // E: plugins
 
-module.exports = {
+module.exports = !IS_SSR ? {
   mode: EXECUTE_MODE,
   entry: {
     'polyfill': [
@@ -81,7 +99,6 @@ module.exports = {
       assets: path.resolve(__dirname, 'src/assets/'),
       types: path.resolve(__dirname, 'types/'),
       scss: path.resolve(__dirname, 'src/assets/scss/'),
-      'react-dom': '@hot-loader/react-dom',
     }
   },
   module: {
@@ -98,8 +115,7 @@ module.exports = {
                 '@babel/plugin-syntax-dynamic-import',
               ]
             }
-          },
-          'ts-loader'
+          }
         ].filter(Boolean)
       },
       {
@@ -109,7 +125,8 @@ module.exports = {
             loader: 'ts-loader',
             options: {
               transpileOnly: true,
-              happyPackMode: true
+              happyPackMode: true,
+              configFile: 'tsconfig.json',
             }
           }
         ]
@@ -210,6 +227,118 @@ module.exports = {
     // openPage: ``,
     publicPath: `/`,
     port: '5000',
+  },
+  performance: {
+    maxEntrypointSize: 128000,
+    maxAssetSize: 128000,
+    hints: false
+  }
+} : {
+  mode: 'production',
+  entry: {
+    'app': path.join(__dirname, 'src', 'client', 'index.ssr'),
+  },
+  output: {
+    path: path.join(__dirname, '.', 'dist'),
+    filename: `src/[name].js`,
+    chunkFilename: `src/chunk-[name].js`,
+    publicPath: `/`,
+    library: 'beat',
+    libraryTarget: 'umd',
+    globalObject: 'this',
+  },
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.json'],
+    mainFields: ['module', 'browser', 'main'],
+    alias: {
+      client: path.resolve(__dirname, 'src/client/'),
+      assets: path.resolve(__dirname, 'src/assets/'),
+      types: path.resolve(__dirname, 'types/'),
+      scss: path.resolve(__dirname, 'src/assets/scss/'),
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx|tsx)$/,
+        include: [ /src\/js/, /node_modules\/axios/ ],
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              plugins: [
+                '@babel/plugin-syntax-dynamic-import',
+              ]
+            }
+          }
+        ]
+      },
+      {
+        test: /\.tsx?$/,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              transpileOnly: false,
+              happyPackMode: false,
+              configFile: 'tsconfig-ssr.json',
+            }
+          }
+        ]
+      },
+      {
+        test: /\.(scss|css)$/,
+        use: ['style-loader', 'css-loader', 'sass-loader'],
+      },
+      {
+        enforce: 'pre',
+        test: /\.js$/,
+        loader: 'source-map-loader'
+      },
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        enforce: 'pre',
+        use: [
+          {
+            loader: 'tslint-loader',
+            options: {
+              configFile: 'tslint.json',
+              tsConfigFile: 'tsconfig-ssr.json'
+            },
+          }
+        ],
+      },
+      {
+        test: /\.md$/i,
+        use: 'raw-loader',
+      },
+    ]
+  },
+  plugins: ALL_PLUGINS_LIST,
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        parallel: 4,
+        terserOptions: {
+          ecma: 5,
+          warnings: false,
+          parse: {},
+          compress: {},
+          mangle: true, // Note `mangle.properties` is `false` by default.
+          module: false,
+          output: null,
+          toplevel: false,
+          nameCache: null,
+          ie8: false,
+          keep_classnames: undefined,
+          keep_fnames: false,
+          safari10: false,
+        },
+      }),
+    ],
   },
   performance: {
     maxEntrypointSize: 128000,

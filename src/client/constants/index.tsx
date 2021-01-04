@@ -1,11 +1,8 @@
-import * as icons from '@material-ui/icons'
-
 import { State } from 'common'
 import { RouteConfig } from 'react-router-config'
 import { FeaturedPost, PostDetailResult, Section, SideBarResult } from 'response'
 
-const iconList: any = icons
-
+import { CDN_URL } from 'client/constants/Env'
 import post1 from 'client/constants/temp/blog-post.1.md'
 import post2 from 'client/constants/temp/blog-post.2.md'
 import post3 from 'client/constants/temp/blog-post.3.md'
@@ -23,7 +20,7 @@ const featuredPosts = [
     date: 'Nov 12',
     description:
       'Multiple lines of text that form the lede, informing new readers quickly and efficiently about what\'s most interesting in this post\'s contents.',
-    image: 'https://source.unsplash.com/random',
+    image: `${CDN_URL}/images/post/000001_1.jpg`,
     imageText: 'main image description',
     linkText: 'Continue reading…',
     type: 1,
@@ -35,7 +32,7 @@ const featuredPosts = [
     date: 'Nov 12',
     description:
       'This is a wider card with supporting text below as a natural lead-in to additional content.',
-    image: 'https://source.unsplash.com/random',
+    image: `${CDN_URL}/images/post/000001_1.jpg`,
     imageText: 'Image Text',
     linkText: 'Continue reading…',
     type: 0,
@@ -47,7 +44,8 @@ const featuredPosts = [
     date: 'Nov 11',
     description:
       'This is a wider card with supporting text below as a natural lead-in to additional content.',
-    image: 'https://source.unsplash.com/random',
+      image: `${CDN_URL}/images/post/000002_1.jpg`,
+    // image: 'https://source.unsplash.com/random',
     imageText: 'Image Text',
     linkText: 'Continue reading…',
     type: 0,
@@ -62,6 +60,9 @@ const post = {
   id: '000003',
   sectionId: 1,
   type: 'markdown',
+  description: 'This is a wider card with supporting text below as a natural lead-in to additional content.',
+  keywords: ['wider', 'card', 'additional content.'],
+  image: `${CDN_URL}/images/post/000001_1.jpg`,
 }
 
 const posts = [post, {
@@ -70,12 +71,18 @@ const posts = [post, {
   id: '000004',
   sectionId: 2,
   type: 'markdown',
+  description: 'This is a wider card with supporting text below as a natural lead-in to additional content.',
+  keywords: ['wider', 'card', 'additional content.'],
+  image: `${CDN_URL}/images/post/000001_1.jpg`,
 }, {
   content: post3,
   title: 'HELLO TITLE - 3',
   id: '000005',
   sectionId: 2,
   type: 'html',
+  description: 'This is a wider card with supporting text below as a natural lead-in to additional content.',
+  keywords: ['wider', 'card', 'additional content.'],
+  image: `${CDN_URL}/images/post/000001_1.jpg`,
 }]
 
 const socialList = [
@@ -136,15 +143,3 @@ export const INITIAL_STATE: State = {
     lang: 'EN',
   },
 }
-
-export const env = {
-  NODE_ENV: process.env.NODE_ENV ? process.env.NODE_ENV : 'development',
-  VERSION: process.env.VERSION ? process.env.VERSION : '1.0.0',
-}
-
-export const DEFAULT_LANG = 'EN'
-
-export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
-
-export const API_ENDPOINT_URL = ''
-export const API_CLIENT_ID = ''

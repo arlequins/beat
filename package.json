@@ -1,27 +1,59 @@
 {
-  "name": "beat",
+  "name": "@arlequins/beat",
   "version": "1.0.0",
   "description": "Created for https://github.com/arlequins/beat",
-  "repository": "https://github.com/arlequins/beat",
   "license": "Apache-2.0",
   "author": "An <harlequin.beat@gmail.com> (https://github.com/arlequins)",
-  "main": "./src/client/index.production.js",
+  "main": "dist/src/app.js",
+  "types": "dist/src/index.ssr.d.ts",
+  "jest": {
+    "coverageReporters": [
+      "json-summary",
+      "text",
+      "lcov"
+    ],
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "setupFilesAfterEnv": [
+      "./jest/set-timeout.js"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/arlequins/beat.git"
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "keywords": ["beat", "react 17", "webpack 5"],
+  "bugs": {
+    "url": "https://github.com/arlequins/beat#readme"
+  },
+  "files": [
+    "dist/src/**/*"
+  ],
   "scripts": {
-    "prereinstall": "rm -rf node_modules",
-    "reinstall": "npm install",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "lint": "tslint -p ./",
     "test": "jest --config jest.config.json --collect-coverage --detectOpenHandles",
     "test:coverage": "npm test -- --coverage --updateSnapshot",
     "test:watch": "jest --config jest.config.json --watch",
     "start": "webpack serve --mode=development --progress --color --port 5000 --env=development",
     "build": "webpack --mode=development --env=localhost",
-    "build:production": "npm run test:coverage && webpack --mode=production --env=production"
+    "build:production": "npm run test:coverage && webpack --mode=production --env=production",
+    "build:ssr": "webpack --mode=production --env=ssr",
+    "format": "prettier --write \"src/client/**/*.{ts,tsx}\"",
+    "lint": "tslint -p tsconfig-ssr.json",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A library",
+    "postversion": "git push && git push --tags",
+    "deploy": "npm publish"
   },
   "dependencies": {
-    "markdown-to-jsx": "^7.1.0"
   },
   "devDependencies": {
+    "markdown-to-jsx": "^7.1.0",
     "@babel/core": "^7.12.10",
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/plugin-transform-runtime": "^7.12.10",
@@ -30,7 +62,6 @@
     "@babel/preset-react": "^7.12.10",
     "@babel/preset-stage-2": "^7.8.3",
     "@babel/runtime": "^7.12.5",
-    "@hot-loader/react-dom": "^17.0.1",
     "@material-ui/core": "^4.11.2",
     "@material-ui/icons": "^4.11.2",
     "@types/classnames": "^2.2.11",

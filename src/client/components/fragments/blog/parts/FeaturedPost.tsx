@@ -34,7 +34,7 @@ const FeaturedPost: React.FC<AllProps & Props> = ({featuredPost = {}}) => {
 
   return (
     <Grid item xs={12} md={6}>
-      <CardActionArea component="a" href={`/blog/${featuredPost.id}`}>
+      <CardActionArea component="a" href={`/p${featuredPost.id}`}>
         <Card className={classes.card}>
           <div className={classes.cardDetails}>
             <CardContent>

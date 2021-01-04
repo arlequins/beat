@@ -1,32 +1,29 @@
 import { lazy } from 'react'
 
+import { TOP_URI as BLOG_ROOT } from 'client/constants/Blog'
+
 const App = lazy(() => import(/* webpackChunkName: "page-app" */ 'client/containers/AppHooks'))
 const Top = lazy(() => import(/* webpackChunkName: "page-top" */ 'client/containers/Top'))
-const BlogTop = lazy(() => import(/* webpackChunkName: "page-blog" */ 'client/containers/BlogTop'))
-const BlogDetail = lazy(() => import(/* webpackChunkName: "page-blog" */ 'client/containers/BlogDetail'))
-const NotFound = lazy(() => import(/* webpackChunkName: "page-working" */ 'client/containers/common/NotFound'))
+const BlogTop = lazy(() => import(/* webpackChunkName: "page-blog-top" */ 'client/containers/BlogTop'))
+const BlogDetail = lazy(() => import(/* webpackChunkName: "page-blog-detail" */ 'client/containers/BlogDetail'))
+const NotFound = lazy(() => import(/* webpackChunkName: "page-not-found" */ 'client/containers/common/NotFound'))
 
 export default [
   {
     component: App,
     routes: [
       {
-        path: `/`,
-        exact: true,
-        component: Top,
-      },
-      {
-        path: `/blog`,
+        path: `${BLOG_ROOT}`,
         exact: true,
         component: BlogTop,
       },
       {
-        path: `/blog/section/:sectionName`,
+        path: `${BLOG_ROOT}section/:sectionName`,
         exact: true,
         component: BlogTop,
       },
       {
-        path: `/blog/p:id`,
+        path: `${BLOG_ROOT}p:id`,
         exact: true,
         component: BlogDetail,
       },

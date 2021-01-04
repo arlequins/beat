@@ -1,4 +1,5 @@
 import React from 'react'
+import Helmet from 'react-helmet'
 import { useSelector } from 'react-redux'
 
 import Container from '@material-ui/core/Container'
@@ -38,6 +39,15 @@ const BlogDetail: React.FC<AllProps> = () => {
 
   return (
     <React.Fragment>
+      <Helmet>
+        <title>{post.title}</title>
+        <meta name="description" content={post.description} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.description} />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.description} />
+        <meta name="keywords" content={post.keywords.join(',')} />
+      </Helmet>
       <CssBaseline />
       <Container maxWidth="lg">
         <Header title={info.headerTitle} />

@@ -1,4 +1,5 @@
-import { DEFAULT_LANG } from 'client/constants'
+import { DEFAULT_LANG } from 'client/constants/Env'
+import { LanguagePack } from 'common'
 
 const LANGUAGE_PACKS: any = {
   EN: {
@@ -6,11 +7,21 @@ const LANGUAGE_PACKS: any = {
       headerTitle: 'BEAT',
       footerTitle: 'Beat Project',
     },
+    head: {
+      title: 'BEAT',
+      desc: 'BEAT DESC',
+      keywords: ['beat', 'an'],
+    },
   },
   JA: {
     info: {
       headerTitle: 'BEAT',
       footerTitle: 'Beat Project',
+    },
+    head: {
+      title: 'BEAT',
+      desc: 'BEAT DESC',
+      keywords: ['beat', 'an'],
     },
   },
   KO: {
@@ -18,10 +29,15 @@ const LANGUAGE_PACKS: any = {
       headerTitle: 'BEAT',
       footerTitle: 'Beat Project',
     },
+    head: {
+      title: 'BEAT',
+      desc: 'BEAT DESC',
+      keywords: ['beat', 'an'],
+    },
   },
 }
 
-export const LANGUAGE_PACK: any = (lang: string) => {
+export const LANGUAGE_PACK = (lang: string): LanguagePack => {
   return LANGUAGE_PACKS[lang] ? {
     ...LANGUAGE_PACKS[lang],
     isExist: true,

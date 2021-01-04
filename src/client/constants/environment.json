@@ -1,0 +1,23 @@
+{
+  "development": {
+    "DOMAIN": "localhost:5000",
+    "CDN_URI": "",
+    "API_ENDPOINT_URL": "",
+    "API_CLIENT_ID": "",
+    "DEFAULT_LANG": "ja"
+  },
+  "localhost:": {
+    "DOMAIN": "localhost:4000",
+    "CDN_URI": "",
+    "API_ENDPOINT_URL": "",
+    "API_CLIENT_ID": "",
+    "DEFAULT_LANG": "ja"
+  },
+  "production": {
+    "DOMAIN": "www.an-beat.name",
+    "CDN_URI": "cdn.an-beat.name",
+    "API_ENDPOINT_URL": "",
+    "API_CLIENT_ID": "",
+    "DEFAULT_LANG": "ja"
+  }
+}

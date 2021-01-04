@@ -42,6 +42,9 @@ declare module 'response' {
     sectionId: number
     id: string
     type: string
+    description: string
+    keywords: string[]
+    image: string
   }
 
   interface ReqSectionListPayload extends RequestPayload {

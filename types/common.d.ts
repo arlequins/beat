@@ -3,6 +3,29 @@ declare module 'common' {
   import { Reducer } from 'redux'
   import { RouteConfig } from 'react-router-config'
 
+  interface EnvVariables {
+    NODE_ENV: string
+    VERSION: string
+    DOMAIN: string
+    CDN_URI: string
+    API_ENDPOINT_URL: string
+    API_CLIENT_ID: string
+    DEFAULT_LANG: string
+  }
+
+  interface LanguagePack {
+    isExist: boolean
+    info: {
+      headerTitle: string
+      footerTitle: string
+    }
+    head: {
+      title: string
+      desc: string
+      keywords: string[]
+    }
+  }
+
   type TEpic = Epic<Action<string>, State>
 
   type AllProps = Readonly<State>
@@ -32,10 +55,16 @@ declare module 'common' {
     [key: string]: string[]
 
     postList?: string[]
+    postDetail?: string[]
+    sectionList?: string[]
+    sideBar?: string[]
   }
 
   interface PreloadedState {
     postList?: PostList
+    postDetail?: PostDetail
+    sectionList?: SectionList
+    sideBar?: SideBar
   }
 
   interface AppConfig {
@@ -48,11 +77,6 @@ declare module 'common' {
 
     route?: RouteConfig
     status?: number
-
-    postList?: PostList
-    postDetail?: PostDetail
-    sectionList?: SectionList
-    sideBar?: SideBar
 
     appConfig?: AppConfig
   }
