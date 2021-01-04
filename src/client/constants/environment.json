@@ -1,4 +1,11 @@
 {
+  "test": {
+    "DOMAIN": "localhost:5000",
+    "CDN_URI": "",
+    "API_ENDPOINT_URL": "",
+    "API_CLIENT_ID": "",
+    "DEFAULT_LANG": "ja"
+  },
   "development": {
     "DOMAIN": "localhost:5000",
     "CDN_URI": "",

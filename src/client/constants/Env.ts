@@ -1,5 +1,7 @@
-import * as Environment from 'client/constants/environment.json'
 import { EnvVariables } from 'common'
+
+// tslint:disable-next-line:no-var-requires
+const Environment: any = require('./environment.json')
 
 const importantEnv = {
 	NODE_ENV: process.env.NODE_ENV ? process.env.NODE_ENV : 'development',

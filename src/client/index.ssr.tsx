@@ -26,15 +26,15 @@ interface StaticRouterContext {
 	[key: string]: any
 }
 
-export const InitialState = INITIAL_STATE
+export const initialState = INITIAL_STATE
 
-export const ServerSideRendering = async (req: any, initialState: State) => {
+export const ServerSideRendering = async (req: any, initial: State) => {
   const sheets = new ServerStyleSheets()
   const context: StaticRouterContext = {}
 
 	const url = req.url
 
-  const state: State = initialState
+  const state: State = initial
   state.route = routes.length > 0 ? routes[0] : {}
   const store = backendCreateStore(state)
 

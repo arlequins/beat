@@ -6,20 +6,6 @@
   "author": "An <harlequin.beat@gmail.com> (https://github.com/arlequins)",
   "main": "dist/src/app.js",
   "types": "dist/src/index.ssr.d.ts",
-  "jest": {
-    "coverageReporters": [
-      "json-summary",
-      "text",
-      "lcov"
-    ],
-    "testEnvironment": "node",
-    "coveragePathIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "setupFilesAfterEnv": [
-      "./jest/set-timeout.js"
-    ]
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/arlequins/beat.git"
@@ -27,7 +13,11 @@
   "directories": {
     "doc": "docs"
   },
-  "keywords": ["beat", "react 17", "webpack 5"],
+  "keywords": [
+    "beat",
+    "react 17",
+    "webpack 5"
+  ],
   "bugs": {
     "url": "https://github.com/arlequins/beat#readme"
   },
@@ -35,8 +25,7 @@
     "dist/src/**/*"
   ],
   "scripts": {
-    "test": "jest --config jest.config.json --collect-coverage --detectOpenHandles",
-    "test:coverage": "npm test -- --coverage --updateSnapshot",
+    "test": "jest --config jest.config.json --collect-coverage --detectOpenHandles --updateSnapshot",
     "test:watch": "jest --config jest.config.json --watch",
     "start": "webpack serve --mode=development --progress --color --port 5000 --env=development",
     "build": "webpack --mode=development --env=localhost",
@@ -50,10 +39,8 @@
     "postversion": "git push && git push --tags",
     "deploy": "npm publish"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
-    "markdown-to-jsx": "^7.1.0",
     "@babel/core": "^7.12.10",
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/plugin-transform-runtime": "^7.12.10",
@@ -91,6 +78,8 @@
     "html-webpack-plugin": "^5.0.0-alpha.3",
     "immutable": "^4.0.0-rc.12",
     "jest": "^26.6.3",
+    "markdown-loader-jest": "^0.1.1",
+    "markdown-to-jsx": "^7.1.0",
     "moment-timezone": "^0.5.32",
     "node-sass": "^5.0.0",
     "prettier": "^2.2.1",

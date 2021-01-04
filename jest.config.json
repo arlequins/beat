@@ -4,7 +4,7 @@
   "transform": {
     ".(ts|tsx)": "ts-jest"
   },
-  "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
+  "testRegex": "((\\.|/)(test|spec))\\.[jt]sx?$",
   "moduleFileExtensions": [
     "js",
     "ts",
@@ -12,7 +12,7 @@
   ],
   "moduleNameMapper": {
     "\\.(css|less|sass|scss)$": "<rootDir>/config/__mocks__/styleMock.js",
-    "\\.(gif|ttf|eot|svg)$": "<rootDir>/config/__mocks__/fileMock.js",
+    "\\.(gif|ttf|eot|svg|md)$": "<rootDir>/config/__mocks__/fileMock.js",
       "^client/(.*)$": "<rootDir>/src/client/$1",
       "^assets/(.*)$": "<rootDir>/src/assets/$1",
       "^scss/(.*)$": "<rootDir>/src/assets/scss/$1",
