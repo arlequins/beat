@@ -28,7 +28,7 @@ interface StaticRouterContext {
 
 export const InitialState = INITIAL_STATE
 
-export const ServerSideRendering = async (req: any, _res: any, initialState: State) => {
+export const ServerSideRendering = async (req: any, initialState: State) => {
   const sheets = new ServerStyleSheets()
   const context: StaticRouterContext = {}
 
