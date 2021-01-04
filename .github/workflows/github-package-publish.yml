@@ -23,7 +23,7 @@ jobs:
         run: |
           npm install
           npm run format
-          npm run build
+          npm run build:ssr
           npm publish
         env:
           CI: true

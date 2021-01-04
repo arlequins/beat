@@ -21,6 +21,6 @@ jobs:
       run: |
         npm install
         npm run test
-        npm run build --if-present
+        npm run build:ssr
       env:
         CI: true
