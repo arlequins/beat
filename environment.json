@@ -1,28 +1,35 @@
 {
   "test": {
-    "DOMAIN": "localhost:5000",
+    "DOMAIN": "http://localhost:5000",
     "CDN_URI": "",
     "API_ENDPOINT_URL": "",
     "API_CLIENT_ID": "",
     "DEFAULT_LANG": "ja"
   },
   "development": {
-    "DOMAIN": "localhost:5000",
+    "DOMAIN": "http://localhost:5000",
     "CDN_URI": "",
     "API_ENDPOINT_URL": "",
     "API_CLIENT_ID": "",
     "DEFAULT_LANG": "ja"
   },
   "localhost:": {
-    "DOMAIN": "localhost:4000",
+    "DOMAIN": "http://localhost:4000",
     "CDN_URI": "",
     "API_ENDPOINT_URL": "",
     "API_CLIENT_ID": "",
     "DEFAULT_LANG": "ja"
   },
   "production": {
-    "DOMAIN": "www.an-beat.name",
-    "CDN_URI": "cdn.an-beat.name",
+    "DOMAIN": "https://www.an-beat.name",
+    "CDN_URI": "https://cdn.an-beat.name",
+    "API_ENDPOINT_URL": "",
+    "API_CLIENT_ID": "",
+    "DEFAULT_LANG": "ja"
+  },
+  "ssr": {
+    "DOMAIN": "https://www.an-beat.name",
+    "CDN_URI": "https://cdn.an-beat.name",
     "API_ENDPOINT_URL": "",
     "API_CLIENT_ID": "",
     "DEFAULT_LANG": "ja"

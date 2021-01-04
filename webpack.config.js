@@ -20,7 +20,9 @@ const EXECUTE_MODE = EXECUTE_ENV === 'production' || IS_SSR ? 'production' : 'de
 // E: constants
 
 // S: plugins
+const Environment = require('./environment.json')
 const CUSTOM_NODE_ENV = {
+  ...Environment[EXECUTE_ENV],
   VERSION: VERSION,
   NODE_ENV: EXECUTE_ENV,
 }

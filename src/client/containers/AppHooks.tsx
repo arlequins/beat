@@ -9,7 +9,7 @@ import { renderRoutes, RouteConfig } from 'react-router-config'
 import ComponentLoading from 'client/components/fragments/common/ComponentLoading'
 
 // interfaces
-import { STATIC_URL } from 'client/constants/Env'
+import { FLAGSHIP_URL, STATIC_URL } from 'client/constants/Env'
 import { LANGUAGE_PACK } from 'client/constants/Lang'
 import { isWindow } from 'client/helpers'
 import { AllProps, AppConfig, State } from 'common'
@@ -47,7 +47,7 @@ const App: React.FC<AllProps> = () => {
 				<meta name="apple-mobile-web-app-status-bar-style" content="#000000" />
 				<meta name="apple-mobile-web-app-title" content={head.title} />
 				<meta name="theme-color" content="#000000" />
-				<link rel="manifest" href="/manifest.json" />
+				<link rel="manifest" href={`${FLAGSHIP_URL}/manifest.json`} />
 				<title>{head.title}</title>
 				<meta name="description" content={head.desc} />
 				<meta property="og:title" content={head.title} />
