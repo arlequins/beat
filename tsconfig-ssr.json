@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    "jsx": "react",
+    "allowJs": true,
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "es2015",
+      "es2016",
+      "es2017",
+      "dom"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "downlevelIteration": true,
+    "moduleResolution": "node",
+    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "module": "ESNext",
+    "noEmitOnError": false,
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strictNullChecks": true,
+    "target": "ES6",
+    "outDir": "dist",
+    "baseUrl": "src",
+    "typeRoots" : ["./node_modules/@types"],
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "client/*": ["client/*"],
+      "types/*": ["../types/*"],
+      "common/*": ["../types/common.d.ts"],
+      "scss/*": ["assets/scss/"]
+      // "redux": ["typings/redux"], // use for redux 3.X
+      // "@src/*": ["src/*"] // will enable -> import { ... } from '@src/components'
+      // in webpack you need to add -> resolve: { alias: { '@src': PATH_TO_SRC } }
+    },
+    "declaration": true,
+  },
+  "include": [
+    "./types/**/*",
+    "./src/client/**/*",
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules",
+  ]
+}
