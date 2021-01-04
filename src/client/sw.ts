@@ -65,10 +65,11 @@ registerRoute(
 			}),
 		],
 	})
-)
-;(self as any).addEventListener('message', (event: any) => {
+);
+
+(self as any).addEventListener('message', (event: any) => {
 	if (event.data && event.data.type === 'SKIP_WAITING') {
-		;(self as any).skipWaiting()
+		(self as any).skipWaiting()
 	}
 
 	// if (event.data && event.data.type === 'INIT_PORT') {

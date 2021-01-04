@@ -15,7 +15,7 @@
     "moduleResolution": "node",
     "noUnusedParameters": true,
     "noUnusedLocals": false,
-    "module": "CommonJS",
+    "module": "ESNext",
     "noEmitOnError": false,
     "noImplicitAny": true,
     "skipLibCheck": true,
@@ -31,6 +31,7 @@
     "paths": {
       "client/*": ["client/*"],
       "types/*": ["../types/*"],
+      "common/*": ["../types/common.d.ts"],
       "scss/*": ["assets/scss/"]
       // "redux": ["typings/redux"], // use for redux 3.X
       // "@src/*": ["src/*"] // will enable -> import { ... } from '@src/components'

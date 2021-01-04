@@ -16,7 +16,7 @@ import { ExtendedWindow } from 'types/settings'
 
 const win: ExtendedWindow = (window as unknown) as ExtendedWindow
 const state = win && win.__INITIAL_STATE__ ? win.__INITIAL_STATE__ : INITIAL_STATE
-state.route = routes.length > 0 ? routes[0] : {}
+state.route = routes
 
 const store = frontendCreateStore(state)
 

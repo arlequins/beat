@@ -1,7 +1,7 @@
 declare module 'common' {
-  import { PostList, SectionList, PostDetail } from 'response'
+
+  import { SideBar, PostList, SectionList, PostDetail } from 'response'
   import { Reducer } from 'redux'
-  import { RouteConfig } from 'react-router-config'
 
   interface EnvVariables {
     NODE_ENV: string

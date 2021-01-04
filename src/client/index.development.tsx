@@ -24,7 +24,7 @@ import { ExtendedWindow } from 'types/settings'
 if (isWindow) {
 	const win: ExtendedWindow = (window as unknown) as ExtendedWindow
 	const state: State = win && win.__INITIAL_STATE__ ? win.__INITIAL_STATE__ : INITIAL_STATE
-	state.route = routes.length > 0 ? routes[0] : {}
+	state.route = routes
 
 	const store = frontendCreateStore(state)
 
@@ -34,7 +34,7 @@ if (isWindow) {
 			<CssBaseline />
 			<Provider store={store}>
 				<React.Suspense fallback={<AppLoading />}>
-					<BrowserRouter>{renderRoutes(routes)}</BrowserRouter>
+					<BrowserRouter>{renderRoutes([routes])}</BrowserRouter>
 				</React.Suspense>
 			</Provider>
 		</ThemeProvider>,

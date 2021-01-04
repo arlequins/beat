@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "author": "An <harlequin.beat@gmail.com> (https://github.com/arlequins)",
   "main": "dist/src/app.js",
-  "types": "dist/src/index.ssr.d.ts",
+  "types": "dist/src/client/index.ssr.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/arlequins/beat.git"
@@ -29,7 +29,7 @@
     "test:watch": "jest --config jest.config.json --watch",
     "start": "webpack serve --mode=development --progress --color --port 5000 --env=development",
     "build": "webpack --mode=development --env=localhost",
-    "build:production": "npm run test:coverage && webpack --mode=production --env=production",
+    "build:production": "npm run test && webpack --mode=production --env=production",
     "build:ssr": "webpack --mode=production --env=ssr",
     "format": "prettier --write \"src/client/**/*.{ts,tsx}\"",
     "lint": "tslint -p tsconfig-ssr.json",

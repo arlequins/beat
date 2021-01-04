@@ -9,14 +9,11 @@ import { ServerStyleSheets, ThemeProvider } from '@material-ui/core/styles'
 
 // client
 import { INITIAL_STATE } from 'client/constants'
-import routes from 'client/routes'
+import routes from 'client/routes/index-ssr'
 import { backendCreateStore } from 'client/store/prod'
 
 // components
 import Theme from 'client/helpers/Theme'
-
-// interface
-import { State } from 'common'
 
 interface StaticRouterContext {
 	status?: number
@@ -26,16 +23,16 @@ interface StaticRouterContext {
 	[key: string]: any
 }
 
-export const initialState = INITIAL_STATE
+export const initialState: any = INITIAL_STATE
 
-export const ServerSideRendering = async (req: any, initial: State) => {
+export const ServerSideRendering = async (req: any, initial: any) => {
   const sheets = new ServerStyleSheets()
   const context: StaticRouterContext = {}
 
 	const url = req.url
 
-  const state: State = initial
-  state.route = routes.length > 0 ? routes[0] : {}
+  const state: any = initial
+  state.route = routes
   const store = backendCreateStore(state)
 
   // Render the component to a string.
@@ -46,7 +43,7 @@ export const ServerSideRendering = async (req: any, initial: State) => {
         <CssBaseline />
         <Provider store={store}>
           <StaticRouter location={url} context={context}>
-            {renderRoutes(routes)}
+            {renderRoutes([routes])}
           </StaticRouter>
         </Provider>
       </ThemeProvider>,

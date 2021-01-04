@@ -16,7 +16,7 @@
     "moduleResolution": "node",
     "noUnusedParameters": true,
     "noUnusedLocals": false,
-    "module": "ES6",
+    "module": "ESNext",
     "noEmitOnError": true,
     "noImplicitAny": true,
     "skipLibCheck": true,
@@ -25,6 +25,9 @@
     "target": "ES5",
     "outDir": "dist",
     "baseUrl": "src",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "paths": {
       "client/*": ["client/*"],
       "types/*": ["../types/*"],

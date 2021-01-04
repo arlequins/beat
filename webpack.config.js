@@ -27,7 +27,7 @@ const CUSTOM_NODE_ENV = {
 
 const PLUGINS_LIST = [
   new WebpackManifestPlugin({
-    fileName: 'assets.json',
+    fileName: path.join(__dirname, 'dist', 'flagship', 'assets.json'),
     basePath: ''
   }),
   new HtmlWebPackPlugin({
@@ -50,7 +50,7 @@ const PLUGINS_LIST = [
       },
       {
         from: path.join(__dirname, 'src', 'assets', 'root'),
-        to: path.join(__dirname, 'dist'),
+        to: path.join(__dirname, 'dist', 'flagship'),
       },
     ],
   }),
@@ -61,7 +61,7 @@ const ALL_PLUGINS_LIST = IS_DEVELOPMENT ? [
 ] : [
   !IS_SSR && new InjectManifest({
     swSrc: path.join(__dirname, 'src', 'client', 'sw.ts'),
-    swDest: path.join(__dirname, 'service-worker.js'),
+    swDest: path.join(__dirname, 'dist', 'flagship', 'service-worker.js'),
     maximumFileSizeToCacheInBytes: 7e+6,
     // Ignore all URL parameters.
     // exclude: [/.*/],

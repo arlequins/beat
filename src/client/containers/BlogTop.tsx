@@ -12,8 +12,13 @@ import BlogTopPart from 'client/components/pages/BlogTopPart'
 // client
 import { LANGUAGE_PACK } from 'client/constants/Lang'
 
+// common sass
+// tslint:disable:no-import-side-effect
+import 'scss/top.scss'
+
 // interface
-import { AllProps, AppConfig, State } from 'common'
+import { State } from 'common'
+import { AllProps, AppConfig } from 'common'
 
 const BlogTop: React.FC<AllProps> = () => {
 	const {

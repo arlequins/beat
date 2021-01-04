@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { render } from 'react-dom'
+import { hydrate } from 'react-dom'
 import { Provider } from 'react-redux'
 import { renderRoutes } from 'react-router-config'
 
@@ -21,16 +21,16 @@ import { ExtendedWindow } from 'types/settings'
 
 const win: ExtendedWindow = (window as unknown) as ExtendedWindow
 const state: State = win && win.__INITIAL_STATE__ ? win.__INITIAL_STATE__ : INITIAL_STATE
-state.route = routes.length > 0 ? routes[0] : {}
+state.route = routes
 
 const store = frontendCreateStore(state)
 
-render(
+hydrate(
 	<ThemeProvider theme={Theme(state.appConfig ? state.appConfig.mode : 'light')}>
 		{/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
 		<CssBaseline />
 		<Provider store={store}>
-			<React.Suspense fallback={<AppLoading />}>{renderRoutes(routes)}</React.Suspense>
+			<React.Suspense fallback={<AppLoading />}>{renderRoutes([routes])}</React.Suspense>
 		</Provider>
 	</ThemeProvider>,
 	document.getElementById('app')

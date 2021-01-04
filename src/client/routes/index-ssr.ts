@@ -1,17 +1,9 @@
-import { lazy } from 'react'
-
 import { TOP_URI as BLOG_ROOT } from 'client/constants/Blog'
 
-const App = lazy(() => import(/* webpackChunkName: "page-app" */ 'client/containers/AppHooks'))
-const BlogTop = lazy(
-	() => import(/* webpackChunkName: "page-blog-top" */ 'client/containers/BlogTop')
-)
-const BlogDetail = lazy(
-	() => import(/* webpackChunkName: "page-blog-detail" */ 'client/containers/BlogDetail')
-)
-const NotFound = lazy(
-	() => import(/* webpackChunkName: "page-not-found" */ 'client/containers/common/NotFound')
-)
+import App from 'client/containers/AppHooks'
+import BlogDetail from 'client/containers/BlogDetail'
+import BlogTop from 'client/containers/BlogTop'
+import NotFound from 'client/containers/common/NotFound'
 
 export default {
 	component: App,
