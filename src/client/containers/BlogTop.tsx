@@ -16,22 +16,23 @@ import { LANGUAGE_PACK } from 'client/constants/Lang'
 import { AllProps, AppConfig, State } from 'common'
 
 const BlogTop: React.FC<AllProps> = () => {
-  const { appConfig = {
-    lang: 'EN',
-  } as AppConfig } = useSelector((state: State) => state)
-  const info = LANGUAGE_PACK(appConfig.lang).info
+	const {
+		appConfig = {
+			lang: 'EN',
+		} as AppConfig,
+	} = useSelector((state: State) => state)
+	const info = LANGUAGE_PACK(appConfig.lang).info
 
-  return (
-    <React.Fragment>
-      <CssBaseline />
-      <Container maxWidth="lg">
-        <Header title={info.headerTitle} />
-        <BlogTopPart />
-
-      </Container>
-      <Footer title={info.footerTitle} />
-    </React.Fragment>
-  )
+	return (
+		<React.Fragment>
+			<CssBaseline />
+			<Container maxWidth="lg">
+				<Header title={info.headerTitle} />
+				<BlogTopPart />
+			</Container>
+			<Footer title={info.footerTitle} />
+		</React.Fragment>
+	)
 }
 
 export default BlogTop

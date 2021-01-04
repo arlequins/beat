@@ -14,51 +14,57 @@ import { AllProps } from 'common'
 import { FeaturedPost as FeaturedPostInterface } from 'response'
 
 const useStyles = makeStyles({
-  card: {
-    display: 'flex',
-  },
-  cardDetails: {
-    flex: 1,
-  },
-  cardMedia: {
-    width: 160,
-  },
+	card: {
+		display: 'flex',
+	},
+	cardDetails: {
+		flex: 1,
+	},
+	cardMedia: {
+		width: 160,
+	},
 })
 
 interface Props {
-  featuredPost: FeaturedPostInterface
+	featuredPost: FeaturedPostInterface
 }
 
-const FeaturedPost: React.FC<AllProps & Props> = ({featuredPost = {}}) => {
-  const classes = useStyles()
+const FeaturedPost: React.FC<AllProps & Props> = ({ featuredPost = {} }) => {
+	const classes = useStyles()
 
-  return (
-    <Grid item xs={12} md={6}>
-      <CardActionArea component="a" href={`/p${featuredPost.id}`}>
-        <Card className={classes.card}>
-          <div className={classes.cardDetails}>
-            <CardContent>
-              <Typography component="h2" variant="h5">
-                {featuredPost.title}
-              </Typography>
-              { featuredPost.date && <Typography variant="subtitle1" color="textSecondary">
-                {featuredPost.date}
-              </Typography> }
-              <Typography variant="subtitle1" paragraph>
-                {featuredPost.description}
-              </Typography>
-              <Typography variant="subtitle1" color="primary">
-                Continue reading...
-              </Typography>
-            </CardContent>
-          </div>
-          <Hidden xsDown>
-            <CardMedia className={classes.cardMedia} image={featuredPost.image} title={featuredPost.imageText} />
-          </Hidden>
-        </Card>
-      </CardActionArea>
-    </Grid>
-  )
+	return (
+		<Grid item xs={12} md={6}>
+			<CardActionArea component="a" href={`/p${featuredPost.id}`}>
+				<Card className={classes.card}>
+					<div className={classes.cardDetails}>
+						<CardContent>
+							<Typography component="h2" variant="h5">
+								{featuredPost.title}
+							</Typography>
+							{featuredPost.date && (
+								<Typography variant="subtitle1" color="textSecondary">
+									{featuredPost.date}
+								</Typography>
+							)}
+							<Typography variant="subtitle1" paragraph>
+								{featuredPost.description}
+							</Typography>
+							<Typography variant="subtitle1" color="primary">
+								Continue reading...
+							</Typography>
+						</CardContent>
+					</div>
+					<Hidden xsDown>
+						<CardMedia
+							className={classes.cardMedia}
+							image={featuredPost.image}
+							title={featuredPost.imageText}
+						/>
+					</Hidden>
+				</Card>
+			</CardActionArea>
+		</Grid>
+	)
 }
 
 export default FeaturedPost

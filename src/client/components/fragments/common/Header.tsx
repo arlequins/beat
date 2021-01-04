@@ -19,93 +19,92 @@ import { RouteConfig } from 'react-router-config'
 import { Section, SectionList } from 'response'
 
 const useStyles = makeStyles((theme) => ({
-  toolbar: {
-    borderBottom: `1px solid ${theme.palette.divider}`,
-  },
-  toolbarTitle: {
-    flex: 1,
-  },
-  toolbarSecondary: {
-    justifyContent: 'space-between',
-    overflowX: 'auto',
-  },
-  toolbarLink: {
-    padding: theme.spacing(1),
-    flexShrink: 0,
-  },
+	toolbar: {
+		borderBottom: `1px solid ${theme.palette.divider}`,
+	},
+	toolbarTitle: {
+		flex: 1,
+	},
+	toolbarSecondary: {
+		justifyContent: 'space-between',
+		overflowX: 'auto',
+	},
+	toolbarLink: {
+		padding: theme.spacing(1),
+		flexShrink: 0,
+	},
 }))
 
 interface Props {
-  title: string
+	title: string
 }
 
 const Header: React.FC<AllProps & Props> = ({ title = '' }) => {
-  const { sectionList = {
-    result: [],
-  } as SectionList, route = {} as RouteConfig} = useSelector((state: State) => state)
-  const sections = sectionList.result
-  const match = findMatchRoutes(route, location.pathname)
-  const sectionName = match.params.sectionName ? match.params.sectionName : ''
-  const curretSection = sectionList.result.find((section: Section) => section.name === sectionName)
-  const classes = useStyles()
+	const {
+		sectionList = {
+			result: [],
+		} as SectionList,
+		route = {} as RouteConfig,
+	} = useSelector((state: State) => state)
+	const sections = sectionList.result
+	const match = findMatchRoutes(route, location.pathname)
+	const sectionName = match.params.sectionName ? match.params.sectionName : ''
+	const curretSection = sectionList.result.find((section: Section) => section.name === sectionName)
+	const classes = useStyles()
 
-  return (
-    <React.Fragment>
-      <Toolbar className={classes.toolbar}>
-        {/* <Button size="small">Subscribe</Button> */}
-        <Typography
-          component="h2"
-          variant="h5"
-          color="inherit"
-          align="center"
-          noWrap
-          className={classes.toolbarTitle}
-        >
-          <Link
-            variant="h5"
-            color="inherit"
-            align="center"
-            noWrap
-            href={TOP_URI}
-          >
-            {title}
-          </Link>
-        </Typography>
-        <IconButton>
-          <SearchIcon />
-        </IconButton>
-        {/* <Button variant="outlined" size="small">
+	return (
+		<React.Fragment>
+			<Toolbar className={classes.toolbar}>
+				{/* <Button size="small">Subscribe</Button> */}
+				<Typography
+					component="h2"
+					variant="h5"
+					color="inherit"
+					align="center"
+					noWrap
+					className={classes.toolbarTitle}
+				>
+					<Link variant="h5" color="inherit" align="center" noWrap href={TOP_URI}>
+						{title}
+					</Link>
+				</Typography>
+				<IconButton>
+					<SearchIcon />
+				</IconButton>
+				{/* <Button variant="outlined" size="small">
           Sign up
         </Button> */}
-      </Toolbar>
-      <Toolbar component="nav" variant="dense" className={classes.toolbarSecondary}>
-        {sections.map((section: Section, index: number) => {
-          if (index > 0) {
-            if (curretSection && curretSection.id === section.id) {
-              return (
-                <Typography color="textPrimary" key={index}>{section.title}</Typography>
-              )
-            } else {
-              return (
-                <Link
-                  color="textSecondary"
-                  noWrap
-                  key={section.title}
-                  variant="body2"
-                  href={section.url}
-                  className={classes.toolbarLink}
-                >
-                  {section.title}
-                </Link>
-              )
-            }
-          } else {
-            return (<Fragment key={index}></Fragment>)
-          }
-        })}
-      </Toolbar>
-    </React.Fragment>
-  )
+			</Toolbar>
+			<Toolbar component="nav" variant="dense" className={classes.toolbarSecondary}>
+				{sections.map((section: Section, index: number) => {
+					if (index > 0) {
+						if (curretSection && curretSection.id === section.id) {
+							return (
+								<Typography color="textPrimary" key={index}>
+									{section.title}
+								</Typography>
+							)
+						} else {
+							return (
+								<Link
+									color="textSecondary"
+									noWrap
+									key={section.title}
+									variant="body2"
+									href={section.url}
+									className={classes.toolbarLink}
+								>
+									{section.title}
+								</Link>
+							)
+						}
+					} else {
+						return <Fragment key={index}></Fragment>
+					}
+				})}
+			</Toolbar>
+		</React.Fragment>
+	)
 }
 
 export default Header

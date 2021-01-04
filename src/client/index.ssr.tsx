@@ -1,56 +1,66 @@
 import * as React from 'react'
+import ReactDOMServer from 'react-dom/server'
 import { Provider } from 'react-redux'
 import { renderRoutes } from 'react-router-config'
 import { StaticRouter } from 'react-router-dom'
 
 import CssBaseline from '@material-ui/core/CssBaseline'
-import { ThemeProvider } from '@material-ui/core/styles'
+import { ServerStyleSheets, ThemeProvider } from '@material-ui/core/styles'
 
 // client
 import { INITIAL_STATE } from 'client/constants'
 import routes from 'client/routes'
-import { frontendCreateStore } from 'client/store/prod'
+import { backendCreateStore } from 'client/store/prod'
 
 // components
-import AppLoading from 'client/components/fragments/common/AppLoading'
 import Theme from 'client/helpers/Theme'
 
 // interface
 import { State } from 'common'
-import { ExtendedWindow } from 'types/settings'
 
 interface StaticRouterContext {
-  status?: number
-  url?: string
-  action?: 'PUSH' | 'REPLACE'
-  location?: object
-  [key: string]: any
+	status?: number
+	url?: string
+	action?: 'PUSH' | 'REPLACE'
+	location?: object
+	[key: string]: any
 }
 
-const win: ExtendedWindow = window as unknown as ExtendedWindow
-const state: State = win && win.__INITIAL_STATE__ ? win.__INITIAL_STATE__ : INITIAL_STATE
-state.route = routes.length > 0 ? routes[0] : {}
+export const InitialState = INITIAL_STATE
 
-const store = frontendCreateStore(state)
+export const ServerSideRendering = async (req: any, _res: any, initialState: State) => {
+  const sheets = new ServerStyleSheets()
+  const context: StaticRouterContext = {}
 
-const context: StaticRouterContext = {}
+	const url = req.url
 
-const ServerSideRendering = async (req: any, _res: any) => {
-  const url = req.url
+  const state: State = initialState
+  state.route = routes.length > 0 ? routes[0] : {}
+  const store = backendCreateStore(state)
 
-  return (
-    <ThemeProvider theme={Theme}>
-      {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-      <CssBaseline />
-      <Provider store={store}>
-        <StaticRouter location={url} context={context}>
-          <React.Suspense fallback={<AppLoading />}>
+  // Render the component to a string.
+  const html = ReactDOMServer.renderToString(
+    sheets.collect(
+      <ThemeProvider theme={Theme(state.appConfig ? state.appConfig.mode : 'light')}>
+        {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+        <CssBaseline />
+        <Provider store={store}>
+          <StaticRouter location={url} context={context}>
             {renderRoutes(routes)}
-          </React.Suspense>
-        </StaticRouter>
-      </Provider>
-    </ThemeProvider>
+          </StaticRouter>
+        </Provider>
+      </ThemeProvider>,
+    ),
   )
-}
 
-export default ServerSideRendering
+  // Grab the CSS from our sheets.
+  const css = sheets.toString()
+
+	return {
+    html: html,
+    css: css,
+    state: state,
+    context: context,
+    url: url,
+  }
+}

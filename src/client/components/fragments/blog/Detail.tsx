@@ -12,28 +12,30 @@ import { AllProps } from 'common'
 import { PostDetailResult } from 'response'
 
 interface Props {
-  posts: PostDetailResult[]
-  sectionTitle?: string
+	posts: PostDetailResult[]
+	sectionTitle?: string
 }
 
-const Detail: React.FC<AllProps & Props> = ({posts = [], sectionTitle = ''}) => {
-  return (
-    <Grid item xs={12} md={8}>
-      { sectionTitle && (
-      <Typography variant="h6" gutterBottom>
-        {sectionTitle}
-      </Typography>
-      )}
-      <Divider />
-      {posts.map((post: PostDetailResult, index: number) => (
-        post.type === 'markdown' ?
-        <Markdown key={index} post={post} />
-        : <Typography key={index}
-          component="div"
-        >{post.content}</Typography>
-      ))}
-    </Grid>
-  )
+const Detail: React.FC<AllProps & Props> = ({ posts = [], sectionTitle = '' }) => {
+	return (
+		<Grid item xs={12} md={8}>
+			{sectionTitle && (
+				<Typography variant="h6" gutterBottom>
+					{sectionTitle}
+				</Typography>
+			)}
+			<Divider />
+			{posts.map((post: PostDetailResult, index: number) =>
+				post.type === 'markdown' ? (
+					<Markdown key={index} post={post} />
+				) : (
+					<Typography key={index} component="div">
+						{post.content}
+					</Typography>
+				)
+			)}
+		</Grid>
+	)
 }
 
 export default Detail

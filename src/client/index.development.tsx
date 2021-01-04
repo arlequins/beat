@@ -22,24 +22,22 @@ import { BrowserRouter } from 'react-router-dom'
 import { ExtendedWindow } from 'types/settings'
 
 if (isWindow) {
-  const win: ExtendedWindow = window as unknown as ExtendedWindow
-  const state: State = win && win.__INITIAL_STATE__ ? win.__INITIAL_STATE__ : INITIAL_STATE
-  state.route = routes.length > 0 ? routes[0] : {}
+	const win: ExtendedWindow = (window as unknown) as ExtendedWindow
+	const state: State = win && win.__INITIAL_STATE__ ? win.__INITIAL_STATE__ : INITIAL_STATE
+	state.route = routes.length > 0 ? routes[0] : {}
 
-  const store = frontendCreateStore(state)
+	const store = frontendCreateStore(state)
 
-  render(
-    <ThemeProvider theme={Theme(state.appConfig ? state.appConfig.mode : 'light')}>
-      {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-      <CssBaseline />
-      <Provider store={store}>
-        <React.Suspense fallback={<AppLoading />}>
-          <BrowserRouter>
-            {renderRoutes(routes)}
-          </BrowserRouter>
-        </React.Suspense>
-      </Provider>
-    </ThemeProvider>,
-    document.getElementById('app')
-  )
+	render(
+		<ThemeProvider theme={Theme(state.appConfig ? state.appConfig.mode : 'light')}>
+			{/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+			<CssBaseline />
+			<Provider store={store}>
+				<React.Suspense fallback={<AppLoading />}>
+					<BrowserRouter>{renderRoutes(routes)}</BrowserRouter>
+				</React.Suspense>
+			</Provider>
+		</ThemeProvider>,
+		document.getElementById('app')
+	)
 }
