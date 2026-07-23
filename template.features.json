@@ -1,0 +1,8 @@
+{
+  "name": "template-t3-turbo-sst",
+  "displayName": "Acme Workspace",
+  "scope": "@acme",
+  "domain": "example.com",
+  "preset": "full",
+  "features": ["auth", "batch", "sst", "example-ui"]
+}

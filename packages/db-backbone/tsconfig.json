@@ -1,0 +1,5 @@
+{
+  "extends": "@acme/tsconfig/compiled-package.json",
+  "include": ["src", "scripts"],
+  "exclude": ["node_modules"]
+}

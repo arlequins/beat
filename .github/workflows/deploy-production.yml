@@ -1,0 +1,23 @@
+name: Production deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      application:
+        description: Application to deploy
+        required: true
+        type: choice
+        options: [api, web, batch]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      application: ${{ inputs.application }}
+      environment: production
+      operation: deploy
+      role_arn: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}

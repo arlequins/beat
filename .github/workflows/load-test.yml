@@ -1,0 +1,19 @@
+name: Baseline load test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: grafana/setup-k6-action@v1
+      - uses: grafana/run-k6-action@v1
+        env:
+          API_URL: ${{ vars.LOAD_TEST_API_URL }}
+        with:
+          path: tests/load/api.js

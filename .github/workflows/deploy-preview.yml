@@ -1,0 +1,41 @@
+name: Preview deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    if: >-
+      github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      vars.AWS_PREVIEW_ROLE_ARN != ''
+    strategy:
+      matrix:
+        application: [api, web]
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      application: ${{ matrix.application }}
+      environment: pr-${{ github.event.pull_request.number }}
+      operation: deploy
+      role_arn: ${{ vars.AWS_PREVIEW_ROLE_ARN }}
+
+  remove:
+    if: >-
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      vars.AWS_PREVIEW_ROLE_ARN != ''
+    strategy:
+      matrix:
+        application: [web, api]
+      max-parallel: 1
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      application: ${{ matrix.application }}
+      environment: pr-${{ github.event.pull_request.number }}
+      operation: remove
+      role_arn: ${{ vars.AWS_PREVIEW_ROLE_ARN }}

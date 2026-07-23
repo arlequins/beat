@@ -1,0 +1,7 @@
+{
+  "extends": "@acme/tsconfig/base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["sst.config.ts", "sst-globals.d.ts"]
+}
