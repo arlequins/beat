@@ -2,6 +2,12 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.2] - 2026-07-23
+
+### Changed
+
+- Updated the template release metadata to v1.1.2.
+
 ## [1.1.0] - 2026-07-22
 
 ### Added

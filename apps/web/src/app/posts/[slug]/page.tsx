@@ -1,110 +1,88 @@
-import { Button } from "@acme/ui/button";
-import { ArrowLeft, Eye, MessageSquare, Timer } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { PostDetailActions } from "~/components/blog/post-detail-actions";
-import { StatusBadge } from "~/components/blog/status-badge";
-import { blogPosts, findBlogPost, formatCompactNumber } from "~/lib/blog-data";
+import { getPost, getPosts, postCategoryMeta } from "~/lib/posts";
 
 export const dynamicParams = false;
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
+export async function generateStaticParams() {
+  return (await getPosts()).map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const post = findBlogPost((await props.params).slug);
-  return { title: post?.title ?? "Post" };
+  const post = await getPost((await props.params).slug);
+  return {
+    title: post?.frontmatter.title ?? "Writing",
+    description: post?.frontmatter.excerpt,
+  };
 }
 
 export default async function PostDetailPage(props: {
   params: Promise<{ slug: string }>;
 }) {
-  const post = findBlogPost((await props.params).slug);
+  const post = await getPost((await props.params).slug);
   if (!post) notFound();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button asChild variant="ghost">
-          <Link href="/posts/">
-            <ArrowLeft aria-hidden="true" />
-            All posts
+    <article>
+      <header className="brand-hero px-5 py-14 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-4xl">
+          <Link
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-[#79e6e0]"
+            href="/posts/"
+          >
+            <ArrowLeft aria-hidden="true" className="size-4" /> 모든 글
           </Link>
-        </Button>
-        <PostDetailActions slug={post.slug} />
-      </div>
-
-      <article className="bg-background overflow-hidden rounded-lg border">
-        <div className="relative aspect-[4/3] w-full sm:aspect-[16/7]">
-          <Image
-            alt="Editorial feature"
-            className="object-cover"
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 1100px"
-            src={post.image}
-          />
-        </div>
-        <div className="mx-auto max-w-4xl px-5 py-7 sm:px-8 sm:py-9 lg:py-12">
-          <div className="mb-5 flex flex-wrap items-center gap-3 text-sm">
-            <StatusBadge label={post.status} />
-            <span className="text-muted-foreground">{post.category}</span>
-          </div>
-          <h1 className="max-w-3xl text-[1.75rem] font-semibold leading-tight sm:text-4xl">
-            {post.title}
-          </h1>
-          <p className="text-muted-foreground mt-4 max-w-3xl text-lg leading-8">
-            {post.excerpt}
-          </p>
-          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 border-y py-4 text-sm">
-            <span className="font-medium">{post.author}</span>
-            <span className="text-muted-foreground">{post.publishedAt}</span>
-            <span className="text-muted-foreground flex items-center gap-1.5">
-              <Timer aria-hidden="true" className="size-4" />
-              {post.readTime}
+          <div className="mt-12 flex flex-wrap gap-2 text-xs font-medium text-slate-400">
+            <span className="border border-[#79e6e0]/40 bg-[#79e6e0]/10 px-2.5 py-1 text-[#79e6e0]">
+              {postCategoryMeta[post.frontmatter.category].label}
             </span>
+            {post.frontmatter.tags.map((tag) => (
+              <span className="border border-white/15 px-2.5 py-1" key={tag}>
+                {tag}
+              </span>
+            ))}
           </div>
-          <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_220px]">
-            <div className="space-y-5 text-base leading-8">
-              {post.content.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-            </div>
-            <aside
-              aria-label="Post performance"
-              className="h-fit border-t pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-5"
-            >
-              <h2 className="text-sm font-semibold">Performance</h2>
-              <dl className="mt-4 grid grid-cols-2 gap-4 lg:block lg:space-y-4">
-                <div>
-                  <dt className="text-muted-foreground flex items-center gap-2 text-xs">
-                    <Eye className="size-4" />
-                    Views
-                  </dt>
-                  <dd className="mt-1 text-xl font-semibold">
-                    {formatCompactNumber(post.views)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground flex items-center gap-2 text-xs">
-                    <MessageSquare className="size-4" />
-                    Comments
-                  </dt>
-                  <dd className="mt-1 text-xl font-semibold">
-                    {post.comments}
-                  </dd>
-                </div>
-              </dl>
-            </aside>
+          <h1 className="display-serif mt-6 text-4xl leading-[1.04] tracking-[-0.055em] text-balance sm:text-6xl">
+            {post.frontmatter.title}
+          </h1>
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300 sm:text-xl">
+            {post.frontmatter.excerpt}
+          </p>
+          <div className="mt-8 border-t border-white/15 pt-4 text-sm text-slate-400">
+            {post.frontmatter.publishedAt} · {post.frontmatter.readTime}
           </div>
         </div>
-      </article>
-    </div>
+      </header>
+      <div className="px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto max-w-3xl">
+          {post.frontmatter.reviewStatus === "unreviewed" ? (
+            <aside className="paper-panel relative mb-12 overflow-hidden border-[#f06449]/40 p-6 text-sm leading-6 text-slate-700">
+              <div className="absolute top-0 left-0 h-full w-1.5 bg-[#f06449]" />
+              <p className="brand-eyebrow text-[#a33a28]">
+                ◇ 미확정본 · 공개 검토 중
+              </p>
+              <p className="mt-3">
+                Lumen이 리서치와 초안을 도왔으며, 아직 Arlequin의 최종 검토를
+                거치지 않았습니다. 공개된 글이지만 내용과 판단은 변경될 수
+                있습니다.
+              </p>
+            </aside>
+          ) : null}
+          <div className="prose-content text-[1.05rem] leading-8 text-slate-700">
+            {post.content}
+          </div>
+          <div className="lumen-rule mt-16" />
+          <p className="mt-6 text-sm leading-6 text-slate-500">
+            Written in dialogue: Lumen assists with research and drafting.
+            Arlequin owns the final judgment.
+          </p>
+        </div>
+      </div>
+    </article>
   );
 }

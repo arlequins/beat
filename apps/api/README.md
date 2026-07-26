@@ -24,7 +24,7 @@ locally so protected HTTP operations can reuse a bearer token when they are
 added. tRPC procedures keep their TypeScript router contract and are not
 represented as REST operations in the OpenAPI document.
 
-`src/app.ts` is runtime-independent. `src/dev.ts` serves it with Node for local development, and `src/lambda.ts` adapts the same app to AWS Lambda.
+`src/app.ts` is runtime-independent. `src/dev.ts` serves it with Node for local development, `src/lambda.ts` adapts the same app to AWS Lambda, and its default export is detected by Vercel as a Node.js Function. See [Vercel deployment](../../docs/vercel-deployment.md) for the two-project setup.
 
 ## AWS deployment presets
 

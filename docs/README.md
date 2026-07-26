@@ -14,6 +14,8 @@ local application; the pages below explain design decisions and ongoing work.
    or deliberately remove when adapting the template.
 4. [Generic application baseline](generic-application.md) explains the reusable
    CRUD, authorization, upload, and Clean Architecture example.
+5. [Portfolio content](portfolio-content.md) explains how to replace the
+   starter identity, projects, and technical writing.
 
 ## Development
 
@@ -36,6 +38,8 @@ local application; the pages below explain design decisions and ongoing work.
 
 ## Deployment and Operations
 
+- [Vercel deployment](vercel-deployment.md): two-project Vercel deployment for
+  the static web app and Hono API, with Neon PostgreSQL.
 - [Deployment and supply-chain security](deployment-security.md): GitHub OIDC,
   protected environments, security checks, and response headers.
 - [Incident runbook](incident-runbook.md): triage, mitigation, recovery, and

@@ -264,3 +264,6 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
 }
 
 export const app = createApiApp();
+
+/** Vercel detects the runtime-independent Hono app at `src/app.ts`. */
+export default app;

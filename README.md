@@ -1,6 +1,6 @@
 # template-t3-turbo-sst
 
-**v1.0.1** - A reusable pnpm monorepo template for a client-only Next.js
+**v1.1.2** - A reusable pnpm monorepo template for a client-only Next.js
 frontend, Hono and tRPC API, Drizzle PostgreSQL persistence, OIDC authentication,
 and optional SST batch and deployment infrastructure.
 
@@ -72,6 +72,18 @@ pnpm dev:local
 Open `http://localhost:3000`. The development identity provider accepts any
 non-empty username and password. PostgreSQL uses host port `55433` by default.
 Stop the database with `pnpm db:stop`.
+
+### Static portfolio
+
+The public portfolio and writing pages can run without PostgreSQL, API, or OIDC
+while you are preparing content:
+
+```bash
+pnpm --filter @acme/web dev
+```
+
+Open `http://localhost:3000` and edit the starter content as described in
+[Portfolio content](./docs/portfolio-content.md).
 
 The API endpoints are:
 
@@ -147,6 +159,9 @@ and [Template Readiness](./docs/template-readiness.md).
 - Web builds as a static export for S3 and CloudFront.
 - API deploys through a Lambda Function URL or API Gateway HTTP API preset.
 - Batch workflows use Step Functions, Lambda, and EventBridge schedules.
+
+For a personal portfolio without AWS infrastructure, deploy the web and API as
+two Vercel projects and use Neon for PostgreSQL. See [Vercel deployment](./docs/vercel-deployment.md).
 
 Read [Deployment and Supply-Chain Security](./docs/deployment-security.md) before
 configuring GitHub OIDC roles or production environments. Deployment-specific
