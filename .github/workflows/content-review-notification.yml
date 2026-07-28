@@ -1,0 +1,61 @@
+name: Content review notification
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+    paths:
+      - "apps/web/content/**/*.mdx"
+      - "docs/**"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  notify-slack:
+    name: Notify Slack reviewers
+    runs-on: ubuntu-latest
+    env:
+      PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
+      PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
+      REPOSITORY: ${{ github.repository }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Post a mobile review link
+        if: env.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        run: |
+          payload="$(jq -n \
+            --arg title "$PULL_REQUEST_TITLE" \
+            --arg url "$PULL_REQUEST_URL" \
+            --arg repository "$REPOSITORY" \
+            '{
+              text: "Portfolio content is ready for review.",
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: ("*:memo: Content review requested*\\n" + $repository + "\\n<" + $url + "|" + $title + ">")
+                  }
+                },
+                {
+                  type: "context",
+                  elements: [
+                    {
+                      type: "mrkdwn",
+                      text: "Open this link on mobile, review the source and rendered content, then submit GitHub Approve or Request changes."
+                    }
+                  ]
+                }
+              ]
+            }')"
+
+          curl --fail --show-error --silent \
+            --header "Content-Type: application/json" \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"
+
+      - name: Explain skipped notification
+        if: env.SLACK_WEBHOOK_URL == ''
+        run: echo "SLACK_WEBHOOK_URL is not configured; no review notification was sent."
