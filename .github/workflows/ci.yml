@@ -36,6 +36,6 @@ jobs:
       - name: Lint the portfolio
         run: pnpm --filter @acme/web lint
       - name: Type-check the portfolio
-        run: pnpm --filter @acme/web typecheck
+        run: pnpm turbo run typecheck --filter=@acme/web...
       - name: Build all static pages
         run: pnpm turbo run build --filter=@acme/web...
