@@ -87,6 +87,23 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-07-27": {
+    title: "Weekly IT Brief — Designing the boundaries around agents",
+    excerpt:
+      "Evaluation security, MCP compatibility, and cloud model choice as the control points for putting agents into products.",
+    intro:
+      "The signal this week is not to connect more agents, but to explain where their authority ends and how a team can reverse their actions.",
+    sections: [
+      {
+        heading: "Three boundaries to keep visible",
+        paragraphs: [
+          "Treat evaluation environments as production security concerns: use short-lived, least-privilege credentials and retain an audit trail of what an agent reads, writes, and sends outside.",
+          "Version MCP integrations like APIs. Record the protocol contract, test critical read-only calls with limited tokens, and retain human approval for actions that create changes.",
+          "Keep model providers behind an adapter boundary. A model change also changes observability, cost limits, data paths, and fallback behaviour, so it should be a reversible deployment rather than an announcement.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -197,6 +214,23 @@ const japanese: Record<string, LocalizedArticle> = {
         paragraphs: [
           "エージェント型の体験は単独機能ではなく製品フローになりつつあります。政策はデータ、承認、変更履歴を通じて設計条件になります。セキュリティ更新は小さくても不可欠な習慣です。",
           "このサイトでは、下書き状態、出典、明確な人間レビューをその答えにしています。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-07-27": {
+    title: "週刊 IT ブリーフ — エージェントの境界面を設計するとき",
+    excerpt:
+      "評価環境のセキュリティ、MCP 互換性、クラウド上のモデル選択を、エージェントを製品に入れる際の統制点として整理します。",
+    intro:
+      "今週の焦点は、より多くのエージェントをつなぐことではなく、どこまでを信頼し、どう元に戻せるかを説明できることです。",
+    sections: [
+      {
+        heading: "見える形で残す三つの境界",
+        paragraphs: [
+          "評価環境も本番のセキュリティ課題として扱います。短命で最小権限の認証情報を使い、エージェントが何を読み、書き、外部へ送ったかを追える監査記録を残します。",
+          "MCP 統合は API と同じようにバージョン管理します。プロトコルの契約を記録し、制限したトークンで重要な読み取り操作をテストし、変更を作る操作には人の承認を残します。",
+          "モデル提供者はアダプター境界の後ろに置きます。モデル変更は可観測性、コスト上限、データ経路、フォールバックも変えるため、発表ではなく元に戻せる配布として扱います。",
         ],
       },
     ],

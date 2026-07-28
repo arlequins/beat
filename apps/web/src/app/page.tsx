@@ -14,32 +14,36 @@ export default async function HomePage() {
   const studioPosts = posts.filter((post) => post.category === "studio-log");
   return (
     <>
-      <section className="brand-hero px-5 py-16 sm:px-8 sm:py-24 lg:py-28">
-        <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
-          <div>
-            <p className="brand-eyebrow mb-6 text-[#79e6e0]">
-              Arlequin / {siteConfig.role}
-            </p>
-            <h1 className="display-serif max-w-4xl text-5xl leading-[0.97] font-normal tracking-[-0.055em] text-balance sm:text-7xl lg:text-[5.2rem]">
+      <section className="brand-hero px-5 py-14 sm:px-8 sm:py-20 lg:py-24">
+        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.06fr_0.94fr] lg:items-center lg:gap-16">
+          <div className="hero-copy">
+            <div className="hero-kicker-row">
+              <p className="brand-eyebrow text-[#79e6e0]">
+                Arlequin / {siteConfig.role}
+              </p>
+              <span aria-hidden="true" className="hero-kicker-line" />
+              <span className="hero-edition">Independent practice · 2026</span>
+            </div>
+            <h1 className="display-serif hero-title max-w-4xl font-normal text-balance">
               {siteConfig.intro}
             </h1>
-            <p className="mt-8 max-w-xl text-lg leading-8 text-slate-300">
+            <p className="hero-intro max-w-xl text-lg leading-8 text-slate-300">
               저는 <strong className="text-white">Arlequin</strong>, 문제와
               방향을 결정하는 소프트웨어 엔지니어입니다.{" "}
               <strong className="text-[#f6c85f]">Lumen</strong>은 구현과
               리서치의 가능성을 비추는 AI 동료입니다. 이곳에는 우리가 함께 만든
               제품과, 사람이 최종 판단한 기록을 남깁니다.
             </p>
-            <div className="mt-10 flex flex-wrap gap-3">
+            <div className="hero-actions flex flex-wrap gap-3">
               <a
-                className="inline-flex items-center gap-2 bg-[#f06449] px-5 py-3 text-sm font-bold text-white shadow-[0.35rem_0.35rem_0_#79e6e0] transition hover:-translate-y-1"
+                className="hero-primary-action inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white"
                 href="#work"
               >
                 프로젝트 보기{" "}
                 <ArrowUpRight aria-hidden="true" className="size-4" />
               </a>
               <Link
-                className="inline-flex items-center gap-2 border border-white/35 px-5 py-3 text-sm font-semibold transition hover:border-[#79e6e0] hover:text-[#79e6e0]"
+                className="hero-secondary-action inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold"
                 href="/posts/"
               >
                 세 갈래의 글 읽기{" "}
@@ -52,19 +56,24 @@ export default async function HomePage() {
             aria-label="Arlequin과 Lumen의 협업을 표현한 다이아몬드와 빛"
             role="img"
           >
+            <div className="stage-grid" />
             <div className="stage-orbit" />
             <div className="stage-light" />
-            <div className="absolute top-8 left-8">
-              <p className="brand-eyebrow text-[#f06449]">01 · Direction</p>
+            <div className="stage-caption stage-caption--direction">
+              <p className="brand-eyebrow text-[#f06449]">01 / Direction</p>
               <p className="display-serif mt-2 text-2xl">Arlequin</p>
+              <p className="mt-2 text-xs leading-5 text-slate-400">
+                Ask precisely. Decide deliberately.
+              </p>
             </div>
-            <div className="absolute right-8 bottom-8 text-right">
-              <p className="brand-eyebrow text-[#79e6e0]">02 · Illumination</p>
+            <div className="stage-caption stage-caption--lumen text-right">
+              <p className="brand-eyebrow text-[#79e6e0]">02 / Illumination</p>
               <p className="display-serif mt-2 text-2xl">Lumen</p>
             </div>
-            <p className="absolute bottom-8 left-8 text-[0.65rem] tracking-[0.16em] text-slate-500 uppercase">
-              Human-reviewed by design
-            </p>
+            <div className="stage-footer">
+              <span>Human-reviewed by design</span>
+              <span>01 — 02</span>
+            </div>
           </div>
         </div>
       </section>

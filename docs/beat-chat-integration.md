@@ -53,6 +53,34 @@ trailing slash), use only an OIDC access token issued for the Beat API audience,
 and keep the portfolio origin separate from Beat's own app origin. A CORS rule
 does not replace OIDC validation or authorization.
 
+## Administrator-only entry
+
+An administrator-only Beat experience is possible, but it must not be enforced
+by conditionally rendering a button in this static portfolio. Anyone can inspect
+a static bundle or open a known Beat URL, so hiding the link is a convenience,
+not an authorization boundary.
+
+Use this model when the portfolio needs a private operator entry:
+
+1. Give the portfolio an OIDC client with its own exact callback URL and use a
+   server-side or edge authorization check to map the authenticated identity to
+   an administrator allowlist.
+2. Render the private entry only after that trusted check succeeds. The entry
+   should still open Beat in a new window rather than pass a browser token,
+   workspace ID, or conversation identifier through a URL.
+3. Let Beat perform its independent OIDC login and enforce its existing
+   workspace-owner/administrator policy for every chat, source, and feedback
+   request. The portfolio login cannot substitute for Beat API authorization.
+4. If embedding is required later, add an explicit Beat frame policy and test
+   OIDC redirects, storage behaviour, logout, CSP `frame-ancestors`, and the
+   exact production origins. Do not relax frame protections merely to make a
+   local iframe work.
+
+The current public entry remains a new-window link. It is safe for a public
+portfolio because all data and authorization remain inside Beat. Add an
+administrator portal only after the identity provider, deployed portfolio
+origin, and exact administrator identities are configured.
+
 ## Local check
 
 Run Beat locally, then build or run the portfolio with a different port and the
