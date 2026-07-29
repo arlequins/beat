@@ -16,6 +16,8 @@ local application; the pages below explain design decisions and ongoing work.
    CRUD, authorization, upload, and Clean Architecture example.
 5. [Portfolio content](portfolio-content.md) explains how to replace the
    starter identity, projects, and technical writing.
+6. [GitHub-native mobile content review](github-content-reviews.md) explains
+   code-owner review requests and approval from GitHub Mobile.
 
 ## Development
 
