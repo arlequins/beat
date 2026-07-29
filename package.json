@@ -33,6 +33,7 @@
     "check": "biome check .",
     "check:changed": "node scripts/check-changed.mjs",
     "check:fix": "biome check . --write",
+    "content:check": "node scripts/check-portfolio-content.mjs",
     "format": "biome format .",
     "format:fix": "biome format . --write",
     "lint": "biome lint .",

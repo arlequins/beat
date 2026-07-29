@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { projects } from "~/lib/blog-data";
 import { getProject } from "~/lib/github";
+import { localizedAlternates } from "~/lib/seo";
 
 export const dynamicParams = false;
 
@@ -18,7 +19,11 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { slug } = await props.params;
   const project = await getProject(slug);
-  return { title: project?.title ?? "Work", description: project?.description };
+  return {
+    alternates: localizedAlternates("ko", `/work/${slug}/`),
+    description: project?.description,
+    title: project?.title ?? "Work",
+  };
 }
 
 export default async function WorkDetailPage(props: {

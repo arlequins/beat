@@ -35,6 +35,8 @@ jobs:
       - uses: ./tooling/github/setup
       - name: Lint the portfolio
         run: pnpm --filter @acme/web lint
+      - name: Validate writing and translations
+        run: pnpm content:check
       - name: Type-check the portfolio
         run: pnpm turbo run typecheck --filter=@acme/web...
       - name: Build all static pages

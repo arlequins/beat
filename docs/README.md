@@ -18,6 +18,8 @@ local application; the pages below explain design decisions and ongoing work.
    starter identity, projects, and technical writing.
 6. [GitHub-native mobile content review](github-content-reviews.md) explains
    code-owner review requests and approval from GitHub Mobile.
+7. [Weekly writing pull-request automation](weekly-writing-automation.md)
+   defines the bot-authored review and publishing flow.
 
 ## Development
 

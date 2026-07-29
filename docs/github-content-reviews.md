@@ -24,6 +24,9 @@ needed.
    `reviewStatus` from `unreviewed` to `reviewed` in that approved PR or a
    follow-up PR.
 
+The scheduled writer's branch, validation, and bot-permission contract is in
+[weekly writing pull-request automation](weekly-writing-automation.md).
+
 ## Required repository setting
 
 After automated content PRs are created by a separate GitHub App or Actions

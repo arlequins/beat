@@ -1,0 +1,21 @@
+name: Content integrity
+
+on:
+  pull_request:
+    paths:
+      - "apps/web/content/posts/**/*.mdx"
+      - "apps/web/src/lib/localized-content.ts"
+      - "scripts/check-portfolio-content.mjs"
+      - ".github/workflows/content-integrity.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate writing and translations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./tooling/github/setup
+      - run: pnpm content:check

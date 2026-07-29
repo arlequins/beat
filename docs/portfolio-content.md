@@ -68,6 +68,8 @@ generated at `/en/` and `/ja/`; the language control keeps the current page when
 switching. User interface copy, projects, post summaries, and the initial
 articles are maintained in [`apps/web/src/lib/localized-content.ts`](../apps/web/src/lib/localized-content.ts).
 When adding a post, add its English and Japanese record there before publishing.
+Run `pnpm content:check` before opening the pull request; CI checks the same
+frontmatter and ensures that both translation records exist.
 
 For each project, focus on the problem, your role, the technical choices, and
 the outcome. Add a blog post whenever you want to preserve a technical
@@ -88,3 +90,10 @@ GitHub project card. It always falls back to the local project description when
 GitHub is unavailable. Add an optional read-only `GITHUB_TOKEN` to Vercel when
 you want a higher GitHub API rate limit; never expose it as a `NEXT_PUBLIC_*`
 variable.
+
+## Weekly automation
+
+The weekly-writing scheduler creates a bot-authored pull request rather than
+pushing directly to `main`. Follow the
+[weekly writing pull-request automation](weekly-writing-automation.md) contract
+when configuring or updating that scheduler.

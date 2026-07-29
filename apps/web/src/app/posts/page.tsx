@@ -3,8 +3,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { getPosts, type PostCategory, postCategoryMeta } from "~/lib/posts";
+import { localizedAlternates } from "~/lib/seo";
 
 export const metadata: Metadata = {
+  alternates: localizedAlternates("ko", "/posts/"),
   title: "Writing · Lumen",
   description: "제품 개발과 기술에 대한 기록",
 };

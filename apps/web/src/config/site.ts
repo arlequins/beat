@@ -12,5 +12,5 @@ export const siteConfig = {
   name: "Arlequin",
   role: "Software Engineer · AI-native product builder",
   shortName: "A×L",
-  url: "https://your-domain.vercel.app",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
 } as const;

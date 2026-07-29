@@ -1,10 +1,16 @@
 import { ArrowUpRight, GitBranch, Mail, PenLine, Sparkles } from "lucide-react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
 import { siteConfig } from "~/config/site";
 import { getProjects } from "~/lib/github";
 import { getPosts } from "~/lib/posts";
+import { localizedAlternates } from "~/lib/seo";
+
+export const metadata: Metadata = {
+  alternates: localizedAlternates("ko"),
+};
 
 export default async function HomePage() {
   const posts = await getPosts();

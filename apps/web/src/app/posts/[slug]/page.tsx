@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getPost, getPosts, postCategoryMeta } from "~/lib/posts";
+import { localizedAlternates } from "~/lib/seo";
 
 export const dynamicParams = false;
 
@@ -14,10 +15,12 @@ export async function generateStaticParams() {
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const post = await getPost((await props.params).slug);
+  const { slug } = await props.params;
+  const post = await getPost(slug);
   return {
-    title: post?.frontmatter.title ?? "Writing",
+    alternates: localizedAlternates("ko", `/posts/${slug}/`),
     description: post?.frontmatter.excerpt,
+    title: post?.frontmatter.title ?? "Writing",
   };
 }
 
