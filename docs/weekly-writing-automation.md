@@ -6,9 +6,12 @@ Arlequin's review, and GitHub Mobile is the approval surface.
 
 ## Required automation contract
 
-Update the existing weekly-writing automation to run every Monday morning in
-Korea Standard Time and use a dedicated GitHub App or bot account. Its token
-needs only repository contents write and pull-request write permissions.
+The existing weekly-writing automation runs every Monday morning in Korea
+Standard Time and opens a PR rather than publishing it. Use a dedicated GitHub
+App or bot account when required approvals will be enforced; its token needs
+only repository contents write and pull-request write permissions. Until then,
+the automation's existing GitHub identity may open the draft PR, but it cannot
+serve as an independent approval.
 
 For one run on `2026-08-03`, the automation must:
 
