@@ -49,6 +49,13 @@ export const serverEnv = createEnv({
     OIDC_PROVIDERS_JSON: z.string().optional(),
     /** Comma-separated OIDC `issuer|subject` identities promoted to administrator. */
     AUTH_BOOTSTRAP_ADMIN_IDENTITIES: z.string().optional(),
+    GITHUB_APP_ID: z.string().min(1).optional(),
+    GITHUB_APP_INSTALLATION_ID: z.string().min(1).optional(),
+    GITHUB_APP_PRIVATE_KEY: z.string().min(1).optional(),
+    GITHUB_CONTENT_REPOSITORY: z
+      .string()
+      .regex(/^[^/]+\/[^/]+$/)
+      .optional(),
     /** Comma-separated browser origins accepted by the Hono API. */
     API_CORS_ORIGINS: z.string().optional(),
     /** Local Hono server port. */
@@ -125,6 +132,10 @@ export const serverEnv = createEnv({
     OIDC_PROVIDERS_JSON: process.env.OIDC_PROVIDERS_JSON,
     AUTH_BOOTSTRAP_ADMIN_IDENTITIES:
       process.env.AUTH_BOOTSTRAP_ADMIN_IDENTITIES,
+    GITHUB_APP_ID: process.env.GITHUB_APP_ID,
+    GITHUB_APP_INSTALLATION_ID: process.env.GITHUB_APP_INSTALLATION_ID,
+    GITHUB_APP_PRIVATE_KEY: process.env.GITHUB_APP_PRIVATE_KEY,
+    GITHUB_CONTENT_REPOSITORY: process.env.GITHUB_CONTENT_REPOSITORY,
     API_CORS_ORIGINS: process.env.API_CORS_ORIGINS,
     API_PORT: process.env.API_PORT,
     API_DEPLOYMENT_PRESET: process.env.API_DEPLOYMENT_PRESET,
