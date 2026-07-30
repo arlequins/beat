@@ -217,6 +217,9 @@ importers:
       '@aws-sdk/client-eventbridge':
         specifier: 'catalog:'
         version: 3.1092.0
+      '@aws-sdk/client-s3':
+        specifier: 'catalog:'
+        version: 3.1092.0
       '@aws-sdk/client-scheduler':
         specifier: 'catalog:'
         version: 3.1092.0
@@ -238,6 +241,9 @@ importers:
       hono:
         specifier: 'catalog:'
         version: 4.12.31
+      jose:
+        specifier: 'catalog:'
+        version: 6.2.3
     devDependencies:
       '@acme/tsconfig':
         specifier: workspace:*

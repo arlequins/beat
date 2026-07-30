@@ -56,6 +56,12 @@ export const serverEnv = createEnv({
       .string()
       .regex(/^[^/]+\/[^/]+$/)
       .optional(),
+    BEAT_AUTH_EVENTS_BUCKET: z.string().min(3).optional(),
+    BEAT_AUTH_EVENTS_PREFIX: z.string().optional().default("admins/events"),
+    BEAT_AUTH_ISSUER_URL: z.url().optional(),
+    BEAT_AUTH_AUDIENCE: z.string().min(1).optional(),
+    BEAT_AUTH_SIGNING_PRIVATE_JWK: z.string().min(1).optional(),
+    BEAT_AUTH_SIGNING_KEY_ID: z.string().min(1).optional(),
     /** Comma-separated browser origins accepted by the Hono API. */
     API_CORS_ORIGINS: z.string().optional(),
     /** Local Hono server port. */
@@ -136,6 +142,12 @@ export const serverEnv = createEnv({
     GITHUB_APP_INSTALLATION_ID: process.env.GITHUB_APP_INSTALLATION_ID,
     GITHUB_APP_PRIVATE_KEY: process.env.GITHUB_APP_PRIVATE_KEY,
     GITHUB_CONTENT_REPOSITORY: process.env.GITHUB_CONTENT_REPOSITORY,
+    BEAT_AUTH_EVENTS_BUCKET: process.env.BEAT_AUTH_EVENTS_BUCKET,
+    BEAT_AUTH_EVENTS_PREFIX: process.env.BEAT_AUTH_EVENTS_PREFIX,
+    BEAT_AUTH_ISSUER_URL: process.env.BEAT_AUTH_ISSUER_URL,
+    BEAT_AUTH_AUDIENCE: process.env.BEAT_AUTH_AUDIENCE,
+    BEAT_AUTH_SIGNING_PRIVATE_JWK: process.env.BEAT_AUTH_SIGNING_PRIVATE_JWK,
+    BEAT_AUTH_SIGNING_KEY_ID: process.env.BEAT_AUTH_SIGNING_KEY_ID,
     API_CORS_ORIGINS: process.env.API_CORS_ORIGINS,
     API_PORT: process.env.API_PORT,
     API_DEPLOYMENT_PRESET: process.env.API_DEPLOYMENT_PRESET,

@@ -13,6 +13,11 @@ import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
 import { createInMemoryRateLimitAdapter } from "./adaptors/in-memory-rate-limit";
 import { mapApplicationErrorToHttp } from "./application-error";
+import {
+  authenticateBeatAdmin,
+  beatJwks,
+  issueBeatAccessToken,
+} from "./beat-auth";
 import { registerOpenApiRoutes } from "./openapi";
 
 export type ApiBindings = {
@@ -220,6 +225,33 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   registerOpenApiRoutes(app, {
     externalReadinessChecks: externalChecks,
     readinessCheck,
+  });
+
+  app.get("/auth/.well-known/openid-configuration", (context) => {
+    const issuer = serverEnv.BEAT_AUTH_ISSUER_URL?.replace(/\/$/, "");
+    if (!issuer)
+      return context.json({ error: "Authentication is not configured" }, 503);
+    return context.json({ issuer, jwks_uri: `${issuer}/jwks` });
+  });
+  app.get("/auth/jwks", async (context) => context.json(await beatJwks()));
+  app.post("/auth/login", async (context) => {
+    const body = await context.req.json<{
+      email?: string;
+      password?: string;
+    }>();
+    if (!body.email || !body.password)
+      return context.json({ error: "Invalid credentials" }, 400);
+    const administrator = await authenticateBeatAdmin(
+      body.email,
+      body.password,
+    );
+    if (!administrator)
+      return context.json({ error: "Invalid credentials" }, 401);
+    return context.json({
+      access_token: await issueBeatAccessToken(administrator),
+      expires_in: 600,
+      token_type: "Bearer",
+    });
   });
 
   app.all(TRPC_HTTP_PATH, (context) =>

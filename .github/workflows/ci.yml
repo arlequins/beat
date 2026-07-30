@@ -41,3 +41,25 @@ jobs:
         run: pnpm turbo run typecheck --filter=@acme/web...
       - name: Build all static pages
         run: pnpm turbo run build --filter=@acme/web...
+
+  api-coverage:
+    name: API coverage (75%)
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_HOST: localhost
+      DATABASE_NAME: beat
+      DATABASE_PASSWORD: test-password
+      DATABASE_PORT: "5432"
+      DATABASE_SSL_MODE: disable
+      DATABASE_USER: postgres
+      NEXT_PUBLIC_API_URL: https://api.invalid
+      NEXT_PUBLIC_OIDC_AUTHORITY: https://api.invalid/auth
+      NEXT_PUBLIC_OIDC_CLIENT_ID: beat-web
+      NEXT_PUBLIC_OIDC_SCOPE: openid profile email
+      OIDC_AUDIENCE: beat-agent
+      OIDC_ISSUER_URL: https://api.invalid/auth
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./tooling/github/setup
+      - name: Enforce API coverage
+        run: pnpm --filter @acme/api test:coverage
