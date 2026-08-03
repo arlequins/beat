@@ -24,6 +24,19 @@ function withoutLocale(pathname: string) {
   return pathname || "/";
 }
 
+function localeFromSelection(value: string): Locale | undefined {
+  switch (value) {
+    case "ko":
+      return "ko";
+    case "en":
+      return "en";
+    case "ja":
+      return "ja";
+    default:
+      return undefined;
+  }
+}
+
 export function LanguageSwitcher() {
   const pathname = usePathname() ?? "/";
   const locale = currentLocale(pathname);
@@ -43,9 +56,10 @@ export function LanguageSwitcher() {
         defaultValue={locale}
         id="language-switcher"
         onChange={(event) => {
-          window.location.assign(
-            localePath(event.target.value as Locale, basePath),
-          );
+          const nextLocale = localeFromSelection(event.currentTarget.value);
+          if (nextLocale) {
+            window.location.assign(localePath(nextLocale, basePath));
+          }
         }}
       >
         {locales.map((item) => (
