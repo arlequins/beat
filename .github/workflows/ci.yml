@@ -61,5 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./tooling/github/setup
+      - name: Build API workspace dependencies
+        run: pnpm turbo run build --filter=@acme/api...
       - name: Enforce API coverage
         run: pnpm --filter @acme/api test:coverage
