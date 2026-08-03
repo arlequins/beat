@@ -39,6 +39,29 @@ export default $config({
       throttleRateLimit: serverEnv.API_THROTTLE_RATE_LIMIT,
       wafEnabled: serverEnv.API_WAF_ENABLED,
     });
+    const authStateBucket = new sst.aws.Bucket("AuthState", {
+      versioning: true,
+      lifecycle: [
+        {
+          expiresIn: "31 days",
+          id: "expire-refresh-sessions",
+          prefix: "v1/oauth/sessions/",
+        },
+        {
+          expiresIn: "2 days",
+          id: "expire-rate-limit-windows",
+          prefix: "v1/rate-limit/",
+        },
+      ],
+    });
+    const authLedgerBucket = new sst.aws.Bucket("AuthLedger", {
+      versioning: true,
+      transform: {
+        bucket: {
+          objectLockEnabled: true,
+        },
+      },
+    });
     const cacheBucket = new sst.aws.Bucket("Cache");
     const uploadOrigins = (
       serverEnv.API_CORS_ORIGINS ?? "http://localhost:3000"
@@ -56,6 +79,20 @@ export default $config({
     const handler = {
       handler: "src/lambda.handler",
       link: [cacheBucket, uploadBucket],
+      permissions: [
+        {
+          actions: ["s3:GetBucketLocation", "s3:ListBucket"],
+          resources: [authStateBucket.arn, authLedgerBucket.arn],
+        },
+        {
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [$interpolate`${authStateBucket.arn}/*`],
+        },
+        {
+          actions: ["s3:PutObject", "s3:PutObjectRetention"],
+          resources: [$interpolate`${authLedgerBucket.arn}/*`],
+        },
+      ],
       ...(vpc
         ? {
             vpc: {
@@ -66,6 +103,10 @@ export default $config({
         : {}),
       environment: {
         ...LambdaEnvironment,
+        BEAT_AUTH_LEDGER_BUCKET: authLedgerBucket.name,
+        BEAT_AUTH_LEDGER_RETENTION_DAYS: "365",
+        BEAT_AUTH_STATE_BUCKET: authStateBucket.name,
+        BEAT_AUTH_STATE_PREFIX: "v1",
         S3_CACHE_BUCKET: cacheBucket.name,
         S3_CACHE_PREFIX: `${$app.name}/${$app.stage}`,
         S3_UPLOAD_BUCKET: uploadBucket.name,
@@ -137,7 +178,11 @@ export default $config({
 
       api.route("$default", handler);
 
-      return { apiUrl: api.url };
+      return {
+        apiUrl: api.url,
+        authLedgerBucket: authLedgerBucket.name,
+        authStateBucket: authStateBucket.name,
+      };
     }
 
     const router = deployment.useEdgeRouter
@@ -154,6 +199,10 @@ export default $config({
       url: router ? { router: { instance: router } } : true,
     });
 
-    return { apiUrl: router?.url ?? api.url };
+    return {
+      apiUrl: router?.url ?? api.url,
+      authLedgerBucket: authLedgerBucket.name,
+      authStateBucket: authStateBucket.name,
+    };
   },
 });

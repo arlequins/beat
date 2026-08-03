@@ -1,7 +1,8 @@
 # Beat Agent authentication integration
 
 Beat is the only identity issuer. Beat Agent must not create users, issue tokens,
-or store administrator credentials. It accepts Beat's short-lived access JWTs.
+or store administrator credentials. It accepts Beat's short-lived access JWTs
+and uses Beat's opaque rotating refresh tokens.
 
 Set these Agent production values to the Beat API values:
 
@@ -12,20 +13,67 @@ OIDC_ALLOWED_ALGORITHMS=ES256
 NEXT_PUBLIC_OIDC_AUTHORITY=https://api.example.com/auth
 ```
 
-The Agent verifier discovers `/.well-known/openid-configuration`, then reads
-`/jwks`. It must require the `admin` role before opening the agent stream.
-Beat access tokens expire after ten minutes. An administrator disabled by a new
-immutable S3 event cannot obtain another token; existing access ends at expiry.
+The Agent verifier discovers `/.well-known/openid-configuration`, reads
+`/jwks`, and requires the `admin` role before opening the agent stream. Access
+tokens expire after ten minutes.
 
-## Immutable administrator events
+## Token API
 
-Write JSON objects beneath `s3://<BEAT_AUTH_EVENTS_BUCKET>/<BEAT_AUTH_EVENTS_PREFIX>/`.
-Object names must sort by time, for example `2026-07-30T10:00:00.000Z-uuid.json`.
+Authenticate directly with Beat. Never send the password to the Agent API:
 
-```json
-{"at":"2026-07-30T10:00:00.000Z","type":"admin-created","email":"admin@example.com","subject":"uuid","passwordHash":"scrypt$SALT$HASH"}
+```http
+POST https://api.example.com/auth/login
+Content-Type: application/json
+
+{"email":"admin@example.com","password":"..."}
 ```
 
-Use `admin-password-changed` with the same shape to replace a password, and
-`admin-disabled` with `at`, `type`, `email`, and `subject` to disable access.
-Never overwrite or delete an event.
+The response contains `access_token`, `refresh_token`, `expires_in`,
+`refresh_expires_in`, and `token_type`. Persist the pair in Agent
+`localStorage`, replace both values after every successful refresh, and clear
+them after any refresh failure.
+
+Refresh with the standard token endpoint:
+
+```http
+POST https://api.example.com/auth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&refresh_token=SESSION.GENERATION.SECRET
+```
+
+Beat rotates the refresh secret with an S3 ETag conditional write. Only one
+concurrent refresh succeeds. Reuse of an older generation revokes the session
+family. The Agent must replace the stored refresh token atomically before
+issuing another API request.
+
+Revoke a session during logout:
+
+```http
+POST https://api.example.com/auth/revoke
+Content-Type: application/x-www-form-urlencoded
+
+token=SESSION.GENERATION.SECRET
+```
+
+## Browser boundary
+
+`localStorage` persistence is an explicit product requirement and exposes
+tokens to JavaScript running on the Agent origin. The Agent production page
+must therefore avoid third-party scripts, enforce a strict Content Security
+Policy, reject untrusted HTML, and clear storage when JWT or refresh validation
+fails.
+
+Beat Agent remains a separate repository. Apply this protocol there without
+copying Beat's administrator store or signing key.
+
+## S3 ownership
+
+Beat provisions two private production buckets:
+
+- the state bucket contains deterministic administrator records and versioned
+  refresh-session objects;
+- the ledger bucket contains append-only authentication events written with
+  `If-None-Match: *` and Object Lock Compliance retention.
+
+Beat Agent receives no AWS credentials and never accesses either bucket.

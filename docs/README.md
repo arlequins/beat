@@ -39,6 +39,9 @@ local application; the pages below explain design decisions and ongoing work.
   accessibility checks.
 - [S3 cache](s3-cache.md): API and database caching, TTL, invalidation, and
   local configuration.
+- [S3-primary production architecture](s3-primary-data-architecture.md):
+  database-free identity, mutable state, immutable audit, and GitHub publishing
+  on AWS.
 
 ## Deployment and Operations
 

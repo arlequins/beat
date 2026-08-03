@@ -39,14 +39,26 @@ export { parseAwsIdList, vpcFromEnv, vpcIdFromEnv } from "./vpc.js";
 
 export const LambdaEnvironment = {
   NODE_ENV: "production",
-  DATABASE_HOST: serverEnv.DATABASE_HOST!,
-  DATABASE_PORT: serverEnv.DATABASE_PORT!,
-  DATABASE_USER: serverEnv.DATABASE_USER!,
-  DATABASE_PASSWORD: serverEnv.DATABASE_PASSWORD!,
-  DATABASE_NAME: serverEnv.DATABASE_NAME!,
-  DATABASE_SSL_MODE: serverEnv.DATABASE_SSL_MODE ?? "require",
-  OIDC_ISSUER_URL: serverEnv.OIDC_ISSUER_URL!,
-  OIDC_AUDIENCE: serverEnv.OIDC_AUDIENCE!,
+  ...(serverEnv.DATABASE_HOST &&
+  serverEnv.DATABASE_PORT &&
+  serverEnv.DATABASE_USER &&
+  serverEnv.DATABASE_PASSWORD &&
+  serverEnv.DATABASE_NAME
+    ? {
+        DATABASE_HOST: serverEnv.DATABASE_HOST,
+        DATABASE_PORT: serverEnv.DATABASE_PORT,
+        DATABASE_USER: serverEnv.DATABASE_USER,
+        DATABASE_PASSWORD: serverEnv.DATABASE_PASSWORD,
+        DATABASE_NAME: serverEnv.DATABASE_NAME,
+        DATABASE_SSL_MODE: serverEnv.DATABASE_SSL_MODE ?? "require",
+      }
+    : {}),
+  ...(serverEnv.OIDC_ISSUER_URL
+    ? { OIDC_ISSUER_URL: serverEnv.OIDC_ISSUER_URL }
+    : {}),
+  ...(serverEnv.OIDC_AUDIENCE
+    ? { OIDC_AUDIENCE: serverEnv.OIDC_AUDIENCE }
+    : {}),
   ...(serverEnv.OIDC_JWKS_URI
     ? { OIDC_JWKS_URI: serverEnv.OIDC_JWKS_URI }
     : {}),
@@ -59,7 +71,11 @@ export const LambdaEnvironment = {
           serverEnv.AUTH_BOOTSTRAP_ADMIN_IDENTITIES,
       }
     : {}),
-  OIDC_ALLOWED_ALGORITHMS: serverEnv.OIDC_ALLOWED_ALGORITHMS ?? "RS256",
+  ...(serverEnv.OIDC_ISSUER_URL
+    ? {
+        OIDC_ALLOWED_ALGORITHMS: serverEnv.OIDC_ALLOWED_ALGORITHMS ?? "RS256",
+      }
+    : {}),
   API_CORS_ORIGINS:
     serverEnv.API_CORS_ORIGINS ?? clientEnv.NEXT_PUBLIC_SITE_URL,
   API_BODY_LIMIT_BYTES: String(serverEnv.API_BODY_LIMIT_BYTES ?? 1_048_576),
@@ -67,6 +83,58 @@ export const LambdaEnvironment = {
   API_RATE_LIMIT_WINDOW_SECONDS: String(
     serverEnv.API_RATE_LIMIT_WINDOW_SECONDS ?? 60,
   ),
+  ...(serverEnv.BEAT_AUTH_STATE_BUCKET
+    ? { BEAT_AUTH_STATE_BUCKET: serverEnv.BEAT_AUTH_STATE_BUCKET }
+    : {}),
+  ...(serverEnv.BEAT_AUTH_LEDGER_BUCKET
+    ? { BEAT_AUTH_LEDGER_BUCKET: serverEnv.BEAT_AUTH_LEDGER_BUCKET }
+    : {}),
+  BEAT_AUTH_STATE_PREFIX: serverEnv.BEAT_AUTH_STATE_PREFIX,
+  ...(serverEnv.BEAT_AUTH_LOOKUP_SECRET
+    ? { BEAT_AUTH_LOOKUP_SECRET: serverEnv.BEAT_AUTH_LOOKUP_SECRET }
+    : {}),
+  ...(serverEnv.BEAT_AUTH_LEDGER_RETENTION_DAYS
+    ? {
+        BEAT_AUTH_LEDGER_RETENTION_DAYS: String(
+          serverEnv.BEAT_AUTH_LEDGER_RETENTION_DAYS,
+        ),
+      }
+    : {}),
+  ...(serverEnv.BEAT_AUTH_REFRESH_TOKEN_TTL_SECONDS
+    ? {
+        BEAT_AUTH_REFRESH_TOKEN_TTL_SECONDS: String(
+          serverEnv.BEAT_AUTH_REFRESH_TOKEN_TTL_SECONDS,
+        ),
+      }
+    : {}),
+  ...(serverEnv.BEAT_AUTH_ISSUER_URL
+    ? { BEAT_AUTH_ISSUER_URL: serverEnv.BEAT_AUTH_ISSUER_URL }
+    : {}),
+  ...(serverEnv.BEAT_AUTH_AUDIENCE
+    ? { BEAT_AUTH_AUDIENCE: serverEnv.BEAT_AUTH_AUDIENCE }
+    : {}),
+  ...(serverEnv.BEAT_AUTH_SIGNING_PRIVATE_JWK
+    ? {
+        BEAT_AUTH_SIGNING_PRIVATE_JWK: serverEnv.BEAT_AUTH_SIGNING_PRIVATE_JWK,
+      }
+    : {}),
+  ...(serverEnv.BEAT_AUTH_SIGNING_KEY_ID
+    ? { BEAT_AUTH_SIGNING_KEY_ID: serverEnv.BEAT_AUTH_SIGNING_KEY_ID }
+    : {}),
+  ...(serverEnv.GITHUB_APP_ID
+    ? { GITHUB_APP_ID: serverEnv.GITHUB_APP_ID }
+    : {}),
+  ...(serverEnv.GITHUB_APP_INSTALLATION_ID
+    ? {
+        GITHUB_APP_INSTALLATION_ID: serverEnv.GITHUB_APP_INSTALLATION_ID,
+      }
+    : {}),
+  ...(serverEnv.GITHUB_APP_PRIVATE_KEY
+    ? { GITHUB_APP_PRIVATE_KEY: serverEnv.GITHUB_APP_PRIVATE_KEY }
+    : {}),
+  ...(serverEnv.GITHUB_CONTENT_REPOSITORY
+    ? { GITHUB_CONTENT_REPOSITORY: serverEnv.GITHUB_CONTENT_REPOSITORY }
+    : {}),
 
   NEXT_PUBLIC_SITE_URL: clientEnv.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_API_URL: clientEnv.NEXT_PUBLIC_API_URL,

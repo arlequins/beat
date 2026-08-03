@@ -1,4 +1,7 @@
-import { ApiDeploymentPreset, resolveApiDeploymentConfig } from "@acme/env";
+import {
+  ApiDeploymentPreset,
+  resolveApiDeploymentConfig,
+} from "@acme/env/api-deployment";
 import { describe, expect, it } from "vitest";
 
 describe("resolveApiDeploymentConfig", () => {

@@ -6,7 +6,12 @@ import {
   MessageCircleMore,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
+import {
+  BeatAdminSessionEvent,
+  hasPersistentBeatAdminSession,
+} from "~/lib/beat-admin-session";
 import { isLocale, type Locale } from "~/lib/i18n";
 
 const copy: Record<Locale, { action: string; detail: string; label: string }> =
@@ -34,13 +39,25 @@ const copy: Record<Locale, { action: string; detail: string; label: string }> =
  * exposes a public destination URL at build time.
  */
 export function BeatChatEntry() {
+  const [authenticated, setAuthenticated] = useState(false);
   const pathname = usePathname() ?? "/";
   const firstSegment = pathname.split("/")[1] ?? "";
   const locale: Locale = isLocale(firstSegment) ? firstSegment : "ko";
   const text = copy[locale];
   const destination = process.env.NEXT_PUBLIC_BEAT_APP_URL?.trim();
 
-  if (!destination) return null;
+  useEffect(() => {
+    const sync = () => setAuthenticated(hasPersistentBeatAdminSession());
+    sync();
+    window.addEventListener(BeatAdminSessionEvent, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(BeatAdminSessionEvent, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  if (!destination || !authenticated) return null;
 
   return (
     <a

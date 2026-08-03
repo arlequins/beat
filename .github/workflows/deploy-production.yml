@@ -21,3 +21,4 @@ jobs:
       environment: production
       operation: deploy
       role_arn: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
+      runtime_secret_id: ${{ vars.BEAT_RUNTIME_SECRET_ID }}

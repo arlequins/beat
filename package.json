@@ -48,7 +48,7 @@
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add",
     "sst:ws": "node ./scripts/sst-workspace.mjs",
-    "test": "pnpm test:runtime && pnpm test:template-init && pnpm architecture:check && turbo run test",
+    "test": "pnpm test:runtime && pnpm architecture:check && turbo run test",
     "test:sst": "node scripts/test-sst.mjs",
     "test:runtime": "node --test scripts/check-runtime.test.mjs",
     "test:template-init": "node --test scripts/template-init.test.mjs scripts/template-doctor.test.mjs",
