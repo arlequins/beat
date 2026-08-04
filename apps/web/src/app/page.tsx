@@ -1,244 +1,286 @@
-import { Button } from "@acme/ui/button";
-import {
-  ArrowUpRight,
-  CalendarClock,
-  Eye,
-  FileText,
-  MessageSquare,
-  PenLine,
-  Users,
-} from "lucide-react";
+import { ArrowUpRight, GitBranch, Mail, PenLine, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-import { PageHeader } from "~/components/blog/page-header";
-import { StatBlock } from "~/components/blog/stat-block";
-import { StatusBadge } from "~/components/blog/status-badge";
 import { siteConfig } from "~/config/site";
-import { blogPosts, formatCompactNumber } from "~/lib/blog-data";
+import { getProjects } from "~/lib/github";
+import { getPosts } from "~/lib/posts";
+import { localizedAlternates } from "~/lib/seo";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = {
+  alternates: localizedAlternates("ko"),
+};
 
-const weeklyViews = [42, 57, 48, 71, 63, 84, 78];
-
-export default function DashboardPage() {
+export default async function HomePage() {
+  const posts = await getPosts();
+  const projectList = await getProjects();
+  const weeklyPosts = posts.filter((post) => post.category === "weekly");
+  const deepDivePosts = posts.filter((post) => post.category === "deep-dive");
+  const studioPosts = posts.filter((post) => post.category === "studio-log");
   return (
-    <div className="space-y-6 lg:space-y-7">
-      <PageHeader
-        eyebrow="Wednesday, July 22"
-        title={`Welcome to ${siteConfig.name}`}
-        description="Here is what is happening across your publication today."
-        actions={
-          <Button asChild>
-            <Link href="/editor/">
-              <PenLine aria-hidden="true" />
-              New post
-            </Link>
-          </Button>
-        }
-      />
-
-      <section
-        aria-label="Publication overview"
-        className="grid grid-cols-2 gap-3 lg:grid-cols-4"
-      >
-        <StatBlock
-          change="+12.4% from last month"
-          icon={Eye}
-          label="Monthly views"
-          tone="blue"
-          value="42.8K"
-        />
-        <StatBlock
-          change="4 waiting for review"
-          icon={FileText}
-          label="Published posts"
-          tone="pink"
-          value="128"
-        />
-        <StatBlock
-          change="+38 this month"
-          icon={Users}
-          label="Subscribers"
-          tone="green"
-          value="3,842"
-        />
-        <StatBlock
-          change="6 need a reply"
-          icon={MessageSquare}
-          label="Comments"
-          tone="yellow"
-          value="286"
-        />
-      </section>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,0.7fr)]">
-        <section className="bg-background rounded-lg border shadow-xs">
-          <div className="flex items-start justify-between gap-3 border-b px-4 py-4 sm:items-center sm:px-5">
-            <div>
-              <h2 className="text-sm font-semibold">Audience this week</h2>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                Daily views across all published posts
+    <>
+      <section className="brand-hero px-5 py-14 sm:px-8 sm:py-20 lg:py-24">
+        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.06fr_0.94fr] lg:items-center lg:gap-16">
+          <div className="hero-copy">
+            <div className="hero-kicker-row">
+              <p className="brand-eyebrow text-[#79e6e0]">
+                Arlequin / {siteConfig.role}
+              </p>
+              <span aria-hidden="true" className="hero-kicker-line" />
+              <span className="hero-edition">Independent practice · 2026</span>
+            </div>
+            <h1 className="display-serif hero-title max-w-4xl font-normal text-balance">
+              {siteConfig.intro}
+            </h1>
+            <p className="hero-intro max-w-xl text-lg leading-8 text-slate-300">
+              저는 <strong className="text-white">Arlequin</strong>, 문제와
+              방향을 결정하는 소프트웨어 엔지니어입니다.{" "}
+              <strong className="text-[#f6c85f]">Lumen</strong>은 구현과
+              리서치의 가능성을 비추는 AI 동료입니다. 이곳에는 우리가 함께 만든
+              제품과, 사람이 최종 판단한 기록을 남깁니다.
+            </p>
+            <div className="hero-actions flex flex-wrap gap-3">
+              <a
+                className="hero-primary-action inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white"
+                href="#work"
+              >
+                프로젝트 보기{" "}
+                <ArrowUpRight aria-hidden="true" className="size-4" />
+              </a>
+              <Link
+                className="hero-secondary-action inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold"
+                href="/posts/"
+              >
+                세 갈래의 글 읽기{" "}
+                <PenLine aria-hidden="true" className="size-4" />
+              </Link>
+            </div>
+          </div>
+          <div
+            className="stage-card"
+            aria-label="Arlequin과 Lumen의 협업을 표현한 다이아몬드와 빛"
+            role="img"
+          >
+            <div className="stage-grid" />
+            <div className="stage-orbit" />
+            <div className="stage-light" />
+            <div className="stage-caption stage-caption--direction">
+              <p className="brand-eyebrow text-[#f06449]">01 / Direction</p>
+              <p className="display-serif mt-2 text-2xl">Arlequin</p>
+              <p className="mt-2 text-xs leading-5 text-slate-400">
+                Ask precisely. Decide deliberately.
               </p>
             </div>
-            <span className="shrink-0 text-sm font-semibold">2,914</span>
-          </div>
-          <div className="px-4 py-5 sm:px-5 sm:py-6">
-            <div className="flex h-36 items-end gap-2 sm:h-44 sm:gap-5">
-              {weeklyViews.map((height, index) => (
-                <div
-                  className="flex h-full flex-1 flex-col justify-end gap-2"
-                  key={height}
-                >
-                  <div
-                    className="bg-primary/20 hover:bg-primary/35 relative min-h-2 w-full rounded-sm transition-colors"
-                    style={{ height: `${height}%` }}
-                  >
-                    <span className="bg-primary absolute inset-x-0 bottom-0 h-1 rounded-sm" />
-                  </div>
-                  <span className="text-muted-foreground text-center text-xs">
-                    {["M", "T", "W", "T", "F", "S", "S"][index]}
-                  </span>
-                </div>
-              ))}
+            <div className="stage-caption stage-caption--lumen text-right">
+              <p className="brand-eyebrow text-[#79e6e0]">02 / Illumination</p>
+              <p className="display-serif mt-2 text-2xl">Lumen</p>
+            </div>
+            <div className="stage-footer">
+              <span>Human-reviewed by design</span>
+              <span>01 — 02</span>
             </div>
           </div>
-        </section>
-
-        <section className="bg-background rounded-lg border shadow-xs">
-          <div className="border-b px-5 py-4">
-            <h2 className="text-sm font-semibold">Publishing queue</h2>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              The next items on your calendar
-            </p>
-          </div>
-          <div className="divide-y">
-            <div className="flex gap-3 px-5 py-4">
-              <CalendarClock className="text-amber-600 mt-0.5 size-4" />
-              <div>
-                <p className="text-sm font-medium">Remote collaboration</p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  Scheduled Jul 24 at 09:00
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 px-5 py-4">
-              <PenLine className="text-muted-foreground mt-0.5 size-4" />
-              <div>
-                <p className="text-sm font-medium">
-                  Architecture for everyday life
-                </p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  Draft updated 2 hours ago
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="border-t p-3">
-            <Button asChild className="w-full" variant="ghost">
-              <Link href="/posts/">
-                View editorial calendar
-                <ArrowUpRight aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-        </section>
-      </div>
-
-      <section className="bg-background overflow-hidden rounded-lg border shadow-xs">
-        <div className="flex items-center justify-between border-b px-4 py-4 sm:px-5">
-          <div>
-            <h2 className="text-sm font-semibold">Recent posts</h2>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              Performance and status across the latest work
-            </p>
-          </div>
-          <Button asChild variant="outline">
-            <Link href="/posts/">View all</Link>
-          </Button>
-        </div>
-        <div className="divide-y sm:hidden">
-          {blogPosts.slice(0, 4).map((post) => (
-            <Link
-              className="flex items-center gap-3 p-4"
-              href={`/posts/${post.slug}/`}
-              key={post.slug}
-            >
-              <span className="relative block size-14 shrink-0 overflow-hidden rounded-md">
-                <Image
-                  alt=""
-                  className="object-cover"
-                  fill
-                  sizes="56px"
-                  src={post.image}
-                />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="line-clamp-2 text-sm font-semibold leading-5">
-                  {post.title}
-                </span>
-                <span className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
-                  <StatusBadge label={post.status} />
-                  <span>{formatCompactNumber(post.views)} views</span>
-                </span>
-              </span>
-              <ArrowUpRight className="text-muted-foreground size-4 shrink-0" />
-            </Link>
-          ))}
-        </div>
-        <div className="hidden overflow-x-auto sm:block">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="bg-muted/60 text-muted-foreground text-xs uppercase">
-              <tr>
-                <th className="px-5 py-3 font-medium">Post</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Published</th>
-                <th className="px-4 py-3 text-right font-medium">Views</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {blogPosts.slice(0, 4).map((post) => (
-                <tr className="hover:bg-muted/30" key={post.slug}>
-                  <td className="px-5 py-3">
-                    <Link
-                      className="flex items-center gap-3"
-                      href={`/posts/${post.slug}/`}
-                    >
-                      <span className="relative block size-10 shrink-0 overflow-hidden rounded-md">
-                        <Image
-                          alt=""
-                          className="object-cover"
-                          fill
-                          sizes="40px"
-                          src={post.image}
-                        />
-                      </span>
-                      <span>
-                        <span className="block max-w-md truncate font-medium">
-                          {post.title}
-                        </span>
-                        <span className="text-muted-foreground mt-0.5 block text-xs">
-                          {post.category} / {post.author}
-                        </span>
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge label={post.status} />
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3 text-xs">
-                    {post.publishedAt}
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium">
-                    {formatCompactNumber(post.views)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </section>
-    </div>
+
+      <section className="harlequin-band border-b border-slate-900/15 px-5 py-10 sm:px-8">
+        <div className="mx-auto grid max-w-6xl gap-px border border-slate-900/15 bg-slate-900/15 sm:grid-cols-3">
+          {[
+            ["Direction", "문제와 공개 기준은 Arlequin이 정합니다."],
+            ["Illumination", "Lumen이 선택지와 맥락을 넓게 비춥니다."],
+            ["Evidence", "코드·출처·검증 결과로 함께 확인합니다."],
+          ].map(([title, text], index) => (
+            <div className="bg-[#f5f0e6]/95 p-6" key={title}>
+              <p className="brand-eyebrow text-[#b63f2d]">
+                0{index + 1} · {title}
+              </p>
+              <p className="mt-3 text-sm leading-6 text-slate-700">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-5 py-20 sm:px-8 sm:py-28" id="work">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 flex items-end justify-between gap-6">
+            <div>
+              <p className="brand-eyebrow text-[#b63f2d]">
+                Arlequin / Selected work
+              </p>
+              <h2 className="display-serif mt-3 text-4xl tracking-[-0.045em] sm:text-5xl">
+                판단이 제품이 된 순간들
+              </h2>
+            </div>
+            <a
+              className="hidden items-center gap-2 text-sm font-semibold text-slate-600 hover:text-[#b63f2d] sm:inline-flex"
+              href={siteConfig.links.github}
+              rel="noreferrer"
+              target="_blank"
+            >
+              GitHub profile <GitBranch aria-hidden="true" className="size-4" />
+            </a>
+          </div>
+          <div className="grid gap-7 md:grid-cols-2">
+            {projectList.map((project, index) => (
+              <article
+                className={`project-card group flex min-h-96 flex-col p-7 sm:p-8 ${index === 0 ? "md:col-span-2 md:grid md:grid-cols-[0.9fr_1.1fr] md:gap-10" : ""}`}
+                key={project.slug}
+              >
+                {project.image ? (
+                  <div className="relative mb-7 aspect-[16/9] overflow-hidden md:mb-0">
+                    <Image
+                      alt=""
+                      className="object-cover"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      src={project.image}
+                    />
+                  </div>
+                ) : null}
+                <div className="flex flex-col">
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="brand-eyebrow text-slate-500">
+                      0{index + 1} · {project.year}
+                    </span>
+                    <a
+                      aria-label={`${project.title} repository`}
+                      className="border border-slate-900/20 p-2 transition hover:bg-[#111326] hover:text-white"
+                      href={project.repository}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <ArrowUpRight aria-hidden="true" className="size-4" />
+                    </a>
+                  </div>
+                  <h3 className="display-serif mt-10 text-3xl tracking-[-0.04em]">
+                    <Link
+                      className="hover:text-[#b63f2d]"
+                      href={`/work/${project.slug}/`}
+                    >
+                      {project.title}
+                    </Link>
+                  </h3>
+                  <p className="mt-2 text-xs font-semibold tracking-[0.08em] text-slate-500 uppercase">
+                    {project.role}
+                  </p>
+                  <p className="mt-5 leading-7 text-slate-700">
+                    {project.description}
+                  </p>
+                  <div className="mt-auto flex flex-wrap gap-2 pt-8">
+                    {project.stack.map((item) => (
+                      <span
+                        className="border border-slate-900/15 px-3 py-1 text-xs font-medium"
+                        key={item}
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-slate-900/15 bg-[#ebe2d4] px-5 py-20 sm:px-8 sm:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 flex items-end justify-between gap-6">
+            <div>
+              <p className="brand-eyebrow text-[#075c66]">Lumen / Writing</p>
+              <h2 className="display-serif mt-3 text-4xl tracking-[-0.045em] sm:text-5xl">
+                흐름을 비추고, 기술을 깊게 봅니다
+              </h2>
+            </div>
+            <Link
+              className="text-sm font-semibold text-slate-600 hover:text-slate-950"
+              href="/posts/"
+            >
+              모든 글 보기
+            </Link>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                accent: "#f06449",
+                posts: weeklyPosts.slice(0, 2),
+                title: "주간 IT 브리핑",
+                kicker: "The changing scene",
+              },
+              {
+                accent: "#07959a",
+                posts: deepDivePosts.slice(0, 2),
+                title: "테크 딥다이브",
+                kicker: "The focused light",
+              },
+              {
+                accent: "#9b4f96",
+                posts: studioPosts.slice(0, 2),
+                title: "Backstage · 제작의 기록",
+                kicker: "History & footage",
+              },
+            ].map((group) => (
+              <div className="paper-panel p-7 sm:p-8" key={group.title}>
+                <div
+                  className="h-2 w-12"
+                  style={{ backgroundColor: group.accent }}
+                />
+                <p className="brand-eyebrow mt-6 text-slate-500">
+                  {group.kicker}
+                </p>
+                <h3 className="display-serif mt-2 text-3xl">{group.title}</h3>
+                <div className="mt-7 divide-y divide-slate-900/15 border-t border-slate-900/15">
+                  {group.posts.map((post) => (
+                    <Link
+                      className="group block py-5"
+                      href={`/posts/${post.slug}/`}
+                      key={post.slug}
+                    >
+                      <div className="flex items-center gap-2 text-[0.68rem] font-semibold tracking-[0.08em] text-slate-500 uppercase">
+                        <span>{post.publishedAt}</span>
+                        {post.reviewStatus === "unreviewed" ? (
+                          <span className="text-[#b63f2d]">· 미확정본</span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 text-lg font-semibold leading-7 group-hover:text-[#b63f2d]">
+                        {post.title}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-20 sm:px-8 sm:py-28">
+        <div className="relative mx-auto max-w-6xl overflow-hidden bg-[#35132f] px-7 py-14 text-white sm:px-12 sm:py-20">
+          <div className="absolute -top-10 -right-10 size-48 rotate-45 border-[3rem] border-[#f06449]/20" />
+          <div className="relative grid gap-10 md:grid-cols-[1fr_auto] md:items-end">
+            <div>
+              <p className="brand-eyebrow flex items-center gap-2 text-[#f6c85f]">
+                <Sparkles aria-hidden="true" className="size-4" /> A dialogue,
+                not a shortcut
+              </p>
+              <h2 className="display-serif mt-4 max-w-3xl text-4xl leading-tight tracking-[-0.04em] sm:text-5xl">
+                AI가 만든 결과보다, 함께 내린 판단을 보여주는 포트폴리오.
+              </h2>
+              <p className="mt-5 max-w-2xl leading-7 text-rose-100/75">
+                Arlequin과 Lumen의 대화는 숨기지 않습니다. 무엇을 맡겼고 무엇을
+                검토했는지, 결과와 함께 과정도 공개합니다.
+              </p>
+            </div>
+            <a
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[#79e6e0] hover:text-white"
+              href={`mailto:${siteConfig.email}`}
+            >
+              연락하기 <Mail aria-hidden="true" className="size-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

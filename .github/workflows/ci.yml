@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: ["*"]
   push:
-    branches: ["main"]
+    branches: [main]
   merge_group:
 
 concurrency:
@@ -14,177 +14,54 @@ concurrency:
 env:
   FORCE_COLOR: 3
   HUSKY: "0"
+  NEXT_PUBLIC_BEAT_APP_URL: https://beat.invalid
+  NEXT_PUBLIC_SITE_URL: https://portfolio.invalid
 
 jobs:
-  environment-contract:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: ./tooling/github/setup
-      - run: pnpm env:check
-
-  generators:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: ./tooling/github/setup
-      - run: pnpm test:generators
-
-  migration-upgrade:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: ./tooling/github/setup
-      - run: pnpm test:migration-upgrade
-
-  database-integration:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: ./tooling/github/setup
-      - name: Test repository against isolated PostgreSQL
-        run: pnpm test:integration
-
-  template-portability:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: pnpm/action-setup@v5
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: ".nvmrc"
-
-      - name: Test runtime and template initializer
-        run: pnpm test:runtime && pnpm test:template-init
-
-  template-output:
-    strategy:
-      matrix:
-        preset: [full, minimal]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Qualify generated preset
-        run: pnpm test:template-output ${{ matrix.preset }}
-
-  template-feature-matrix:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: ./tooling/github/setup
-      - name: Qualify pairwise feature combinations
-        run: pnpm test:template-matrix
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Copy env
-        shell: bash
-        run: cp .env.example .env
-
-      - name: Biome lint
-        run: pnpm lint && pnpm lint:ws
-
-      - name: Dead code and dependencies
-        run: pnpm lint:dead-code
-
   format:
+    name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Copy env
-        shell: bash
-        run: cp .env.example .env
-
-      - name: Biome format
+      - uses: ./tooling/github/setup
+      - name: Check formatting
         run: pnpm format
 
-  typecheck:
+  web:
+    name: Static portfolio
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: ./tooling/github/setup
+      - name: Lint the portfolio
+        run: pnpm --filter @acme/web lint
+      - name: Validate writing and translations
+        run: pnpm content:check
+      - name: Type-check the portfolio
+        run: pnpm turbo run typecheck --filter=@acme/web...
+      - name: Build all static pages
+        run: pnpm turbo run build --filter=@acme/web...
 
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Copy env
-        shell: bash
-        run: cp .env.example .env
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-  sst-config:
+  api-coverage:
+    name: API coverage (75%)
     runs-on: ubuntu-latest
+    env:
+      DATABASE_HOST: localhost
+      DATABASE_NAME: beat
+      DATABASE_PASSWORD: test-password
+      DATABASE_PORT: "5432"
+      DATABASE_SSL_MODE: disable
+      DATABASE_USER: postgres
+      NEXT_PUBLIC_API_URL: https://api.invalid
+      NEXT_PUBLIC_OIDC_AUTHORITY: https://api.invalid/auth
+      NEXT_PUBLIC_OIDC_CLIENT_ID: beat-web
+      NEXT_PUBLIC_OIDC_SCOPE: openid profile email
+      OIDC_AUDIENCE: beat-agent
+      OIDC_ISSUER_URL: https://api.invalid/auth
     steps:
       - uses: actions/checkout@v5
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Copy env
-        shell: bash
-        run: cp .env.example .env
-
-      - name: Validate SST without AWS credentials
-        run: pnpm test:sst
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Copy env
-        shell: bash
-        run: cp .env.example .env
-
-      - name: Test
-        run: pnpm test
-
-      - name: Check migrations
-        run: pnpm db:check
-
-  storybook:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Build Storybook
-        run: pnpm storybook:build
-
-  e2e:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Test browser authentication
-        run: pnpm test:e2e
+      - uses: ./tooling/github/setup
+      - name: Build API workspace dependencies
+        run: pnpm turbo run build --filter=@acme/api...
+      - name: Enforce API coverage
+        run: pnpm --filter @acme/api test:coverage

@@ -1,5 +1,9 @@
 # Clean Architecture
 
+This page documents retained generic workspace boundaries. Beat's selected
+production composition replaces the PostgreSQL/tRPC request path with the
+[S3-primary production architecture](s3-primary-data-architecture.md).
+
 This template keeps policy independent from delivery frameworks and providers.
 The example content slice is intentionally small, but it demonstrates the same
 dependency direction expected from production features.

@@ -4,6 +4,9 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "auth:admin:create": "pnpm with-env tsx scripts/create-beat-admin.ts",
+    "auth:admin:disable": "pnpm with-env tsx scripts/disable-beat-admin.ts",
+    "auth:admin:password": "pnpm with-env tsx scripts/change-beat-admin-password.ts",
     "dev": "pnpm with-env tsx watch src/dev.ts",
     "build": "tsc --noEmit",
     "start": "pnpm with-env tsx src/dev.ts",
@@ -14,6 +17,7 @@
     "format": "biome format .",
     "lint": "biome lint .",
     "test": "pnpm with-env vitest run",
+    "test:coverage": "pnpm with-env vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
@@ -24,18 +28,21 @@
     "@acme/service": "workspace:*",
     "@acme/trpc": "workspace:*",
     "@aws-sdk/client-eventbridge": "catalog:",
+    "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/client-scheduler": "catalog:",
     "@aws-sdk/client-sqs": "catalog:",
     "@hono/zod-openapi": "catalog:",
     "@scalar/hono-api-reference": "catalog:",
     "@trpc/server": "catalog:",
     "drizzle-orm": "catalog:",
-    "hono": "catalog:"
+    "hono": "catalog:",
+    "jose": "catalog:"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "@hono/node-server": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "sst": "4.17.1",
     "tsx": "catalog:",
     "typescript": "catalog:",

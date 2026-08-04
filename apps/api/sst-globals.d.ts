@@ -23,6 +23,10 @@ declare const $config: (config: {
   app: (input?: { stage?: string }) => SstAppConfig | Promise<SstAppConfig>;
   run: () => Record<string, unknown> | Promise<Record<string, unknown>>;
 }) => unknown;
+declare const $interpolate: (
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+) => string;
 
 declare const sst: {
   aws: {
@@ -60,13 +64,30 @@ declare const sst: {
           allowMethods?: ("DELETE" | "GET" | "HEAD" | "POST" | "PUT")[];
           allowOrigins?: string[];
         };
+        lifecycle?: {
+          enabled?: boolean;
+          expiresIn?: `${number} day` | `${number} days`;
+          id?: string;
+          prefix?: string;
+        }[];
+        transform?: {
+          bucket?: {
+            objectLockEnabled?: boolean;
+          };
+        };
+        versioning?: boolean;
       },
-    ) => { name: string };
+    ) => { arn: string; name: string };
     Function: new (
       name: string,
       args: {
         handler: string;
         environment?: Record<string, string>;
+        permissions?: {
+          actions: string[];
+          effect?: "allow" | "deny";
+          resources: string[];
+        }[];
         url?:
           | boolean
           | { router: { instance: { url: string }; path?: string } };

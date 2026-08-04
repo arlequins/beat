@@ -11,6 +11,10 @@
       "types": "./dist/public-defaults.d.ts",
       "default": "./dist/public-defaults.js"
     },
+    "./api-deployment": {
+      "types": "./dist/api-deployment.d.ts",
+      "default": "./dist/api-deployment.js"
+    },
     "./skip-validation": {
       "types": "./dist/skip-validation.d.ts",
       "default": "./dist/skip-validation.js"

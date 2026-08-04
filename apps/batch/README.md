@@ -1,6 +1,6 @@
 # `apps/batch` — Step Functions + EventBridge cron
 
-(Template **v1.0.1** — see repo-root [`CHANGELOG.md`](../../CHANGELOG.md).)
+(Template **v1.1.2** — see repo-root [`CHANGELOG.md`](../../CHANGELOG.md).)
 
 Runs **batch pipelines** as sequential **AWS Step Functions**, optionally on a schedule via **EventBridge** (`CronV2`). One **starter Lambda** (`shared/entry.ts`) calls `StartExecution` when the schedule fires.
 

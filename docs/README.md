@@ -14,6 +14,12 @@ local application; the pages below explain design decisions and ongoing work.
    or deliberately remove when adapting the template.
 4. [Generic application baseline](generic-application.md) explains the reusable
    CRUD, authorization, upload, and Clean Architecture example.
+5. [Portfolio content](portfolio-content.md) explains how to replace the
+   starter identity, projects, and technical writing.
+6. [GitHub-native mobile content review](github-content-reviews.md) explains
+   code-owner review requests and approval from GitHub Mobile.
+7. [Weekly writing pull-request automation](weekly-writing-automation.md)
+   defines the bot-authored review and publishing flow.
 
 ## Development
 
@@ -33,9 +39,14 @@ local application; the pages below explain design decisions and ongoing work.
   accessibility checks.
 - [S3 cache](s3-cache.md): API and database caching, TTL, invalidation, and
   local configuration.
+- [S3-primary production architecture](s3-primary-data-architecture.md):
+  database-free identity, mutable state, immutable audit, and GitHub publishing
+  on AWS.
 
 ## Deployment and Operations
 
+- [Vercel deployment](vercel-deployment.md): two-project Vercel deployment for
+  the static web app and Hono API, with Neon PostgreSQL.
 - [Deployment and supply-chain security](deployment-security.md): GitHub OIDC,
   protected environments, security checks, and response headers.
 - [Incident runbook](incident-runbook.md): triage, mitigation, recovery, and

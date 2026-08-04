@@ -19,6 +19,11 @@ on:
         description: AWS IAM role assumed through GitHub OIDC
         required: true
         type: string
+      runtime_secret_id:
+        description: Optional AWS Secrets Manager JSON secret for an API deployment
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -43,6 +48,47 @@ jobs:
 
       - name: Validate operation
         run: test "${{ inputs.operation }}" = deploy || test "${{ inputs.operation }}" = remove
+
+      - name: Require Beat production runtime secret
+        if: inputs.application == 'api' && inputs.operation == 'deploy'
+        env:
+          RUNTIME_SECRET_ID: ${{ inputs.runtime_secret_id }}
+        run: test -n "$RUNTIME_SECRET_ID"
+
+      - name: Load API runtime configuration from Secrets Manager
+        if: inputs.application == 'api' && inputs.operation == 'deploy' && inputs.runtime_secret_id != ''
+        env:
+          RUNTIME_SECRET_ID: ${{ inputs.runtime_secret_id }}
+        run: |
+          secret_file="$RUNNER_TEMP/beat-api-runtime.json"
+          umask 077
+          aws secretsmanager get-secret-value \
+            --secret-id "$RUNTIME_SECRET_ID" \
+            --query SecretString \
+            --output text > "$secret_file"
+          SECRET_FILE="$secret_file" node -e '
+            const { appendFileSync, readFileSync } = require("node:fs");
+            const { randomUUID } = require("node:crypto");
+            const keys = [
+              "BEAT_AUTH_LOOKUP_SECRET",
+              "BEAT_AUTH_ISSUER_URL",
+              "BEAT_AUTH_AUDIENCE",
+              "BEAT_AUTH_SIGNING_PRIVATE_JWK",
+              "BEAT_AUTH_SIGNING_KEY_ID",
+              "GITHUB_APP_ID",
+              "GITHUB_APP_INSTALLATION_ID",
+              "GITHUB_APP_PRIVATE_KEY",
+              "GITHUB_CONTENT_REPOSITORY",
+            ];
+            const values = JSON.parse(readFileSync(process.env.SECRET_FILE, "utf8"));
+            for (const key of keys) {
+              if (typeof values[key] !== "string" || values[key].length === 0) {
+                throw new Error(`Runtime secret is missing a non-empty ${key}`);
+              }
+              const delimiter = `BEAT_${randomUUID()}`;
+              appendFileSync(process.env.GITHUB_ENV, `${key}<<${delimiter}\n${values[key]}\n${delimiter}\n`);
+            }
+          '
 
       - name: Run SST operation
         run: pnpm sst:ws ${{ inputs.application }} ${{ inputs.operation }} -- --stage ${{ inputs.environment }}

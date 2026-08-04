@@ -1,6 +1,8 @@
 # Hono API
 
-The API exposes a lightweight health endpoint and the tRPC transport used by the static Next.js client.
+The production Beat API provides S3-backed administrator identity, rotating
+tokens, health checks, and GitHub content automation. It does not require
+PostgreSQL.
 
 ```bash
 pnpm --filter @acme/api dev
@@ -11,20 +13,30 @@ pnpm --filter @acme/api sst:deploy
 | Path | Purpose |
 | --- | --- |
 | `GET /health/live` | Process liveness and request ID. |
-| `GET /health/ready` | Readiness, including PostgreSQL connectivity. |
+| `GET /health/ready` | Readiness for the S3 state and immutable ledger buckets. |
 | `GET /health` | Compatibility alias for liveness. |
 | `GET /docs` | Interactive Scalar API reference and request client. |
 | `GET /openapi.json` | OpenAPI 3.1 contract used by the API explorer. |
 | `POST /api/echo` | Executable JSON request example for local and deployed verification. |
-| `/api/trpc/*` | tRPC queries and mutations. |
+| `GET /auth/.well-known/openid-configuration` | Beat issuer discovery. |
+| `GET /auth/jwks` | ES256 token verification keys. |
+| `POST /auth/login` | Administrator login and initial token pair. |
+| `POST /auth/token` | Atomic refresh-token rotation. |
+| `POST /auth/revoke` | Refresh-session revocation. |
+| `GET /admin/content/drafts/:slug` | Read the current S3 draft revision. |
+| `PUT /admin/content/drafts/:slug` | Save an immutable revision and conditionally move its head. |
+| `POST /admin/content/drafts/:slug/confirm` | Confirm a revision and open its GitHub review PR. |
 
 Open `http://localhost:5000/docs`, select an operation, and use the request
 client to send it to the current API host. The explorer persists authorization
 locally so protected HTTP operations can reuse a bearer token when they are
-added. tRPC procedures keep their TypeScript router contract and are not
-represented as REST operations in the OpenAPI document.
+added.
 
-`src/app.ts` is runtime-independent. `src/dev.ts` serves it with Node for local development, and `src/lambda.ts` adapts the same app to AWS Lambda.
+`src/app.ts` is runtime-independent. `src/dev.ts` serves it with Node for local
+development and `src/lambda.ts` adapts the same app to AWS Lambda. The
+production SST stack provisions a versioned state bucket and an Object
+Lock-enabled ledger bucket. See
+[S3-primary production architecture](../../docs/s3-primary-data-architecture.md).
 
 ## AWS deployment presets
 

@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
-import { AdminSettings } from "~/components/blog/admin-settings";
-import { PageHeader } from "~/components/blog/page-header";
 
-export const metadata: Metadata = { title: "Administration" };
+import { BeatAdminConsole } from "~/components/admin/beat-admin-console";
 
-export default function AdminPage() {
+export const metadata: Metadata = {
+  description: "Beat 관리자 전용 기사 검토 화면",
+  robots: { follow: false, index: false },
+  title: "Beat 관리자",
+};
+
+export default function BeatAdminPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Workspace"
-        title="Administration"
-        description="Configure publication defaults, editorial behavior, and security."
-      />
-      <AdminSettings />
-    </div>
+    <main className="min-h-screen bg-[var(--background)] px-4 py-12 text-[var(--foreground)] sm:px-8">
+      <BeatAdminConsole />
+    </main>
   );
 }

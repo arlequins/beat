@@ -17,20 +17,14 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@acme/auth": "workspace:*",
     "@acme/env": "workspace:*",
-    "@acme/trpc": "workspace:*",
-    "@acme/ui": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "@tanstack/react-query": "catalog:",
-    "@trpc/client": "catalog:",
-    "@trpc/tanstack-react-query": "catalog:",
+    "gray-matter": "^4.0.3",
     "lucide-react": "catalog:",
     "next": "^16.2.10",
-    "oidc-client-ts": "catalog:",
+    "next-mdx-remote": "^5.0.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "superjson": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

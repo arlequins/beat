@@ -1,8 +1,9 @@
-# template-t3-turbo-sst
+# Beat
 
-**v1.0.1** - A reusable pnpm monorepo template for a client-only Next.js
-frontend, Hono and tRPC API, Drizzle PostgreSQL persistence, OIDC authentication,
-and optional SST batch and deployment infrastructure.
+Arlequin's Korean-first portfolio, technical writing workflow, and
+administrator-only Beat entry point. Production runs on AWS with static
+CloudFront delivery, a Hono Lambda API, and S3-primary identity and workflow
+state.
 
 ## Stack
 
@@ -10,11 +11,11 @@ and optional SST batch and deployment infrastructure.
 | --- | --- |
 | Workspace | pnpm catalogs, Turborepo, TypeScript, Biome |
 | Web | Next.js App Router, client-only static export, React, Tailwind CSS |
-| API | Hono, tRPC, local Node.js server, AWS Lambda deployment |
-| Database | PostgreSQL, Drizzle ORM, migrations, and idempotent seeds |
-| Authentication | OpenID Connect Authorization Code with PKCE and JWT validation |
+| API | Hono, local Node.js server, AWS Lambda deployment |
+| Primary data | Versioned S3 state and Object Lock immutable ledger |
+| Authentication | Beat-issued ES256 access JWTs and rotating refresh tokens |
 | Infrastructure | SST Ion, CloudFront, Lambda, Step Functions, EventBridge |
-| Testing | Vitest, PostgreSQL integration tests, Playwright, accessibility checks |
+| Testing | Vitest coverage, Playwright, accessibility checks |
 
 Internal packages use the placeholder scope `@acme/*`. The initializer replaces
 it when creating a project.
@@ -22,7 +23,7 @@ it when creating a project.
 ## Requirements
 
 - Node.js and pnpm versions matching [`package.json`](./package.json)
-- Docker for local PostgreSQL and end-to-end tests
+- Docker only for retained legacy PostgreSQL integration tests
 - AWS credentials only for cloud-backed SST commands
 
 Use the Node.js version in [`.nvmrc`](./.nvmrc). The preinstall check reports an
@@ -73,17 +74,32 @@ Open `http://localhost:3000`. The development identity provider accepts any
 non-empty username and password. PostgreSQL uses host port `55433` by default.
 Stop the database with `pnpm db:stop`.
 
-The API endpoints are:
+### Static portfolio
+
+The public portfolio and writing pages can run without PostgreSQL, API, or OIDC
+while you are preparing content:
+
+```bash
+pnpm --filter @acme/web dev
+```
+
+Open `http://localhost:3000` and edit the starter content as described in
+[Portfolio content](./docs/portfolio-content.md).
+
+The production Beat API endpoints are:
 
 - Liveness: `http://localhost:5000/health/live`
-- PostgreSQL-backed readiness: `http://localhost:5000/health/ready`
+- S3-backed readiness: `http://localhost:5000/health/ready`
 - Interactive API explorer: `http://localhost:5000/docs`
 - OpenAPI document: `http://localhost:5000/openapi.json`
-- tRPC: `http://localhost:5000/api/trpc`
+- Login: `http://localhost:5000/auth/login`
+- Token refresh: `http://localhost:5000/auth/token`
+- Administrator console: `http://localhost:3000/admin/`
 
-See [Application Architecture](./docs/architecture.md) for request flow and
-workspace boundaries, and [OpenID Connect Authentication](./docs/authentication.md)
-for provider configuration.
+See [S3-primary production architecture](./docs/s3-primary-data-architecture.md)
+for the production request flow and
+[Beat Agent authentication integration](./docs/beat-agent-auth-integration.md)
+for the shared token contract.
 
 ## Common Commands
 
@@ -97,6 +113,7 @@ for provider configuration.
 | `pnpm test` | Run unit and contract tests. |
 | `pnpm test:e2e` | Run isolated PostgreSQL and browser end-to-end tests. |
 | `pnpm db:setup` | Apply committed migrations and pending seeds. |
+| `pnpm --filter @acme/api auth:admin:create` | Create a production S3 administrator. |
 | `pnpm turbo gen` | Generate an application, package, or tRPC domain. |
 | `pnpm gen:feature` | Generate a clean-architecture command or query slice. |
 
@@ -146,7 +163,10 @@ and [Template Readiness](./docs/template-readiness.md).
 
 - Web builds as a static export for S3 and CloudFront.
 - API deploys through a Lambda Function URL or API Gateway HTTP API preset.
-- Batch workflows use Step Functions, Lambda, and EventBridge schedules.
+- Optional batch workflows use Step Functions, Lambda, and EventBridge
+  schedules.
+
+The selected production profile uses AWS only. Neon and Vercel are not required.
 
 Read [Deployment and Supply-Chain Security](./docs/deployment-security.md) before
 configuring GitHub OIDC roles or production environments. Deployment-specific

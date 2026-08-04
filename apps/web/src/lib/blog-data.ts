@@ -1,158 +1,75 @@
-export const PostStatus = {
-  DRAFT: "Draft",
-  PUBLISHED: "Published",
-  SCHEDULED: "Scheduled",
-} as const;
-export type PostStatus = (typeof PostStatus)[keyof typeof PostStatus];
-
-export type BlogPost = {
-  author: string;
-  category: string;
-  comments: number;
-  content: string[];
-  excerpt: string;
-  featured?: boolean;
-  image: string;
-  publishedAt: string;
-  readTime: string;
+export type PortfolioProject = {
+  challenge: string;
+  description: string;
+  highlights: string[];
+  image?: string;
+  outcome: string;
+  repository: string;
+  role: string;
   slug: string;
-  status: PostStatus;
+  stack: string[];
   title: string;
-  views: number;
+  year: string;
 };
 
-export const blogPosts: BlogPost[] = [
+/** Replace these entries with your own GitHub repositories and career stories. */
+export const projects: PortfolioProject[] = [
   {
-    author: "Alex Morgan",
-    category: "Work",
-    comments: 18,
-    content: [
-      "A useful publishing rhythm is less about producing more and more about reducing the distance between an idea and a clear decision. The best editorial systems make the next action obvious without flattening the work into a checklist.",
-      "We began by replacing a collection of disconnected tools with one weekly planning ritual. Drafts were reviewed together, ownership stayed visible, and every article had a reason to exist before anyone opened an editor.",
-      "The result was not only a more consistent calendar. Writers spent less time asking for context, editors could spot bottlenecks earlier, and the team had room to improve the quality of every piece.",
+    challenge:
+      "서비스를 시작할 때마다 반복되는 인프라·인증·데이터베이스 설정을 줄이면서도, 나중에 운영에 필요한 품질 기준을 유지하는 일이 과제였습니다.",
+    description:
+      "확장 가능한 웹·API·데이터베이스 레이어를 한 템플릿으로 정리한 풀스택 모노레포입니다. 제품을 빠르게 시작하면서도 운영 품질을 놓치지 않는 구조를 목표로 했습니다.",
+    highlights: [
+      "Static Next.js delivery",
+      "Hono + tRPC API",
+      "PostgreSQL migrations",
     ],
-    excerpt:
-      "A practical framework for building a calm, repeatable editorial practice that leaves room for better ideas.",
-    featured: true,
-    image: "/blog/editorial-workspace.jpg",
-    publishedAt: "Jul 18, 2026",
-    readTime: "7 min read",
-    slug: "build-an-editorial-rhythm",
-    status: PostStatus.PUBLISHED,
-    title: "Build an editorial rhythm your team can keep",
-    views: 12_480,
+    image: "/portfolio/ai-template-cover.png",
+    outcome:
+      "정적 포트폴리오부터 API와 데이터베이스가 필요한 제품까지 점진적으로 확장할 수 있는 출발점을 만들었습니다.",
+    repository: "https://github.com/arlequins/beat",
+    role: "Architecture · Full-stack development",
+    slug: "beat-template",
+    stack: ["Next.js", "TypeScript", "Hono", "PostgreSQL"],
+    title: "Beat — Full-stack product template",
+    year: "2026",
   },
   {
-    author: "Jon Bell",
-    category: "Design",
-    comments: 9,
-    content: [
-      "A workspace communicates priorities before a meeting begins. Light, movement, sound, and the placement of everyday tools all affect whether a team can focus or collaborate well.",
-      "We visited four small studios and found the same pattern: the most effective rooms did not try to serve every mode at once. Instead, they created clear zones and let people choose the environment that matched the task.",
+    challenge:
+      "AI 에이전트가 빠르게 코드를 만들더라도, 사람이 검토하기 쉽고 계속 발전시킬 수 있는 작업 단위와 품질 기준이 필요했습니다.",
+    description:
+      "AI 에이전트를 제품 개발 파트너로 활용하는 실험 프로젝트입니다. 요구사항을 작게 나누고, 화면·테스트·문서를 함께 갱신하는 흐름을 만들었습니다.",
+    highlights: [
+      "Task-scoped agent prompts",
+      "Build and type-check loop",
+      "Human review checkpoints",
     ],
-    excerpt:
-      "What thoughtful studios teach us about attention, collaboration, and the spaces between them.",
-    image: "/blog/studio-office.jpg",
-    publishedAt: "Jul 15, 2026",
-    readTime: "5 min read",
-    slug: "spaces-that-support-good-work",
-    status: PostStatus.PUBLISHED,
-    title: "Spaces that support good work",
-    views: 8_920,
+    outcome:
+      "반복적인 초기 구현 시간을 줄이는 동시에, 변경 이유와 검증 결과가 코드베이스에 남도록 했습니다.",
+    repository: "https://github.com/your-github-id",
+    role: "AI-assisted product development",
+    slug: "agent-assisted-product-workflow",
+    stack: ["Codex", "TypeScript", "Next.js", "Playwright"],
+    title: "Agent-assisted product workflow",
+    year: "2026",
   },
   {
-    author: "Alina Ross",
-    category: "Culture",
-    comments: 0,
-    content: [
-      "Remote collaboration improves when teams stop treating every conversation as a meeting. A shared vocabulary for decisions, questions, and work in progress gives people more ways to contribute.",
-      "This guide collects the small practices that helped our team make async work feel less transactional and more human.",
+    challenge:
+      "새 프로젝트마다 같은 배포 설정과 문서가 반복되면서, 개인 실험의 결과가 다음 프로젝트로 이어지지 않는 문제가 있었습니다.",
+    description:
+      "정적 포트폴리오, MDX 기술 블로그, GitHub 메타데이터, Vercel 배포를 한 흐름으로 정리한 개발자 경험 개선 사례입니다.",
+    highlights: [
+      "MDX content workflow",
+      "GitHub metadata fallback",
+      "Static Vercel delivery",
     ],
-    excerpt:
-      "Small practices that make distributed collaboration clearer, kinder, and more resilient.",
-    image: "/blog/team-collaboration.jpg",
-    publishedAt: "Jul 24, 2026",
-    readTime: "6 min read",
-    slug: "a-field-guide-to-remote-collaboration",
-    status: PostStatus.SCHEDULED,
-    title: "A field guide to remote collaboration",
-    views: 0,
-  },
-  {
-    author: "Alex Morgan",
-    category: "Ideas",
-    comments: 0,
-    content: [
-      "Architecture gives abstract values a physical form. The most memorable public spaces are legible enough to welcome us and surprising enough to reward attention.",
-      "These notes are the beginning of a visual essay about civic buildings, everyday rituals, and the details people remember.",
-    ],
-    excerpt:
-      "Notes toward a visual essay on public spaces and the details that make them memorable.",
-    image: "/blog/modern-architecture.jpg",
-    publishedAt: "Updated 2 hours ago",
-    readTime: "4 min read",
-    slug: "architecture-for-everyday-life",
-    status: PostStatus.DRAFT,
-    title: "Architecture for everyday life",
-    views: 0,
+    outcome:
+      "새 작업을 공개 가능한 사례 연구와 기술 노트로 전환하는 시간을 줄이고, 개인 학습 기록을 꾸준히 쌓을 기반을 마련했습니다.",
+    repository: "https://github.com/your-github-id",
+    role: "Developer experience · Content system",
+    slug: "portfolio-as-a-product",
+    stack: ["MDX", "Vercel", "GitHub API", "SEO"],
+    title: "Portfolio as a product",
+    year: "2026",
   },
 ];
-
-export const blogUsers = [
-  {
-    email: "alex@example.test",
-    initials: "AM",
-    joined: "Jan 12, 2026",
-    name: "Alex Morgan",
-    posts: 24,
-    role: "Administrator",
-    status: "Active",
-  },
-  {
-    email: "jon@example.test",
-    initials: "JB",
-    joined: "Feb 03, 2026",
-    name: "Jon Bell",
-    posts: 16,
-    role: "Editor",
-    status: "Active",
-  },
-  {
-    email: "alina@example.test",
-    initials: "AR",
-    joined: "Mar 28, 2026",
-    name: "Alina Ross",
-    posts: 8,
-    role: "Author",
-    status: "Active",
-  },
-  {
-    email: "sam@example.test",
-    initials: "SK",
-    joined: "Jun 07, 2026",
-    name: "Sam Kim",
-    posts: 2,
-    role: "Author",
-    status: "Invited",
-  },
-  {
-    email: "leah@example.test",
-    initials: "LP",
-    joined: "Nov 19, 2025",
-    name: "Leah Patel",
-    posts: 11,
-    role: "Editor",
-    status: "Suspended",
-  },
-] as const;
-
-export function findBlogPost(slug: string): BlogPost | undefined {
-  return blogPosts.find((post) => post.slug === slug);
-}
-
-export function formatCompactNumber(value: number): string {
-  return new Intl.NumberFormat("en", {
-    notation: value >= 1_000 ? "compact" : "standard",
-    maximumFractionDigits: 1,
-  }).format(value);
-}
