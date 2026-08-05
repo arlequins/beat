@@ -1,0 +1,222 @@
+openapi: 3.1.0
+info:
+  title: Beat Gourmet Action
+  version: 1.0.0
+  description: Save and recall confirmed personal meal records in Beat.
+servers:
+  - url: https://api.example.com
+security:
+  - bearerAuth: []
+paths:
+  /api/gourmet/entries:
+    get:
+      operationId: listGourmetEntries
+      summary: List meal records using optional filters.
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          schema: { type: string, format: date }
+        - in: query
+          name: area
+          schema: { type: string }
+        - in: query
+          name: restaurantName
+          schema: { type: string }
+        - in: query
+          name: cuisineTag
+          schema: { type: string }
+        - in: query
+          name: ingredient
+          schema: { type: string }
+        - in: query
+          name: minRating
+          schema: { type: number, minimum: 0, maximum: 10 }
+        - in: query
+          name: revisit
+          schema: { type: string, enum: [yes, no, unknown] }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: A page of meal records.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GourmetList" }
+    post:
+      operationId: createGourmetEntry
+      summary: Save one meal after the user explicitly confirms the record.
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          description: Stable unique key for this one confirmed message.
+          schema: { type: string, minLength: 8, maxLength: 128 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GourmetInput" }
+      responses:
+        "201":
+          description: Saved or replayed idempotently.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, detailUrl, entry]
+                properties:
+                  status: { type: string, const: saved }
+                  detailUrl: { type: string, format: uri }
+                  entry: { $ref: "#/components/schemas/GourmetEntry" }
+        "409":
+          description: The idempotency key was reused for different content.
+  /api/gourmet/entries/{id}:
+    get:
+      operationId: getGourmetEntry
+      summary: Load a meal by UUID or slug.
+      parameters:
+        - $ref: "#/components/parameters/EntryId"
+      responses:
+        "200":
+          description: The requested record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GourmetEntry" }
+        "404": { description: Record not found. }
+    patch:
+      operationId: updateGourmetEntry
+      summary: Update fields after the user confirms the proposed changes.
+      parameters:
+        - $ref: "#/components/parameters/EntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/GourmetPatch"
+      responses:
+        "200":
+          description: Updated record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GourmetEntry" }
+        "409": { description: The expected revision is stale. }
+  /api/gourmet/context:
+    get:
+      operationId: getGourmetContext
+      summary: Get recent preferences and patterns before making a recommendation.
+      parameters:
+        - in: query
+          name: days
+          schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 50, default: 30 }
+      responses:
+        "200":
+          description: Aggregated recent context and matching records.
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    EntryId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+  schemas:
+    StringList:
+      type: array
+      maxItems: 24
+      items: { type: string, minLength: 1, maxLength: 120 }
+    GourmetInput:
+      type: object
+      additionalProperties: false
+      required: [restaurantName, menuName, rating, revisit, summary]
+      properties:
+        restaurantName: { type: string, minLength: 1, maxLength: 200 }
+        restaurantBranch: { type: [string, "null"], maxLength: 120 }
+        menuName: { type: string, minLength: 1, maxLength: 200 }
+        area: { type: [string, "null"], maxLength: 120 }
+        visitedAt: { type: [string, "null"], format: date }
+        rating: { type: number, minimum: 0, maximum: 10, multipleOf: 0.5 }
+        revisit: { type: string, enum: [yes, no, unknown] }
+        summary: { type: string, minLength: 1, maxLength: 500 }
+        source: { type: string, enum: [chatgpt, manual, import], default: chatgpt }
+        status: { type: string, enum: [draft, published], default: published }
+        externalRequestId: { type: [string, "null"], maxLength: 128 }
+        freeTextNote: { type: [string, "null"], maxLength: 2000 }
+        cuisineTags: { $ref: "#/components/schemas/StringList" }
+        ingredients: { $ref: "#/components/schemas/StringList" }
+        cookingMethods: { $ref: "#/components/schemas/StringList" }
+        tasteNotes: { $ref: "#/components/schemas/StringList" }
+        nutritionTags: { $ref: "#/components/schemas/StringList" }
+        liked: { $ref: "#/components/schemas/StringList" }
+        discoveries: { $ref: "#/components/schemas/StringList" }
+        postMealNotes: { $ref: "#/components/schemas/StringList" }
+    GourmetPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedRevision: { type: integer, minimum: 1 }
+        restaurantName: { type: string, minLength: 1, maxLength: 200 }
+        restaurantBranch: { type: [string, "null"], maxLength: 120 }
+        menuName: { type: string, minLength: 1, maxLength: 200 }
+        area: { type: [string, "null"], maxLength: 120 }
+        visitedAt: { type: [string, "null"], format: date }
+        rating: { type: number, minimum: 0, maximum: 10, multipleOf: 0.5 }
+        revisit: { type: string, enum: [yes, no, unknown] }
+        summary: { type: string, minLength: 1, maxLength: 500 }
+        status: { type: string, enum: [draft, published] }
+        freeTextNote: { type: [string, "null"], maxLength: 2000 }
+        cuisineTags: { $ref: "#/components/schemas/StringList" }
+        ingredients: { $ref: "#/components/schemas/StringList" }
+        cookingMethods: { $ref: "#/components/schemas/StringList" }
+        tasteNotes: { $ref: "#/components/schemas/StringList" }
+        nutritionTags: { $ref: "#/components/schemas/StringList" }
+        liked: { $ref: "#/components/schemas/StringList" }
+        discoveries: { $ref: "#/components/schemas/StringList" }
+        postMealNotes: { $ref: "#/components/schemas/StringList" }
+    GourmetEntry:
+      allOf:
+        - $ref: "#/components/schemas/GourmetInput"
+        - type: object
+          required: [id, slug, revision, createdAt, updatedAt, images]
+          properties:
+            id: { type: string }
+            slug: { type: string }
+            revision: { type: integer }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            images:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  altText: { type: string }
+                  publicPath: { type: string }
+                  prUrl: { type: string, format: uri }
+    GourmetList:
+      type: object
+      required: [entries, page, total]
+      properties:
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/GourmetEntry" }
+        page: { type: integer }
+        nextPage: { type: integer }
+        total: { type: integer }

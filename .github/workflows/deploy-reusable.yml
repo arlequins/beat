@@ -75,6 +75,7 @@ jobs:
               "BEAT_AUTH_AUDIENCE",
               "BEAT_AUTH_SIGNING_PRIVATE_JWK",
               "BEAT_AUTH_SIGNING_KEY_ID",
+              "BEAT_GOURMET_ACTION_API_KEY",
               "GITHUB_APP_ID",
               "GITHUB_APP_INSTALLATION_ID",
               "GITHUB_APP_PRIVATE_KEY",

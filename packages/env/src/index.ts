@@ -121,6 +121,9 @@ export const LambdaEnvironment = {
   ...(serverEnv.BEAT_AUTH_SIGNING_KEY_ID
     ? { BEAT_AUTH_SIGNING_KEY_ID: serverEnv.BEAT_AUTH_SIGNING_KEY_ID }
     : {}),
+  ...(serverEnv.BEAT_GOURMET_ACTION_API_KEY
+    ? { BEAT_GOURMET_ACTION_API_KEY: serverEnv.BEAT_GOURMET_ACTION_API_KEY }
+    : {}),
   ...(serverEnv.GITHUB_APP_ID
     ? { GITHUB_APP_ID: serverEnv.GITHUB_APP_ID }
     : {}),

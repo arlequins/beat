@@ -20,6 +20,12 @@ local application; the pages below explain design decisions and ongoing work.
    code-owner review requests and approval from GitHub Mobile.
 7. [Weekly writing pull-request automation](weekly-writing-automation.md)
    defines the bot-authored review and publishing flow.
+8. [Beat Gourmet records](gourmet.md) explains the S3 record model, repository
+   image review, public browser, and administrator workflow.
+9. [Custom GPT setup for Gourmet](gourmet-custom-gpt.md) covers the Action
+   credential, schema, instructions, Preview checks, and photo boundary.
+10. [Gourmet end-to-end integration](gourmet-integration-flow.md) traces the
+    exact ChatGPT, Beat API, S3, administrator, GitHub PR, and public-site flow.
 
 ## Development
 

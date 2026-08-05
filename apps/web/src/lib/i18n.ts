@@ -19,6 +19,7 @@ export const copy: Record<Locale, Record<string, string>> = {
     email: "이메일",
     footer:
       "Arlequin이 방향을 결정하고, Lumen이 가능성과 맥락을 비춥니다. 모든 결과는 사람의 검토를 거쳐 완성됩니다.",
+    gourmet: "Gourmet",
     language: "언어",
     work: "작업",
     writing: "글",
@@ -29,6 +30,7 @@ export const copy: Record<Locale, Record<string, string>> = {
     email: "Email",
     footer:
       "Arlequin chooses the direction; Lumen illuminates the possibilities and context. Every result is completed through human review.",
+    gourmet: "Gourmet",
     language: "Language",
     work: "Work",
     writing: "Writing",
@@ -39,6 +41,7 @@ export const copy: Record<Locale, Record<string, string>> = {
     email: "メール",
     footer:
       "Arlequinが方向を決め、Lumenが可能性と文脈を照らします。すべての成果は人のレビューを経て完成します。",
+    gourmet: "Gourmet",
     language: "言語",
     work: "作品",
     writing: "ノート",

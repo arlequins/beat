@@ -2,11 +2,11 @@
 
 import { ExternalLink, LogOut, Save, Send, ShieldCheck } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
+import { GourmetManager } from "~/components/admin/gourmet-manager";
 
 import {
+  authorizedBeatAdminRequest,
   BeatAdminSessionEvent,
-  beatAdminAccessToken,
-  beatAdminApiUrl,
   hasPersistentBeatAdminSession,
   loginBeatAdmin,
   logoutBeatAdmin,
@@ -24,18 +24,6 @@ type Publication = {
   prUrl?: string;
   status: "pending" | "opened";
 };
-
-async function authorizedRequest(path: string, init?: RequestInit) {
-  const token = await beatAdminAccessToken();
-  return fetch(`${beatAdminApiUrl()}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-  });
-}
 
 export function BeatAdminConsole() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -83,7 +71,7 @@ export function BeatAdminConsole() {
     setMessage("");
     setPrUrl(undefined);
     try {
-      const response = await authorizedRequest(
+      const response = await authorizedBeatAdminRequest(
         `/admin/content/drafts/${encodeURIComponent(slug)}`,
       );
       if (response.status === 404) {
@@ -112,7 +100,7 @@ export function BeatAdminConsole() {
     setBusy(true);
     setMessage("");
     try {
-      const response = await authorizedRequest(
+      const response = await authorizedBeatAdminRequest(
         `/admin/content/drafts/${encodeURIComponent(slug)}`,
         {
           body: JSON.stringify({
@@ -141,7 +129,7 @@ export function BeatAdminConsole() {
     setBusy(true);
     setMessage("");
     try {
-      const response = await authorizedRequest(
+      const response = await authorizedBeatAdminRequest(
         `/admin/content/drafts/${encodeURIComponent(slug)}/confirm`,
         {
           body: JSON.stringify({ expectedRevision: revision }),
@@ -308,6 +296,7 @@ export function BeatAdminConsole() {
           </a>
         ) : null}
       </div>
+      <GourmetManager />
     </section>
   );
 }

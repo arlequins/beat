@@ -1,6 +1,6 @@
 "use client";
 
-import { GitBranch, Mail } from "lucide-react";
+import { GitBranch, Mail, Utensils } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -52,11 +52,19 @@ export function AppShell(props: { children: React.ReactNode }) {
             >
               {text.writing}
             </Link>
+            <Link
+              aria-label={text.gourmet}
+              className="text-slate-600 transition hover:text-[#d94f38]"
+              href={localePath(locale, "/gourmet/")}
+            >
+              <Utensils aria-hidden="true" className="size-5 md:hidden" />
+              <span className="hidden md:inline">{text.gourmet}</span>
+            </Link>
             <LanguageSwitcher />
             <ThemeToggle />
             <a
               aria-label="GitHub"
-              className="text-slate-600 transition hover:text-[#d94f38]"
+              className="hidden text-slate-600 transition hover:text-[#d94f38] sm:block"
               href={siteConfig.links.github}
               rel="noreferrer"
               target="_blank"

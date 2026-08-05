@@ -95,11 +95,14 @@ The production Beat API endpoints are:
 - Login: `http://localhost:5000/auth/login`
 - Token refresh: `http://localhost:5000/auth/token`
 - Administrator console: `http://localhost:3000/admin/`
+- Gourmet records: `http://localhost:3000/gourmet/`
 
 See [S3-primary production architecture](./docs/s3-primary-data-architecture.md)
 for the production request flow and
 [Beat Agent authentication integration](./docs/beat-agent-auth-integration.md)
 for the shared token contract.
+The [Beat Gourmet guide](./docs/gourmet.md) covers Custom GPT text capture,
+S3-backed records, and repository-reviewed images.
 
 ## Common Commands
 

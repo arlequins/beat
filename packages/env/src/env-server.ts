@@ -74,6 +74,10 @@ export const serverEnv = createEnv({
     BEAT_AUTH_AUDIENCE: z.string().min(1).optional(),
     BEAT_AUTH_SIGNING_PRIVATE_JWK: z.string().min(1).optional(),
     BEAT_AUTH_SIGNING_KEY_ID: z.string().min(1).optional(),
+    /** Separate bearer secret for the personal Custom GPT gourmet Action. */
+    BEAT_GOURMET_ACTION_API_KEY: z.string().min(32).optional(),
+    /** Public portfolio origin used when API responses return browser links. */
+    NEXT_PUBLIC_SITE_URL: z.url().optional(),
     /** One-time operator input consumed only by the administrator bootstrap script. */
     BEAT_ADMIN_BOOTSTRAP_EMAIL: z.email().optional(),
     /** One-time operator input consumed only by the administrator bootstrap script. */
@@ -170,6 +174,8 @@ export const serverEnv = createEnv({
     BEAT_AUTH_AUDIENCE: process.env.BEAT_AUTH_AUDIENCE,
     BEAT_AUTH_SIGNING_PRIVATE_JWK: process.env.BEAT_AUTH_SIGNING_PRIVATE_JWK,
     BEAT_AUTH_SIGNING_KEY_ID: process.env.BEAT_AUTH_SIGNING_KEY_ID,
+    BEAT_GOURMET_ACTION_API_KEY: process.env.BEAT_GOURMET_ACTION_API_KEY,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     BEAT_ADMIN_BOOTSTRAP_EMAIL: process.env.BEAT_ADMIN_BOOTSTRAP_EMAIL,
     BEAT_ADMIN_BOOTSTRAP_PASSWORD: process.env.BEAT_ADMIN_BOOTSTRAP_PASSWORD,
     API_CORS_ORIGINS: process.env.API_CORS_ORIGINS,
