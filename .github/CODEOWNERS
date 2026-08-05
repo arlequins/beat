@@ -1,4 +1,5 @@
 # Portfolio writing requires Arlequin's review before merging.
 apps/web/content/ @arlequins
+apps/web/public/gourmet/ @arlequins
 apps/web/src/lib/localized-content.ts @arlequins
 docs/ @arlequins

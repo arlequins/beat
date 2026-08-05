@@ -35,7 +35,7 @@ export const viewport: Viewport = { themeColor: "#111326" };
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

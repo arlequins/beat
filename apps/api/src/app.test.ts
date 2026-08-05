@@ -3,6 +3,7 @@ import { createLogger } from "@acme/logger";
 import { describe, expect, it, vi } from "vitest";
 
 import { createApiApp } from "./app";
+import { GourmetError } from "./gourmet";
 
 describe("API app", () => {
   const app = createApiApp({
@@ -216,6 +217,138 @@ describe("API app", () => {
     expect(response.headers.get("referrer-policy")).toBe("no-referrer");
     expect(response.headers.get("permissions-policy")).toContain("camera=()");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+  });
+
+  it("accepts the separate Gourmet Action key and preserves idempotency headers", async () => {
+    const entry = {
+      area: "서울",
+      cookingMethods: [],
+      createdAt: "2026-08-05T00:00:00.000Z",
+      cuisineTags: ["한식"],
+      discoveries: [],
+      externalRequestId: "mobile-1",
+      freeTextNote: null,
+      id: "meal-1",
+      images: [],
+      ingredients: ["쌀"],
+      liked: [],
+      menuName: "비빔밥",
+      nutritionTags: [],
+      postMealNotes: [],
+      rating: 8.5,
+      restaurantBranch: null,
+      restaurantName: "Beat 식당",
+      revisit: "yes",
+      revision: 1,
+      schemaVersion: 1,
+      slug: "beat-meal-meal-1",
+      source: "chatgpt",
+      status: "published",
+      summary: "채소가 신선한 비빔밥",
+      tasteNotes: [],
+      updatedAt: "2026-08-05T00:00:00.000Z",
+      visitedAt: "2026-08-05",
+    } as const;
+    const create = vi.fn(async () => entry);
+    const gourmetApp = createApiApp({
+      corsOrigins: ["http://localhost:3000"],
+      gourmet: {
+        attachImage: vi.fn(),
+        context: vi.fn(),
+        create,
+        delete: vi.fn(),
+        get: vi.fn(async () => ({ entry, etag: '"v1"' })),
+        list: vi.fn(async () => ({ entries: [entry], page: 1, total: 1 })),
+        update: vi.fn(async () => entry),
+      } as never,
+      gourmetActionApiKey: "gourmet-action-key-at-least-32-characters",
+      logger: createLogger({ service: "api", sink: () => {} }),
+      rateLimiter: false,
+    });
+    const response = await gourmetApp.request("/api/gourmet/entries", {
+      body: JSON.stringify({
+        area: "서울",
+        cookingMethods: [],
+        cuisineTags: ["한식"],
+        discoveries: [],
+        externalRequestId: "mobile-1",
+        freeTextNote: null,
+        ingredients: ["쌀"],
+        liked: [],
+        menuName: "비빔밥",
+        nutritionTags: [],
+        postMealNotes: [],
+        rating: 8.5,
+        restaurantBranch: null,
+        restaurantName: "Beat 식당",
+        revisit: "yes",
+        source: "chatgpt",
+        status: "published",
+        summary: "채소가 신선한 비빔밥",
+        tasteNotes: [],
+        visitedAt: "2026-08-05",
+      }),
+      headers: {
+        Authorization: "Bearer gourmet-action-key-at-least-32-characters",
+        "Content-Type": "application/json",
+        "Idempotency-Key": "custom-gpt-message-1",
+      },
+      method: "POST",
+    });
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toMatchObject({
+      detailUrl: expect.stringContaining("/gourmet/?entry="),
+      status: "saved",
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ restaurantName: "Beat 식당" }),
+      expect.objectContaining({
+        idempotencyKey: "custom-gpt-message-1",
+        subject: "chatgpt-action",
+      }),
+    );
+  });
+
+  it("rejects missing Gourmet authentication and invalid half-step ratings", async () => {
+    const gourmetApp = createApiApp({
+      corsOrigins: ["http://localhost:3000"],
+      gourmet: {
+        attachImage: vi.fn(),
+        context: vi.fn(),
+        create: vi.fn(),
+        delete: vi.fn(),
+        get: vi.fn(),
+        list: vi.fn(),
+        update: vi.fn(),
+      } as never,
+      gourmetActionApiKey: "gourmet-action-key-at-least-32-characters",
+      logger: createLogger({ service: "api", sink: () => {} }),
+      rateLimiter: false,
+    });
+    const unauthorized = await gourmetApp.request("/api/gourmet/entries", {
+      body: "{}",
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+    expect(unauthorized.status).toBe(401);
+    const invalid = await gourmetApp.request("/api/gourmet/entries", {
+      body: JSON.stringify({
+        menuName: "메뉴",
+        rating: 8.3,
+        restaurantName: "식당",
+        revisit: "unknown",
+        summary: "요약",
+      }),
+      headers: {
+        Authorization: "Bearer gourmet-action-key-at-least-32-characters",
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+    expect(invalid.status).toBe(400);
+    await expect(invalid.json()).resolves.toMatchObject({
+      error: { code: "INVALID_REQUEST" },
+    });
   });
 
   it("issues, refreshes, and revokes Beat token pairs", async () => {
@@ -541,5 +674,253 @@ describe("API app", () => {
       },
     );
     expect(rejectedDraft.status).toBe(400);
+  });
+
+  it("enforces public, Action, and administrator Gourmet route boundaries", async () => {
+    const baseEntry = {
+      area: "서울",
+      cookingMethods: [],
+      createdAt: "2026-08-05T00:00:00.000Z",
+      cuisineTags: [],
+      discoveries: [],
+      externalRequestId: null,
+      freeTextNote: null,
+      id: "published-entry",
+      images: [],
+      ingredients: [],
+      liked: [],
+      menuName: "메뉴",
+      nutritionTags: [],
+      postMealNotes: [],
+      rating: 8,
+      restaurantBranch: null,
+      restaurantName: "식당",
+      revisit: "yes",
+      revision: 1,
+      schemaVersion: 1,
+      slug: "published-entry",
+      source: "manual",
+      status: "published",
+      summary: "요약",
+      tasteNotes: [],
+      updatedAt: "2026-08-05T00:00:00.000Z",
+      visitedAt: "2026-08-05",
+    } as const;
+    const draftEntry = {
+      ...baseEntry,
+      id: "draft-entry",
+      slug: "draft-entry",
+      status: "draft" as const,
+    };
+    const deletedEntry = {
+      ...baseEntry,
+      id: "deleted-entry",
+      slug: "deleted-entry",
+      status: "deleted" as const,
+    };
+    const list = vi.fn(async () => ({
+      entries: [baseEntry],
+      page: 1,
+      total: 1,
+    }));
+    const update = vi.fn(async (id: string) => {
+      if (id === "conflict") throw new GourmetError("conflict", "stale");
+      return baseEntry;
+    });
+    const gourmetApp = createApiApp({
+      beatAuth: {
+        authenticate: vi.fn(),
+        issueTokenPair: vi.fn(),
+        jwks: vi.fn(async () => ({ keys: [] })),
+        refreshTokenPair: vi.fn(),
+        revokeRefreshToken: vi.fn(async () => {}),
+        verifyAccessToken: vi.fn(async (token) => {
+          if (token !== "admin-token") throw new Error("invalid");
+          return { email: "admin@example.com", subject: "admin-1" };
+        }),
+      },
+      corsOrigins: ["http://localhost:3000"],
+      gourmet: {
+        attachImage: vi.fn(async () => ({
+          ...baseEntry,
+          images: [
+            {
+              altText: "사진",
+              byteSize: 32,
+              createdAt: "2026-08-05T00:00:00.000Z",
+              height: null,
+              id: "image-1",
+              mimeType: "image/webp",
+              originalFilename: "meal.webp",
+              prUrl: "https://github.com/arlequins/beat/pull/40",
+              publicPath: "/gourmet/image.webp",
+              repositoryPath: "apps/web/public/gourmet/image.webp",
+              sortOrder: 0,
+              storageKey: "apps/web/public/gourmet/image.webp",
+              width: null,
+            },
+          ],
+        })),
+        context: vi.fn(async () => ({ averageRating: 8 })),
+        create: vi.fn(async () => baseEntry),
+        delete: vi.fn(async () => deletedEntry),
+        get: vi.fn(async (id: string) => {
+          if (id === "missing") return undefined;
+          return {
+            entry: id === "draft-entry" ? draftEntry : baseEntry,
+            etag: '"v1"',
+          };
+        }),
+        list,
+        update,
+      } as never,
+      gourmetActionApiKey: "gourmet-action-key-at-least-32-characters",
+      logger: createLogger({ service: "api", sink: () => {} }),
+      rateLimiter: false,
+    });
+    const actionHeaders = {
+      Authorization: "Bearer gourmet-action-key-at-least-32-characters",
+      "Content-Type": "application/json",
+    };
+    const adminHeaders = {
+      Authorization: "Bearer admin-token",
+      "Content-Type": "application/json",
+    };
+
+    const publicList = await gourmetApp.request(
+      "/api/gourmet/entries?area=%EC%84%9C%EC%9A%B8&pageSize=10",
+    );
+    expect(publicList.status).toBe(200);
+    expect(list).toHaveBeenCalledWith(
+      expect.objectContaining({
+        area: "서울",
+        pageSize: 10,
+        status: "published",
+      }),
+    );
+    expect(
+      (await gourmetApp.request("/api/gourmet/entries?page=zero")).status,
+    ).toBe(400);
+    expect(
+      (await gourmetApp.request("/api/gourmet/entries?status=draft")).status,
+    ).toBe(403);
+
+    expect((await gourmetApp.request("/api/gourmet/context")).status).toBe(401);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/context?days=30&limit=5", {
+          headers: actionHeaders,
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/context?days=invalid", {
+          headers: actionHeaders,
+        })
+      ).status,
+    ).toBe(400);
+
+    expect(
+      (await gourmetApp.request("/api/gourmet/entries/published-entry")).status,
+    ).toBe(200);
+    expect(
+      (await gourmetApp.request("/api/gourmet/entries/draft-entry")).status,
+    ).toBe(404);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/draft-entry", {
+          headers: adminHeaders,
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (await gourmetApp.request("/api/gourmet/entries/missing")).status,
+    ).toBe(404);
+
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/published-entry", {
+          body: JSON.stringify({ rating: 9 }),
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        })
+      ).status,
+    ).toBe(401);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/published-entry", {
+          body: JSON.stringify({ expectedRevision: 1, rating: 9 }),
+          headers: actionHeaders,
+          method: "PATCH",
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/conflict", {
+          body: JSON.stringify({ rating: 9 }),
+          headers: actionHeaders,
+          method: "PATCH",
+        })
+      ).status,
+    ).toBe(409);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/published-entry", {
+          body: JSON.stringify({ rating: 11 }),
+          headers: actionHeaders,
+          method: "PATCH",
+        })
+      ).status,
+    ).toBe(400);
+
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/published-entry", {
+          headers: actionHeaders,
+          method: "DELETE",
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/published-entry", {
+          headers: adminHeaders,
+          method: "DELETE",
+        })
+      ).status,
+    ).toBe(200);
+
+    expect(
+      (
+        await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/images",
+          { body: "{}", headers: actionHeaders, method: "POST" },
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/images",
+          { body: "{}", headers: adminHeaders, method: "POST" },
+        )
+      ).status,
+    ).toBe(400);
+    const attached = await gourmetApp.request(
+      "/admin/gourmet/entries/published-entry/images",
+      {
+        body: JSON.stringify({
+          altText: "사진",
+          contentBase64: "UklGRgAAAABXRUJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          contentType: "image/webp",
+          originalFilename: "meal.webp",
+        }),
+        headers: adminHeaders,
+        method: "POST",
+      },
+    );
+    expect(attached.status).toBe(200);
   });
 });

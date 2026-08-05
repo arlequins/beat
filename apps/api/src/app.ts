@@ -28,6 +28,7 @@ import {
   getBeatDraft,
   saveBeatDraft,
 } from "./beat-content";
+import { registerGourmetRoutes } from "./gourmet-routes";
 import { registerOpenApiRoutes } from "./openapi";
 
 export type ApiBindings = {
@@ -51,6 +52,8 @@ export type CreateApiAppOptions = {
     getDraft: typeof getBeatDraft;
     saveDraft: typeof saveBeatDraft;
   };
+  gourmet?: Parameters<typeof registerGourmetRoutes>[1]["gourmet"];
+  gourmetActionApiKey?: string;
   corsOrigins?: string[];
   logger?: Logger;
   readinessCheck?: () => Promise<void>;
@@ -172,7 +175,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
         "Trpc-Accept",
         "X-Request-Id",
       ],
-      allowMethods: ["GET", "POST", "PUT", "OPTIONS"],
+      allowMethods: ["DELETE", "GET", "PATCH", "POST", "PUT", "OPTIONS"],
       exposeHeaders: [
         "RateLimit-Limit",
         "RateLimit-Remaining",
@@ -189,6 +192,8 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     "/auth/token",
     "/auth/refresh",
     "/admin/content/*",
+    "/admin/gourmet/*",
+    "/api/gourmet/*",
   ];
   for (const path of guardedPaths) {
     app.use(
@@ -336,6 +341,11 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       return undefined;
     }
   };
+  registerGourmetRoutes(app, {
+    actionApiKey: options.gourmetActionApiKey,
+    gourmet: options.gourmet,
+    verifyAccessToken: auth.verifyAccessToken,
+  });
   const contentError = (
     context: Context<ApiBindings>,
     error: unknown,

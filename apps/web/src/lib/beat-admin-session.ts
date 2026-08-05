@@ -1,5 +1,7 @@
 "use client";
 
+import { env } from "~/env";
+
 export const BeatAdminSessionKey = "beat-admin-session";
 export const BeatAdminSessionEvent = "beat-admin-session-changed";
 
@@ -19,9 +21,7 @@ type TokenResponse = {
 };
 
 function apiUrl() {
-  const value = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-  if (!value) throw new Error("Beat API URL is not configured");
-  return value;
+  return env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 }
 
 function sessionFromTokens(tokens: TokenResponse): BeatAdminSession {
@@ -125,4 +125,19 @@ export async function logoutBeatAdmin() {
 
 export function beatAdminApiUrl() {
   return apiUrl();
+}
+
+export async function authorizedBeatAdminRequest(
+  path: string,
+  init?: RequestInit,
+) {
+  const token = await beatAdminAccessToken();
+  return fetch(`${apiUrl()}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      ...init?.headers,
+    },
+  });
 }

@@ -109,10 +109,13 @@ v1/rate-limit/login-ip/{ipHmac}/{window}.json
 v1/rate-limit/login-user/{emailHmac}/{window}.json
 v1/drafts/{postId}/head.json
 v1/publication-jobs/{idempotencyKey}.json
+v1/gourmet/entries/{entryId}/head.json
+v1/gourmet/entries/{entryId}/revisions/{revision}.json
 
 # Immutable ledger bucket
 v1/events/auth/{yyyy}/{mm}/{dd}/{timestamp}-{eventId}.json
 v1/events/content/{yyyy}/{mm}/{dd}/{timestamp}-{eventId}.json
+v1/events/gourmet/{yyyy}/{mm}/{dd}/{timestamp}-{eventId}.json
 v1/events/system/{yyyy}/{mm}/{dd}/{timestamp}-{eventId}.json
 ```
 

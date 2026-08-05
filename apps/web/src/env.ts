@@ -1,4 +1,7 @@
-import { DEFAULT_LOCALHOST_SITE_URL } from "@acme/env/public-defaults";
+import {
+  DEFAULT_LOCALHOST_API_URL,
+  DEFAULT_LOCALHOST_SITE_URL,
+} from "@acme/env/public-defaults";
 import { skipEnvValidation } from "@acme/env/skip-validation";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod/v4";
@@ -17,6 +20,13 @@ export const env = createEnv({
   },
   server: {},
   client: {
+    NEXT_PUBLIC_API_URL: z.preprocess(
+      (v) =>
+        typeof v === "string" && v.trim().length > 0
+          ? v
+          : DEFAULT_LOCALHOST_API_URL,
+      z.url(),
+    ),
     NEXT_PUBLIC_SITE_URL: z.preprocess(
       (v) =>
         typeof v === "string" && v.trim().length > 0
@@ -27,6 +37,7 @@ export const env = createEnv({
   },
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
   skipValidation: skipEnvValidation,
