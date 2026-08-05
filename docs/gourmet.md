@@ -5,6 +5,10 @@ structured text after the user confirms it, while the public portfolio renders
 only `published` records. Administrators use the existing Beat login to edit,
 publish, archive, and attach reviewed photographs.
 
+For the request-by-request connection between ChatGPT, Beat authentication, S3,
+the administrator browser, GitHub image PRs, and the public site, see the
+[end-to-end integration guide](gourmet-integration-flow.md).
+
 ## Storage decision
 
 The two data classes deliberately use different systems of record:
