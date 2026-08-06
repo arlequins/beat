@@ -103,4 +103,57 @@ describe("Beat production reconciliation", () => {
       unexpectedDeleteMarkers: 1,
     });
   });
+
+  it("paginates S3 versions and reports an evidence write failure", async () => {
+    let adminPages = 0;
+    const send = vi.fn(async (command: unknown) => {
+      if (command instanceof ListObjectVersionsCommand) {
+        if (command.input.Prefix !== "v1/admins/")
+          return { IsTruncated: false };
+        adminPages += 1;
+        if (adminPages === 1)
+          return {
+            IsTruncated: true,
+            NextKeyMarker: "next-admin",
+            NextVersionIdMarker: "next-version",
+            Versions: [{ Key: "v1/admins/incomplete.json" }],
+          };
+        expect(command.input).toMatchObject({
+          KeyMarker: "next-admin",
+          VersionIdMarker: "next-version",
+        });
+        return {
+          IsTruncated: false,
+          Versions: [
+            {
+              ETag: '"admin-v1"',
+              IsLatest: false,
+              Key: "v1/admins/by-email/hash.json",
+              LastModified: new Date("2026-08-06T03:00:00.000Z"),
+              VersionId: "version-1",
+            },
+          ],
+        };
+      }
+      if (command instanceof PutObjectCommand)
+        throw new Error("ledger unavailable");
+      throw new Error("unexpected command");
+    });
+    const reconciliation = await loadReconciliation();
+    await expect(
+      reconciliation.reconcileStateVersionAudit({
+        send,
+      } as unknown as S3Client),
+    ).resolves.toMatchObject({
+      checked: 1,
+      failures: [
+        {
+          key: "v1/admins/by-email/hash.json",
+          message: "ledger unavailable",
+        },
+      ],
+      newEvidence: 0,
+    });
+    expect(adminPages).toBe(2);
+  });
 });
