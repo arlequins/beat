@@ -28,8 +28,9 @@ includes requests, errors, latency, and Lambda cold starts. Set
 1. Stop administrator writes if conditional conflicts or delete markers are
    still increasing.
 2. Locate the affected key and version in CloudTrail or S3 Inventory.
-3. Run `auth:state:recover` to copy the selected version into `v1/recovery/`.
-   Do not copy it directly over a live head.
+3. Dispatch `Production operations` with `recover-state-version` to copy the
+   selected version into `v1/recovery/`. Do not copy it directly over a live
+   head.
 4. Inspect the quarantined JSON, schema version, digest, and related ledger
    events before a separate revision-checked promotion.
 5. For content publication, inspect the S3 publication job and GitHub PR. The

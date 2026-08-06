@@ -116,7 +116,7 @@ S3-backed records, and repository-reviewed images.
 | `pnpm test` | Run unit and contract tests. |
 | `pnpm test:e2e` | Run isolated PostgreSQL and browser end-to-end tests. |
 | `pnpm db:setup` | Apply committed migrations and pending seeds. |
-| `pnpm --filter @acme/api auth:admin:create` | Create a production S3 administrator. |
+| `Production operations` GitHub Action | Create, rotate, or disable production S3 administrators. |
 | `pnpm turbo gen` | Generate an application, package, or tRPC domain. |
 | `pnpm gen:feature` | Generate a clean-architecture command or query slice. |
 

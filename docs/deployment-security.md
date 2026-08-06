@@ -16,12 +16,20 @@ Set `AWS_REGION` as an environment variable. Do not store AWS access keys in Git
 
 Start with the trust-policy template in [`docs/iam/github-oidc-trust-policy.json`](./iam/github-oidc-trust-policy.json). Replace placeholders and retain only the production subject before applying it. The deployment permission policy is intentionally not universal: generate it from CloudTrail during the first controlled production qualification, then constrain actions and resources to the stacks, state bucket, asset bucket, and roles owned by this repository.
 
+The same protected role runs `Production operations`. Once the API has created
+the bucket names, scope its operator permissions to the two exact buckets:
+`s3:GetObject`, `s3:PutObject`, `s3:PutObjectRetention`, `s3:HeadBucket`,
+`s3:HeadObject`, `s3:GetBucketLifecycleConfiguration`, and
+`s3:ListBucketVersions`. Do not grant deletion permissions. Administrator
+operations also require read access to the one runtime secret described below.
+
 ## Environments and Branch Protection
 
 Create a `production` GitHub Environment with required reviewers, prevent self-review, restrict deployment to protected release branches or tags, and configure an approval timeout. Protect `main` and `develop`, require the CI and Security checks, require review, dismiss stale approvals, and disallow force pushes.
 
 Pull requests never receive AWS credentials and do not create cloud previews.
-Only an approved manual production workflow can assume the deployment role.
+Only an approved manual production workflow dispatched from `main` can assume
+the deployment role.
 
 ## Security Checks
 
@@ -59,28 +67,21 @@ writes it directly to GitHub's job environment without printing it. It is
 intentionally enabled only for the protected `production` API deployment;
 web, batch, and remove jobs do not read the secret.
 
-After the first API deployment, create the initial administrator from a trusted
-operator environment:
+After the first API deployment, use only the protected
+`Production operations` GitHub Actions workflow. Do not run administrator,
+recovery, or qualification commands from a local shell. The scripts reject
+non-GitHub execution, and the actual AWS boundary is the production-only OIDC
+role.
 
-```bash
-BEAT_AUTH_STATE_BUCKET=... \
-BEAT_AUTH_LEDGER_BUCKET=... \
-BEAT_ADMIN_BOOTSTRAP_EMAIL=admin@example.com \
-BEAT_ADMIN_BOOTSTRAP_PASSWORD='a-long-unique-password' \
-pnpm --filter @acme/api auth:admin:create
-```
+For any administrator create or password rotation, temporarily set a unique
+`BEAT_ADMIN_OPERATION_PASSWORD` secret in the `production` GitHub Environment.
+Dispatch the workflow with the administrator email and the `authStateBucket`
+and `authLedgerBucket` values emitted by the Production deployment. After the
+run, rotate or remove that environment secret. Administrator emails are normal
+workflow inputs; never enter a password as an input.
 
-Use the `authStateBucket` and `authLedgerBucket` values printed by the
-production deployment. The operator needs access to both generated buckets.
-Remove the bootstrap password from the shell environment immediately after the
-command.
-
-Use the same trusted operator environment to rotate or disable an account:
-
-```bash
-pnpm --filter @acme/api auth:admin:password
-pnpm --filter @acme/api auth:admin:disable
-```
+Use `disable-admin` with the target email for account disablement. The workflow
+serializes all protected operations and requires a `production` confirmation.
 
 Password changes and disable operations increment the credential version, so
 existing refresh sessions can no longer rotate. Already-issued access tokens
@@ -88,27 +89,18 @@ expire within ten minutes.
 
 ### Production storage qualification
 
-After the first API deployment, export the generated state and ledger bucket
-names in a trusted operator shell and run the deliberate production
-qualification once:
-
-```bash
-BEAT_PRODUCTION_QUALIFICATION_CONFIRM=production \
-pnpm --filter @acme/api auth:production:qualify
-```
+After the first API deployment, dispatch `Production operations` with
+`qualify-storage`, the emitted bucket names, and the `production`
+confirmation. It is deliberately not available through a local command.
 
 The command verifies bucket reachability, state versioning, one-winner
 conditional updates, lifecycle visibility, and Compliance Object Lock. It
 creates retained qualification objects and therefore requires the explicit
 confirmation value. Preserve the JSON result as deployment evidence.
 
-To recover a historical state object, copy it into the quarantine prefix first:
-
-```bash
-BEAT_RECOVERY_SOURCE_KEY=v1/drafts/example/head.json \
-BEAT_RECOVERY_VERSION_ID=example-version-id \
-pnpm --filter @acme/api auth:state:recover
-```
+To recover a historical state object, dispatch `Production operations` with
+`recover-state-version`, the selected state key and S3 version ID. The action
+copies it into the quarantine prefix first.
 
 This command never overwrites a live head. Inspect the recovered JSON under
 `v1/recovery/` and perform any later promotion as a separate revision-checked

@@ -18,6 +18,13 @@ function toPascalCase(slug: string): string {
 export default $config({
   async app(input) {
     const { serverEnv, sstAwsRegion, Stage } = await import("@acme/env");
+    if (
+      input?.stage === Stage.PRODUCTION &&
+      process.env.GITHUB_ACTIONS !== "true"
+    )
+      throw new Error(
+        "Beat production deployment is allowed only from protected GitHub Actions",
+      );
     const localAwsProfile = serverEnv.SST_AWS_PROFILE?.trim();
     const region = sstAwsRegion();
 

@@ -1,6 +1,9 @@
 import { serverEnv } from "@acme/env/server-env";
 
 import { recoverBeatStateVersion } from "../src/state-recovery";
+import { requireGitHubProductionAction } from "./require-github-production-action";
+
+requireGitHubProductionAction();
 
 const result = await recoverBeatStateVersion({
   sourceKey:
