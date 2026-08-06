@@ -158,8 +158,8 @@ pnpm test:template-output full
 pnpm test:template-output minimal
 ```
 
-These checks do not emulate AWS. Cloud deployment, preview stages, and sandbox
-smoke tests still require AWS credentials. See [SST Local Testing](./docs/sst-local-testing.md)
+These checks do not emulate AWS. The controlled production qualification and
+deployment still require AWS credentials. See [SST Local Testing](./docs/sst-local-testing.md)
 and [Template Readiness](./docs/template-readiness.md).
 
 ## Deployment

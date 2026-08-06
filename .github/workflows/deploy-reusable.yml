@@ -66,30 +66,18 @@ jobs:
             --secret-id "$RUNTIME_SECRET_ID" \
             --query SecretString \
             --output text > "$secret_file"
-          SECRET_FILE="$secret_file" node -e '
-            const { appendFileSync, readFileSync } = require("node:fs");
-            const { randomUUID } = require("node:crypto");
-            const keys = [
-              "BEAT_AUTH_LOOKUP_SECRET",
-              "BEAT_AUTH_ISSUER_URL",
-              "BEAT_AUTH_AUDIENCE",
-              "BEAT_AUTH_SIGNING_PRIVATE_JWK",
-              "BEAT_AUTH_SIGNING_KEY_ID",
-              "BEAT_GOURMET_ACTION_API_KEY",
-              "GITHUB_APP_ID",
-              "GITHUB_APP_INSTALLATION_ID",
-              "GITHUB_APP_PRIVATE_KEY",
-              "GITHUB_CONTENT_REPOSITORY",
-            ];
-            const values = JSON.parse(readFileSync(process.env.SECRET_FILE, "utf8"));
-            for (const key of keys) {
-              if (typeof values[key] !== "string" || values[key].length === 0) {
-                throw new Error(`Runtime secret is missing a non-empty ${key}`);
-              }
-              const delimiter = `BEAT_${randomUUID()}`;
-              appendFileSync(process.env.GITHUB_ENV, `${key}<<${delimiter}\n${values[key]}\n${delimiter}\n`);
-            }
-          '
+          BEAT_RUNTIME_SECRET_FILE="$secret_file" \
+          BEAT_GITHUB_ENV_FILE="$GITHUB_ENV" \
+          node scripts/validate-beat-runtime-secret.mjs
 
       - name: Run SST operation
         run: pnpm sst:ws ${{ inputs.application }} ${{ inputs.operation }} -- --stage ${{ inputs.environment }}
+
+      - name: Smoke production API
+        if: inputs.application == 'api' && inputs.environment == 'production' && inputs.operation == 'deploy'
+        env:
+          API_URL: ${{ vars.BEAT_PRODUCTION_API_URL }}
+        run: |
+          test -n "$API_URL"
+          node -e 'const url = new URL(process.argv[1]); if (url.protocol !== "https:") throw new Error("Production smoke endpoint must use HTTPS");' "$API_URL"
+          node scripts/smoke-api.mjs "${API_URL%/}"

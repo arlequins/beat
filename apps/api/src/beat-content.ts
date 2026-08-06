@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { serverEnv } from "@acme/env/server-env";
 import {
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -23,14 +24,15 @@ export type BeatDraft = {
   updatedBy: string;
 };
 
-type PublicationJob = {
+export type PublicationJob = {
   branch: string;
+  completedAt?: string;
   draftRevision: number;
   idempotencyKey: string;
   prUrl?: string;
   schemaVersion: 1;
   slug: string;
-  status: "pending" | "opened";
+  status: "closed" | "merged" | "opened" | "pending";
   updatedAt: string;
 };
 
@@ -216,7 +218,10 @@ function isPublicationJob(value: unknown): value is PublicationJob {
     typeof row.draftRevision === "number" &&
     typeof row.idempotencyKey === "string" &&
     typeof row.slug === "string" &&
-    (row.status === "pending" || row.status === "opened") &&
+    (row.status === "pending" ||
+      row.status === "opened" ||
+      row.status === "merged" ||
+      row.status === "closed") &&
     typeof row.updatedAt === "string"
   );
 }
@@ -514,8 +519,7 @@ export async function confirmAndPublishBeatDraft(
   if (existing) {
     if (!isPublicationJob(existing.value))
       throw new Error("Invalid publication job state");
-    if (existing.value.status === "opened" && existing.value.prUrl)
-      return existing.value;
+    if (existing.value.status !== "pending") return existing.value;
   }
   const branch = `content/${slug}-r${draft.revision}`;
   const pending: PublicationJob = existing?.value ?? {
@@ -581,4 +585,187 @@ export async function confirmAndPublishBeatDraft(
     contentConfig,
   );
   return opened;
+}
+
+async function publicationJobKeys(
+  client: S3Client,
+  contentConfig: ContentConfig,
+) {
+  const keys: string[] = [];
+  let continuationToken: string | undefined;
+  do {
+    const page = await client.send(
+      new ListObjectsV2Command({
+        Bucket: contentConfig.stateBucket,
+        ContinuationToken: continuationToken,
+        Prefix: `${contentConfig.statePrefix}/publication-jobs/`,
+      }),
+    );
+    for (const object of page.Contents ?? []) {
+      if (object.Key?.endsWith(".json")) keys.push(object.Key);
+    }
+    continuationToken = page.IsTruncated
+      ? page.NextContinuationToken
+      : undefined;
+  } while (continuationToken);
+  return keys;
+}
+
+function pullRequestNumber(prUrl: string, repository: string) {
+  const url = new URL(prUrl);
+  const [owner, name, segment, number, ...extra] = url.pathname
+    .split("/")
+    .filter(Boolean);
+  if (
+    url.protocol !== "https:" ||
+    url.hostname !== "github.com" ||
+    `${owner}/${name}` !== repository ||
+    segment !== "pull" ||
+    extra.length > 0 ||
+    !number ||
+    !/^\d+$/.test(number)
+  )
+    throw new Error("Publication job has an invalid GitHub pull request URL");
+  return Number(number);
+}
+
+async function pullRequestState(
+  prUrl: string,
+  request: typeof fetch,
+  contentConfig: ContentConfig,
+) {
+  const installation = await createGitHubInstallationToken(request);
+  const number = pullRequestNumber(prUrl, contentConfig.repository);
+  const pull = await githubRequest<{
+    closed_at?: string | null;
+    merged_at?: string | null;
+    state?: "closed" | "open";
+  }>(
+    request,
+    installation.token,
+    `https://api.github.com/repos/${contentConfig.repository}/pulls/${number}`,
+  );
+  if (!pull.response.ok || !pull.value?.state)
+    throw new Error(
+      `GitHub pull request lookup failed (${pull.response.status})`,
+    );
+  if (pull.value.merged_at)
+    return { completedAt: pull.value.merged_at, status: "merged" as const };
+  if (pull.value.state === "closed")
+    return {
+      completedAt: pull.value.closed_at ?? new Date().toISOString(),
+      status: "closed" as const,
+    };
+  return { status: "opened" as const };
+}
+
+export type PublicationReconciliationSummary = {
+  checked: number;
+  closed: number;
+  failures: { key: string; message: string }[];
+  merged: number;
+  opened: number;
+};
+
+/**
+ * Replays interrupted publication jobs and records the terminal GitHub PR
+ * state. Each write uses the current S3 ETag, so concurrent API and scheduled
+ * executions fail closed instead of overwriting one another.
+ */
+export async function reconcileBeatPublicationJobs(
+  client = new S3Client({}),
+  request: typeof fetch = fetch,
+): Promise<PublicationReconciliationSummary> {
+  const contentConfig = config();
+  const summary: PublicationReconciliationSummary = {
+    checked: 0,
+    closed: 0,
+    failures: [],
+    merged: 0,
+    opened: 0,
+  };
+  for (const key of await publicationJobKeys(client, contentConfig)) {
+    summary.checked += 1;
+    try {
+      const stored = await getJson<PublicationJob>(
+        client,
+        contentConfig.stateBucket,
+        key,
+      );
+      if (!stored || !isPublicationJob(stored.value))
+        throw new Error("Invalid publication job state");
+      if (stored.value.status === "merged" || stored.value.status === "closed")
+        continue;
+
+      let next: PublicationJob | undefined;
+      let eventType: string | undefined;
+      if (stored.value.status === "pending") {
+        const draft = await getJson<BeatDraft>(
+          client,
+          contentConfig.stateBucket,
+          revisionKey(
+            stored.value.slug,
+            stored.value.draftRevision,
+            contentConfig,
+          ),
+        );
+        if (!draft || !isDraft(draft.value))
+          throw new Error("Publication draft revision is missing or invalid");
+        const prUrl = await openGitHubPullRequest(
+          draft.value,
+          stored.value.branch,
+          request,
+          contentConfig,
+        );
+        next = {
+          ...stored.value,
+          prUrl,
+          status: "opened",
+          updatedAt: new Date().toISOString(),
+        };
+        eventType = "publication-pr-reconciled";
+        summary.opened += 1;
+      } else if (stored.value.prUrl) {
+        const state = await pullRequestState(
+          stored.value.prUrl,
+          request,
+          contentConfig,
+        );
+        if (state.status !== "opened") {
+          next = {
+            ...stored.value,
+            completedAt: state.completedAt,
+            status: state.status,
+            updatedAt: new Date().toISOString(),
+          };
+          eventType = `publication-pr-${state.status}`;
+          summary[state.status] += 1;
+        }
+      }
+      if (!next || !eventType) continue;
+      await putJson(client, {
+        bucket: contentConfig.stateBucket,
+        ifMatch: stored.etag,
+        key,
+        value: next,
+      });
+      await appendContentEvent(
+        eventType,
+        {
+          prUrl: next.prUrl,
+          revision: next.draftRevision,
+          slug: next.slug,
+          subject: "system:reconciler",
+        },
+        client,
+        contentConfig,
+      );
+    } catch (error) {
+      summary.failures.push({
+        key,
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+  return summary;
 }

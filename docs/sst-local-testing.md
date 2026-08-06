@@ -46,10 +46,14 @@ pnpm test:e2e
 
 `sst dev`, `sst diff`, and `sst deploy` create, inspect, or update AWS-backed infrastructure and state. They require AWS credentials with the appropriate permissions. Setting `home: "local"` only moves SST state storage to the local machine; it does not emulate Lambda, API Gateway, CloudFront, Step Functions, or other AWS services.
 
-Use an isolated AWS sandbox stage for the final infrastructure preview:
+Use `diff` for the final infrastructure review without creating a second
+environment:
 
 ```bash
-pnpm sst:ws api deploy -- --stage sandbox
+pnpm sst:ws api diff -- --stage production
 ```
 
-Keep this cloud-connected check separate from the authentication-free local test so contributors and ordinary CI jobs can validate the repository without account access.
+Run the protected production deployment only after reviewing that diff. Keep
+this cloud-connected check separate from the authentication-free local test so
+contributors and ordinary CI jobs can validate the repository without account
+access.

@@ -1,5 +1,6 @@
 import {
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   type S3Client,
 } from "@aws-sdk/client-s3";
@@ -20,10 +21,20 @@ function s3Harness() {
           Bucket: string;
           IfMatch?: string;
           IfNoneMatch?: string;
-          Key: string;
+          Key?: string;
+          Prefix?: string;
         };
       }
     ).input;
+    if (command instanceof ListObjectsV2Command) {
+      const prefix = `${input.Bucket}/${input.Prefix ?? ""}`;
+      return {
+        Contents: [...objects.keys()]
+          .filter((key) => key.startsWith(prefix))
+          .map((key) => ({ Key: key.slice(input.Bucket.length + 1) })),
+        IsTruncated: false,
+      };
+    }
     const key = `${input.Bucket}/${input.Key}`;
     if (command instanceof GetObjectCommand) {
       const stored = objects.get(key);
@@ -232,5 +243,73 @@ describe("Beat S3 content", () => {
         harness.client,
       ),
     ).rejects.toMatchObject({ code: "not_found" });
+  });
+
+  it("replays pending publication jobs and records merged pull requests", async () => {
+    const harness = s3Harness();
+    const content = await loadContent();
+    await content.saveBeatDraft(
+      {
+        expectedRevision: 0,
+        slug: "reconcile-test",
+        source: "---\ntitle: Test\nreviewStatus: reviewed\n---\n\nFinal",
+        title: "Test",
+        updatedBy: "admin-1",
+      },
+      harness.client,
+    );
+    const publishingRequest = vi.fn(
+      async (input: string | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url.endsWith("/git/ref/heads/main"))
+          return Response.json({ object: { sha: "main-sha" } });
+        if (url.endsWith("/git/refs"))
+          return Response.json({}, { status: 201 });
+        if (url.includes("/contents/") && init?.method !== "PUT")
+          return Response.json({}, { status: 404 });
+        if (url.includes("/contents/") && init?.method === "PUT")
+          return Response.json({}, { status: 201 });
+        if (url.endsWith("/pulls"))
+          return Response.json({
+            html_url: "https://github.com/arlequins/beat/pull/20",
+          });
+        throw new Error(`unexpected GitHub request ${url}`);
+      },
+    ) as typeof fetch;
+    const opened = await content.confirmAndPublishBeatDraft(
+      {
+        expectedRevision: 1,
+        slug: "reconcile-test",
+        subject: "admin-1",
+      },
+      harness.client,
+      publishingRequest,
+    );
+    expect(opened.status).toBe("opened");
+
+    const mergedRequest = vi.fn(async (input: string | URL) => {
+      const url = String(input);
+      if (url.endsWith("/pulls/20"))
+        return Response.json({
+          merged_at: "2026-08-06T00:00:00.000Z",
+          state: "closed",
+        });
+      throw new Error(`unexpected GitHub request ${url}`);
+    }) as typeof fetch;
+    const summary = await content.reconcileBeatPublicationJobs(
+      harness.client,
+      mergedRequest,
+    );
+    expect(summary).toMatchObject({
+      checked: 1,
+      failures: [],
+      merged: 1,
+    });
+    const repeated = await content.reconcileBeatPublicationJobs(
+      harness.client,
+      mergedRequest,
+    );
+    expect(repeated).toMatchObject({ checked: 1, merged: 0 });
+    expect(mergedRequest).toHaveBeenCalledTimes(1);
   });
 });

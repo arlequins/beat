@@ -27,6 +27,7 @@ export default $config({
       resolveApiDeploymentConfig,
       serverEnv,
       sstAwsRegion,
+      Stage,
       vpcFromEnv,
     } = await import("@acme/env");
 
@@ -62,6 +63,155 @@ export default $config({
         },
       },
     });
+    const auditEvidenceBucket = new sst.aws.Bucket("AuditEvidence", {
+      versioning: true,
+    });
+    const caller = aws.getCallerIdentityOutput({});
+    const trailName = `${$app.name}-${$app.stage}-s3-data`;
+    const trailArn = $interpolate`arn:aws:cloudtrail:${region}:${caller.accountId}:trail/${trailName}`;
+    const auditEvidencePolicy = aws.iam.getPolicyDocumentOutput({
+      statements: [
+        {
+          actions: ["s3:GetBucketAcl"],
+          conditions: [
+            {
+              test: "StringEquals",
+              values: [trailArn],
+              variable: "aws:SourceArn",
+            },
+          ],
+          effect: "Allow",
+          principals: [
+            { identifiers: ["cloudtrail.amazonaws.com"], type: "Service" },
+          ],
+          resources: [auditEvidenceBucket.arn],
+          sid: "CloudTrailAclCheck",
+        },
+        {
+          actions: ["s3:PutObject"],
+          conditions: [
+            {
+              test: "StringEquals",
+              values: ["bucket-owner-full-control"],
+              variable: "s3:x-amz-acl",
+            },
+            {
+              test: "StringEquals",
+              values: [trailArn],
+              variable: "aws:SourceArn",
+            },
+          ],
+          effect: "Allow",
+          principals: [
+            { identifiers: ["cloudtrail.amazonaws.com"], type: "Service" },
+          ],
+          resources: [
+            $interpolate`${auditEvidenceBucket.arn}/AWSLogs/${caller.accountId}/*`,
+          ],
+          sid: "CloudTrailWrite",
+        },
+        {
+          actions: ["s3:PutObject"],
+          conditions: [
+            {
+              test: "StringEquals",
+              values: ["bucket-owner-full-control"],
+              variable: "s3:x-amz-acl",
+            },
+            {
+              test: "StringEquals",
+              values: [caller.accountId],
+              variable: "aws:SourceAccount",
+            },
+            {
+              test: "ArnLike",
+              values: [authLedgerBucket.arn],
+              variable: "aws:SourceArn",
+            },
+          ],
+          effect: "Allow",
+          principals: [{ identifiers: ["s3.amazonaws.com"], type: "Service" }],
+          resources: [$interpolate`${auditEvidenceBucket.arn}/inventory/*`],
+          sid: "S3InventoryWrite",
+        },
+        {
+          actions: ["s3:*"],
+          conditions: [
+            {
+              test: "Bool",
+              values: ["false"],
+              variable: "aws:SecureTransport",
+            },
+          ],
+          effect: "Deny",
+          principals: [{ identifiers: ["*"], type: "*" }],
+          resources: [
+            auditEvidenceBucket.arn,
+            $interpolate`${auditEvidenceBucket.arn}/*`,
+          ],
+          sid: "DenyInsecureTransport",
+        },
+      ],
+    });
+    const auditEvidenceBucketPolicy = new aws.s3.BucketPolicy(
+      "AuditEvidencePolicy",
+      {
+        bucket: auditEvidenceBucket.name,
+        policy: auditEvidencePolicy.json,
+      },
+    );
+    new aws.cloudtrail.Trail(
+      "BeatDataTrail",
+      {
+        enableLogFileValidation: true,
+        eventSelectors: [
+          {
+            dataResources: [
+              {
+                type: "AWS::S3::Object",
+                values: [
+                  $interpolate`${authStateBucket.arn}/`,
+                  $interpolate`${authLedgerBucket.arn}/`,
+                ],
+              },
+            ],
+            includeManagementEvents: false,
+            readWriteType: "All",
+          },
+        ],
+        includeGlobalServiceEvents: false,
+        isMultiRegionTrail: false,
+        name: trailName,
+        s3BucketName: auditEvidenceBucket.name,
+      },
+      { dependsOn: [auditEvidenceBucketPolicy] },
+    );
+    new aws.s3.Inventory(
+      "LedgerInventory",
+      {
+        bucket: authLedgerBucket.name,
+        destination: {
+          bucket: {
+            accountId: caller.accountId,
+            bucketArn: auditEvidenceBucket.arn,
+            format: "ORC",
+            prefix: "inventory/ledger",
+          },
+        },
+        includedObjectVersions: "All",
+        name: `${$app.name}-${$app.stage}-ledger-daily`,
+        optionalFields: [
+          "ETag",
+          "LastModifiedDate",
+          "ObjectLockMode",
+          "ObjectLockRetainUntilDate",
+          "Size",
+          "StorageClass",
+        ],
+        schedule: { frequency: "Daily" },
+      },
+      { dependsOn: [auditEvidenceBucketPolicy] },
+    );
     const cacheBucket = new sst.aws.Bucket("Cache");
     const uploadOrigins = (
       serverEnv.API_CORS_ORIGINS ?? "http://localhost:3000"
@@ -81,7 +231,11 @@ export default $config({
       link: [cacheBucket, uploadBucket],
       permissions: [
         {
-          actions: ["s3:GetBucketLocation", "s3:ListBucket"],
+          actions: [
+            "s3:GetBucketLocation",
+            "s3:ListBucket",
+            "s3:ListBucketVersions",
+          ],
           resources: [authStateBucket.arn, authLedgerBucket.arn],
         },
         {
@@ -162,6 +316,52 @@ export default $config({
       }),
     });
 
+    const operationalMetric = (name: string) => ({
+      namespace: "Beat/Operations",
+      metricName: name,
+      dimensions: { stage: $app.stage },
+      period: 300,
+      statistic: "Sum",
+    });
+    for (const [name, metricName, threshold] of [
+      ["ReconciliationFailures", "ReconciliationFailure", 1],
+      ["ReconciliationBacklog", "ReconciliationBacklog", 1],
+      ["UnexpectedStateDeletes", "UnexpectedDeleteMarker", 1],
+    ] as const) {
+      new aws.cloudwatch.MetricAlarm(name, {
+        ...operationalMetric(metricName),
+        alarmActions,
+        comparisonOperator: "GreaterThanOrEqualToThreshold",
+        evaluationPeriods: 1,
+        threshold,
+        treatMissingData: "notBreaching",
+      });
+    }
+    for (const [name, metricName, threshold] of [
+      ["AuthenticationFailures", "AuthenticationFailure", 5],
+      ["ConditionalWriteConflicts", "ConditionalWriteConflict", 5],
+    ] as const) {
+      new aws.cloudwatch.MetricAlarm(name, {
+        ...metric(metricName),
+        alarmActions,
+        comparisonOperator: "GreaterThanOrEqualToThreshold",
+        evaluationPeriods: 1,
+        threshold,
+        treatMissingData: "notBreaching",
+      });
+    }
+
+    new sst.aws.CronV2("BeatReconciliation", {
+      enabled: $app.stage === Stage.PRODUCTION,
+      schedule: "rate(15 minutes)",
+      function: {
+        ...handler,
+        handler: "src/reconcile.handler",
+        link: [],
+        timeout: "5 minutes",
+      },
+    });
+
     if (deployment.preset === ApiDeploymentPreset.API_GATEWAY) {
       const api = new sst.aws.ApiGatewayV2("Api", {
         cors: false,
@@ -180,6 +380,7 @@ export default $config({
 
       return {
         apiUrl: api.url,
+        auditEvidenceBucket: auditEvidenceBucket.name,
         authLedgerBucket: authLedgerBucket.name,
         authStateBucket: authStateBucket.name,
       };
@@ -201,6 +402,7 @@ export default $config({
 
     return {
       apiUrl: router?.url ?? api.url,
+      auditEvidenceBucket: auditEvidenceBucket.name,
       authLedgerBucket: authLedgerBucket.name,
       authStateBucket: authStateBucket.name,
     };

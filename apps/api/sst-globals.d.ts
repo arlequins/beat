@@ -78,6 +78,14 @@ declare const sst: {
         versioning?: boolean;
       },
     ) => { arn: string; name: string };
+    CronV2: new (
+      name: string,
+      args: {
+        enabled?: boolean;
+        function: Record<string, unknown>;
+        schedule: string;
+      },
+    ) => unknown;
     Function: new (
       name: string,
       args: {
@@ -109,8 +117,35 @@ declare const sst: {
 };
 
 declare const aws: {
+  getCallerIdentityOutput: (args?: Record<string, unknown>) => {
+    accountId: string;
+  };
+  cloudtrail: {
+    Trail: new (
+      name: string,
+      args: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ) => unknown;
+  };
   cloudwatch: {
     MetricAlarm: new (name: string, args: Record<string, unknown>) => unknown;
     Dashboard: new (name: string, args: Record<string, unknown>) => unknown;
+  };
+  iam: {
+    getPolicyDocumentOutput: (args: Record<string, unknown>) => {
+      json: string;
+    };
+  };
+  s3: {
+    BucketPolicy: new (
+      name: string,
+      args: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ) => unknown;
+    Inventory: new (
+      name: string,
+      args: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ) => unknown;
   };
 };

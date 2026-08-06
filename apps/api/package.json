@@ -7,6 +7,8 @@
     "auth:admin:create": "pnpm with-env tsx scripts/create-beat-admin.ts",
     "auth:admin:disable": "pnpm with-env tsx scripts/disable-beat-admin.ts",
     "auth:admin:password": "pnpm with-env tsx scripts/change-beat-admin-password.ts",
+    "auth:state:recover": "pnpm with-env tsx scripts/recover-beat-state.ts",
+    "auth:production:qualify": "pnpm with-env tsx scripts/qualify-beat-production.ts",
     "dev": "pnpm with-env tsx watch src/dev.ts",
     "build": "tsc --noEmit",
     "start": "pnpm with-env tsx src/dev.ts",
