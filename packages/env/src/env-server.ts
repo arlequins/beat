@@ -58,6 +58,11 @@ export const serverEnv = createEnv({
       .optional(),
     BEAT_AUTH_STATE_BUCKET: z.string().min(3).optional(),
     BEAT_AUTH_LEDGER_BUCKET: z.string().min(3).optional(),
+    /** ARN of the protected Secrets Manager JSON object fetched by Lambda at runtime. */
+    BEAT_RUNTIME_SECRET_ARN: z
+      .string()
+      .startsWith("arn:aws:secretsmanager:")
+      .optional(),
     BEAT_AUTH_STATE_PREFIX: z.string().optional().default("v1"),
     BEAT_AUTH_LOOKUP_SECRET: z.string().min(32).optional(),
     BEAT_AUTH_LEDGER_RETENTION_DAYS: z.coerce
@@ -170,6 +175,7 @@ export const serverEnv = createEnv({
     GITHUB_CONTENT_REPOSITORY: process.env.GITHUB_CONTENT_REPOSITORY,
     BEAT_AUTH_STATE_BUCKET: process.env.BEAT_AUTH_STATE_BUCKET,
     BEAT_AUTH_LEDGER_BUCKET: process.env.BEAT_AUTH_LEDGER_BUCKET,
+    BEAT_RUNTIME_SECRET_ARN: process.env.BEAT_RUNTIME_SECRET_ARN,
     BEAT_AUTH_STATE_PREFIX: process.env.BEAT_AUTH_STATE_PREFIX,
     BEAT_AUTH_LOOKUP_SECRET: process.env.BEAT_AUTH_LOOKUP_SECRET,
     BEAT_AUTH_LEDGER_RETENTION_DAYS:

@@ -226,6 +226,9 @@ importers:
       '@aws-sdk/client-scheduler':
         specifier: 'catalog:'
         version: 3.1092.0
+      '@aws-sdk/client-secrets-manager':
+        specifier: 'catalog:'
+        version: 3.1090.0
       '@aws-sdk/client-sqs':
         specifier: 'catalog:'
         version: 3.1092.0

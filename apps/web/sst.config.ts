@@ -38,7 +38,7 @@ export default $config({
   async run() {
     const { clientEnv } = await import("@acme/env");
 
-    new sst.aws.StaticSite("Web", {
+    const site = new sst.aws.StaticSite("Web", {
       path: ".",
       errorPage: "/404.html",
       environment: {
@@ -60,6 +60,37 @@ export default $config({
         directory: ".",
         title: "web",
       },
+      transform: {
+        assets: (args) => {
+          args.cors = false;
+          args.enforceHttps = true;
+          args.versioning = true;
+          args.transform = {
+            bucket: { forceDestroy: false },
+            publicAccessBlock: {
+              blockPublicAcls: true,
+              blockPublicPolicy: true,
+              ignorePublicAcls: true,
+              restrictPublicBuckets: true,
+            },
+          };
+        },
+      },
     });
+    const assets = site.nodes.assets;
+    if (!assets)
+      throw new Error("SST StaticSite did not create an asset bucket");
+    new aws.s3.BucketOwnershipControls("WebAssetsOwnership", {
+      bucket: assets.name,
+      rule: { objectOwnership: "BucketOwnerEnforced" },
+    });
+    new aws.s3.BucketServerSideEncryptionConfiguration("WebAssetsEncryption", {
+      bucket: assets.name,
+      rules: [
+        { applyServerSideEncryptionByDefault: { sseAlgorithm: "AES256" } },
+      ],
+    });
+
+    return { webUrl: site.url };
   },
 });

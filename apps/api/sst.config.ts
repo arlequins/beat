@@ -47,212 +47,169 @@ export default $config({
       throttleRateLimit: serverEnv.API_THROTTLE_RATE_LIMIT,
       wafEnabled: serverEnv.API_WAF_ENABLED,
     });
-    const authStateBucket = new sst.aws.Bucket("AuthState", {
-      versioning: true,
+    if ($app.stage === Stage.PRODUCTION && !serverEnv.BEAT_RUNTIME_SECRET_ARN)
+      throw new Error(
+        "BEAT_RUNTIME_SECRET_ARN is required for the production API Lambda",
+      );
+
+    const statePrefix = serverEnv.BEAT_AUTH_STATE_PREFIX.replace(
+      /^\/+|\/+$/g,
+      "",
+    );
+    const createPrivateBucket = (
+      name: string,
+      options: {
+        cors?:
+          | false
+          | {
+              allowHeaders: string[];
+              allowMethods: ("PUT" | "GET")[];
+              allowOrigins: string[];
+            };
+        lifecycle?: {
+          expiresIn: `${number} day` | `${number} days`;
+          id: string;
+          prefix: string;
+        }[];
+        objectLock?: boolean;
+      } = {},
+    ) => {
+      const bucket = new sst.aws.Bucket(name, {
+        cors: options.cors ?? false,
+        enforceHttps: true,
+        lifecycle: options.lifecycle,
+        versioning: true,
+        transform: {
+          bucket: {
+            forceDestroy: false,
+            ...(options.objectLock ? { objectLockEnabled: true } : {}),
+          },
+          publicAccessBlock: {
+            blockPublicAcls: true,
+            blockPublicPolicy: true,
+            ignorePublicAcls: true,
+            restrictPublicBuckets: true,
+          },
+        },
+      });
+      new aws.s3.BucketOwnershipControls(`${name}Ownership`, {
+        bucket: bucket.name,
+        rule: { objectOwnership: "BucketOwnerEnforced" },
+      });
+      new aws.s3.BucketServerSideEncryptionConfiguration(`${name}Encryption`, {
+        bucket: bucket.name,
+        rules: [
+          { applyServerSideEncryptionByDefault: { sseAlgorithm: "AES256" } },
+        ],
+      });
+      return bucket;
+    };
+
+    const authStateBucket = createPrivateBucket("AuthState", {
       lifecycle: [
         {
           expiresIn: "31 days",
           id: "expire-refresh-sessions",
-          prefix: "v1/oauth/sessions/",
+          prefix: `${statePrefix}/oauth/sessions/`,
         },
         {
           expiresIn: "2 days",
           id: "expire-rate-limit-windows",
-          prefix: "v1/rate-limit/",
+          prefix: `${statePrefix}/rate-limit/`,
         },
       ],
     });
-    const authLedgerBucket = new sst.aws.Bucket("AuthLedger", {
-      versioning: true,
-      transform: {
-        bucket: {
-          objectLockEnabled: true,
-        },
-      },
+    const authLedgerBucket = createPrivateBucket("AuthLedger", {
+      objectLock: true,
     });
-    const auditEvidenceBucket = new sst.aws.Bucket("AuditEvidence", {
-      versioning: true,
-    });
-    const caller = aws.getCallerIdentityOutput({});
-    const trailName = `${$app.name}-${$app.stage}-s3-data`;
-    const trailArn = $interpolate`arn:aws:cloudtrail:${region}:${caller.accountId}:trail/${trailName}`;
-    const auditEvidencePolicy = aws.iam.getPolicyDocumentOutput({
-      statements: [
+    const cacheBucket = createPrivateBucket("Cache", {
+      lifecycle: [
         {
-          actions: ["s3:GetBucketAcl"],
-          conditions: [
-            {
-              test: "StringEquals",
-              values: [trailArn],
-              variable: "aws:SourceArn",
-            },
-          ],
-          effect: "Allow",
-          principals: [
-            { identifiers: ["cloudtrail.amazonaws.com"], type: "Service" },
-          ],
-          resources: [auditEvidenceBucket.arn],
-          sid: "CloudTrailAclCheck",
-        },
-        {
-          actions: ["s3:PutObject"],
-          conditions: [
-            {
-              test: "StringEquals",
-              values: ["bucket-owner-full-control"],
-              variable: "s3:x-amz-acl",
-            },
-            {
-              test: "StringEquals",
-              values: [trailArn],
-              variable: "aws:SourceArn",
-            },
-          ],
-          effect: "Allow",
-          principals: [
-            { identifiers: ["cloudtrail.amazonaws.com"], type: "Service" },
-          ],
-          resources: [
-            $interpolate`${auditEvidenceBucket.arn}/AWSLogs/${caller.accountId}/*`,
-          ],
-          sid: "CloudTrailWrite",
-        },
-        {
-          actions: ["s3:PutObject"],
-          conditions: [
-            {
-              test: "StringEquals",
-              values: ["bucket-owner-full-control"],
-              variable: "s3:x-amz-acl",
-            },
-            {
-              test: "StringEquals",
-              values: [caller.accountId],
-              variable: "aws:SourceAccount",
-            },
-            {
-              test: "ArnLike",
-              values: [authLedgerBucket.arn],
-              variable: "aws:SourceArn",
-            },
-          ],
-          effect: "Allow",
-          principals: [{ identifiers: ["s3.amazonaws.com"], type: "Service" }],
-          resources: [$interpolate`${auditEvidenceBucket.arn}/inventory/*`],
-          sid: "S3InventoryWrite",
-        },
-        {
-          actions: ["s3:*"],
-          conditions: [
-            {
-              test: "Bool",
-              values: ["false"],
-              variable: "aws:SecureTransport",
-            },
-          ],
-          effect: "Deny",
-          principals: [{ identifiers: ["*"], type: "*" }],
-          resources: [
-            auditEvidenceBucket.arn,
-            $interpolate`${auditEvidenceBucket.arn}/*`,
-          ],
-          sid: "DenyInsecureTransport",
+          expiresIn: "7 days",
+          id: "expire-cache-objects",
+          prefix: `${$app.name}/${$app.stage}/`,
         },
       ],
     });
-    const auditEvidenceBucketPolicy = new aws.s3.BucketPolicy(
-      "AuditEvidencePolicy",
-      {
-        bucket: auditEvidenceBucket.name,
-        policy: auditEvidencePolicy.json,
-      },
-    );
-    new aws.cloudtrail.Trail(
-      "BeatDataTrail",
-      {
-        enableLogFileValidation: true,
-        eventSelectors: [
-          {
-            dataResources: [
-              {
-                type: "AWS::S3::Object",
-                values: [
-                  $interpolate`${authStateBucket.arn}/`,
-                  $interpolate`${authLedgerBucket.arn}/`,
-                ],
-              },
-            ],
-            includeManagementEvents: false,
-            readWriteType: "All",
-          },
-        ],
-        includeGlobalServiceEvents: false,
-        isMultiRegionTrail: false,
-        name: trailName,
-        s3BucketName: auditEvidenceBucket.name,
-      },
-      { dependsOn: [auditEvidenceBucketPolicy] },
-    );
-    new aws.s3.Inventory(
-      "LedgerInventory",
-      {
-        bucket: authLedgerBucket.name,
-        destination: {
-          bucket: {
-            accountId: caller.accountId,
-            bucketArn: auditEvidenceBucket.arn,
-            format: "ORC",
-            prefix: "inventory/ledger",
-          },
-        },
-        includedObjectVersions: "All",
-        name: `${$app.name}-${$app.stage}-ledger-daily`,
-        optionalFields: [
-          "ETag",
-          "LastModifiedDate",
-          "ObjectLockMode",
-          "ObjectLockRetainUntilDate",
-          "Size",
-          "StorageClass",
-        ],
-        schedule: { frequency: "Daily" },
-      },
-      { dependsOn: [auditEvidenceBucketPolicy] },
-    );
-    const cacheBucket = new sst.aws.Bucket("Cache");
     const uploadOrigins = (
       serverEnv.API_CORS_ORIGINS ?? "http://localhost:3000"
     )
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean);
-    const uploadBucket = new sst.aws.Bucket("Uploads", {
+    const uploadBucket = createPrivateBucket("Uploads", {
       cors: {
         allowHeaders: ["content-type"],
         allowMethods: ["PUT"],
         allowOrigins: uploadOrigins,
       },
+      lifecycle: [
+        {
+          expiresIn: "31 days",
+          id: "expire-unpublished-uploads",
+          prefix: `${$app.name}/${$app.stage}/`,
+        },
+      ],
     });
     const handler = {
       handler: "src/lambda.handler",
-      link: [cacheBucket, uploadBucket],
+      logging: {
+        format: "json" as const,
+        retention: $app.stage === Stage.PRODUCTION ? "13 months" : "1 month",
+      },
       permissions: [
         {
-          actions: [
-            "s3:GetBucketLocation",
-            "s3:ListBucket",
-            "s3:ListBucketVersions",
-          ],
+          actions: ["s3:GetBucketLocation", "s3:ListBucket"],
           resources: [authStateBucket.arn, authLedgerBucket.arn],
         },
         {
+          actions: ["s3:ListBucketVersions"],
+          resources: [authStateBucket.arn],
+        },
+        {
           actions: ["s3:GetObject", "s3:PutObject"],
-          resources: [$interpolate`${authStateBucket.arn}/*`],
+          resources: [$interpolate`${authStateBucket.arn}/${statePrefix}/*`],
         },
         {
           actions: ["s3:PutObject", "s3:PutObjectRetention"],
-          resources: [$interpolate`${authLedgerBucket.arn}/*`],
+          resources: [
+            $interpolate`${authLedgerBucket.arn}/${statePrefix}/events/*`,
+          ],
         },
+        {
+          actions: ["s3:ListBucket"],
+          conditions: [
+            {
+              test: "StringLike",
+              variable: "s3:prefix",
+              values: [
+                `${$app.name}/${$app.stage}`,
+                `${$app.name}/${$app.stage}/*`,
+              ],
+            },
+          ],
+          resources: [cacheBucket.arn],
+        },
+        {
+          actions: ["s3:DeleteObject", "s3:GetObject", "s3:PutObject"],
+          resources: [
+            $interpolate`${cacheBucket.arn}/${$app.name}/${$app.stage}/*`,
+          ],
+        },
+        {
+          actions: ["s3:PutObject"],
+          resources: [
+            $interpolate`${uploadBucket.arn}/${$app.name}/${$app.stage}/*`,
+          ],
+        },
+        ...(serverEnv.BEAT_RUNTIME_SECRET_ARN
+          ? [
+              {
+                actions: ["secretsmanager:GetSecretValue"],
+                resources: [serverEnv.BEAT_RUNTIME_SECRET_ARN],
+              },
+            ]
+          : []),
       ],
       ...(vpc
         ? {
@@ -267,7 +224,10 @@ export default $config({
         BEAT_AUTH_LEDGER_BUCKET: authLedgerBucket.name,
         BEAT_AUTH_LEDGER_RETENTION_DAYS: "365",
         BEAT_AUTH_STATE_BUCKET: authStateBucket.name,
-        BEAT_AUTH_STATE_PREFIX: "v1",
+        BEAT_AUTH_STATE_PREFIX: statePrefix,
+        ...(serverEnv.BEAT_RUNTIME_SECRET_ARN
+          ? { BEAT_RUNTIME_SECRET_ARN: serverEnv.BEAT_RUNTIME_SECRET_ARN }
+          : {}),
         S3_CACHE_BUCKET: cacheBucket.name,
         S3_CACHE_PREFIX: `${$app.name}/${$app.stage}`,
         S3_UPLOAD_BUCKET: uploadBucket.name,
@@ -364,13 +324,15 @@ export default $config({
       function: {
         ...handler,
         handler: "src/reconcile.handler",
-        link: [],
         timeout: "5 minutes",
       },
     });
 
     if (deployment.preset === ApiDeploymentPreset.API_GATEWAY) {
       const api = new sst.aws.ApiGatewayV2("Api", {
+        accessLog: {
+          retention: $app.stage === Stage.PRODUCTION ? "13 months" : "1 month",
+        },
         cors: false,
         ...(deployment.customDomain ? { domain: deployment.customDomain } : {}),
         transform: {
@@ -387,7 +349,6 @@ export default $config({
 
       return {
         apiUrl: api.url,
-        auditEvidenceBucket: auditEvidenceBucket.name,
         authLedgerBucket: authLedgerBucket.name,
         authStateBucket: authStateBucket.name,
       };
@@ -409,7 +370,6 @@ export default $config({
 
     return {
       apiUrl: router?.url ?? api.url,
-      auditEvidenceBucket: auditEvidenceBucket.name,
       authLedgerBucket: authLedgerBucket.name,
       authStateBucket: authStateBucket.name,
     };

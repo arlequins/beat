@@ -1,0 +1,149 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadOnlyDiscovery",
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:GET",
+        "cloudformation:DescribeStacks",
+        "cloudformation:ListStackResources",
+        "cloudfront:GetDistribution",
+        "cloudfront:ListDistributions",
+        "events:DescribeRule",
+        "iam:GetPolicy",
+        "iam:GetRole",
+        "iam:ListAttachedRolePolicies",
+        "lambda:GetFunction",
+        "logs:DescribeLogGroups",
+        "s3:GetAccountPublicAccessBlock",
+        "s3:GetBucketEncryption",
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketPolicyStatus",
+        "s3:GetBucketVersioning",
+        "secretsmanager:DescribeSecret",
+        "states:DescribeStateMachine",
+        "tag:GetResources"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ReadOnlyRuntimeSecretForDeploymentValidation",
+      "Effect": "Allow",
+      "Action": ["secretsmanager:GetSecretValue"],
+      "Resource": "arn:aws:secretsmanager:ap-northeast-1:AWS_ACCOUNT_ID:secret:arlequin/beat/production/runtime-*"
+    },
+    {
+      "Sid": "ManageBeatSstStateAndAssetsOnly",
+      "Effect": "Allow",
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:DeleteBucketPolicy",
+        "s3:DeleteObject",
+        "s3:DeleteObjectVersion",
+        "s3:GetBucketCORS",
+        "s3:GetBucketLocation",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:GetBucketTagging",
+        "s3:GetLifecycleConfiguration",
+        "s3:ListBucket",
+        "s3:ListBucketVersions",
+        "s3:PutBucketCORS",
+        "s3:PutBucketEncryption",
+        "s3:PutBucketLifecycleConfiguration",
+        "s3:PutBucketOwnershipControls",
+        "s3:PutBucketPolicy",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:PutBucketTagging",
+        "s3:PutBucketVersioning",
+        "s3:PutObject",
+        "s3:PutObjectRetention"
+      ],
+      "Resource": [
+        "arn:aws:s3:::api-production-*",
+        "arn:aws:s3:::api-production-*/*",
+        "arn:aws:s3:::web-production-*",
+        "arn:aws:s3:::web-production-*/*",
+        "arn:aws:s3:::sst-*",
+        "arn:aws:s3:::sst-*/*"
+      ]
+    },
+    {
+      "Sid": "ManageBeatRuntimeRolesOnly",
+      "Effect": "Allow",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:CreatePolicy",
+        "iam:CreateRole",
+        "iam:DeletePolicy",
+        "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:GetRolePolicy",
+        "iam:PassRole",
+        "iam:PutRolePolicy",
+        "iam:TagPolicy",
+        "iam:TagRole",
+        "iam:UpdateAssumeRolePolicy"
+      ],
+      "Resource": [
+        "arn:aws:iam::AWS_ACCOUNT_ID:role/api-production-*",
+        "arn:aws:iam::AWS_ACCOUNT_ID:role/batch-production-*",
+        "arn:aws:iam::AWS_ACCOUNT_ID:role/web-production-*",
+        "arn:aws:iam::AWS_ACCOUNT_ID:policy/api-production-*",
+        "arn:aws:iam::AWS_ACCOUNT_ID:policy/batch-production-*",
+        "arn:aws:iam::AWS_ACCOUNT_ID:policy/web-production-*"
+      ]
+    },
+    {
+      "Sid": "ManageBeatRegionalRuntime",
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:DELETE",
+        "apigateway:PATCH",
+        "apigateway:POST",
+        "events:DeleteRule",
+        "events:PutRule",
+        "events:PutTargets",
+        "events:RemoveTargets",
+        "lambda:AddPermission",
+        "lambda:CreateFunction",
+        "lambda:DeleteFunction",
+        "lambda:DeleteFunctionUrlConfig",
+        "lambda:DeletePermission",
+        "lambda:InvokeFunction",
+        "lambda:TagResource",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "logs:CreateLogGroup",
+        "logs:DeleteLogGroup",
+        "logs:PutRetentionPolicy",
+        "states:CreateStateMachine",
+        "states:DeleteStateMachine",
+        "states:TagResource",
+        "states:UpdateStateMachine"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-northeast-1"
+        }
+      }
+    },
+    {
+      "Sid": "ManageBeatCloudFrontSiteOnly",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateDistribution",
+        "cloudfront:CreateInvalidation",
+        "cloudfront:DeleteDistribution",
+        "cloudfront:TagResource",
+        "cloudfront:UpdateDistribution"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

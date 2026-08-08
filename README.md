@@ -24,7 +24,8 @@ it when creating a project.
 
 - Node.js and pnpm versions matching [`package.json`](./package.json)
 - Docker only for retained legacy PostgreSQL integration tests
-- AWS credentials only for cloud-backed SST commands
+- no local AWS credentials for production; protected GitHub Actions assumes the
+  production role through OIDC
 
 Use the Node.js version in [`.nvmrc`](./.nvmrc). The preinstall check reports an
 actionable error when the runtime does not match.
@@ -170,6 +171,9 @@ and [Template Readiness](./docs/template-readiness.md).
   schedules.
 
 The selected production profile uses AWS only. Neon and Vercel are not required.
+Never run a production SST diff, deploy, or remove command locally; use the
+protected GitHub Actions procedure in
+[Production AWS/SST handoff](./docs/production-aws-sst.md).
 
 Read [Deployment and Supply-Chain Security](./docs/deployment-security.md) before
 configuring GitHub OIDC roles or production environments. Deployment-specific

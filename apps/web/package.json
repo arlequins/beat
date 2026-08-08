@@ -7,6 +7,7 @@
     "clean": "git clean -xdf .cache .next .turbo node_modules",
     "dev": "pnpm with-env next dev",
     "sst:dev": "pnpm with-env sst dev",
+    "sst:diff": "pnpm with-env sst diff",
     "sst:deploy": "pnpm with-env sst deploy",
     "sst:install": "pnpm with-env sst install",
     "sst:remove": "pnpm with-env sst remove",

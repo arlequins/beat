@@ -8,13 +8,29 @@ on:
         required: true
         type: choice
         options: [api, web, batch]
+      reviewed_commit:
+        description: Exact main commit SHA reviewed in Production infrastructure diff
+        required: true
+        type: string
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
+  validate-reviewed-diff:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+    steps:
+      - name: Require a diff reviewed for this exact commit
+        run: |
+          test -n "$REVIEWED_COMMIT"
+          test "$REVIEWED_COMMIT" = "$GITHUB_SHA"
+
   deploy:
+    needs: validate-reviewed-diff
     if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/deploy-reusable.yml
     with:
@@ -22,4 +38,4 @@ jobs:
       environment: production
       operation: deploy
       role_arn: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
-      runtime_secret_id: ${{ vars.BEAT_RUNTIME_SECRET_ID }}
+      runtime_secret_arn: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}

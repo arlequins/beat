@@ -9,12 +9,12 @@ to `repo:OWNER/REPOSITORY:environment:production`.
 Store role ARNs as GitHub variables. Role ARNs identify resources and are not credentials:
 
 - `production` environment: `AWS_PRODUCTION_ROLE_ARN`
-- `production` environment: `BEAT_RUNTIME_SECRET_ID` — name or ARN of the JSON secret consumed only by the API deployment job
+- `production` environment: `BEAT_RUNTIME_SECRET_ARN` — full ARN of the JSON secret validated by the protected API plan/deploy job and read by the API Lambda at runtime
 - `production` environment: `BEAT_PRODUCTION_API_URL` — exact HTTPS API origin used by the post-deployment smoke test
 
 Set `AWS_REGION` as an environment variable. Do not store AWS access keys in GitHub.
 
-Start with the trust-policy template in [`docs/iam/github-oidc-trust-policy.json`](./iam/github-oidc-trust-policy.json). Replace placeholders and retain only the production subject before applying it. The deployment permission policy is intentionally not universal: generate it from CloudTrail during the first controlled production qualification, then constrain actions and resources to the stacks, state bucket, asset bucket, and roles owned by this repository.
+Start with the trust-policy template in [`docs/iam/github-oidc-trust-policy.json`](./iam/github-oidc-trust-policy.json). Replace placeholders and retain only the production subject before applying it. The deployment permission policy is intentionally separate from the baseline role: review [`Production AWS/SST handoff`](./production-aws-sst.md), start from its bounded policy template, then constrain each action and resource from the protected production diff evidence.
 
 The same protected role runs `Production operations`. Once the API has created
 the bucket names, scope its operator permissions to the two exact buckets:
@@ -41,7 +41,7 @@ The license policy rejects AGPL and GPL production dependencies by default. Adju
 
 Store Beat's runtime configuration as one AWS Secrets Manager JSON secret. Do not store its values in GitHub Secrets, repository variables, source files, browser-visible variables, or SST outputs.
 
-The production deployment workflow reads the secret only after it assumes `AWS_PRODUCTION_ROLE_ARN` through GitHub OIDC. The role therefore needs `secretsmanager:GetSecretValue` only for this secret and `secretsmanager:DescribeSecret` only if required by the chosen resource policy. It must not have wildcard Secrets Manager access.
+The protected production diff/deployment workflow reads the secret only after it assumes `AWS_PRODUCTION_ROLE_ARN` through GitHub OIDC, validates it, masks its values, and deletes the runner temporary file. SST receives only `BEAT_RUNTIME_SECRET_ARN`; the API Lambda retrieves the JSON with an exact `secretsmanager:GetSecretValue` permission before importing the application. The values are never written to SST/Pulumi state, Lambda configuration, static assets, GitHub variables, or `NEXT_PUBLIC_*` values. The role must not have wildcard Secrets Manager access.
 
 The JSON object must contain these string values:
 
@@ -62,10 +62,10 @@ The JSON object must contain these string values:
 
 The S3 state and ledger bucket names are not secret values. SST creates both
 buckets and injects their generated names into the Lambda environment. The
-workflow validates that every required secret key is a non-empty string and
-writes it directly to GitHub's job environment without printing it. It is
-intentionally enabled only for the protected `production` API deployment;
-web, batch, and remove jobs do not read the secret.
+workflow validates every required secret key without exporting the JSON into
+the SST command environment. It is intentionally enabled only for the
+protected `production` API diff/deploy jobs; web, batch, and remove jobs do not
+read the secret.
 
 After the first API deployment, use only the protected
 `Production operations` GitHub Actions workflow. Do not run administrator,

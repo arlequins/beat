@@ -74,10 +74,25 @@ export function appendGitHubEnvironment(file, values) {
   }
 }
 
+function escapeGitHubWorkflowCommand(value) {
+  return value
+    .replaceAll("%", "%25")
+    .replaceAll("\r", "%0D")
+    .replaceAll("\n", "%0A");
+}
+
+/** Register every runtime value for log redaction before another Action step sees it. */
+export function maskGitHubRuntimeSecret(values) {
+  if (process.env.GITHUB_ACTIONS !== "true") return;
+  for (const value of Object.values(values))
+    console.log(`::add-mask::${escapeGitHubWorkflowCommand(value)}`);
+}
+
 export function validateRuntimeSecretFile(secretFile, githubEnvFile) {
   const values = validateBeatRuntimeSecret(
     JSON.parse(readFileSync(secretFile, "utf8")),
   );
+  maskGitHubRuntimeSecret(values);
   if (githubEnvFile) appendGitHubEnvironment(githubEnvFile, values);
   return values;
 }

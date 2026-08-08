@@ -33,6 +33,7 @@ declare const sst: {
     ApiGatewayV2: new (
       name: string,
       args: {
+        accessLog?: { retention?: string };
         cors?: boolean;
         domain?: string;
         transform?: {
@@ -51,6 +52,8 @@ declare const sst: {
           handler: string;
           environment?: Record<string, string>;
           link?: unknown[];
+          logging?: Record<string, unknown>;
+          permissions?: Record<string, unknown>[];
           vpc?: { subnets: string[]; securityGroups: string[] };
         },
       ) => unknown;
@@ -59,22 +62,21 @@ declare const sst: {
     Bucket: new (
       name: string,
       args?: {
-        cors?: {
-          allowHeaders?: string[];
-          allowMethods?: ("DELETE" | "GET" | "HEAD" | "POST" | "PUT")[];
-          allowOrigins?: string[];
-        };
+        cors?:
+          | false
+          | {
+              allowHeaders?: string[];
+              allowMethods?: ("DELETE" | "GET" | "HEAD" | "POST" | "PUT")[];
+              allowOrigins?: string[];
+            };
         lifecycle?: {
           enabled?: boolean;
           expiresIn?: `${number} day` | `${number} days`;
           id?: string;
           prefix?: string;
         }[];
-        transform?: {
-          bucket?: {
-            objectLockEnabled?: boolean;
-          };
-        };
+        enforceHttps?: boolean;
+        transform?: Record<string, unknown>;
         versioning?: boolean;
       },
     ) => { arn: string; name: string };
@@ -91,11 +93,7 @@ declare const sst: {
       args: {
         handler: string;
         environment?: Record<string, string>;
-        permissions?: {
-          actions: string[];
-          effect?: "allow" | "deny";
-          resources: string[];
-        }[];
+        permissions?: Record<string, unknown>[];
         url?:
           | boolean
           | { router: { instance: { url: string }; path?: string } };
@@ -137,6 +135,14 @@ declare const aws: {
     };
   };
   s3: {
+    BucketOwnershipControls: new (
+      name: string,
+      args: Record<string, unknown>,
+    ) => unknown;
+    BucketServerSideEncryptionConfiguration: new (
+      name: string,
+      args: Record<string, unknown>,
+    ) => unknown;
     BucketPolicy: new (
       name: string,
       args: Record<string, unknown>,
