@@ -5,6 +5,8 @@ import { skipEnvValidation } from "./skip-validation.js";
 
 /** Default for `SST_AWS_REGION` (Zod + {@link sstAwsRegion} fallback when validation is skipped). */
 export const DEFAULT_SST_AWS_REGION = "us-east-1" as const;
+/** Default S3 object-key namespace for Beat authentication state. */
+export const DEFAULT_BEAT_AUTH_STATE_PREFIX = "v1" as const;
 /**
  * Single source of truth for `process.env` reads in this package.
  * All keys used by `@acme/env` are listed in `server` + `runtimeEnv` (no scattered `process.env`).
@@ -63,7 +65,10 @@ export const serverEnv = createEnv({
       .string()
       .startsWith("arn:aws:secretsmanager:")
       .optional(),
-    BEAT_AUTH_STATE_PREFIX: z.string().optional().default("v1"),
+    BEAT_AUTH_STATE_PREFIX: z
+      .string()
+      .optional()
+      .default(DEFAULT_BEAT_AUTH_STATE_PREFIX),
     BEAT_AUTH_LOOKUP_SECRET: z.string().min(32).optional(),
     BEAT_AUTH_LEDGER_RETENTION_DAYS: z.coerce
       .number()
@@ -237,4 +242,13 @@ export function sstAwsRegion(): string {
     return r.trim();
   }
   return DEFAULT_SST_AWS_REGION;
+}
+
+/** Beat auth state namespace with the schema default preserved when CI skips validation. */
+export function beatAuthStatePrefix(): string {
+  const prefix = serverEnv.BEAT_AUTH_STATE_PREFIX;
+  if (typeof prefix === "string" && prefix.trim().length > 0) {
+    return prefix.trim();
+  }
+  return DEFAULT_BEAT_AUTH_STATE_PREFIX;
 }

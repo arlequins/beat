@@ -3,7 +3,7 @@
  */
 
 import { clientEnv } from "./env-client.js";
-import { serverEnv } from "./env-server.js";
+import { beatAuthStatePrefix, serverEnv } from "./env-server.js";
 
 export {
   type ApiDeploymentConfig,
@@ -15,6 +15,8 @@ export {
 export { type DatabaseEnv, loadDatabaseEnv } from "./database.js";
 export { clientEnv } from "./env-client.js";
 export {
+  beatAuthStatePrefix,
+  DEFAULT_BEAT_AUTH_STATE_PREFIX,
   DEFAULT_SST_AWS_REGION,
   globalEnv,
   serverEnv,
@@ -81,7 +83,7 @@ export const LambdaEnvironment = {
   ...(serverEnv.BEAT_RUNTIME_SECRET_ARN
     ? { BEAT_RUNTIME_SECRET_ARN: serverEnv.BEAT_RUNTIME_SECRET_ARN }
     : {}),
-  BEAT_AUTH_STATE_PREFIX: serverEnv.BEAT_AUTH_STATE_PREFIX,
+  BEAT_AUTH_STATE_PREFIX: beatAuthStatePrefix(),
   ...(serverEnv.BEAT_AUTH_LEDGER_RETENTION_DAYS
     ? {
         BEAT_AUTH_LEDGER_RETENTION_DAYS: String(
