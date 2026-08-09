@@ -37,5 +37,3 @@ jobs:
       application: ${{ inputs.application }}
       environment: production
       operation: deploy
-      role_arn: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
-      runtime_secret_arn: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
