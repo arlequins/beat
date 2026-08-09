@@ -19,6 +19,11 @@ on:
         description: diff, deploy, or remove
         required: true
         type: string
+      bootstrap_api:
+        description: One-time API infrastructure deploy before the runtime secret exists
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -52,6 +57,11 @@ jobs:
           test "${{ inputs.operation }}" = diff || \
           test "${{ inputs.operation }}" = deploy || \
           test "${{ inputs.operation }}" = remove
+          if test "${{ inputs.bootstrap_api }}" = true; then
+            test "${{ inputs.application }}" = api
+            test "${{ inputs.environment }}" = production
+            test "${{ inputs.operation }}" = deploy
+          fi
 
       - name: Require Beat production runtime secret
         if: inputs.environment == 'production' && inputs.application == 'api' && inputs.operation != 'remove'
@@ -62,7 +72,7 @@ jobs:
           case "$RUNTIME_SECRET_ARN" in arn:aws:secretsmanager:*) ;; *) exit 1 ;; esac
 
       - name: Validate API runtime secret without exporting it
-        if: inputs.environment == 'production' && inputs.application == 'api' && inputs.operation != 'remove'
+        if: inputs.environment == 'production' && inputs.application == 'api' && inputs.operation == 'deploy' && !inputs.bootstrap_api
         env:
           RUNTIME_SECRET_ARN: ${{ env.BEAT_RUNTIME_SECRET_ARN }}
         run: |
@@ -109,9 +119,13 @@ jobs:
           echo "api_url=$API_URL" >> "$GITHUB_OUTPUT"
           echo "### API deployed" >> "$GITHUB_STEP_SUMMARY"
           echo "\`$API_URL\`" >> "$GITHUB_STEP_SUMMARY"
+          if test "${{ inputs.bootstrap_api }}" = true; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Runtime-secret validation and smoke testing are deferred until the secret is initialized." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Smoke production API
-        if: inputs.application == 'api' && inputs.environment == 'production' && inputs.operation == 'deploy'
+        if: inputs.application == 'api' && inputs.environment == 'production' && inputs.operation == 'deploy' && !inputs.bootstrap_api
         env:
           API_URL: ${{ steps.deployed-api.outputs.api_url }}
         run: |

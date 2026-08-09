@@ -78,6 +78,31 @@ anomaly monitor.
    preconfigured API URL is required. Run **Production operations**
    `qualify-storage` once after the first API deployment and retain its result.
 
+### First API deployment without a custom domain
+
+The generated API Gateway URL is also Beat's permanent OIDC issuer origin. On
+the first deployment only, the URL does not exist yet and the empty runtime
+secret therefore cannot contain the final issuer. Use this protected two-phase
+bootstrap instead of a placeholder issuer:
+
+1. Run **Production infrastructure diff** for `api`. A diff requires the exact
+   secret ARN but does not read or validate a secret value.
+2. Review the plan, then run **Production deployment** for the same commit with
+   `bootstrap_api=true`. This option is accepted only for the production API
+   deploy. It creates the retained infrastructure and reports `apiUrl`, while
+   deliberately deferring runtime-secret validation and the smoke request.
+3. Set the `beat-sst-aws` production Environment variable
+   `BEAT_AUTH_ISSUER_URL` to the reported API URL plus `/auth`. Configure the
+   protected GitHub App source secrets there and run **Initialize Beat runtime
+   secret** once.
+4. Run **Production deployment** again for the same reviewed commit with
+   `bootstrap_api=false`. The normal path validates the complete secret and
+   must pass the HTTPS API smoke test.
+
+The bootstrap option does not write the secret, expose its values, grant the
+application role write access, or replace the normal deployment path. Do not
+use it after initialization.
+
 The deploy workflow cannot be run from a pull request or another branch. It
 performs no implicit deploy after a merge and no local fallback exists.
 
