@@ -17,6 +17,7 @@ const TO_SCRIPT = {
 };
 
 const [appKey, cmdKey, ...forward] = process.argv.slice(2);
+const forwardedArguments = forward[0] === "--" ? forward.slice(1) : forward;
 
 if (!appKey || !cmdKey) {
   console.error(
@@ -42,9 +43,13 @@ if (!script) {
   process.exit(1);
 }
 
-const result = spawnSync("pnpm", ["-F", pkg, "run", script, ...forward], {
-  stdio: "inherit",
-  shell: process.platform === "win32",
-});
+const result = spawnSync(
+  "pnpm",
+  ["-F", pkg, "run", script, "--", ...forwardedArguments],
+  {
+    stdio: "inherit",
+    shell: process.platform === "win32",
+  },
+);
 
 process.exit(result.status === null ? 1 : result.status);

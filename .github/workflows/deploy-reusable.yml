@@ -95,9 +95,9 @@ jobs:
         run: |
           if test "${{ inputs.operation }}" = diff; then
             set -o pipefail
-            pnpm sst:ws ${{ inputs.application }} diff -- --stage ${{ inputs.environment }} | tee "$RUNNER_TEMP/sst-diff.txt"
+            pnpm sst:ws ${{ inputs.application }} diff -- --stage ${{ inputs.environment }} --print-logs | tee "$RUNNER_TEMP/sst-diff.txt"
           else
-            pnpm sst:ws ${{ inputs.application }} ${{ inputs.operation }} -- --stage ${{ inputs.environment }}
+            pnpm sst:ws ${{ inputs.application }} ${{ inputs.operation }} -- --stage ${{ inputs.environment }} --print-logs
           fi
 
       - name: Save reviewed SST diff
