@@ -126,7 +126,22 @@ declare const aws: {
     ) => unknown;
   };
   cloudwatch: {
-    MetricAlarm: new (name: string, args: Record<string, unknown>) => unknown;
+    MetricAlarm: new (
+      name: string,
+      args: {
+        alarmActions?: string[];
+        comparisonOperator: string;
+        dimensions?: Record<string, string>;
+        evaluationPeriods: number;
+        metricName: string;
+        name?: string;
+        namespace: string;
+        period: number;
+        statistic: string;
+        threshold: number;
+        treatMissingData?: string;
+      },
+    ) => unknown;
     Dashboard: new (name: string, args: Record<string, unknown>) => unknown;
   };
   iam: {
