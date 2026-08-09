@@ -19,15 +19,6 @@ on:
         description: diff, deploy, or remove
         required: true
         type: string
-      role_arn:
-        description: AWS IAM role assumed through GitHub OIDC
-        required: true
-        type: string
-      runtime_secret_arn:
-        description: Protected AWS Secrets Manager JSON secret ARN for the API Lambda
-        required: false
-        default: ""
-        type: string
 
 permissions:
   contents: read
@@ -41,6 +32,8 @@ jobs:
       api_url: ${{ steps.deployed-api.outputs.api_url }}
     env:
       SST_AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
+      DEPLOY_ROLE_ARN: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
+      BEAT_RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
     concurrency:
       group: sst-${{ inputs.environment }}-${{ inputs.application }}
       cancel-in-progress: false
@@ -51,7 +44,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ inputs.role_arn }}
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.SST_AWS_REGION }}
 
       - name: Validate operation
@@ -63,15 +56,15 @@ jobs:
       - name: Require Beat production runtime secret
         if: inputs.environment == 'production' && inputs.application == 'api' && inputs.operation != 'remove'
         env:
-          RUNTIME_SECRET_ARN: ${{ inputs.runtime_secret_arn }}
+          RUNTIME_SECRET_ARN: ${{ env.BEAT_RUNTIME_SECRET_ARN }}
         run: |
           test -n "$RUNTIME_SECRET_ARN"
           case "$RUNTIME_SECRET_ARN" in arn:aws:secretsmanager:*) ;; *) exit 1 ;; esac
 
       - name: Validate API runtime secret without exporting it
-        if: inputs.environment == 'production' && inputs.application == 'api' && inputs.operation != 'remove' && inputs.runtime_secret_arn != ''
+        if: inputs.environment == 'production' && inputs.application == 'api' && inputs.operation != 'remove'
         env:
-          RUNTIME_SECRET_ARN: ${{ inputs.runtime_secret_arn }}
+          RUNTIME_SECRET_ARN: ${{ env.BEAT_RUNTIME_SECRET_ARN }}
         run: |
           secret_file="$RUNNER_TEMP/beat-api-runtime.json"
           trap 'rm -f "$secret_file"' EXIT
@@ -85,7 +78,7 @@ jobs:
 
       - name: Run SST operation
         env:
-          BEAT_RUNTIME_SECRET_ARN: ${{ inputs.runtime_secret_arn }}
+          BEAT_RUNTIME_SECRET_ARN: ${{ env.BEAT_RUNTIME_SECRET_ARN }}
         run: |
           if test "${{ inputs.operation }}" = diff; then
             set -o pipefail
@@ -106,7 +99,7 @@ jobs:
         id: deployed-api
         if: inputs.application == 'api' && inputs.environment == 'production' && inputs.operation == 'deploy'
         env:
-          BEAT_RUNTIME_SECRET_ARN: ${{ inputs.runtime_secret_arn }}
+          BEAT_RUNTIME_SECRET_ARN: ${{ env.BEAT_RUNTIME_SECRET_ARN }}
         run: |
           state_file="$RUNNER_TEMP/beat-api-sst-state.json"
           trap 'rm -f "$state_file"' EXIT

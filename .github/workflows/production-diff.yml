@@ -21,5 +21,3 @@ jobs:
       application: ${{ inputs.application }}
       environment: production
       operation: diff
-      role_arn: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
-      runtime_secret_arn: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
