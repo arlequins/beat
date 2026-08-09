@@ -243,7 +243,9 @@ export default $config({
       period: 300,
       statistic: "Sum",
     });
+    const alarmName = (name: string) => `${$app.name}-${$app.stage}-${name}`;
     new aws.cloudwatch.MetricAlarm("ApiServerErrors", {
+      alarmName: alarmName("ApiServerErrors"),
       ...metric("ServerErrorCount"),
       evaluationPeriods: 1,
       threshold: 1,
@@ -251,6 +253,7 @@ export default $config({
       alarmActions,
     });
     new aws.cloudwatch.MetricAlarm("ApiLatency", {
+      alarmName: alarmName("ApiLatency"),
       ...metric("RequestDuration"),
       statistic: "Average",
       evaluationPeriods: 2,
@@ -294,6 +297,7 @@ export default $config({
       ["UnexpectedStateDeletes", "UnexpectedDeleteMarker", 1],
     ] as const) {
       new aws.cloudwatch.MetricAlarm(name, {
+        alarmName: alarmName(name),
         ...operationalMetric(metricName),
         alarmActions,
         comparisonOperator: "GreaterThanOrEqualToThreshold",
@@ -307,6 +311,7 @@ export default $config({
       ["ConditionalWriteConflicts", "ConditionalWriteConflict", 5],
     ] as const) {
       new aws.cloudwatch.MetricAlarm(name, {
+        alarmName: alarmName(name),
         ...metric(metricName),
         alarmActions,
         comparisonOperator: "GreaterThanOrEqualToThreshold",
