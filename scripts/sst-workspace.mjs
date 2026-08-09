@@ -45,7 +45,7 @@ if (!script) {
 
 const result = spawnSync(
   "pnpm",
-  ["-F", pkg, "run", script, "--", ...forwardedArguments],
+  ["-F", pkg, "run", script, ...forwardedArguments],
   {
     stdio: "inherit",
     shell: process.platform === "win32",
