@@ -12,6 +12,11 @@ on:
         description: Exact main commit SHA reviewed in Production infrastructure diff
         required: true
         type: string
+      bootstrap_api:
+        description: One-time API infrastructure deploy to establish the generated issuer URL
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -28,6 +33,9 @@ jobs:
         run: |
           test -n "$REVIEWED_COMMIT"
           test "$REVIEWED_COMMIT" = "$GITHUB_SHA"
+          if test "${{ inputs.bootstrap_api }}" = true; then
+            test "${{ inputs.application }}" = api
+          fi
 
   deploy:
     needs: validate-reviewed-diff
@@ -37,3 +45,4 @@ jobs:
       application: ${{ inputs.application }}
       environment: production
       operation: deploy
+      bootstrap_api: ${{ inputs.bootstrap_api }}
