@@ -9,20 +9,20 @@ For file naming, mocking, and test design rules, see the
 - Migration upgrade tests apply the original schema and then migrate to the current schema in an isolated PostgreSQL container.
 - Testcontainers creates a fresh PostgreSQL instance for repository integration tests, applies every Drizzle migration, and removes the instance after the suite.
 - Playwright runs the OIDC flow and accessibility checks on desktop and mobile Chromium.
-- The production API deployment runs a smoke test against the exact
-  `BEAT_PRODUCTION_API_URL`. The same check can be run manually through the
-  Production smoke workflow. Beat has no scheduled sandbox environment.
+- The production API deployment reads the generated `apiUrl` from SST state
+  after deployment and smoke-tests that exact HTTPS endpoint. The same check
+  can be run manually through the Production smoke workflow. Beat has no
+  scheduled sandbox environment.
 - k6 baseline load tests are manual, require the protected production
   environment, and require the `production` confirmation input.
 
-Create a protected `production` GitHub Environment and configure
-`BEAT_PRODUCTION_API_URL` as its exact public HTTPS API origin. The API
-deployment runs the smoke check after SST finishes; the manual workflow accepts
-the same origin as an explicit input.
+Create a protected `production` GitHub Environment. The API deployment runs
+the smoke check after SST finishes and writes its generated endpoint into the
+workflow summary. The manual smoke and k6 workflows accept that endpoint as an
+explicit input.
 
 ```bash
 gh api --method PUT repos/OWNER/REPOSITORY/environments/production
-gh variable set BEAT_PRODUCTION_API_URL --env production --body "https://api.example.com"
 gh workflow run aws-smoke.yml -f api_url="https://api.example.com"
 ```
 

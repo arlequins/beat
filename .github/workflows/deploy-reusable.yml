@@ -2,6 +2,10 @@ name: Deploy SST application
 
 on:
   workflow_call:
+    outputs:
+      api_url:
+        description: API URL emitted by a successful API deployment
+        value: ${{ jobs.deploy.outputs.api_url }}
     inputs:
       application:
         description: Workspace to deploy
@@ -33,6 +37,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    outputs:
+      api_url: ${{ steps.deployed-api.outputs.api_url }}
     env:
       SST_AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
     concurrency:
@@ -96,11 +102,25 @@ jobs:
           path: ${{ runner.temp }}/sst-diff.txt
           if-no-files-found: error
 
+      - name: Resolve deployed API URL from SST state
+        id: deployed-api
+        if: inputs.application == 'api' && inputs.environment == 'production' && inputs.operation == 'deploy'
+        env:
+          BEAT_RUNTIME_SECRET_ARN: ${{ inputs.runtime_secret_arn }}
+        run: |
+          state_file="$RUNNER_TEMP/beat-api-sst-state.json"
+          trap 'rm -f "$state_file"' EXIT
+          SST_TELEMETRY_DISABLED=1 pnpm --filter @acme/api with-env sst state export --stage production > "$state_file"
+          API_URL="$(node scripts/read-sst-output.mjs "$state_file" apiUrl)"
+          node -e 'const url = new URL(process.argv[1]); if (url.protocol !== "https:") throw new Error("Production smoke endpoint must use HTTPS");' "$API_URL"
+          echo "api_url=$API_URL" >> "$GITHUB_OUTPUT"
+          echo "### API deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$API_URL\`" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Smoke production API
         if: inputs.application == 'api' && inputs.environment == 'production' && inputs.operation == 'deploy'
         env:
-          API_URL: ${{ vars.BEAT_PRODUCTION_API_URL }}
+          API_URL: ${{ steps.deployed-api.outputs.api_url }}
         run: |
-          test -n "$API_URL"
           node -e 'const url = new URL(process.argv[1]); if (url.protocol !== "https:") throw new Error("Production smoke endpoint must use HTTPS");' "$API_URL"
           node scripts/smoke-api.mjs "${API_URL%/}"

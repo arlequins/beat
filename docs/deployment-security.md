@@ -10,9 +10,10 @@ Store role ARNs as GitHub variables. Role ARNs identify resources and are not cr
 
 - `production` environment: `AWS_PRODUCTION_ROLE_ARN`
 - `production` environment: `BEAT_RUNTIME_SECRET_ARN` — full ARN of the JSON secret validated by the protected API plan/deploy job and read by the API Lambda at runtime
-- `production` environment: `BEAT_PRODUCTION_API_URL` — exact HTTPS API origin used by the post-deployment smoke test
 
 Set `AWS_REGION` as an environment variable. Do not store AWS access keys in GitHub.
+`BEAT_PRODUCTION_API_URL` is not used: the protected API deployment reads its
+own `apiUrl` output from SST state and smoke-tests that one URL.
 
 Start with the trust-policy template in [`docs/iam/github-oidc-trust-policy.json`](./iam/github-oidc-trust-policy.json). Replace placeholders and retain only the production subject before applying it. The deployment permission policy is intentionally separate from the baseline role: review [`Production AWS/SST handoff`](./production-aws-sst.md), start from its bounded policy template, then constrain each action and resource from the protected production diff evidence.
 

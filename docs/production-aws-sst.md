@@ -73,8 +73,9 @@ anomaly monitor.
    reader. For batch, confirm log retention and no unneeded data access.
 4. Run **Production deployment** from the same `main` commit. Paste that exact
    commit SHA into `reviewed_commit`; the workflow rejects a stale SHA.
-5. Review the protected Environment approval, then validate the API HTTPS
-   endpoint with **Production smoke**. Run **Production operations**
+5. The API deployment reads its generated `apiUrl` from SST state, records only
+   that URL in the workflow summary, and smoke-tests it. No custom domain or
+   preconfigured API URL is required. Run **Production operations**
    `qualify-storage` once after the first API deployment and retain its result.
 
 The deploy workflow cannot be run from a pull request or another branch. It
