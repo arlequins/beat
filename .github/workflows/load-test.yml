@@ -2,18 +2,35 @@ name: Baseline load test
 
 on:
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: Confirm an approved production capacity test
+        required: true
+        type: choice
+        options: [production]
+      api_url:
+        description: HTTPS API URL from the successful API deployment summary
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   k6:
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Validate approved production target
+        env:
+          API_URL: ${{ inputs.api_url }}
+        run: |
+          test "${{ inputs.confirm }}" = production
+          node -e 'const url = new URL(process.argv[1]); if (url.protocol !== "https:") throw new Error("Load-test endpoint must use HTTPS");' "$API_URL"
       - uses: grafana/setup-k6-action@v1
       - uses: grafana/run-k6-action@v1
         env:
-          API_URL: ${{ vars.LOAD_TEST_API_URL }}
+          API_URL: ${{ inputs.api_url }}
         with:
           path: tests/load/api.js

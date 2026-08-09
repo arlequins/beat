@@ -301,12 +301,14 @@ application ports to DynamoDB or PostgreSQL. The immutable S3 ledger can remain.
 
 ## Recovery and operations
 
-- Enable CloudTrail S3 data events for both data buckets and deliver them to a
-  separately protected audit destination.
+- If account-level CloudTrail data events are required, configure them in the
+  `beat-sst-aws` account baseline and deliver them to its separately protected
+  audit destination. The application stack does not create a competing trail.
 - Alarm on authentication failures, conditional-write conflicts, reconciliation
   backlog, GitHub publication failures, KMS errors, and unexpected object
   deletion attempts.
-- Run S3 Inventory for the ledger and verify Object Lock status periodically.
+- Verify Object Lock status periodically; add S3 Inventory through the account
+  baseline only when its destination and retention policy are approved.
 - Retain state-bucket noncurrent versions long enough to investigate incidents.
 - Test point-in-time recovery by restoring selected object versions to a
   separate recovery prefix.
@@ -332,15 +334,24 @@ Implemented in Beat:
 - an administrator web console that persists the rotating token pair in
   `localStorage` and opens a GitHub content-review pull request;
 - storage readiness checks, deployment secret loading, unit tests, and a
-  75-percent API coverage gate.
+  75-percent API coverage gate;
+- a production-only scheduled reconciler that replays pending GitHub
+  publication jobs, records merged or closed PR state, and produces immutable
+  evidence for every durable state-object version without reading its body;
+- reconciliation alarms and an isolated version-recovery command; account-wide
+  CloudTrail and any S3 Inventory remain baseline-owned;
+- an explicit real-AWS qualification command for conditional writes,
+  versioning, lifecycle configuration, and Compliance Object Lock.
 
 Still required before live production traffic:
 
-1. Run integration tests against real AWS buckets for concurrent refresh,
-   Object Lock retention, lifecycle expiry, and administrator disablement.
-2. Add a scheduled reconciler for interrupted ledger writes and GitHub
-   publication jobs.
-3. Add CloudTrail S3 data events, alarms, inventory, and recovery exercises.
+1. Run the production qualification against the deployed buckets and retain
+   its output with the deployment evidence.
+2. Exercise concurrent refresh, administrator disablement, state-version
+   recovery, GitHub PR reconciliation, and mobile Gourmet publication against
+   the live production API.
+3. Verify the baseline-owned CloudTrail delivery when it is enabled, then
+   subscribe the alarm topic to an operator destination.
 4. Move ES256 signing from a private JWK runtime secret to AWS KMS if the
    operational complexity is acceptable.
 

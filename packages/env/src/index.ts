@@ -39,20 +39,9 @@ export { parseAwsIdList, vpcFromEnv, vpcIdFromEnv } from "./vpc.js";
 
 export const LambdaEnvironment = {
   NODE_ENV: "production",
-  ...(serverEnv.DATABASE_HOST &&
-  serverEnv.DATABASE_PORT &&
-  serverEnv.DATABASE_USER &&
-  serverEnv.DATABASE_PASSWORD &&
-  serverEnv.DATABASE_NAME
-    ? {
-        DATABASE_HOST: serverEnv.DATABASE_HOST,
-        DATABASE_PORT: serverEnv.DATABASE_PORT,
-        DATABASE_USER: serverEnv.DATABASE_USER,
-        DATABASE_PASSWORD: serverEnv.DATABASE_PASSWORD,
-        DATABASE_NAME: serverEnv.DATABASE_NAME,
-        DATABASE_SSL_MODE: serverEnv.DATABASE_SSL_MODE ?? "require",
-      }
-    : {}),
+  // Only non-secret configuration may be serialized by infrastructure code.
+  // Beat production retrieves credentials and private keys from Secrets Manager
+  // in the Lambda process, never from this SST/Pulumi input object.
   ...(serverEnv.OIDC_ISSUER_URL
     ? { OIDC_ISSUER_URL: serverEnv.OIDC_ISSUER_URL }
     : {}),
@@ -89,10 +78,10 @@ export const LambdaEnvironment = {
   ...(serverEnv.BEAT_AUTH_LEDGER_BUCKET
     ? { BEAT_AUTH_LEDGER_BUCKET: serverEnv.BEAT_AUTH_LEDGER_BUCKET }
     : {}),
-  BEAT_AUTH_STATE_PREFIX: serverEnv.BEAT_AUTH_STATE_PREFIX,
-  ...(serverEnv.BEAT_AUTH_LOOKUP_SECRET
-    ? { BEAT_AUTH_LOOKUP_SECRET: serverEnv.BEAT_AUTH_LOOKUP_SECRET }
+  ...(serverEnv.BEAT_RUNTIME_SECRET_ARN
+    ? { BEAT_RUNTIME_SECRET_ARN: serverEnv.BEAT_RUNTIME_SECRET_ARN }
     : {}),
+  BEAT_AUTH_STATE_PREFIX: serverEnv.BEAT_AUTH_STATE_PREFIX,
   ...(serverEnv.BEAT_AUTH_LEDGER_RETENTION_DAYS
     ? {
         BEAT_AUTH_LEDGER_RETENTION_DAYS: String(
@@ -113,31 +102,6 @@ export const LambdaEnvironment = {
   ...(serverEnv.BEAT_AUTH_AUDIENCE
     ? { BEAT_AUTH_AUDIENCE: serverEnv.BEAT_AUTH_AUDIENCE }
     : {}),
-  ...(serverEnv.BEAT_AUTH_SIGNING_PRIVATE_JWK
-    ? {
-        BEAT_AUTH_SIGNING_PRIVATE_JWK: serverEnv.BEAT_AUTH_SIGNING_PRIVATE_JWK,
-      }
-    : {}),
-  ...(serverEnv.BEAT_AUTH_SIGNING_KEY_ID
-    ? { BEAT_AUTH_SIGNING_KEY_ID: serverEnv.BEAT_AUTH_SIGNING_KEY_ID }
-    : {}),
-  ...(serverEnv.BEAT_GOURMET_ACTION_API_KEY
-    ? { BEAT_GOURMET_ACTION_API_KEY: serverEnv.BEAT_GOURMET_ACTION_API_KEY }
-    : {}),
-  ...(serverEnv.GITHUB_APP_ID
-    ? { GITHUB_APP_ID: serverEnv.GITHUB_APP_ID }
-    : {}),
-  ...(serverEnv.GITHUB_APP_INSTALLATION_ID
-    ? {
-        GITHUB_APP_INSTALLATION_ID: serverEnv.GITHUB_APP_INSTALLATION_ID,
-      }
-    : {}),
-  ...(serverEnv.GITHUB_APP_PRIVATE_KEY
-    ? { GITHUB_APP_PRIVATE_KEY: serverEnv.GITHUB_APP_PRIVATE_KEY }
-    : {}),
-  ...(serverEnv.GITHUB_CONTENT_REPOSITORY
-    ? { GITHUB_CONTENT_REPOSITORY: serverEnv.GITHUB_CONTENT_REPOSITORY }
-    : {}),
 
   NEXT_PUBLIC_SITE_URL: clientEnv.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_API_URL: clientEnv.NEXT_PUBLIC_API_URL,
@@ -149,9 +113,6 @@ export const LambdaEnvironment = {
   NEXT_PUBLIC_OIDC_SCOPE: clientEnv.NEXT_PUBLIC_OIDC_SCOPE,
   ...(serverEnv.OTEL_EXPORTER_OTLP_ENDPOINT
     ? { OTEL_EXPORTER_OTLP_ENDPOINT: serverEnv.OTEL_EXPORTER_OTLP_ENDPOINT }
-    : {}),
-  ...(serverEnv.OTEL_EXPORTER_OTLP_HEADERS
-    ? { OTEL_EXPORTER_OTLP_HEADERS: serverEnv.OTEL_EXPORTER_OTLP_HEADERS }
     : {}),
   OTEL_SERVICE_NAME: serverEnv.OTEL_SERVICE_NAME ?? "api",
   ...(serverEnv.OTEL_SERVICE_VERSION

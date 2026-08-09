@@ -148,6 +148,10 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     telemetry.metric("RequestDuration", durationMs, "Milliseconds", { stage });
     if (context.res.status >= 500)
       telemetry.metric("ServerErrorCount", 1, "Count", { stage });
+    if (context.res.status === 401)
+      telemetry.metric("AuthenticationFailure", 1, "Count", { stage });
+    if (context.res.status === 409)
+      telemetry.metric("ConditionalWriteConflict", 1, "Count", { stage });
     if (coldStart) {
       coldStart = false;
       telemetry.metric("ColdStart", 1, "Count", { stage });

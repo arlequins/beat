@@ -6,12 +6,19 @@
  * SST disallows top-level imports — `@acme/env` is loaded via dynamic `import()` in `app` / `run`.
  * `app()` uses validated {@link serverEnv}, {@link sstAwsRegion}, {@link Stage} for the AWS provider.
  *
- * Run all SST commands from this package (cwd = `apps/web`).
- * Deploy: set `NEXT_PUBLIC_*` then `pnpm sst:deploy -- --stage production`
+ * Run local SST commands from this package (cwd = `apps/web`). Production
+ * deployment is deliberately restricted to the protected GitHub Action.
  */
 export default $config({
   async app(input) {
     const { serverEnv, sstAwsRegion, Stage } = await import("@acme/env");
+    if (
+      input?.stage === Stage.PRODUCTION &&
+      process.env.GITHUB_ACTIONS !== "true"
+    )
+      throw new Error(
+        "Beat production deployment is allowed only from protected GitHub Actions",
+      );
     const localAwsProfile = serverEnv.SST_AWS_PROFILE?.trim();
     const region = sstAwsRegion();
 
@@ -31,7 +38,7 @@ export default $config({
   async run() {
     const { clientEnv } = await import("@acme/env");
 
-    new sst.aws.StaticSite("Web", {
+    const site = new sst.aws.StaticSite("Web", {
       path: ".",
       errorPage: "/404.html",
       environment: {
@@ -53,6 +60,37 @@ export default $config({
         directory: ".",
         title: "web",
       },
+      transform: {
+        assets: (args) => {
+          args.cors = false;
+          args.enforceHttps = true;
+          args.versioning = true;
+          args.transform = {
+            bucket: { forceDestroy: false },
+            publicAccessBlock: {
+              blockPublicAcls: true,
+              blockPublicPolicy: true,
+              ignorePublicAcls: true,
+              restrictPublicBuckets: true,
+            },
+          };
+        },
+      },
     });
+    const assets = site.nodes.assets;
+    if (!assets)
+      throw new Error("SST StaticSite did not create an asset bucket");
+    new aws.s3.BucketOwnershipControls("WebAssetsOwnership", {
+      bucket: assets.name,
+      rule: { objectOwnership: "BucketOwnerEnforced" },
+    });
+    new aws.s3.BucketServerSideEncryptionConfiguration("WebAssetsEncryption", {
+      bucket: assets.name,
+      rules: [
+        { applyServerSideEncryptionByDefault: { sseAlgorithm: "AES256" } },
+      ],
+    });
+
+    return { webUrl: site.url };
   },
 });

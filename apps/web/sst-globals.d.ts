@@ -21,7 +21,10 @@ type SstAppConfig = {
 
 declare const $config: (config: {
   app: (input?: { stage?: string }) => SstAppConfig | Promise<SstAppConfig>;
-  run: () => void | Promise<void>;
+  run: () =>
+    | undefined
+    | Record<string, unknown>
+    | Promise<undefined | Record<string, unknown>>;
 }) => unknown;
 
 declare const sst: {
@@ -34,7 +37,31 @@ declare const sst: {
         environment?: Record<string, string>;
         build?: { command: string; output: string };
         dev?: { command: string; directory: string; title?: string };
+        transform?: {
+          assets?: (args: {
+            cors?: false;
+            enforceHttps?: boolean;
+            transform?: Record<string, unknown>;
+            versioning?: boolean;
+          }) => void;
+        };
       },
+    ) => {
+      url: string;
+      nodes: { assets?: { name: string } };
+    };
+  };
+};
+
+declare const aws: {
+  s3: {
+    BucketOwnershipControls: new (
+      name: string,
+      args: Record<string, unknown>,
+    ) => unknown;
+    BucketServerSideEncryptionConfiguration: new (
+      name: string,
+      args: Record<string, unknown>,
     ) => unknown;
   };
 };

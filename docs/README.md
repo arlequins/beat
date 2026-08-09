@@ -55,6 +55,9 @@ local application; the pages below explain design decisions and ongoing work.
   the static web app and Hono API, with Neon PostgreSQL.
 - [Deployment and supply-chain security](deployment-security.md): GitHub OIDC,
   protected environments, security checks, and response headers.
+- [Production AWS/SST handoff](production-aws-sst.md): baseline ownership,
+  secret boundary, least-privilege role handoff, protected diff/deploy, and
+  rollback.
 - [Incident runbook](incident-runbook.md): triage, mitigation, recovery, and
   observability integration points.
 - [Semantic versioning](semantic-versioning.md): release impact and repository

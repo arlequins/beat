@@ -1,0 +1,133 @@
+name: Production operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Approved production operation
+        required: true
+        type: choice
+        options:
+          - create-admin
+          - rotate-admin-password
+          - disable-admin
+          - qualify-storage
+          - recover-state-version
+      confirm:
+        description: Type production to acknowledge this protected operation
+        required: true
+        type: choice
+        options: [production]
+      state_bucket:
+        description: authStateBucket from the Production deployment output
+        required: true
+        type: string
+      ledger_bucket:
+        description: authLedgerBucket from the Production deployment output
+        required: true
+        type: string
+      administrator_email:
+        description: Required for administrator operations
+        required: false
+        type: string
+      recovery_source_key:
+        description: Required only for recover-state-version
+        required: false
+        type: string
+      recovery_version_id:
+        description: Required only for recover-state-version
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  operate:
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    concurrency:
+      group: beat-production-operations
+      cancel-in-progress: false
+    env:
+      BEAT_ADMIN_BOOTSTRAP_EMAIL: ${{ inputs.administrator_email }}
+      BEAT_ADMIN_BOOTSTRAP_PASSWORD: ${{ secrets.BEAT_ADMIN_OPERATION_PASSWORD }}
+      BEAT_AUTH_LEDGER_BUCKET: ${{ inputs.ledger_bucket }}
+      BEAT_AUTH_LEDGER_RETENTION_DAYS: "365"
+      BEAT_AUTH_STATE_BUCKET: ${{ inputs.state_bucket }}
+      BEAT_AUTH_STATE_PREFIX: v1
+      BEAT_PRODUCTION_QUALIFICATION_CONFIRM: ${{ inputs.confirm }}
+      BEAT_RECOVERY_SOURCE_KEY: ${{ inputs.recovery_source_key }}
+      BEAT_RECOVERY_VERSION_ID: ${{ inputs.recovery_version_id }}
+      CONFIRM: ${{ inputs.confirm }}
+      OPERATION: ${{ inputs.operation }}
+      RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
+      SST_AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
+      SST_STAGE: production
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./tooling/github/setup
+
+      - name: Require complete protected-operation input
+        run: |
+          test "$CONFIRM" = production
+          test -n "$BEAT_AUTH_STATE_BUCKET"
+          test -n "$BEAT_AUTH_LEDGER_BUCKET"
+          case "$OPERATION" in
+            create-admin|rotate-admin-password)
+              test -n "$BEAT_ADMIN_BOOTSTRAP_EMAIL"
+              test -n "$BEAT_ADMIN_BOOTSTRAP_PASSWORD"
+              ;;
+            disable-admin)
+              test -n "$BEAT_ADMIN_BOOTSTRAP_EMAIL"
+              ;;
+            recover-state-version)
+              test -n "$BEAT_RECOVERY_SOURCE_KEY"
+              test -n "$BEAT_RECOVERY_VERSION_ID"
+              ;;
+            qualify-storage) ;;
+            *) exit 1 ;;
+          esac
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
+          aws-region: ${{ env.SST_AWS_REGION }}
+
+      - name: Require and load auth configuration for administrator operations
+        if: inputs.operation == 'create-admin' || inputs.operation == 'rotate-admin-password' || inputs.operation == 'disable-admin'
+        run: |
+          test -n "$RUNTIME_SECRET_ARN"
+          secret_file="$RUNNER_TEMP/beat-api-runtime.json"
+          trap 'rm -f "$secret_file"' EXIT
+          umask 077
+          aws secretsmanager get-secret-value \
+            --secret-id "$RUNTIME_SECRET_ARN" \
+            --query SecretString \
+            --output text > "$secret_file"
+          BEAT_RUNTIME_SECRET_FILE="$secret_file" \
+          BEAT_GITHUB_ENV_FILE="$GITHUB_ENV" \
+          node scripts/validate-beat-runtime-secret.mjs
+
+      - name: Run protected operation
+        run: |
+          case "$OPERATION" in
+            create-admin)
+              pnpm --filter @acme/api auth:admin:create
+              ;;
+            rotate-admin-password)
+              pnpm --filter @acme/api auth:admin:password
+              ;;
+            disable-admin)
+              pnpm --filter @acme/api auth:admin:disable
+              ;;
+            qualify-storage)
+              pnpm --filter @acme/api auth:production:qualify
+              ;;
+            recover-state-version)
+              pnpm --filter @acme/api auth:state:recover
+              ;;
+          esac

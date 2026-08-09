@@ -24,7 +24,8 @@ it when creating a project.
 
 - Node.js and pnpm versions matching [`package.json`](./package.json)
 - Docker only for retained legacy PostgreSQL integration tests
-- AWS credentials only for cloud-backed SST commands
+- no local AWS credentials for production; protected GitHub Actions assumes the
+  production role through OIDC
 
 Use the Node.js version in [`.nvmrc`](./.nvmrc). The preinstall check reports an
 actionable error when the runtime does not match.
@@ -116,7 +117,7 @@ S3-backed records, and repository-reviewed images.
 | `pnpm test` | Run unit and contract tests. |
 | `pnpm test:e2e` | Run isolated PostgreSQL and browser end-to-end tests. |
 | `pnpm db:setup` | Apply committed migrations and pending seeds. |
-| `pnpm --filter @acme/api auth:admin:create` | Create a production S3 administrator. |
+| `Production operations` GitHub Action | Create, rotate, or disable production S3 administrators. |
 | `pnpm turbo gen` | Generate an application, package, or tRPC domain. |
 | `pnpm gen:feature` | Generate a clean-architecture command or query slice. |
 
@@ -158,8 +159,8 @@ pnpm test:template-output full
 pnpm test:template-output minimal
 ```
 
-These checks do not emulate AWS. Cloud deployment, preview stages, and sandbox
-smoke tests still require AWS credentials. See [SST Local Testing](./docs/sst-local-testing.md)
+These checks do not emulate AWS. The controlled production qualification and
+deployment still require AWS credentials. See [SST Local Testing](./docs/sst-local-testing.md)
 and [Template Readiness](./docs/template-readiness.md).
 
 ## Deployment
@@ -170,6 +171,9 @@ and [Template Readiness](./docs/template-readiness.md).
   schedules.
 
 The selected production profile uses AWS only. Neon and Vercel are not required.
+Never run a production SST diff, deploy, or remove command locally; use the
+protected GitHub Actions procedure in
+[Production AWS/SST handoff](./docs/production-aws-sst.md).
 
 Read [Deployment and Supply-Chain Security](./docs/deployment-security.md) before
 configuring GitHub OIDC roles or production environments. Deployment-specific

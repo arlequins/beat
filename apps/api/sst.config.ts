@@ -4,6 +4,13 @@
 export default $config({
   async app(input) {
     const { serverEnv, sstAwsRegion, Stage } = await import("@acme/env");
+    if (
+      input?.stage === Stage.PRODUCTION &&
+      process.env.GITHUB_ACTIONS !== "true"
+    )
+      throw new Error(
+        "Beat production deployment is allowed only from protected GitHub Actions",
+      );
     const localAwsProfile = serverEnv.SST_AWS_PROFILE?.trim();
     const region = sstAwsRegion();
 
@@ -27,6 +34,7 @@ export default $config({
       resolveApiDeploymentConfig,
       serverEnv,
       sstAwsRegion,
+      Stage,
       vpcFromEnv,
     } = await import("@acme/env");
 
@@ -39,59 +47,169 @@ export default $config({
       throttleRateLimit: serverEnv.API_THROTTLE_RATE_LIMIT,
       wafEnabled: serverEnv.API_WAF_ENABLED,
     });
-    const authStateBucket = new sst.aws.Bucket("AuthState", {
-      versioning: true,
+    if ($app.stage === Stage.PRODUCTION && !serverEnv.BEAT_RUNTIME_SECRET_ARN)
+      throw new Error(
+        "BEAT_RUNTIME_SECRET_ARN is required for the production API Lambda",
+      );
+
+    const statePrefix = serverEnv.BEAT_AUTH_STATE_PREFIX.replace(
+      /^\/+|\/+$/g,
+      "",
+    );
+    const createPrivateBucket = (
+      name: string,
+      options: {
+        cors?:
+          | false
+          | {
+              allowHeaders: string[];
+              allowMethods: ("PUT" | "GET")[];
+              allowOrigins: string[];
+            };
+        lifecycle?: {
+          expiresIn: `${number} day` | `${number} days`;
+          id: string;
+          prefix: string;
+        }[];
+        objectLock?: boolean;
+      } = {},
+    ) => {
+      const bucket = new sst.aws.Bucket(name, {
+        cors: options.cors ?? false,
+        enforceHttps: true,
+        lifecycle: options.lifecycle,
+        versioning: true,
+        transform: {
+          bucket: {
+            forceDestroy: false,
+            ...(options.objectLock ? { objectLockEnabled: true } : {}),
+          },
+          publicAccessBlock: {
+            blockPublicAcls: true,
+            blockPublicPolicy: true,
+            ignorePublicAcls: true,
+            restrictPublicBuckets: true,
+          },
+        },
+      });
+      new aws.s3.BucketOwnershipControls(`${name}Ownership`, {
+        bucket: bucket.name,
+        rule: { objectOwnership: "BucketOwnerEnforced" },
+      });
+      new aws.s3.BucketServerSideEncryptionConfiguration(`${name}Encryption`, {
+        bucket: bucket.name,
+        rules: [
+          { applyServerSideEncryptionByDefault: { sseAlgorithm: "AES256" } },
+        ],
+      });
+      return bucket;
+    };
+
+    const authStateBucket = createPrivateBucket("AuthState", {
       lifecycle: [
         {
           expiresIn: "31 days",
           id: "expire-refresh-sessions",
-          prefix: "v1/oauth/sessions/",
+          prefix: `${statePrefix}/oauth/sessions/`,
         },
         {
           expiresIn: "2 days",
           id: "expire-rate-limit-windows",
-          prefix: "v1/rate-limit/",
+          prefix: `${statePrefix}/rate-limit/`,
         },
       ],
     });
-    const authLedgerBucket = new sst.aws.Bucket("AuthLedger", {
-      versioning: true,
-      transform: {
-        bucket: {
-          objectLockEnabled: true,
-        },
-      },
+    const authLedgerBucket = createPrivateBucket("AuthLedger", {
+      objectLock: true,
     });
-    const cacheBucket = new sst.aws.Bucket("Cache");
+    const cacheBucket = createPrivateBucket("Cache", {
+      lifecycle: [
+        {
+          expiresIn: "7 days",
+          id: "expire-cache-objects",
+          prefix: `${$app.name}/${$app.stage}/`,
+        },
+      ],
+    });
     const uploadOrigins = (
       serverEnv.API_CORS_ORIGINS ?? "http://localhost:3000"
     )
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean);
-    const uploadBucket = new sst.aws.Bucket("Uploads", {
+    const uploadBucket = createPrivateBucket("Uploads", {
       cors: {
         allowHeaders: ["content-type"],
         allowMethods: ["PUT"],
         allowOrigins: uploadOrigins,
       },
+      lifecycle: [
+        {
+          expiresIn: "31 days",
+          id: "expire-unpublished-uploads",
+          prefix: `${$app.name}/${$app.stage}/`,
+        },
+      ],
     });
     const handler = {
       handler: "src/lambda.handler",
-      link: [cacheBucket, uploadBucket],
+      logging: {
+        format: "json" as const,
+        retention: $app.stage === Stage.PRODUCTION ? "13 months" : "1 month",
+      },
       permissions: [
         {
           actions: ["s3:GetBucketLocation", "s3:ListBucket"],
           resources: [authStateBucket.arn, authLedgerBucket.arn],
         },
         {
+          actions: ["s3:ListBucketVersions"],
+          resources: [authStateBucket.arn],
+        },
+        {
           actions: ["s3:GetObject", "s3:PutObject"],
-          resources: [$interpolate`${authStateBucket.arn}/*`],
+          resources: [$interpolate`${authStateBucket.arn}/${statePrefix}/*`],
         },
         {
           actions: ["s3:PutObject", "s3:PutObjectRetention"],
-          resources: [$interpolate`${authLedgerBucket.arn}/*`],
+          resources: [
+            $interpolate`${authLedgerBucket.arn}/${statePrefix}/events/*`,
+          ],
         },
+        {
+          actions: ["s3:ListBucket"],
+          conditions: [
+            {
+              test: "StringLike",
+              variable: "s3:prefix",
+              values: [
+                `${$app.name}/${$app.stage}`,
+                `${$app.name}/${$app.stage}/*`,
+              ],
+            },
+          ],
+          resources: [cacheBucket.arn],
+        },
+        {
+          actions: ["s3:DeleteObject", "s3:GetObject", "s3:PutObject"],
+          resources: [
+            $interpolate`${cacheBucket.arn}/${$app.name}/${$app.stage}/*`,
+          ],
+        },
+        {
+          actions: ["s3:PutObject"],
+          resources: [
+            $interpolate`${uploadBucket.arn}/${$app.name}/${$app.stage}/*`,
+          ],
+        },
+        ...(serverEnv.BEAT_RUNTIME_SECRET_ARN
+          ? [
+              {
+                actions: ["secretsmanager:GetSecretValue"],
+                resources: [serverEnv.BEAT_RUNTIME_SECRET_ARN],
+              },
+            ]
+          : []),
       ],
       ...(vpc
         ? {
@@ -106,7 +224,10 @@ export default $config({
         BEAT_AUTH_LEDGER_BUCKET: authLedgerBucket.name,
         BEAT_AUTH_LEDGER_RETENTION_DAYS: "365",
         BEAT_AUTH_STATE_BUCKET: authStateBucket.name,
-        BEAT_AUTH_STATE_PREFIX: "v1",
+        BEAT_AUTH_STATE_PREFIX: statePrefix,
+        ...(serverEnv.BEAT_RUNTIME_SECRET_ARN
+          ? { BEAT_RUNTIME_SECRET_ARN: serverEnv.BEAT_RUNTIME_SECRET_ARN }
+          : {}),
         S3_CACHE_BUCKET: cacheBucket.name,
         S3_CACHE_PREFIX: `${$app.name}/${$app.stage}`,
         S3_UPLOAD_BUCKET: uploadBucket.name,
@@ -162,8 +283,56 @@ export default $config({
       }),
     });
 
+    const operationalMetric = (name: string) => ({
+      namespace: "Beat/Operations",
+      metricName: name,
+      dimensions: { stage: $app.stage },
+      period: 300,
+      statistic: "Sum",
+    });
+    for (const [name, metricName, threshold] of [
+      ["ReconciliationFailures", "ReconciliationFailure", 1],
+      ["ReconciliationBacklog", "ReconciliationBacklog", 1],
+      ["UnexpectedStateDeletes", "UnexpectedDeleteMarker", 1],
+    ] as const) {
+      new aws.cloudwatch.MetricAlarm(name, {
+        ...operationalMetric(metricName),
+        alarmActions,
+        comparisonOperator: "GreaterThanOrEqualToThreshold",
+        evaluationPeriods: 1,
+        threshold,
+        treatMissingData: "notBreaching",
+      });
+    }
+    for (const [name, metricName, threshold] of [
+      ["AuthenticationFailures", "AuthenticationFailure", 5],
+      ["ConditionalWriteConflicts", "ConditionalWriteConflict", 5],
+    ] as const) {
+      new aws.cloudwatch.MetricAlarm(name, {
+        ...metric(metricName),
+        alarmActions,
+        comparisonOperator: "GreaterThanOrEqualToThreshold",
+        evaluationPeriods: 1,
+        threshold,
+        treatMissingData: "notBreaching",
+      });
+    }
+
+    new sst.aws.CronV2("BeatReconciliation", {
+      enabled: $app.stage === Stage.PRODUCTION,
+      schedule: "rate(15 minutes)",
+      function: {
+        ...handler,
+        handler: "src/reconcile.handler",
+        timeout: "5 minutes",
+      },
+    });
+
     if (deployment.preset === ApiDeploymentPreset.API_GATEWAY) {
       const api = new sst.aws.ApiGatewayV2("Api", {
+        accessLog: {
+          retention: $app.stage === Stage.PRODUCTION ? "13 months" : "1 month",
+        },
         cors: false,
         ...(deployment.customDomain ? { domain: deployment.customDomain } : {}),
         transform: {

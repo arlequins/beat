@@ -33,6 +33,7 @@ declare const sst: {
     ApiGatewayV2: new (
       name: string,
       args: {
+        accessLog?: { retention?: string };
         cors?: boolean;
         domain?: string;
         transform?: {
@@ -51,6 +52,8 @@ declare const sst: {
           handler: string;
           environment?: Record<string, string>;
           link?: unknown[];
+          logging?: Record<string, unknown>;
+          permissions?: Record<string, unknown>[];
           vpc?: { subnets: string[]; securityGroups: string[] };
         },
       ) => unknown;
@@ -59,35 +62,38 @@ declare const sst: {
     Bucket: new (
       name: string,
       args?: {
-        cors?: {
-          allowHeaders?: string[];
-          allowMethods?: ("DELETE" | "GET" | "HEAD" | "POST" | "PUT")[];
-          allowOrigins?: string[];
-        };
+        cors?:
+          | false
+          | {
+              allowHeaders?: string[];
+              allowMethods?: ("DELETE" | "GET" | "HEAD" | "POST" | "PUT")[];
+              allowOrigins?: string[];
+            };
         lifecycle?: {
           enabled?: boolean;
           expiresIn?: `${number} day` | `${number} days`;
           id?: string;
           prefix?: string;
         }[];
-        transform?: {
-          bucket?: {
-            objectLockEnabled?: boolean;
-          };
-        };
+        enforceHttps?: boolean;
+        transform?: Record<string, unknown>;
         versioning?: boolean;
       },
     ) => { arn: string; name: string };
+    CronV2: new (
+      name: string,
+      args: {
+        enabled?: boolean;
+        function: Record<string, unknown>;
+        schedule: string;
+      },
+    ) => unknown;
     Function: new (
       name: string,
       args: {
         handler: string;
         environment?: Record<string, string>;
-        permissions?: {
-          actions: string[];
-          effect?: "allow" | "deny";
-          resources: string[];
-        }[];
+        permissions?: Record<string, unknown>[];
         url?:
           | boolean
           | { router: { instance: { url: string }; path?: string } };
@@ -109,8 +115,43 @@ declare const sst: {
 };
 
 declare const aws: {
+  getCallerIdentityOutput: (args?: Record<string, unknown>) => {
+    accountId: string;
+  };
+  cloudtrail: {
+    Trail: new (
+      name: string,
+      args: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ) => unknown;
+  };
   cloudwatch: {
     MetricAlarm: new (name: string, args: Record<string, unknown>) => unknown;
     Dashboard: new (name: string, args: Record<string, unknown>) => unknown;
+  };
+  iam: {
+    getPolicyDocumentOutput: (args: Record<string, unknown>) => {
+      json: string;
+    };
+  };
+  s3: {
+    BucketOwnershipControls: new (
+      name: string,
+      args: Record<string, unknown>,
+    ) => unknown;
+    BucketServerSideEncryptionConfiguration: new (
+      name: string,
+      args: Record<string, unknown>,
+    ) => unknown;
+    BucketPolicy: new (
+      name: string,
+      args: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ) => unknown;
+    Inventory: new (
+      name: string,
+      args: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ) => unknown;
   };
 };

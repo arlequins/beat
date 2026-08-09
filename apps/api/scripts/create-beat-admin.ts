@@ -1,6 +1,9 @@
 import { serverEnv } from "@acme/env/server-env";
 
 import { createBeatAdmin } from "../src/beat-auth";
+import { requireGitHubProductionAction } from "./require-github-production-action";
+
+requireGitHubProductionAction();
 
 const email = serverEnv.BEAT_ADMIN_BOOTSTRAP_EMAIL;
 const password = serverEnv.BEAT_ADMIN_BOOTSTRAP_PASSWORD;

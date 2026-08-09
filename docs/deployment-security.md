@@ -2,25 +2,35 @@
 
 ## AWS OIDC Setup
 
-Create separate AWS IAM roles for preview and production. Configure GitHub's OIDC provider as the federated principal and restrict the `sub` claim to this repository. Preview jobs use dynamic GitHub Environments, so allow `repo:OWNER/REPOSITORY:environment:pr-*` for the preview role. Allow only `repo:OWNER/REPOSITORY:environment:production` for the production role.
+Create one AWS IAM role for the protected production environment. Configure
+GitHub's OIDC provider as the federated principal and restrict the `sub` claim
+to `repo:OWNER/REPOSITORY:environment:production`.
 
 Store role ARNs as GitHub variables. Role ARNs identify resources and are not credentials:
 
-- repository: `AWS_PREVIEW_ROLE_ARN`
 - `production` environment: `AWS_PRODUCTION_ROLE_ARN`
-- `production` environment: `BEAT_RUNTIME_SECRET_ID` — name or ARN of the JSON secret consumed only by the API deployment job
-
-Preview jobs remain skipped until `AWS_PREVIEW_ROLE_ARN` is configured.
+- `production` environment: `BEAT_RUNTIME_SECRET_ARN` — full ARN of the JSON secret validated by the protected API plan/deploy job and read by the API Lambda at runtime
 
 Set `AWS_REGION` as an environment variable. Do not store AWS access keys in GitHub.
+`BEAT_PRODUCTION_API_URL` is not used: the protected API deployment reads its
+own `apiUrl` output from SST state and smoke-tests that one URL.
 
-Start with the trust-policy template in [`docs/iam/github-oidc-trust-policy.json`](./iam/github-oidc-trust-policy.json). Replace placeholders and retain only the subject appropriate for each role before applying it. The deployment permission policy is intentionally not universal: generate it from CloudTrail after a sandbox deployment, then constrain actions and resources to the stacks, state bucket, asset bucket, and roles owned by this repository.
+Start with the trust-policy template in [`docs/iam/github-oidc-trust-policy.json`](./iam/github-oidc-trust-policy.json). Replace placeholders and retain only the production subject before applying it. The deployment permission policy is intentionally separate from the baseline role: review [`Production AWS/SST handoff`](./production-aws-sst.md), start from its bounded policy template, then constrain each action and resource from the protected production diff evidence.
+
+The same protected role runs `Production operations`. Once the API has created
+the bucket names, scope its operator permissions to the two exact buckets:
+`s3:GetObject`, `s3:PutObject`, `s3:PutObjectRetention`, `s3:HeadBucket`,
+`s3:HeadObject`, `s3:GetBucketLifecycleConfiguration`, and
+`s3:ListBucketVersions`. Do not grant deletion permissions. Administrator
+operations also require read access to the one runtime secret described below.
 
 ## Environments and Branch Protection
 
 Create a `production` GitHub Environment with required reviewers, prevent self-review, restrict deployment to protected release branches or tags, and configure an approval timeout. Protect `main` and `develop`, require the CI and Security checks, require review, dismiss stale approvals, and disallow force pushes.
 
-Preview deployments only run for branches in the same repository. Fork pull requests never receive AWS credentials. A closed pull request removes its `pr-NUMBER` stage.
+Pull requests never receive AWS credentials and do not create cloud previews.
+Only an approved manual production workflow dispatched from `main` can assume
+the deployment role.
 
 ## Security Checks
 
@@ -32,7 +42,7 @@ The license policy rejects AGPL and GPL production dependencies by default. Adju
 
 Store Beat's runtime configuration as one AWS Secrets Manager JSON secret. Do not store its values in GitHub Secrets, repository variables, source files, browser-visible variables, or SST outputs.
 
-The production deployment workflow reads the secret only after it assumes `AWS_PRODUCTION_ROLE_ARN` through GitHub OIDC. The role therefore needs `secretsmanager:GetSecretValue` only for this secret and `secretsmanager:DescribeSecret` only if required by the chosen resource policy. It must not have wildcard Secrets Manager access.
+The protected production diff/deployment workflow reads the secret only after it assumes `AWS_PRODUCTION_ROLE_ARN` through GitHub OIDC, validates it, masks its values, and deletes the runner temporary file. SST receives only `BEAT_RUNTIME_SECRET_ARN`; the API Lambda retrieves the JSON with an exact `secretsmanager:GetSecretValue` permission before importing the application. The values are never written to SST/Pulumi state, Lambda configuration, static assets, GitHub variables, or `NEXT_PUBLIC_*` values. The role must not have wildcard Secrets Manager access.
 
 The JSON object must contain these string values:
 
@@ -43,6 +53,7 @@ The JSON object must contain these string values:
   "BEAT_AUTH_AUDIENCE": "beat-agent",
   "BEAT_AUTH_SIGNING_PRIVATE_JWK": "{...}",
   "BEAT_AUTH_SIGNING_KEY_ID": "beat-auth-2026-01",
+  "BEAT_GOURMET_ACTION_API_KEY": "...at least 32 random characters...",
   "GITHUB_APP_ID": "...",
   "GITHUB_APP_INSTALLATION_ID": "...",
   "GITHUB_APP_PRIVATE_KEY": "-----BEGIN RSA PRIVATE KEY-----\\n...",
@@ -52,37 +63,60 @@ The JSON object must contain these string values:
 
 The S3 state and ledger bucket names are not secret values. SST creates both
 buckets and injects their generated names into the Lambda environment. The
-workflow validates that every required secret key is a non-empty string and
-writes it directly to GitHub's job environment without printing it. It is
-intentionally enabled only for the protected `production` API deployment;
-preview, web, batch, and remove jobs do not read the secret.
+workflow validates every required secret key without exporting the JSON into
+the SST command environment. It is intentionally enabled only for the
+protected `production` API diff/deploy jobs; web, batch, and remove jobs do not
+read the secret.
 
-After the first API deployment, create the initial administrator from a trusted
-operator environment:
+After the first API deployment, use only the protected
+`Production operations` GitHub Actions workflow. Do not run administrator,
+recovery, or qualification commands from a local shell. The scripts reject
+non-GitHub execution, and the actual AWS boundary is the production-only OIDC
+role.
 
-```bash
-BEAT_AUTH_STATE_BUCKET=... \
-BEAT_AUTH_LEDGER_BUCKET=... \
-BEAT_ADMIN_BOOTSTRAP_EMAIL=admin@example.com \
-BEAT_ADMIN_BOOTSTRAP_PASSWORD='a-long-unique-password' \
-pnpm --filter @acme/api auth:admin:create
-```
+For any administrator create or password rotation, temporarily set a unique
+`BEAT_ADMIN_OPERATION_PASSWORD` secret in the `production` GitHub Environment.
+Dispatch the workflow with the administrator email and the `authStateBucket`
+and `authLedgerBucket` values emitted by the Production deployment. After the
+run, rotate or remove that environment secret. Administrator emails are normal
+workflow inputs; never enter a password as an input.
 
-Use the `authStateBucket` and `authLedgerBucket` values printed by the
-production deployment. The operator needs access to both generated buckets.
-Remove the bootstrap password from the shell environment immediately after the
-command.
-
-Use the same trusted operator environment to rotate or disable an account:
-
-```bash
-pnpm --filter @acme/api auth:admin:password
-pnpm --filter @acme/api auth:admin:disable
-```
+Use `disable-admin` with the target email for account disablement. The workflow
+serializes all protected operations and requires a `production` confirmation.
 
 Password changes and disable operations increment the credential version, so
 existing refresh sessions can no longer rotate. Already-issued access tokens
 expire within ten minutes.
+
+### Production storage qualification
+
+After the first API deployment, dispatch `Production operations` with
+`qualify-storage`, the emitted bucket names, and the `production`
+confirmation. It is deliberately not available through a local command.
+
+The command verifies bucket reachability, state versioning, one-winner
+conditional updates, lifecycle visibility, and Compliance Object Lock. It
+creates retained qualification objects and therefore requires the explicit
+confirmation value. Preserve the JSON result as deployment evidence.
+
+To recover a historical state object, dispatch `Production operations` with
+`recover-state-version`, the selected state key and S3 version ID. The action
+copies it into the quarantine prefix first.
+
+This command never overwrites a live head. Inspect the recovered JSON under
+`v1/recovery/` and perform any later promotion as a separate revision-checked
+operation.
+
+## Release automation credential
+
+Release Please intentionally uses a separate `RELEASE_PLEASE_TOKEN` repository
+secret because pull requests created with the default workflow token do not
+start the repository's normal CI workflows. Use a fine-grained token or GitHub
+App user token limited to this repository with Contents and Pull requests
+read/write access. Never reuse an AWS, Beat administrator, or GitHub content
+publication credential. A manual Release workflow run fails when this secret is
+absent; push runs leave a clear inactive summary without blocking application
+CI.
 
 ## Headers and CSP
 

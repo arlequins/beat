@@ -58,6 +58,11 @@ export const serverEnv = createEnv({
       .optional(),
     BEAT_AUTH_STATE_BUCKET: z.string().min(3).optional(),
     BEAT_AUTH_LEDGER_BUCKET: z.string().min(3).optional(),
+    /** ARN of the protected Secrets Manager JSON object fetched by Lambda at runtime. */
+    BEAT_RUNTIME_SECRET_ARN: z
+      .string()
+      .startsWith("arn:aws:secretsmanager:")
+      .optional(),
     BEAT_AUTH_STATE_PREFIX: z.string().optional().default("v1"),
     BEAT_AUTH_LOOKUP_SECRET: z.string().min(32).optional(),
     BEAT_AUTH_LEDGER_RETENTION_DAYS: z.coerce
@@ -82,6 +87,12 @@ export const serverEnv = createEnv({
     BEAT_ADMIN_BOOTSTRAP_EMAIL: z.email().optional(),
     /** One-time operator input consumed only by the administrator bootstrap script. */
     BEAT_ADMIN_BOOTSTRAP_PASSWORD: z.string().min(16).optional(),
+    /** Operator-only S3 state key selected for a recovery copy. */
+    BEAT_RECOVERY_SOURCE_KEY: z.string().min(1).optional(),
+    /** Operator-only immutable S3 version selected for a recovery copy. */
+    BEAT_RECOVERY_VERSION_ID: z.string().min(1).optional(),
+    /** Explicit operator acknowledgement for real production S3 qualification writes. */
+    BEAT_PRODUCTION_QUALIFICATION_CONFIRM: z.literal("production").optional(),
     /** Comma-separated browser origins accepted by the Hono API. */
     API_CORS_ORIGINS: z.string().optional(),
     /** Local Hono server port. */
@@ -164,6 +175,7 @@ export const serverEnv = createEnv({
     GITHUB_CONTENT_REPOSITORY: process.env.GITHUB_CONTENT_REPOSITORY,
     BEAT_AUTH_STATE_BUCKET: process.env.BEAT_AUTH_STATE_BUCKET,
     BEAT_AUTH_LEDGER_BUCKET: process.env.BEAT_AUTH_LEDGER_BUCKET,
+    BEAT_RUNTIME_SECRET_ARN: process.env.BEAT_RUNTIME_SECRET_ARN,
     BEAT_AUTH_STATE_PREFIX: process.env.BEAT_AUTH_STATE_PREFIX,
     BEAT_AUTH_LOOKUP_SECRET: process.env.BEAT_AUTH_LOOKUP_SECRET,
     BEAT_AUTH_LEDGER_RETENTION_DAYS:
@@ -178,6 +190,10 @@ export const serverEnv = createEnv({
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     BEAT_ADMIN_BOOTSTRAP_EMAIL: process.env.BEAT_ADMIN_BOOTSTRAP_EMAIL,
     BEAT_ADMIN_BOOTSTRAP_PASSWORD: process.env.BEAT_ADMIN_BOOTSTRAP_PASSWORD,
+    BEAT_RECOVERY_SOURCE_KEY: process.env.BEAT_RECOVERY_SOURCE_KEY,
+    BEAT_RECOVERY_VERSION_ID: process.env.BEAT_RECOVERY_VERSION_ID,
+    BEAT_PRODUCTION_QUALIFICATION_CONFIRM:
+      process.env.BEAT_PRODUCTION_QUALIFICATION_CONFIRM,
     API_CORS_ORIGINS: process.env.API_CORS_ORIGINS,
     API_PORT: process.env.API_PORT,
     API_DEPLOYMENT_PRESET: process.env.API_DEPLOYMENT_PRESET,

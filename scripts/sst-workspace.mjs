@@ -8,6 +8,7 @@ const PACKAGES = {
 };
 const TO_SCRIPT = {
   dev: "sst:dev",
+  diff: "sst:diff",
   deploy: "sst:deploy",
   /** SST platform types; runs `sst install` in that app */
   types: "sst:install",
@@ -19,7 +20,7 @@ const [appKey, cmdKey, ...forward] = process.argv.slice(2);
 
 if (!appKey || !cmdKey) {
   console.error(
-    "Usage: pnpm sst:ws <web|api|batch> <dev|deploy|install|types|remove> [-- extra sst args]\n" +
+    "Usage: pnpm sst:ws <web|api|batch> <dev|diff|deploy|install|types|remove> [-- extra sst args]\n" +
       "Example: pnpm sst:ws api deploy -- --stage production",
   );
   process.exit(1);

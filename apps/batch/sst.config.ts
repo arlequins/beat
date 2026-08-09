@@ -18,6 +18,13 @@ function toPascalCase(slug: string): string {
 export default $config({
   async app(input) {
     const { serverEnv, sstAwsRegion, Stage } = await import("@acme/env");
+    if (
+      input?.stage === Stage.PRODUCTION &&
+      process.env.GITHUB_ACTIONS !== "true"
+    )
+      throw new Error(
+        "Beat production deployment is allowed only from protected GitHub Actions",
+      );
     const localAwsProfile = serverEnv.SST_AWS_PROFILE?.trim();
     const region = sstAwsRegion();
 
@@ -88,9 +95,9 @@ export default $config({
         key,
         new sst.aws.Function(`${toPascalCase(String(key))}`, {
           handler: def.handler,
+          logging: { format: "json", retention: def.retention },
           timeout: def.timeout,
           memory: def.memory,
-          retention: def.retention,
           ...(vpc ? { vpc } : {}),
           environment,
         }),
@@ -100,9 +107,12 @@ export default $config({
     /** One Lambda for all pipelines; `batchId` is passed in `lambdaInvoke.payload` per state machine. */
     const pipelineFailureFn = new sst.aws.Function(`PipelineFailure`, {
       handler: "lib/functions/common/pipeline-failure.handler",
+      logging: {
+        format: "json",
+        retention: deployStage === Stage.PRODUCTION ? "13 months" : "2 weeks",
+      },
       timeout: "1 minute",
       memory: "1024 MB",
-      retention: deployStage === Stage.PRODUCTION ? "13 months" : "2 weeks",
       ...(vpc ? { vpc } : {}),
       environment,
     });
@@ -160,6 +170,11 @@ export default $config({
 
       const pipeline = new sst.aws.StepFunctions(`Step${name}`, {
         definition: chain,
+        logging: {
+          includeData: false,
+          level: "error",
+          retention: deployStage === Stage.PRODUCTION ? "13 months" : "1 month",
+        },
       });
 
       new sst.aws.CronV2(`Cron${name}`, {
@@ -167,6 +182,11 @@ export default $config({
         enabled: manifest.eventBridgeScheduleEnabled,
         function: {
           handler: manifest.starterHandler,
+          logging: {
+            format: "json",
+            retention:
+              deployStage === Stage.PRODUCTION ? "13 months" : "1 month",
+          },
           timeout: "1 minute",
           link: [pipeline],
           environment: {

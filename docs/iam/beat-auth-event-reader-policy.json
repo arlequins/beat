@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListAdminAuthEventPrefixOnly",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "AUTH_EVENT_BUCKET_ARN",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": ["admins/events/", "admins/events/*"]
+        }
+      }
+    },
+    {
+      "Sid": "ReadAdminAuthEventsOnly",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "AUTH_EVENT_BUCKET_ARN/admins/events/*"
+    }
+  ]
+}
