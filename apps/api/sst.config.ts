@@ -30,6 +30,7 @@ export default $config({
   async run() {
     const {
       ApiDeploymentPreset,
+      beatAuthStatePrefix,
       LambdaEnvironment,
       resolveApiDeploymentConfig,
       serverEnv,
@@ -52,10 +53,7 @@ export default $config({
         "BEAT_RUNTIME_SECRET_ARN is required for the production API Lambda",
       );
 
-    const statePrefix = serverEnv.BEAT_AUTH_STATE_PREFIX.replace(
-      /^\/+|\/+$/g,
-      "",
-    );
+    const statePrefix = beatAuthStatePrefix().replace(/^\/+|\/+$/g, "");
     const createPrivateBucket = (
       name: string,
       options: {
