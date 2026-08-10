@@ -10,8 +10,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock("./runtime-secret", () => ({
   loadBeatRuntimeSecret: mocks.loadRuntimeSecret,
 }));
-vi.mock("@acme/env/server-env", () => ({ serverEnv: {} }));
-vi.mock("@acme/logger", () => ({
+vi.mock("@arlequins/env/server-env", () => ({ serverEnv: {} }));
+vi.mock("@arlequins/logger", () => ({
   startObservability: mocks.startObservability,
 }));
 vi.mock("hono/aws-lambda", () => ({ handle: mocks.handle }));

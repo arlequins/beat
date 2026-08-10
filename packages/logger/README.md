@@ -1,4 +1,4 @@
-# `@acme/logger`
+# `@arlequins/logger`
 
 Small structured JSON logger shared by server applications and packages.
 

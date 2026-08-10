@@ -1,5 +1,5 @@
 {
-  "name": "@acme/sst-bootstrap",
+  "name": "@arlequins/sst-bootstrap",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,8 +10,8 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "devDependencies": {
-    "@acme/env": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/env": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@aws-sdk/client-secrets-manager": "^3.1090.0",
     "@types/node": "catalog:",
     "sst": "4.17.1",

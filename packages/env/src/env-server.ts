@@ -9,7 +9,7 @@ export const DEFAULT_SST_AWS_REGION = "us-east-1" as const;
 export const DEFAULT_BEAT_AUTH_STATE_PREFIX = "v1" as const;
 /**
  * Single source of truth for `process.env` reads in this package.
- * All keys used by `@acme/env` are listed in `server` + `runtimeEnv` (no scattered `process.env`).
+ * All keys used by `@arlequins/env` are listed in `server` + `runtimeEnv` (no scattered `process.env`).
  *
  * Apps should import this validated object instead of reading `process.env` directly.
  */

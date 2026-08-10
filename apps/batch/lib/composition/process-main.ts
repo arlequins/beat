@@ -1,7 +1,7 @@
-import { db } from "@acme/db-backbone/client";
-import { createDrizzlePostRepository } from "@acme/db-backbone/post-repository";
-import { createLogger } from "@acme/logger";
-import { createContentService } from "@acme/service";
+import { db } from "@arlequins/db-backbone/client";
+import { createDrizzlePostRepository } from "@arlequins/db-backbone/post-repository";
+import { createLogger } from "@arlequins/logger";
+import { createContentService } from "@arlequins/service";
 import { createProcessMain } from "../usecases/process-main";
 
 const logger = createLogger({

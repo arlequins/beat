@@ -13,11 +13,11 @@ function toPascalCase(slug: string): string {
 
 /**
  * SST disallows top-level imports in `sst.config.ts` — use dynamic `import()` inside `app` / `run`.
- * `app()` loads {@link serverEnv} / {@link sstAwsRegion} / {@link Stage} from `@acme/env` (Zod-validated).
+ * `app()` loads {@link serverEnv} / {@link sstAwsRegion} / {@link Stage} from `@arlequins/env` (Zod-validated).
  */
 export default $config({
   async app(input) {
-    const { sstAwsRegion, Stage } = await import("@acme/env");
+    const { sstAwsRegion, Stage } = await import("@arlequins/env");
     if (input?.stage !== Stage.PRODUCTION)
       throw new Error("Beat has one SST stage: production");
     if (process.env.GITHUB_ACTIONS !== "true")
@@ -37,7 +37,7 @@ export default $config({
   async run() {
     type HandlerKey = keyof typeof HandlerMap;
     const { vpcFromEnv, Stage, resolveDeployStage, LambdaEnvironment } =
-      await import("@acme/env");
+      await import("@arlequins/env");
     const { RegisteredManifests } = await import("./config");
     const { HandlerMap } = await import("./config/handler");
     const { batchTaskRetryPolicyForDeployStage } = await import("./shared");

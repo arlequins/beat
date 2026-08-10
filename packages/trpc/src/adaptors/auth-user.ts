@@ -1,7 +1,7 @@
-import type { UserProvisioningPort } from "@acme/auth";
-import { AppRole } from "@acme/auth";
-import type { Database } from "@acme/db-backbone/client";
-import { AppUser, UserRole } from "@acme/db-backbone/schema";
+import type { UserProvisioningPort } from "@arlequins/auth";
+import { AppRole } from "@arlequins/auth";
+import type { Database } from "@arlequins/db-backbone/client";
+import { AppUser, UserRole } from "@arlequins/db-backbone/schema";
 import { eq } from "drizzle-orm";
 
 const validRoles = new Set<string>(Object.values(AppRole));

@@ -9,7 +9,7 @@ const boundaries = [
   {
     directory: "packages/service/src",
     forbidden: [
-      /^@acme\//,
+      /^@arlequins\//,
       /^@aws-sdk\//,
       /^@trpc\//,
       /^drizzle-orm(?:\/|$)/,
@@ -19,21 +19,21 @@ const boundaries = [
   },
   {
     directory: "packages/auth/src/domain",
-    forbidden: [/^@acme\//, /^jose(?:\/|$)/, /^zod(?:\/|$)/],
+    forbidden: [/^@arlequins\//, /^jose(?:\/|$)/, /^zod(?:\/|$)/],
     reason: "the authentication domain must remain framework independent",
   },
   {
     directory: "packages/auth/src/application",
-    forbidden: [/^@acme\//, /^jose(?:\/|$)/, /^zod(?:\/|$)/],
+    forbidden: [/^@arlequins\//, /^jose(?:\/|$)/, /^zod(?:\/|$)/],
     reason:
       "authentication use cases may only depend on domain types and ports",
   },
   {
     directory: "packages/trpc/src/router",
     forbidden: [
-      /^@acme\/db-/,
-      /^@acme\/env(?:\/|$)/,
-      /^@acme\/s3-cache(?:\/|$)/,
+      /^@arlequins\/db-/,
+      /^@arlequins\/env(?:\/|$)/,
+      /^@arlequins\/s3-cache(?:\/|$)/,
       /^@aws-sdk\//,
       /^drizzle-orm(?:\/|$)/,
     ],
@@ -41,7 +41,7 @@ const boundaries = [
   },
   {
     directory: "apps/batch/lib/usecases",
-    forbidden: [/^@acme\/db-/, /^@aws-sdk\//, /^drizzle-orm(?:\/|$)/],
+    forbidden: [/^@arlequins\/db-/, /^@aws-sdk\//, /^drizzle-orm(?:\/|$)/],
     reason: "batch use cases receive infrastructure through ports",
   },
 ];

@@ -1,4 +1,4 @@
-import type { ContentListInput, ContentRepository } from "@acme/service";
+import type { ContentListInput, ContentRepository } from "@arlequins/service";
 import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 
 import type { Database } from "./client";

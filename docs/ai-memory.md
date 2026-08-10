@@ -5,7 +5,7 @@ This page is a durable context note for AI agents working in this repository.
 ## Repository Identity
 
 - This is a pnpm + Turborepo monorepo template with SST, web, API, batch, database, and shared package layers.
-- Internal packages use the `@acme/*` scope.
+- Internal packages use the `@arlequins/*` scope.
 - The repository is private-template oriented by default. Internal packages should remain private unless a publication workflow is intentionally added.
 - Documentation should avoid project-specific names from source material and should be written in English.
 
@@ -20,7 +20,7 @@ This page is a durable context note for AI agents working in this repository.
 | Batch           | SST Step Functions, Lambda handlers, EventBridge schedules, and local batch runner scripts. |
 | Database        | Drizzle ORM with `postgres.js`.                                                             |
 | Validation      | Zod, mostly through shared validator packages.                                              |
-| Environment     | Centralized environment validation through `@acme/env` and SST bootstrap tooling.           |
+| Environment     | Centralized environment validation through `@arlequins/env` and SST bootstrap tooling.           |
 | Tooling         | Biome plus shared Tailwind and TypeScript packages under `tooling/`.                        |
 
 ## Package Layout Memory
@@ -79,11 +79,11 @@ This page is a durable context note for AI agents working in this repository.
 - Business logic should live in services and depend on ports rather than concrete I/O.
 - Drizzle queries belong in database adapters, not in routers.
 - External API calls belong in external adapters, not in routers.
-- Environment access should be centralized through `@acme/env`.
+- Environment access should be centralized through `@arlequins/env`.
 - Tests should start with pure shared packages and use Vitest.
 - Database schema changes require committed Drizzle SQL and metadata; applied seed files are immutable.
 - Browser authentication uses Authorization Code + PKCE; APIs validate JWT access tokens against OIDC discovery and JWKS metadata.
-- `@acme/oidc-mock` is development-only and must not be deployed as a production identity provider.
+- `@arlequins/oidc-mock` is development-only and must not be deployed as a production identity provider.
 - E2E tests own an isolated PostgreSQL container and must clean it up after the run.
 
 ## Review Memory

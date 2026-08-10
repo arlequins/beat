@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import { serverEnv } from "@acme/env/server-env";
+import { serverEnv } from "@arlequins/env/server-env";
 import {
   GetObjectCommand,
   ListObjectsV2Command,

@@ -34,13 +34,13 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./tooling/github/setup
       - name: Lint the portfolio
-        run: pnpm --filter @acme/web lint
+        run: pnpm --filter @arlequins/web lint
       - name: Validate writing and translations
         run: pnpm content:check
       - name: Type-check the portfolio
-        run: pnpm turbo run typecheck --filter=@acme/web...
+        run: pnpm turbo run typecheck --filter=@arlequins/web...
       - name: Build all static pages
-        run: pnpm turbo run build --filter=@acme/web...
+        run: pnpm turbo run build --filter=@arlequins/web...
 
   api-coverage:
     name: API coverage (75%)
@@ -62,6 +62,6 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./tooling/github/setup
       - name: Build API workspace dependencies
-        run: pnpm turbo run build --filter=@acme/api...
+        run: pnpm turbo run build --filter=@arlequins/api...
       - name: Enforce API coverage
-        run: pnpm --filter @acme/api test:coverage
+        run: pnpm --filter @arlequins/api test:coverage

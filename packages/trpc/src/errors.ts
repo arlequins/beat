@@ -137,4 +137,4 @@ export function formatTrpcErrorShape<
   };
 }
 
-import { toApplicationErrorContract } from "@acme/service";
+import { toApplicationErrorContract } from "@arlequins/service";

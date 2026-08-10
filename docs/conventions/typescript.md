@@ -22,7 +22,7 @@ import path from "node:path";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 // Good: package named imports
-import { env } from "@acme/env";
+import { env } from "@arlequins/env";
 ```
 
 ### Prefer Named Exports
@@ -116,8 +116,8 @@ Type-only imports must use a separate `import type` statement.
 ```ts
 import { useQuery } from "@tanstack/react-query";
 
-import type { RouterInputs, RouterOutputs } from "@acme/trpc/client";
-import { useTRPC } from "@acme/trpc/client";
+import type { RouterInputs, RouterOutputs } from "@arlequins/trpc/client";
+import { useTRPC } from "@arlequins/trpc/client";
 ```
 
 Avoid inline type imports such as `import { type Foo } from "..."` when Biome

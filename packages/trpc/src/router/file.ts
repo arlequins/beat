@@ -1,4 +1,4 @@
-import { Permission } from "@acme/auth";
+import { Permission } from "@arlequins/auth";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";

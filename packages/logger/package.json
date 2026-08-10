@@ -1,5 +1,5 @@
 {
-  "name": "@acme/logger",
+  "name": "@arlequins/logger",
   "private": true,
   "type": "module",
   "exports": {
@@ -28,7 +28,7 @@
     "@opentelemetry/sdk-node": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

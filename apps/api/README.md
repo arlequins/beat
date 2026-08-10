@@ -5,9 +5,9 @@ tokens, health checks, and GitHub content automation. It does not require
 PostgreSQL.
 
 ```bash
-pnpm --filter @acme/api dev
-pnpm --filter @acme/api test
-pnpm --filter @acme/api sst:deploy
+pnpm --filter @arlequins/api dev
+pnpm --filter @arlequins/api test
+pnpm --filter @arlequins/api sst:deploy
 ```
 
 | Path | Purpose |
@@ -40,7 +40,7 @@ Lock-enabled ledger bucket. See
 
 ## AWS deployment presets
 
-Set `API_DEPLOYMENT_PRESET` before running `pnpm --filter @acme/api sst:deploy`.
+Set `API_DEPLOYMENT_PRESET` before running `pnpm --filter @arlequins/api sst:deploy`.
 
 | Preset | Best fit | Throttling | WAF | Custom domain |
 | --- | --- | --- | --- | --- |

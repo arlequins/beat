@@ -1,5 +1,5 @@
 {
-  "name": "@acme/service",
+  "name": "@arlequins/service",
   "private": true,
   "type": "module",
   "exports": {
@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

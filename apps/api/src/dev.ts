@@ -1,5 +1,5 @@
-import { serverEnv } from "@acme/env";
-import { createLogger, startObservability } from "@acme/logger";
+import { serverEnv } from "@arlequins/env";
+import { createLogger, startObservability } from "@arlequins/logger";
 
 await startObservability({
   endpoint: serverEnv.OTEL_EXPORTER_OTLP_ENDPOINT,

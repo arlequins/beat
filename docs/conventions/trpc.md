@@ -95,7 +95,7 @@ router -> usecase -> service -> port <- adapter
 3. Compose the service in `createTRPCContext` under `ctx.services`.
 4. Add a thin router in `packages/trpc/src/router/{domain}.ts`.
 5. Register it in `packages/trpc/src/root.ts`.
-6. Export browser-safe types only through `@acme/trpc/client`.
+6. Export browser-safe types only through `@arlequins/trpc/client`.
 7. Add tests for service behavior and representative router authorization or validation paths.
 
 ## Output Schemas
@@ -117,7 +117,7 @@ const itemRouter = {
 
 ## Browser Boundary
 
-Client Components must import from `@acme/trpc/client`, never `@acme/trpc`. The server entry imports authentication, Drizzle, and Node-only database code; the client entry contains only constants, error helpers, and types.
+Client Components must import from `@arlequins/trpc/client`, never `@arlequins/trpc`. The server entry imports authentication, Drizzle, and Node-only database code; the client entry contains only constants, error helpers, and types.
 
 ## Common Mistakes
 
@@ -126,5 +126,5 @@ Client Components must import from `@acme/trpc/client`, never `@acme/trpc`. The 
 | Writing Drizzle queries in a router | Add the operation to a dependency-injected service or adapter. |
 | Calling an external API directly from a router | Inject an external API port into the service. |
 | Importing a global service singleton | Compose the service in the request context and use `ctx.services`. |
-| Importing `@acme/trpc` in a Client Component | Import browser-safe values and types from `@acme/trpc/client`. |
+| Importing `@arlequins/trpc` in a Client Component | Import browser-safe values and types from `@arlequins/trpc/client`. |
 | Leaving `.output(z.unknown())` in place | Define an explicit Zod response schema. |

@@ -3,7 +3,7 @@ import { stdin as input, stdout as output } from "node:process";
 import { createInterface } from "node:readline/promises";
 import { pathToFileURL } from "node:url";
 
-import { closeDatabasePool } from "@acme/db-backbone/client";
+import { closeDatabasePool } from "@arlequins/db-backbone/client";
 
 import { RegisteredManifests } from "../config";
 import { HandlerMap } from "../config/handler";
@@ -143,7 +143,7 @@ async function main(): Promise<void> {
 
   printBanner(
     "Batch · local runner",
-    "@acme/batch — pick a Step Functions step",
+    "@arlequins/batch — pick a Step Functions step",
   );
   printStepList(steps, batchId);
 

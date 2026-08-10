@@ -1,5 +1,5 @@
-import { assertSampleSeedAllowed } from "@acme/shared/seed-safety";
-import type { SeedContext } from "@acme/types";
+import { assertSampleSeedAllowed } from "@arlequins/shared/seed-safety";
+import type { SeedContext } from "@arlequins/types";
 
 import type { Database } from "../../../src/client";
 import { Post } from "../../../src/schema";

@@ -1,4 +1,7 @@
-import { ApplicationInputError, ResourceNotFoundError } from "@acme/service";
+import {
+  ApplicationInputError,
+  ResourceNotFoundError,
+} from "@arlequins/service";
 import { describe, expect, it } from "vitest";
 
 import { mapApplicationErrorToHttp } from "./application-error";

@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const TEMPLATE_NAME = "template-t3-turbo-sst";
-const TEMPLATE_SCOPE = "@acme";
+const TEMPLATE_SCOPE = "@arlequins";
 const TEMPLATE_DISPLAY_NAME = "Acme Workspace";
 const OPTIONAL_FEATURES = ["auth", "batch", "sst", "example-ui"];
 const DEPENDENCY_FIELDS = [

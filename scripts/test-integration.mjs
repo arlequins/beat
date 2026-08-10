@@ -19,7 +19,7 @@ const nonStandardSocket =
   host?.startsWith("unix://") && host !== "unix:///var/run/docker.sock";
 const result = spawnSync(
   process.platform === "win32" ? "pnpm.cmd" : "pnpm",
-  ["--filter", "@acme/db-backbone", "test:integration"],
+  ["--filter", "@arlequins/db-backbone", "test:integration"],
   {
     env: {
       ...process.env,

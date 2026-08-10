@@ -1,6 +1,6 @@
 # S3 Cache
 
-`@acme/s3-cache` is a reusable S3-backed cache for API responses and database
+`@arlequins/s3-cache` is a reusable S3-backed cache for API responses and database
 query results. The API SST stack provisions and links a dedicated bucket. Local
 development remains functional when no cache bucket is configured.
 

@@ -107,7 +107,7 @@ async function legacyPasswordHash(password: string) {
 }
 
 afterEach(() => {
-  vi.doUnmock("@acme/env");
+  vi.doUnmock("@arlequins/env");
   vi.unstubAllEnvs();
 });
 

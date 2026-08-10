@@ -1,9 +1,9 @@
-import { Permission } from "@acme/auth";
+import { Permission } from "@arlequins/auth";
 import {
   createPostInputSchema,
   listPostsInputSchema,
   updatePostInputSchema,
-} from "@acme/validators";
+} from "@arlequins/validators";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 

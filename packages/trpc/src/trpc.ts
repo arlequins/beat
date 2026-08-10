@@ -7,8 +7,8 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 
-import type { Permission } from "@acme/auth";
-import { hasPermission } from "@acme/auth";
+import type { Permission } from "@arlequins/auth";
+import { hasPermission } from "@arlequins/auth";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError, z } from "zod/v4";

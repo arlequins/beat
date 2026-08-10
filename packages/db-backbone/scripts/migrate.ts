@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { loadDatabaseEnv } from "@acme/env";
+import { loadDatabaseEnv } from "@arlequins/env";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";

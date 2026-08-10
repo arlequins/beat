@@ -7,8 +7,8 @@
  * @see https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html
  */
 
-import type { DeployStage } from "@acme/env";
-import { resolveDeployStage } from "@acme/env";
+import type { DeployStage } from "@arlequins/env";
+import { resolveDeployStage } from "@arlequins/env";
 
 import type { BatchManifest } from "../shared";
 import { createBatchManifest } from "../shared";

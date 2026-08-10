@@ -1,14 +1,14 @@
 import {
   DEFAULT_LOCALHOST_API_URL,
   DEFAULT_LOCALHOST_SITE_URL,
-} from "@acme/env/public-defaults";
-import { skipEnvValidation } from "@acme/env/skip-validation";
+} from "@arlequins/env/public-defaults";
+import { skipEnvValidation } from "@arlequins/env/skip-validation";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod/v4";
 
 /**
  * Public env for the Next.js client bundle. Do **not** import `serverEnv` here — it runs in the browser
- * and must only use `NEXT_PUBLIC_*` via `process.env` (inlined at build) plus shared defaults from `@acme/env/public-defaults`.
+ * and must only use `NEXT_PUBLIC_*` via `process.env` (inlined at build) plus shared defaults from `@arlequins/env/public-defaults`.
  *
  * The static portfolio requires only its public site URL.
  */

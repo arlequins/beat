@@ -31,19 +31,19 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `${envCommand} pnpm --filter @acme/oidc-mock start`,
+      command: `${envCommand} pnpm --filter @arlequins/oidc-mock start`,
       url: "http://localhost:5557/.well-known/openid-configuration",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },
     {
-      command: `${envCommand} pnpm --filter @acme/api start`,
+      command: `${envCommand} pnpm --filter @arlequins/api start`,
       url: "http://localhost:5100/health",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },
     {
-      command: `${envCommand} pnpm --filter @acme/web exec next dev --port 3100`,
+      command: `${envCommand} pnpm --filter @arlequins/web exec next dev --port 3100`,
       url: "http://localhost:3100",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

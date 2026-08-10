@@ -31,7 +31,7 @@ const databaseConnectionSchema = z.object({
     .default("require"),
 });
 
-/** Shared by `@acme/db-backbone` `client.ts` and `drizzle.config.ts`. */
+/** Shared by `@arlequins/db-backbone` `client.ts` and `drizzle.config.ts`. */
 export function loadDatabaseEnv(): DatabaseEnv {
   const row = databaseConnectionSchema.parse({
     DATABASE_HOST: serverEnv.DATABASE_HOST,
