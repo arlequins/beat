@@ -1,7 +1,7 @@
 {
-  "extends": "@acme/tsconfig/compiled-package.json",
+  "extends": "@arlequins/tsconfig/compiled-package.json",
   "compilerOptions": {
-    /** Emit `.js` so Node/Vite can resolve `@acme/env` without a TS loader (see `package.json` `exports`). */
+    /** Emit `.js` so Node/Vite can resolve `@arlequins/env` without a TS loader (see `package.json` `exports`). */
     "emitDeclarationOnly": false,
     "module": "ESNext",
     "moduleResolution": "Bundler",

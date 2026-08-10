@@ -35,7 +35,7 @@ For commit format details, see [Git conventions](conventions/git.md#commit-messa
 ## Repository Release Model
 
 - Version source: root `package.json` and the matching git tag, such as `vX.Y.Z`.
-- Release unit: the whole repository. Internal packages such as `@acme/ui` and `@acme/trpc` are private workspace packages and do not receive independent npm releases unless the repository adopts a separate publication workflow.
+- Release unit: the whole repository. Internal packages such as `@arlequins/ui` and `@arlequins/trpc` are private workspace packages and do not receive independent npm releases unless the repository adopts a separate publication workflow.
 - Changelog: Release Please updates `CHANGELOG.md` from Conventional Commits.
 
 Release flow:

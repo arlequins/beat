@@ -3,7 +3,7 @@
 /**
  * Static Next.js (`next build` + `output: "export"`) → S3 + CloudFront via SST `StaticSite`.
  *
- * SST disallows top-level imports — `@acme/env` is loaded via dynamic `import()` in `app` / `run`.
+ * SST disallows top-level imports — `@arlequins/env` is loaded via dynamic `import()` in `app` / `run`.
  * `app()` uses validated {@link serverEnv}, {@link sstAwsRegion}, {@link Stage} for the AWS provider.
  *
  * Run local SST commands from this package (cwd = `apps/web`). Production
@@ -11,7 +11,7 @@
  */
 export default $config({
   async app(input) {
-    const { serverEnv, sstAwsRegion, Stage } = await import("@acme/env");
+    const { serverEnv, sstAwsRegion, Stage } = await import("@arlequins/env");
     if (
       input?.stage === Stage.PRODUCTION &&
       process.env.GITHUB_ACTIONS !== "true"
@@ -36,7 +36,7 @@ export default $config({
     };
   },
   async run() {
-    const { clientEnv } = await import("@acme/env");
+    const { clientEnv } = await import("@arlequins/env");
 
     const site = new sst.aws.StaticSite("Web", {
       path: ".",

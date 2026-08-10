@@ -1,5 +1,5 @@
 {
-  "name": "@acme/web",
+  "name": "@arlequins/web",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,7 +18,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@acme/env": "workspace:*",
+    "@arlequins/env": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "gray-matter": "^4.0.3",
     "lucide-react": "catalog:",
@@ -29,8 +29,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/tailwind-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tailwind-config": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",

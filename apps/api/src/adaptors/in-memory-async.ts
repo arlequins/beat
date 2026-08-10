@@ -4,7 +4,7 @@ import type {
   JobQueuePort,
   ScheduleRequest,
   SchedulerPort,
-} from "@acme/service";
+} from "@arlequins/service";
 
 export type InMemoryAsyncState = {
   events: AsyncMessage[];

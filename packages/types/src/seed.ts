@@ -1,4 +1,4 @@
-import type { DeployStage } from "@acme/env";
+import type { DeployStage } from "@arlequins/env";
 
 export type { DeployStage };
 

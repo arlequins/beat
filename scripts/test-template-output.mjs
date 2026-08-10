@@ -59,7 +59,7 @@ async function copyRepository() {
 async function assertTemplateIdentityRemoved() {
   const forbidden = [
     "template-t3-turbo-sst",
-    "@acme",
+    "@arlequins",
     "Acme Workspace",
     "example.com",
   ];

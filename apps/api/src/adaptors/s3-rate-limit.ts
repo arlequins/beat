@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 
-import { serverEnv } from "@acme/env/server-env";
-import type { RateLimitPort, RateLimitRequest } from "@acme/service";
+import { serverEnv } from "@arlequins/env/server-env";
+import type { RateLimitPort, RateLimitRequest } from "@arlequins/service";
 import {
   GetObjectCommand,
   PutObjectCommand,

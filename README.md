@@ -17,7 +17,7 @@ state.
 | Infrastructure | SST Ion, CloudFront, Lambda, Step Functions, EventBridge |
 | Testing | Vitest coverage, Playwright, accessibility checks |
 
-Internal packages use the placeholder scope `@acme/*`. The initializer replaces
+Internal packages use the placeholder scope `@arlequins/*`. The initializer replaces
 it when creating a project.
 
 ## Requirements
@@ -81,7 +81,7 @@ The public portfolio and writing pages can run without PostgreSQL, API, or OIDC
 while you are preparing content:
 
 ```bash
-pnpm --filter @acme/web dev
+pnpm --filter @arlequins/web dev
 ```
 
 Open `http://localhost:3000` and edit the starter content as described in
@@ -140,7 +140,7 @@ backup, restore, and deployment ordering.
 - `pnpm env:pull` and `pnpm env:push` synchronize supported values with AWS
   Secrets Manager.
 
-Application code should access validated environment values through `@acme/env`
+Application code should access validated environment values through `@arlequins/env`
 instead of reading `process.env` throughout the codebase.
 
 ## Template Qualification

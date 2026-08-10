@@ -1,6 +1,6 @@
 /// <reference types="node" />
 
-import { loadDatabaseEnv } from "@acme/env";
+import { loadDatabaseEnv } from "@arlequins/env";
 import type { Config } from "drizzle-kit";
 
 const dbEnv = loadDatabaseEnv();

@@ -116,18 +116,18 @@ jobs:
         run: |
           case "$OPERATION" in
             create-admin)
-              pnpm --filter @acme/api auth:admin:create
+              pnpm --filter @arlequins/api auth:admin:create
               ;;
             rotate-admin-password)
-              pnpm --filter @acme/api auth:admin:password
+              pnpm --filter @arlequins/api auth:admin:password
               ;;
             disable-admin)
-              pnpm --filter @acme/api auth:admin:disable
+              pnpm --filter @arlequins/api auth:admin:disable
               ;;
             qualify-storage)
-              pnpm --filter @acme/api auth:production:qualify
+              pnpm --filter @arlequins/api auth:production:qualify
               ;;
             recover-state-version)
-              pnpm --filter @acme/api auth:state:recover
+              pnpm --filter @arlequins/api auth:state:recover
               ;;
           esac

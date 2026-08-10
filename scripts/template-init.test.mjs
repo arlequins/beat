@@ -73,7 +73,7 @@ describe("template:init", () => {
 
     const fileRouter = transformContent(
       "packages/trpc/src/router/file.ts",
-      'import { Permission } from "@acme/auth";\nimport { permissionProcedure } from "../trpc";\nconst upload = permissionProcedure(Permission.POST_WRITE);\n',
+      'import { Permission } from "@arlequins/auth";\nimport { permissionProcedure } from "../trpc";\nconst upload = permissionProcedure(Permission.POST_WRITE);\n',
       { name: "app", scope: "@company", preset: "minimal" },
     );
     assert.doesNotMatch(fileRouter, /@company\/auth|permissionProcedure/);
@@ -160,7 +160,7 @@ describe("template:init", () => {
       "apps/batch/package.json",
       JSON.stringify({
         dependencies: {
-          "@acme/env": "workspace:*",
+          "@arlequins/env": "workspace:*",
           "@aws-sdk/client-sfn": "latest",
         },
       }),
@@ -194,9 +194,9 @@ describe("template:init", () => {
     await mkdir(join(root, "apps/web"), { recursive: true });
     await writeFile(
       packagePath,
-      '{"name":"template-t3-turbo-sst","dependencies":{"@acme/env":"workspace:*"}}\n',
+      '{"name":"template-t3-turbo-sst","dependencies":{"@arlequins/env":"workspace:*"}}\n',
     );
-    await writeFile(sstPath, 'name: "web"; // example.com @acme/web\n');
+    await writeFile(sstPath, 'name: "web"; // example.com @arlequins/web\n');
     const files = ["package.json", "apps/web/sst.config.ts"];
     const options = {
       name: "customer-portal",
@@ -232,10 +232,10 @@ describe("template:init", () => {
     await writeFile(
       packagePath,
       JSON.stringify({
-        name: "@acme/web",
+        name: "@arlequins/web",
         scripts: { "sst:dev": "sst dev" },
         dependencies: {
-          "@acme/validators": "workspace:*",
+          "@arlequins/validators": "workspace:*",
           "@tanstack/react-form": "catalog:",
           "oidc-client-ts": "catalog:",
           react: "catalog:react19",

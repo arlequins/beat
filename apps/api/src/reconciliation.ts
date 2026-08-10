@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { serverEnv } from "@acme/env/server-env";
+import { serverEnv } from "@arlequins/env/server-env";
 import {
   ListObjectVersionsCommand,
   PutObjectCommand,

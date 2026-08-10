@@ -1,4 +1,4 @@
-import { cn } from "@acme/ui";
+import { cn } from "@arlequins/ui";
 import type { LucideIcon } from "lucide-react";
 
 export function EmptyState(props: {

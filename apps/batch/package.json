@@ -1,5 +1,5 @@
 {
-  "name": "@acme/batch",
+  "name": "@arlequins/batch",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -18,14 +18,14 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@acme/db-backbone": "workspace:^",
-    "@acme/env": "workspace:*",
-    "@acme/logger": "workspace:*",
-    "@acme/service": "workspace:^",
+    "@arlequins/db-backbone": "workspace:^",
+    "@arlequins/env": "workspace:*",
+    "@arlequins/logger": "workspace:*",
+    "@arlequins/service": "workspace:^",
     "@aws-sdk/client-sfn": "^3.1090.0"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@types/aws-lambda": "^8.10.162",
     "@types/node": "catalog:",
     "sst": "4.17.1",

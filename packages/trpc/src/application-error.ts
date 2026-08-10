@@ -1,7 +1,7 @@
 import {
   ApplicationErrorCode,
   toApplicationErrorContract,
-} from "@acme/service";
+} from "@arlequins/service";
 import type { TRPC_ERROR_CODE_KEY } from "@trpc/server/rpc";
 
 const TrpcCodeByApplicationCode: Record<

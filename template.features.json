@@ -1,7 +1,7 @@
 {
   "name": "template-t3-turbo-sst",
   "displayName": "Acme Workspace",
-  "scope": "@acme",
+  "scope": "@arlequins",
   "domain": "example.com",
   "preset": "full",
   "features": ["auth", "batch", "sst", "example-ui"]

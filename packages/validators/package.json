@@ -1,5 +1,5 @@
 {
-  "name": "@acme/validators",
+  "name": "@arlequins/validators",
   "private": true,
   "type": "module",
   "exports": {
@@ -21,7 +21,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "typescript": "catalog:"
   }
 }

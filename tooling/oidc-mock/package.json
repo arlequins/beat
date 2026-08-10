@@ -1,5 +1,5 @@
 {
-  "name": "@acme/oidc-mock",
+  "name": "@arlequins/oidc-mock",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,7 +15,7 @@
     "oidc-provider": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/oidc-provider": "catalog:",
     "tsx": "catalog:",

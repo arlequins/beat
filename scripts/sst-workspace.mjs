@@ -2,9 +2,9 @@
 import { spawnSync } from "node:child_process";
 
 const PACKAGES = {
-  web: "@acme/web",
-  api: "@acme/api",
-  batch: "@acme/batch",
+  web: "@arlequins/web",
+  api: "@arlequins/api",
+  batch: "@arlequins/batch",
 };
 const TO_SCRIPT = {
   dev: "sst:dev",

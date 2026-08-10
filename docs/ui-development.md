@@ -1,6 +1,6 @@
 # UI Development
 
-The shared `@acme/ui` package provides three feedback loops:
+The shared `@arlequins/ui` package provides three feedback loops:
 
 - React Testing Library and Vitest for component behavior.
 - Storybook for isolated visual development and accessibility checks.
@@ -9,7 +9,7 @@ The shared `@acme/ui` package provides three feedback loops:
 ## Commands
 
 ```bash
-pnpm --filter @acme/ui test
+pnpm --filter @arlequins/ui test
 pnpm storybook
 pnpm storybook:build
 ```

@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "@acme/tailwind-config/theme";
+@import "@arlequins/tailwind-config/theme";
 
 @source "./src/*.{ts,tsx}";
 

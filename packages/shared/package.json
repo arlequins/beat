@@ -1,5 +1,5 @@
 {
-  "name": "@acme/shared",
+  "name": "@arlequins/shared",
   "private": true,
   "type": "module",
   "exports": {
@@ -27,12 +27,12 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@acme/env": "workspace:*",
-    "@acme/types": "workspace:*",
+    "@arlequins/env": "workspace:*",
+    "@arlequins/types": "workspace:*",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

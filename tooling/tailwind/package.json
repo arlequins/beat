@@ -1,5 +1,5 @@
 {
-  "name": "@acme/tailwind-config",
+  "name": "@arlequins/tailwind-config",
   "private": true,
   "type": "module",
   "exports": {
@@ -19,7 +19,7 @@
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

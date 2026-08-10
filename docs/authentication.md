@@ -48,7 +48,7 @@ NEXT_PUBLIC_OIDC_SCOPE=openid profile email
 
 ## Local Provider
 
-`pnpm dev:local` starts the development-only `@acme/oidc-mock` provider with PostgreSQL, the API, and the web app. It uses in-memory accounts and signing keys and must never be deployed as a production identity provider.
+`pnpm dev:local` starts the development-only `@arlequins/oidc-mock` provider with PostgreSQL, the API, and the web app. It uses in-memory accounts and signing keys and must never be deployed as a production identity provider.
 
 The complete local configuration is in `.env.localhost.example`. The Playwright suite uses `.env.e2e` and an isolated database to verify PKCE sign-in, JWT validation through discovery and JWKS, protected tRPC CRUD, and sign-out.
 

@@ -3,9 +3,9 @@ import type { Dirent } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { resolveDeployStage } from "@acme/env";
+import { resolveDeployStage } from "@arlequins/env";
 
-import type { SeedRun } from "@acme/types";
+import type { SeedRun } from "@arlequins/types";
 import { sql } from "drizzle-orm";
 
 const defaultLedger = {

@@ -31,7 +31,7 @@ catalogs:
 
 ## Workspace Dependencies
 
-- Use `"@acme/<package>": "workspace:*"` for internal package dependencies.
+- Use `"@arlequins/<package>": "workspace:*"` for internal package dependencies.
 - Internal packages should be `"private": true` and should not be published to npm unless the repository explicitly defines a publication workflow.
 
 ## Automated Dependency Updates
@@ -99,7 +99,7 @@ Generated files should include:
 | File                               | Purpose                                                       |
 | ---------------------------------- | ------------------------------------------------------------- |
 | `packages/<name>/package.json`     | `private: true`, `type: "module"`, scripts, and dependencies. |
-| `packages/<name>/tsconfig.json`    | Extends `@acme/tsconfig`.                                     |
+| `packages/<name>/tsconfig.json`    | Extends `@arlequins/tsconfig`.                                     |
 | `packages/<name>/src/index.ts`     | Minimal named-export package entry point.                     |
 
 After running the generator:
@@ -117,4 +117,4 @@ domain slices. See [Developer Experience](../developer-experience.md#generators)
 
 - Apps should not keep scattered `apps/<name>/.env.*` files when the environment is injected through shared tooling or deployment infrastructure.
 - Use root-level `env:pull` and `env:push` scripts to synchronize secrets when those scripts are available.
-- Do not read `process.env` directly throughout application code. Centralize environment loading and validation in a shared environment package, such as `@acme/env`.
+- Do not read `process.env` directly throughout application code. Centralize environment loading and validation in a shared environment package, such as `@arlequins/env`.

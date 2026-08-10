@@ -27,7 +27,7 @@ apps/batch -> composition -> application use case    <- provider SDKs
 Dependencies point inward. Domain and application code never imports Drizzle,
 Hono, tRPC, AWS SDKs, environment loaders, or concrete logging packages.
 
-Application failures use stable framework-neutral codes from `@acme/service`.
+Application failures use stable framework-neutral codes from `@arlequins/service`.
 Delivery adapters map those contracts to tRPC codes or HTTP status responses;
 unknown infrastructure errors remain private and are reported as internal errors.
 
@@ -46,15 +46,15 @@ unknown infrastructure errors remain private and are reported as internal errors
 
 ## Request Flow
 
-1. A Client Component calls the browser-safe `@acme/trpc/client` entry point.
+1. A Client Component calls the browser-safe `@arlequins/trpc/client` entry point.
 2. The client sends a request to `${NEXT_PUBLIC_API_URL}/api/trpc`.
 3. Hono applies request IDs, request guards, security headers, and CORS.
 4. The tRPC composition root validates the OIDC session and constructs use cases.
 5. A router validates input, applies authorization, and calls one use case.
 6. The use case reaches external systems only through injected ports.
 
-Client Components must never import the server entry point `@acme/trpc`. Use
-`@acme/trpc/client`, which contains browser-safe constants, error helpers, and
+Client Components must never import the server entry point `@arlequins/trpc`. Use
+`@arlequins/trpc/client`, which contains browser-safe constants, error helpers, and
 types.
 
 ## Feature Workflow
@@ -108,5 +108,5 @@ building and deploying the web app.
 - Add ordinary HTTP endpoints as dedicated Hono route modules.
 - Put provider implementations in adapter directories and select them in composition roots.
 - Add Drizzle tables under `packages/db-backbone/src/schemas` and export them from `schema.ts`.
-- Centralize environment parsing in `@acme/env` and update examples plus `turbo.json`.
+- Centralize environment parsing in `@arlequins/env` and update examples plus `turbo.json`.
 - Commit a migration for every schema change and numbered seeds for data changes.

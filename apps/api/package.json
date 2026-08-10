@@ -1,5 +1,5 @@
 {
-  "name": "@acme/api",
+  "name": "@arlequins/api",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -25,11 +25,11 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@acme/db-backbone": "workspace:*",
-    "@acme/env": "workspace:*",
-    "@acme/logger": "workspace:*",
-    "@acme/service": "workspace:*",
-    "@acme/trpc": "workspace:*",
+    "@arlequins/db-backbone": "workspace:*",
+    "@arlequins/env": "workspace:*",
+    "@arlequins/logger": "workspace:*",
+    "@arlequins/service": "workspace:*",
+    "@arlequins/trpc": "workspace:*",
     "@aws-sdk/client-eventbridge": "catalog:",
     "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/client-scheduler": "catalog:",
@@ -43,7 +43,7 @@
     "jose": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@hono/node-server": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",

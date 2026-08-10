@@ -1,6 +1,6 @@
 import { createSign } from "node:crypto";
 
-import { serverEnv } from "@acme/env/server-env";
+import { serverEnv } from "@arlequins/env/server-env";
 
 type InstallationTokenResponse = { expires_at: string; token: string };
 

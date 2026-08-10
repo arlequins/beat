@@ -12,7 +12,7 @@ const config = {
 
   poweredByHeader: false,
 
-  transpilePackages: ["@acme/trpc", "@acme/ui"],
+  transpilePackages: ["@arlequins/trpc", "@arlequins/ui"],
 
   trailingSlash: true,
 

@@ -2,7 +2,7 @@ import type {
   EventPublisherPort,
   JobQueuePort,
   SchedulerPort,
-} from "@acme/service";
+} from "@arlequins/service";
 import {
   EventBridgeClient,
   PutEventsCommand,

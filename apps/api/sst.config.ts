@@ -3,7 +3,7 @@
 /** Hono API deployed through the endpoint selected by `API_DEPLOYMENT_PRESET`. */
 export default $config({
   async app(input) {
-    const { serverEnv, sstAwsRegion, Stage } = await import("@acme/env");
+    const { serverEnv, sstAwsRegion, Stage } = await import("@arlequins/env");
     if (
       input?.stage === Stage.PRODUCTION &&
       process.env.GITHUB_ACTIONS !== "true"
@@ -37,7 +37,7 @@ export default $config({
       sstAwsRegion,
       Stage,
       vpcFromEnv,
-    } = await import("@acme/env");
+    } = await import("@arlequins/env");
 
     const region = sstAwsRegion();
     const vpc = vpcFromEnv();

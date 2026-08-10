@@ -26,7 +26,7 @@ Runs **batch pipelines** as sequential **AWS Step Functions**, optionally on a s
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **State machine**   | Runs `steps` in **array order**. Each step invokes the Lambda for `handlerKey` (see **`HandlerMap`** in [`config/handler.ts`](config/handler.ts)).                                                               |
 | **Handler Lambdas** | One **deployed function per distinct `handlerKey`** (reused by multiple steps when needed). `sst.config.ts` uses `function: fn.arn` so the ASL keeps a separate Task per step.                                   |
-| **Cron (`CronV2`)** | Optional; `schedule` + `enabled` come from **`ScheduleByStage`** for the current deploy stage (`resolveDeployStage()` in `@acme/env`).                                                                           |
+| **Cron (`CronV2`)** | Optional; `schedule` + `enabled` come from **`ScheduleByStage`** for the current deploy stage (`resolveDeployStage()` in `@arlequins/env`).                                                                           |
 | **Starter Lambda**  | `shared/entry.ts` — uses env **`STATE_MACHINE_ARN`** (injected for that batch’s Cron).                                                                                                                           |
 | **Failure path**    | Retries when `withRetry: true` (`batchTaskRetryPolicyForDeployStage` in `shared/index.ts` — develop/production vs default), then **Catch** → `lib/functions/common/pipeline-failure` → `PipelineFailureHandled`. |
 
@@ -56,7 +56,7 @@ apps/batch/
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
 | [**`config/README.md`**](config/README.md)       | **Add steps** — `step-defs/`, [`handler.ts`](config/handler.ts) for new `handlerKey`, [`index.ts`](config/index.ts) like `sample` |
 | [Repository `README.md`](../../README.md)        | Monorepo tech stack, SST / deploy overview                                                                                        |
-| [`packages/README.md`](../../packages/README.md) | Workspace packages (`@acme/db-backbone`, `@acme/shared`, …)                                                                       |
+| [`packages/README.md`](../../packages/README.md) | Workspace packages (`@arlequins/db-backbone`, `@arlequins/shared`, …)                                                                       |
 | [`CHANGELOG.md`](../../CHANGELOG.md)             | Release notes                                                                                                                     |
 
 For **local debugging** without full SST, see `scripts/dev.ts` and `scripts/run-pipeline.ts`.

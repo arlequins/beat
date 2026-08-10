@@ -1,5 +1,5 @@
 {
-  "name": "@acme/ui",
+  "name": "@arlequins/ui",
   "private": true,
   "type": "module",
   "exports": {
@@ -43,8 +43,8 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
-    "@acme/tailwind-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tailwind-config": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@storybook/addon-a11y": "catalog:",
     "@storybook/addon-docs": "catalog:",
     "@storybook/react-vite": "catalog:",

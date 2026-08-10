@@ -22,7 +22,7 @@
   "packageRules": [
     {
       "description": "Ignore private workspace packages",
-      "matchPackageNames": ["@acme/**"],
+      "matchPackageNames": ["@arlequins/**"],
       "enabled": false
     },
     {

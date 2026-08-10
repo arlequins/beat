@@ -1,4 +1,4 @@
-# `@acme/s3-cache`
+# `@arlequins/s3-cache`
 
 S3-backed JSON cache for API responses and database query results. It provides
 TTL jitter, stale-while-revalidate, gzip compression, object size limits,

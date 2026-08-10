@@ -1,4 +1,4 @@
-import { serverEnv } from "@acme/env/server-env";
+import { serverEnv } from "@arlequins/env/server-env";
 
 import { createBeatAdmin } from "../src/beat-auth";
 import { requireGitHubProductionAction } from "./require-github-production-action";

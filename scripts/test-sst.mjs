@@ -4,10 +4,10 @@ import { resolve } from "node:path";
 
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const sstPackages = [
-  "@acme/web",
-  "@acme/api",
-  "@acme/batch",
-  "@acme/sst-bootstrap",
+  "@arlequins/web",
+  "@arlequins/api",
+  "@arlequins/batch",
+  "@arlequins/sst-bootstrap",
 ];
 
 const authFreeEnv = { ...process.env };
@@ -47,7 +47,7 @@ function run(args, env = process.env) {
 }
 
 console.log("Building SST configuration dependencies");
-run(["--filter", "@acme/env", "run", "build"], authFreeEnv);
+run(["--filter", "@arlequins/env", "run", "build"], authFreeEnv);
 
 for (const packageName of sstPackages) {
   console.log(`\nSST provider check: ${packageName}`);
@@ -58,7 +58,7 @@ console.log("\nSST deployment preset tests");
 run(
   [
     "--filter",
-    "@acme/api",
+    "@arlequins/api",
     "with-env",
     "vitest",
     "run",
