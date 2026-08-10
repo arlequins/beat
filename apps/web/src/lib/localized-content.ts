@@ -104,6 +104,23 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-08-10": {
+    title: "Weekly IT Brief — When automation changes operations",
+    excerpt:
+      "A developer's view of CI supply-chain safeguards, cloud lifecycle notices, and long-running agents.",
+    intro:
+      "This week's operational signal is not simply that automation can do more work. Teams need explicit procedures for pausing, replacing, and observing automated work.",
+    sections: [
+      {
+        heading: "Three operating controls to make explicit",
+        paragraphs: [
+          "Treat GitHub Actions holds for potentially malicious workflows as a final safeguard, not a substitute for review. Pin actions, require review for workflow changes, and verify the changed YAML, invoked actions, and token scope before approval.",
+          "Turn cloud lifecycle notices into a dependency review. Record an owner, replacement, deadline, and rollback plan for each direct or indirect service dependency, then make the result part of release readiness.",
+          "For long-running agent work, expose a job ID, progress states, structured logs, time and cost limits, and understandable cancellation and retry paths. Keep idempotency keys and approval points around tool calls with side effects.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -231,6 +248,23 @@ const japanese: Record<string, LocalizedArticle> = {
           "評価環境も本番のセキュリティ課題として扱います。短命で最小権限の認証情報を使い、エージェントが何を読み、書き、外部へ送ったかを追える監査記録を残します。",
           "MCP 統合は API と同じようにバージョン管理します。プロトコルの契約を記録し、制限したトークンで重要な読み取り操作をテストし、変更を作る操作には人の承認を残します。",
           "モデル提供者はアダプター境界の後ろに置きます。モデル変更は可観測性、コスト上限、データ経路、フォールバックも変えるため、発表ではなく元に戻せる配布として扱います。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-08-10": {
+    title: "週刊 IT ブリーフ — 自動化が運用手順を変えるとき",
+    excerpt:
+      "CI のサプライチェーン防御、クラウドのライフサイクル、長時間実行エージェントを開発者の視点で整理します。",
+    intro:
+      "今週の運用上のシグナルは、自動化がより多くの仕事を行えることだけではありません。自動化された仕事を止め、置き換え、観察する手順を明確にする必要があります。",
+    sections: [
+      {
+        heading: "明確にしておく三つの運用コントロール",
+        paragraphs: [
+          "潜在的に悪意のある GitHub Actions ワークフローの保留は、レビューの代わりではなく最後の安全網として扱います。アクションをコミット SHA に固定し、ワークフロー変更のレビューを必須にして、承認前に変更された YAML、呼び出されたアクション、トークンの権限を確認します。",
+          "クラウドのライフサイクル告知を依存関係レビューの契機にします。直接・間接の各サービス依存関係について、担当者、代替案、期限、ロールバック計画を記録し、結果をリリース準備の一部にします。",
+          "長時間実行するエージェント作業には、ジョブ ID、進捗状態、構造化ログ、時間とコストの上限、理解しやすいキャンセルと再試行の経路を用意します。副作用のあるツール呼び出しには、冪等性キーと承認点を残します。",
         ],
       },
     ],
