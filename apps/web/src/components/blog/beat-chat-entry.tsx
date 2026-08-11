@@ -42,7 +42,11 @@ export function BeatChatEntry() {
   const [authenticated, setAuthenticated] = useState(false);
   const pathname = usePathname() ?? "/";
   const firstSegment = pathname.split("/")[1] ?? "";
-  const locale: Locale = isLocale(firstSegment) ? firstSegment : "ko";
+  const locale: Locale = isLocale(firstSegment)
+    ? firstSegment
+    : pathname === "/"
+      ? "en"
+      : "ko";
   const text = copy[locale];
   const destination = process.env.NEXT_PUBLIC_BEAT_APP_URL?.trim();
 

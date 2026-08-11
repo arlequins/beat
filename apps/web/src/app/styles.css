@@ -46,6 +46,11 @@
   body {
     background: var(--paper);
     color: var(--ink);
+    font-family:
+      "SF Pro Text", "SF Pro Display", "Avenir Next", ui-sans-serif, system-ui,
+      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-synthesis: none;
+    font-kerning: normal;
     letter-spacing: var(--tracking-normal);
   }
   ::selection {
@@ -56,7 +61,11 @@
 
 @layer components {
   .display-serif {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family:
+      "SF Pro Display", "Avenir Next", ui-sans-serif, system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 650;
+    letter-spacing: -0.045em;
   }
 
   .brand-mark {
@@ -431,8 +440,11 @@
 
   .prose-content h2 {
     margin-top: 3.4rem;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family:
+      "SF Pro Display", "Avenir Next", ui-sans-serif, system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: clamp(1.65rem, 3vw, 2.15rem);
+    font-weight: 650;
     line-height: 1.2;
     letter-spacing: -0.035em;
     color: var(--ink);

@@ -35,7 +35,7 @@ export const viewport: Viewport = { themeColor: "#111326" };
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -43,7 +43,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           }}
         />
       </head>
-      <body className="min-h-screen font-sans antialiased">
+      <body className="min-h-screen antialiased">
         <AppShell>{props.children}</AppShell>
       </body>
     </html>
