@@ -2,6 +2,14 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.3.0...template-t3-turbo-sst-v1.4.0) (2026-08-11)
+
+
+### Features
+
+* make English the portfolio default ([#23](https://github.com/arlequins/beat/issues/23)) ([da5e0d0](https://github.com/arlequins/beat/commit/da5e0d0fe227fb488a1fef4b948ed96aa46fc16d))
+* standardize localized portfolio routes ([#25](https://github.com/arlequins/beat/issues/25)) ([5820ebf](https://github.com/arlequins/beat/commit/5820ebf3ddc7a1546f64f05e798f4d630d9c07ec))
+
 ## [1.3.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.2.0...template-t3-turbo-sst-v1.3.0) (2026-08-11)
 
 
