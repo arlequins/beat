@@ -9,7 +9,7 @@ function normalizePath(path: string) {
 
 /**
  * Keep canonical and hreflang metadata in one place so every static locale
- * describes the same Korean original, English, and Japanese alternatives.
+ * describes the English default, Korean, and Japanese alternatives.
  */
 export function localizedAlternates(
   locale: Locale,
@@ -25,7 +25,7 @@ export function localizedAlternates(
       en: href("en"),
       ja: href("ja"),
       ko: href("ko"),
-      "x-default": href("ko"),
+      "x-default": href("en"),
     },
   };
 }

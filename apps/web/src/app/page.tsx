@@ -2,17 +2,17 @@ import { ArrowUpRight, GitBranch, Mail, PenLine, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-
+import { LocalizedHome } from "~/components/blog/localized-pages";
 import { siteConfig } from "~/config/site";
 import { getProjects } from "~/lib/github";
 import { getPosts } from "~/lib/posts";
 import { localizedAlternates } from "~/lib/seo";
 
 export const metadata: Metadata = {
-  alternates: localizedAlternates("ko"),
+  alternates: localizedAlternates("en"),
 };
 
-export default async function HomePage() {
+export async function KoreanHome() {
   const posts = await getPosts();
   const projectList = await getProjects();
   const weeklyPosts = posts.filter((post) => post.category === "weekly");
@@ -283,4 +283,8 @@ export default async function HomePage() {
       </section>
     </>
   );
+}
+
+export default function HomePage() {
+  return <LocalizedHome locale="en" />;
 }

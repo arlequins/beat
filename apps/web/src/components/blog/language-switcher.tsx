@@ -13,12 +13,13 @@ import {
 
 function currentLocale(pathname: string): Locale {
   const segment = pathname.split("/")[1] ?? "";
-  return isLocale(segment) && segment !== "ko" ? segment : "ko";
+  if (isLocale(segment)) return segment;
+  return pathname === "/" ? "en" : "ko";
 }
 
 function withoutLocale(pathname: string) {
   const segment = pathname.split("/")[1] ?? "";
-  if (isLocale(segment) && segment !== "ko") {
+  if (isLocale(segment)) {
     return pathname.replace(new RegExp(`^/${segment}`), "") || "/";
   }
   return pathname || "/";

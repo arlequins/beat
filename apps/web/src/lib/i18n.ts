@@ -8,7 +8,7 @@ export function isLocale(value: string): value is Locale {
 
 export function localePath(locale: Locale, path = "/") {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  if (locale === "ko") return normalized;
+  if (locale === "ko") return normalized === "/" ? "/ko/" : normalized;
   return normalized === "/" ? `/${locale}/` : `/${locale}${normalized}`;
 }
 
