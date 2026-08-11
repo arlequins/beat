@@ -60,6 +60,8 @@ local application; the pages below explain design decisions and ongoing work.
   rollback.
 - [Incident runbook](incident-runbook.md): triage, mitigation, recovery, and
   observability integration points.
+- [Production API runtime diagnostics](production-runtime-diagnostics.md):
+  GitHub Actions-only, redacted CloudWatch initialization-failure triage.
 - [Semantic versioning](semantic-versioning.md): release impact and repository
   version policy.
 
