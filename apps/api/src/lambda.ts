@@ -8,7 +8,7 @@ async function initialize(): Promise<RuntimeHandler> {
   await loadBeatRuntimeSecret();
   const [{ serverEnv }, { startObservability }, { handle }, { app }] =
     await Promise.all([
-      import("@acme/env"),
+      import("@acme/env/server-env"),
       import("@acme/logger"),
       import("hono/aws-lambda"),
       import("./app"),
