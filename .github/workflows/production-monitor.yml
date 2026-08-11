@@ -24,6 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./tooling/github/setup
+      - name: Build SST workspace dependencies
+        run: pnpm turbo run build --filter=@acme/web... --filter=@acme/api...
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
