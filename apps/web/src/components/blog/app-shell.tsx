@@ -14,11 +14,7 @@ import { copy, isLocale, type Locale, localePath } from "~/lib/i18n";
 export function AppShell(props: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
   const segment = pathname.split("/")[1] ?? "";
-  const locale: Locale = isLocale(segment)
-    ? segment
-    : pathname === "/"
-      ? "en"
-      : "ko";
+  const locale: Locale = isLocale(segment) ? segment : "en";
   const text = copy[locale];
 
   useEffect(() => {

@@ -2,16 +2,17 @@ import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { LocalizedPostsPage } from "~/components/blog/localized-pages";
 import { getPosts, type PostCategory, postCategoryMeta } from "~/lib/posts";
 import { localizedAlternates } from "~/lib/seo";
 
 export const metadata: Metadata = {
-  alternates: localizedAlternates("ko", "/posts/"),
+  alternates: localizedAlternates("en", "/posts/"),
   title: "Writing · Lumen",
   description: "제품 개발과 기술에 대한 기록",
 };
 
-export default async function PostsPage() {
+export async function KoreanPostsPage() {
   const posts = await getPosts();
   const categories: PostCategory[] = ["weekly", "deep-dive", "studio-log"];
   return (
@@ -113,4 +114,8 @@ export default async function PostsPage() {
       </section>
     </>
   );
+}
+
+export default function PostsPage() {
+  return <LocalizedPostsPage locale="en" />;
 }

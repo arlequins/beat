@@ -14,7 +14,7 @@ import {
 function currentLocale(pathname: string): Locale {
   const segment = pathname.split("/")[1] ?? "";
   if (isLocale(segment)) return segment;
-  return pathname === "/" ? "en" : "ko";
+  return "en";
 }
 
 function withoutLocale(pathname: string) {

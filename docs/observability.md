@@ -34,3 +34,13 @@ OTEL_SERVICE_NAME=api
 ```
 
 Unset the endpoint to return to the dependency-free local mode.
+# Production availability monitor
+
+The `Production availability monitor` workflow runs hourly and can also be
+started manually. It assumes the protected production deployment role through
+GitHub OIDC, reads only the public `webUrl` and `apiUrl` SST outputs into
+temporary runner files, verifies HTTPS, and checks the website and API health
+endpoint.
+
+It never reads the runtime secret. A failure creates one open GitHub issue with
+a link to the failed run; the issue is not duplicated while it remains open.
