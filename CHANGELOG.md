@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.2.0...template-t3-turbo-sst-v1.3.0) (2026-08-11)
+
+
+### Features
+
+* report deployed web URL ([#21](https://github.com/arlequins/beat/issues/21)) ([bf3aec0](https://github.com/arlequins/beat/commit/bf3aec012e434c8502cfc88af2b4ea1e7704a456))
+
 ## [1.2.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.1.2...template-t3-turbo-sst-v1.2.0) (2026-08-11)
 
 
