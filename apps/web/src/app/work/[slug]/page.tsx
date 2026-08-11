@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { LocalizedWorkDetail } from "~/components/blog/localized-pages";
 import { projects } from "~/lib/blog-data";
 import { getProject } from "~/lib/github";
 import { localizedAlternates } from "~/lib/seo";
@@ -20,13 +21,13 @@ export async function generateMetadata(props: {
   const { slug } = await props.params;
   const project = await getProject(slug);
   return {
-    alternates: localizedAlternates("ko", `/work/${slug}/`),
+    alternates: localizedAlternates("en", `/work/${slug}/`),
     description: project?.description,
     title: project?.title ?? "Work",
   };
 }
 
-export default async function WorkDetailPage(props: {
+export async function KoreanWorkDetailPage(props: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await props.params;
@@ -112,4 +113,15 @@ export default async function WorkDetailPage(props: {
       </div>
     </article>
   );
+}
+
+export default async function WorkDetailPage(props: {
+  params: Promise<{ slug: string }>;
+}) {
+  const page = await LocalizedWorkDetail({
+    locale: "en",
+    slug: (await props.params).slug,
+  });
+  if (!page) notFound();
+  return page;
 }

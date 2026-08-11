@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { LocalizedPostDetail } from "~/components/blog/localized-pages";
 import { getPost, getPosts, postCategoryMeta } from "~/lib/posts";
 import { localizedAlternates } from "~/lib/seo";
 
@@ -18,13 +19,13 @@ export async function generateMetadata(props: {
   const { slug } = await props.params;
   const post = await getPost(slug);
   return {
-    alternates: localizedAlternates("ko", `/posts/${slug}/`),
+    alternates: localizedAlternates("en", `/posts/${slug}/`),
     description: post?.frontmatter.excerpt,
     title: post?.frontmatter.title ?? "Writing",
   };
 }
 
-export default async function PostDetailPage(props: {
+export async function KoreanPostDetailPage(props: {
   params: Promise<{ slug: string }>;
 }) {
   const post = await getPost((await props.params).slug);
@@ -88,4 +89,15 @@ export default async function PostDetailPage(props: {
       </div>
     </article>
   );
+}
+
+export default async function PostDetailPage(props: {
+  params: Promise<{ slug: string }>;
+}) {
+  const page = await LocalizedPostDetail({
+    locale: "en",
+    slug: (await props.params).slug,
+  });
+  if (!page) notFound();
+  return page;
 }
