@@ -12,22 +12,10 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    env:
-      RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
     steps:
-      - name: Explain inactive release automation
-        if: env.RELEASE_PLEASE_TOKEN == ''
-        run: |
-          echo "Release Please is not configured." >> "$GITHUB_STEP_SUMMARY"
-          echo "Add the RELEASE_PLEASE_TOKEN repository secret before expecting release PRs or tags." >> "$GITHUB_STEP_SUMMARY"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            exit 1
-          fi
-
       - name: Create or update release
-        if: env.RELEASE_PLEASE_TOKEN != ''
         uses: googleapis/release-please-action@v4
         with:
-          token: ${{ env.RELEASE_PLEASE_TOKEN }}
+          token: ${{ github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
