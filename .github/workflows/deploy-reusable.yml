@@ -6,6 +6,9 @@ on:
       api_url:
         description: API URL emitted by a successful API deployment
         value: ${{ jobs.deploy.outputs.api_url }}
+      web_url:
+        description: Web URL emitted by a successful web deployment
+        value: ${{ jobs.deploy.outputs.web_url }}
     inputs:
       application:
         description: Workspace to deploy
@@ -35,6 +38,7 @@ jobs:
     environment: ${{ inputs.environment }}
     outputs:
       api_url: ${{ steps.deployed-api.outputs.api_url }}
+      web_url: ${{ steps.deployed-web.outputs.web_url }}
     env:
       SST_AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
       DEPLOY_ROLE_ARN: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
@@ -126,6 +130,19 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "Runtime-secret validation and smoke testing are deferred until the secret is initialized." >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Resolve deployed web URL from SST state
+        id: deployed-web
+        if: inputs.application == 'web' && inputs.environment == 'production' && inputs.operation == 'deploy'
+        run: |
+          state_file="$RUNNER_TEMP/beat-web-sst-state.json"
+          trap 'rm -f "$state_file"' EXIT
+          SST_TELEMETRY_DISABLED=1 pnpm --silent --filter @acme/web with-env sst state export --stage production > "$state_file"
+          WEB_URL="$(node scripts/read-sst-output.mjs "$state_file" webUrl)"
+          node -e 'const url = new URL(process.argv[1]); if (url.protocol !== "https:") throw new Error("Production web endpoint must use HTTPS");' "$WEB_URL"
+          echo "web_url=$WEB_URL" >> "$GITHUB_OUTPUT"
+          echo "### Web deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$WEB_URL\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Smoke production API
         if: inputs.application == 'api' && inputs.environment == 'production' && inputs.operation == 'deploy' && !inputs.bootstrap_api
