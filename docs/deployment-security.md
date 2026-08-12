@@ -115,6 +115,10 @@ App installation token. The app must be installed on `arlequins/beat` and have
 only Contents and Pull requests read/write access. The existing GitHub App
 installation ID is not needed by this token exchange.
 
+The workflow explicitly requests those two write permissions while minting its
+short-lived token. GitHub refuses the run if the installation has not accepted
+either permission, rather than silently falling back to a weaker token.
+
 Keep these source materials separate from AWS credentials, Beat administrator
 credentials, and GitHub content-publication credentials. The private key is
 never logged, committed, put in SST state, or exposed to the browser. When the
