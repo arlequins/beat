@@ -29,6 +29,8 @@ jobs:
           app-id: ${{ env.RELEASE_APP_ID }}
           private-key: ${{ env.RELEASE_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
+          permission-contents: write
+          permission-pull-requests: write
       - name: Create or update release
         if: steps.app-token.outputs.token != ''
         uses: googleapis/release-please-action@v4
