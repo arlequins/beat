@@ -133,7 +133,9 @@ export default $config({
         "Trpc-Accept",
         "X-Request-Id",
       ],
-      allowMethods: ["DELETE", "GET", "PATCH", "POST", "PUT", "OPTIONS"],
+      // AWS Function URL CORS supports GET, PUT, HEAD, POST, PATCH, DELETE,
+      // or `*`; OPTIONS preflight is handled by the Function URL itself.
+      allowMethods: ["DELETE", "GET", "PATCH", "POST", "PUT"],
       allowOrigins: corsOrigins,
       exposeHeaders: [
         "RateLimit-Limit",

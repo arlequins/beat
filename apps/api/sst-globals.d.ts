@@ -106,7 +106,6 @@ declare const sst: {
                       | "DELETE"
                       | "GET"
                       | "HEAD"
-                      | "OPTIONS"
                       | "PATCH"
                       | "POST"
                       | "PUT"
