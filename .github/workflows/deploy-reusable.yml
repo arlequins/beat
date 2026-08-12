@@ -15,7 +15,7 @@ on:
         required: true
         type: string
       environment:
-        description: GitHub environment and SST stage
+        description: Must be the sole GitHub Environment and SST stage, production
         required: true
         type: string
       operation:
@@ -35,7 +35,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: production
     outputs:
       api_url: ${{ steps.deployed-api.outputs.api_url }}
       web_url: ${{ steps.deployed-web.outputs.web_url }}
@@ -44,7 +44,7 @@ jobs:
       DEPLOY_ROLE_ARN: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
       BEAT_RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
     concurrency:
-      group: sst-${{ inputs.environment }}-${{ inputs.application }}
+      group: sst-production-${{ inputs.application }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
@@ -61,6 +61,7 @@ jobs:
 
       - name: Validate operation
         run: |
+          test "${{ inputs.environment }}" = production
           test "${{ inputs.operation }}" = diff || \
           test "${{ inputs.operation }}" = deploy || \
           test "${{ inputs.operation }}" = remove

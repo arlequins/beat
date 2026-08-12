@@ -111,7 +111,6 @@ S3-backed records, and repository-reviewed images.
 | --- | --- |
 | `pnpm dev:local` | Start the complete local application stack. |
 | `pnpm dev` | Run development tasks when dependencies are already available. |
-| `pnpm dev:sst` | Run web, API, and batch through cloud-backed SST development. |
 | `pnpm check` / `pnpm check:fix` | Check or fix Biome formatting and lint rules. |
 | `pnpm typecheck` | Typecheck every workspace. |
 | `pnpm test` | Run unit and contract tests. |
@@ -170,7 +169,7 @@ and [Template Readiness](./docs/template-readiness.md).
 - Optional batch workflows use Step Functions, Lambda, and EventBridge
   schedules.
 
-The selected production profile uses AWS only. Neon and Vercel are not required.
+The selected production-only profile uses AWS only. Neon and Vercel are not required.
 Never run a production SST diff, deploy, or remove command locally; use the
 protected GitHub Actions procedure in
 [Production AWS/SST handoff](./docs/production-aws-sst.md).

@@ -3,28 +3,21 @@
 /** Hono API deployed through the endpoint selected by `API_DEPLOYMENT_PRESET`. */
 export default $config({
   async app(input) {
-    const { serverEnv, sstAwsRegion, Stage } = await import("@acme/env");
-    if (
-      input?.stage === Stage.PRODUCTION &&
-      process.env.GITHUB_ACTIONS !== "true"
-    )
+    const { sstAwsRegion, Stage } = await import("@acme/env");
+    if (input?.stage !== Stage.PRODUCTION)
+      throw new Error("Beat has one SST stage: production");
+    if (process.env.GITHUB_ACTIONS !== "true")
       throw new Error(
         "Beat production deployment is allowed only from protected GitHub Actions",
       );
-    const localAwsProfile = serverEnv.SST_AWS_PROFILE?.trim();
     const region = sstAwsRegion();
 
     return {
       name: "api",
-      removal: input?.stage === Stage.PRODUCTION ? "retain" : "remove",
-      protect: input?.stage === Stage.PRODUCTION,
+      removal: "retain",
+      protect: true,
       home: "aws",
-      providers: {
-        aws: {
-          region,
-          ...(localAwsProfile ? { profile: localAwsProfile } : {}),
-        },
-      },
+      providers: { aws: { region } },
     };
   },
   async run() {

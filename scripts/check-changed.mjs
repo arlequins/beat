@@ -17,7 +17,6 @@ function exists(ref) {
 const candidates = [
   requestedBase,
   process.env.CHANGE_BASE,
-  "origin/develop",
   "origin/main",
   "HEAD~1",
 ];
