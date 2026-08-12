@@ -11,13 +11,55 @@ OIDC_ISSUER_URL=https://api.example.com/auth
 OIDC_AUDIENCE=beat-agent
 OIDC_ALLOWED_ALGORITHMS=ES256
 NEXT_PUBLIC_OIDC_AUTHORITY=https://api.example.com/auth
+NEXT_PUBLIC_OIDC_CLIENT_ID=beat-agent-web
+NEXT_PUBLIC_OIDC_SCOPE=openid profile email offline_access
 ```
 
 The Agent verifier discovers `/.well-known/openid-configuration`, reads
 `/jwks`, and requires the `admin` role before opening the agent stream. Access
 tokens expire after ten minutes.
 
-## Token API
+## Authorization Code + PKCE (production path)
+
+The Agent uses the standard browser Authorization Code flow with S256 PKCE.
+Beat exposes these discovery fields from the issuer above:
+
+- `authorization_endpoint`: `{issuer}/authorize`
+- `token_endpoint`: `{issuer}/token`
+- `revocation_endpoint`: `{issuer}/revoke`
+- `end_session_endpoint`: `{issuer}/logout`
+
+The public client is registered by the protected production Environment variable
+`BEAT_AUTH_CLIENTS_JSON`; it is not a secret and must not be placed in the
+runtime secret. Use exact strings for both callbacks, including the trailing
+slash:
+
+```dotenv
+BEAT_AUTH_CLIENTS_JSON=[{"client_id":"beat-agent-web","redirect_uris":["https://agent.example.com/auth/callback/"],"post_logout_redirect_uris":["https://agent.example.com/auth/logout-callback/"],"scopes":["openid","profile","email","offline_access"]}]
+```
+
+The final Agent origin replaces `https://agent.example.com` in the protected
+Environment. Beat requires `response_type=code`, `state`, `nonce`,
+`code_challenge`, and `code_challenge_method=S256`. The authorization form
+returns only a one-time authorization code and the original state to the exact
+redirect URI. The token endpoint accepts `grant_type=authorization_code` with
+`code_verifier`, validates the one-time S3 record, and returns an ES256 access
+JWT (`aud=beat-agent`), an opaque rotating refresh token, and an ES256 ID token
+with the requested nonce. Authorization codes expire after 60 seconds and are
+never logged or stored in plaintext.
+
+For logout, revoke the refresh token first, then navigate to the end-session
+endpoint with `client_id`, the exact `post_logout_redirect_uri`, and a client
+state value. `oidc-client-ts` may send an `id_token_hint`; Beat verifies its
+ES256 signature, issuer, and audience before using that audience to identify
+the client. No access or refresh token is accepted in a URL, and the Agent must
+not log callback query strings.
+
+`offline_access` is an allowed scope so the Agent can retain its rotating
+refresh session. Beat still preserves the legacy direct endpoints below for
+existing administrators and local operators.
+
+## Legacy token API
 
 Authenticate directly with Beat. Never send the password to the Agent API:
 

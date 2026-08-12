@@ -80,6 +80,13 @@ export const serverEnv = createEnv({
       .int()
       .positive()
       .optional(),
+    BEAT_AUTH_AUTHORIZATION_CODE_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .optional(),
+    /** JSON public-client allowlist for the Beat Authorization Code + PKCE flow. */
+    BEAT_AUTH_CLIENTS_JSON: z.string().min(2).optional(),
     BEAT_AUTH_ISSUER_URL: z.url().optional(),
     BEAT_AUTH_AUDIENCE: z.string().min(1).optional(),
     BEAT_AUTH_SIGNING_PRIVATE_JWK: z.string().min(1).optional(),
@@ -187,6 +194,9 @@ export const serverEnv = createEnv({
       process.env.BEAT_AUTH_LEDGER_RETENTION_DAYS,
     BEAT_AUTH_REFRESH_TOKEN_TTL_SECONDS:
       process.env.BEAT_AUTH_REFRESH_TOKEN_TTL_SECONDS,
+    BEAT_AUTH_AUTHORIZATION_CODE_TTL_SECONDS:
+      process.env.BEAT_AUTH_AUTHORIZATION_CODE_TTL_SECONDS,
+    BEAT_AUTH_CLIENTS_JSON: process.env.BEAT_AUTH_CLIENTS_JSON,
     BEAT_AUTH_ISSUER_URL: process.env.BEAT_AUTH_ISSUER_URL,
     BEAT_AUTH_AUDIENCE: process.env.BEAT_AUTH_AUDIENCE,
     BEAT_AUTH_SIGNING_PRIVATE_JWK: process.env.BEAT_AUTH_SIGNING_PRIVATE_JWK,

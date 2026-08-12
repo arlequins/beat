@@ -21,10 +21,13 @@ import {
   type BeatAuthError,
   beatJwks,
   checkBeatStorageReadiness,
+  issueBeatAuthorizationCode,
   issueBeatTokenPair,
+  redeemBeatAuthorizationCode,
   refreshBeatTokenPair,
   revokeBeatRefreshToken,
   verifyBeatAccessToken,
+  verifyBeatIdTokenHint,
 } from "./beat-auth";
 import {
   type BeatContentError,
@@ -32,6 +35,15 @@ import {
   getBeatDraft,
   saveBeatDraft,
 } from "./beat-content";
+import {
+  authorizationForm,
+  BeatOidcConfigurationError,
+  BeatOidcRequestError,
+  readStringRecord,
+  supportedOidcScopes,
+  validateAuthorizationRequest,
+  validateLogoutRequest,
+} from "./beat-oidc";
 import { registerGourmetRoutes } from "./gourmet-routes";
 import { registerOpenApiRoutes } from "./openapi";
 
@@ -45,9 +57,12 @@ export type ApiBindings = {
 export type CreateApiAppOptions = {
   beatAuth?: {
     authenticate: typeof authenticateBeatAdmin;
+    issueAuthorizationCode?: typeof issueBeatAuthorizationCode;
     issueTokenPair: typeof issueBeatTokenPair;
     jwks: typeof beatJwks;
     refreshTokenPair: typeof refreshBeatTokenPair;
+    redeemAuthorizationCode?: typeof redeemBeatAuthorizationCode;
+    verifyIdTokenHint?: typeof verifyBeatIdTokenHint;
     revokeRefreshToken: typeof revokeBeatRefreshToken;
     verifyAccessToken: typeof verifyBeatAccessToken;
   };
@@ -65,6 +80,7 @@ export type CreateApiAppOptions = {
   errorReporter?: ErrorReporter;
   telemetry?: Telemetry;
   bodyLimitBytes?: number;
+  beatOidcClientsJson?: string;
   rateLimit?: { requests: number; windowMs: number };
   rateLimiter?: false | RateLimitPort;
 };
@@ -115,13 +131,18 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
         (serverEnv.BEAT_AUTH_STATE_BUCKET && serverEnv.BEAT_AUTH_LOOKUP_SECRET
           ? createS3RateLimitAdapter()
           : createInMemoryRateLimitAdapter()));
-  const auth = options.beatAuth ?? {
+  const beatOidcClientsJson = options.beatOidcClientsJson;
+  const auth = {
     authenticate: authenticateBeatAdmin,
+    issueAuthorizationCode: issueBeatAuthorizationCode,
     issueTokenPair: issueBeatTokenPair,
     jwks: beatJwks,
     refreshTokenPair: refreshBeatTokenPair,
+    redeemAuthorizationCode: redeemBeatAuthorizationCode,
     revokeRefreshToken: revokeBeatRefreshToken,
     verifyAccessToken: verifyBeatAccessToken,
+    verifyIdTokenHint: verifyBeatIdTokenHint,
+    ...options.beatAuth,
   };
   const content = options.beatContent ?? {
     confirmAndPublish: confirmAndPublishBeatDraft,
@@ -196,6 +217,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   );
 
   const guardedPaths = [
+    "/auth/authorize",
     "/auth/login",
     "/auth/token",
     "/auth/refresh",
@@ -259,19 +281,51 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     readinessCheck,
   });
 
+  const parseAuthRequest = async (context: Context<ApiBindings>) => {
+    const contentType = context.req.header("content-type") ?? "";
+    if (contentType.includes("application/x-www-form-urlencoded"))
+      return readStringRecord(await context.req.parseBody());
+    return readStringRecord(await context.req.json<Record<string, unknown>>());
+  };
+  const oauthRequestError = (
+    context: Context<ApiBindings>,
+    error: unknown,
+    status: 400 | 503 = 400,
+  ) => {
+    if (error instanceof BeatOidcConfigurationError)
+      return context.json({ error: "temporarily_unavailable" }, 503);
+    if (error instanceof BeatOidcRequestError)
+      return context.json({ error: error.code }, status);
+    throw error;
+  };
+  const authorizeErrorRedirect = (
+    context: Context<ApiBindings>,
+    request: ReturnType<typeof validateAuthorizationRequest>,
+    error = "access_denied",
+  ) => {
+    const redirect = new URL(request.redirectUri);
+    redirect.searchParams.set("error", error);
+    redirect.searchParams.set("state", request.state);
+    context.header("Cache-Control", "no-store");
+    return context.redirect(redirect.toString(), 302);
+  };
+
   app.get("/auth/.well-known/openid-configuration", (context) => {
     const issuer = serverEnv.BEAT_AUTH_ISSUER_URL?.replace(/\/$/, "");
     if (!issuer)
       return context.json({ error: "Authentication is not configured" }, 503);
     context.header("Cache-Control", "public, max-age=300");
     return context.json({
-      grant_types_supported: ["refresh_token"],
+      authorization_endpoint: `${issuer}/authorize`,
+      code_challenge_methods_supported: ["S256"],
+      end_session_endpoint: `${issuer}/logout`,
+      grant_types_supported: ["authorization_code", "refresh_token"],
       id_token_signing_alg_values_supported: ["ES256"],
       issuer,
       jwks_uri: `${issuer}/jwks`,
-      response_types_supported: ["token"],
+      response_types_supported: ["code"],
       revocation_endpoint: `${issuer}/revoke`,
-      scopes_supported: ["openid", "profile", "email"],
+      scopes_supported: supportedOidcScopes,
       subject_types_supported: ["public"],
       token_endpoint: `${issuer}/token`,
       token_endpoint_auth_methods_supported: ["none"],
@@ -280,6 +334,57 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   app.get("/auth/jwks", async (context) => {
     context.header("Cache-Control", "public, max-age=300");
     return context.json(await auth.jwks());
+  });
+  app.get("/auth/authorize", (context) => {
+    try {
+      const request = validateAuthorizationRequest(
+        Object.fromEntries(new URL(context.req.url).searchParams.entries()),
+        beatOidcClientsJson,
+      );
+      context.header("Cache-Control", "no-store");
+      context.header(
+        "Content-Security-Policy",
+        "default-src 'none'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; style-src 'unsafe-inline'",
+      );
+      return context.html(authorizationForm(request));
+    } catch (error) {
+      return oauthRequestError(context, error);
+    }
+  });
+  app.post("/auth/authorize", async (context) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await parseAuthRequest(context);
+    } catch (error) {
+      return oauthRequestError(context, error);
+    }
+    let request: ReturnType<typeof validateAuthorizationRequest>;
+    try {
+      request = validateAuthorizationRequest(body, beatOidcClientsJson);
+    } catch (error) {
+      return oauthRequestError(context, error);
+    }
+    const email = typeof body.email === "string" ? body.email : undefined;
+    const password =
+      typeof body.password === "string" ? body.password : undefined;
+    if (!email || !password) return authorizeErrorRedirect(context, request);
+    const administrator = await auth.authenticate(email, password);
+    if (!administrator) return authorizeErrorRedirect(context, request);
+    const code = await (
+      auth.issueAuthorizationCode ?? issueBeatAuthorizationCode
+    )(administrator, {
+      clientId: request.clientId,
+      codeChallenge: request.codeChallenge,
+      codeChallengeMethod: request.codeChallengeMethod,
+      nonce: request.nonce,
+      redirectUri: request.redirectUri,
+      scope: request.scope,
+    });
+    const redirect = new URL(request.redirectUri);
+    redirect.searchParams.set("code", code);
+    redirect.searchParams.set("state", request.state);
+    context.header("Cache-Control", "no-store");
+    return context.redirect(redirect.toString(), 302);
   });
   app.post("/auth/login", async (context) => {
     const body = await context.req.json<{
@@ -295,15 +400,37 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     return context.json(await auth.issueTokenPair(administrator));
   });
   const refreshHandler = async (context: Context<ApiBindings>) => {
-    const contentType = context.req.header("content-type") ?? "";
-    const body = contentType.includes("application/x-www-form-urlencoded")
-      ? await context.req.parseBody()
-      : await context.req.json<{
-          grant_type?: string;
-          refresh_token?: string;
-        }>();
+    const body = await parseAuthRequest(context);
     const grantType =
       typeof body.grant_type === "string" ? body.grant_type : "refresh_token";
+    if (grantType === "authorization_code") {
+      const code = typeof body.code === "string" ? body.code : undefined;
+      const clientId =
+        typeof body.client_id === "string" ? body.client_id : undefined;
+      const redirectUri =
+        typeof body.redirect_uri === "string" ? body.redirect_uri : undefined;
+      const codeVerifier =
+        typeof body.code_verifier === "string" ? body.code_verifier : undefined;
+      if (!code || !clientId || !redirectUri || !codeVerifier)
+        return context.json({ error: "invalid_request" }, 400);
+      try {
+        const tokens = await (
+          auth.redeemAuthorizationCode ?? redeemBeatAuthorizationCode
+        )({
+          clientId,
+          code,
+          codeVerifier,
+          redirectUri,
+        });
+        context.header("Cache-Control", "no-store");
+        return context.json(tokens);
+      } catch (error) {
+        const authError = error as BeatAuthError;
+        if (authError.code === "invalid_authorization_code")
+          return context.json({ error: "invalid_grant" }, 400);
+        throw error;
+      }
+    }
     const refreshToken =
       typeof body.refresh_token === "string" ? body.refresh_token : undefined;
     if (grantType !== "refresh_token" || !refreshToken)
@@ -321,11 +448,39 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   };
   app.post("/auth/token", refreshHandler);
   app.post("/auth/refresh", refreshHandler);
+  const logoutHandler = async (context: Context<ApiBindings>) => {
+    try {
+      const input =
+        context.req.method === "GET"
+          ? Object.fromEntries(new URL(context.req.url).searchParams.entries())
+          : await parseAuthRequest(context);
+      if (typeof input.id_token_hint === "string") {
+        let hint: { clientId: string; subject: string };
+        try {
+          hint = await (auth.verifyIdTokenHint ?? verifyBeatIdTokenHint)(
+            input.id_token_hint,
+          );
+        } catch {
+          throw new BeatOidcRequestError("invalid_request");
+        }
+        if (input.client_id !== undefined && input.client_id !== hint.clientId)
+          throw new BeatOidcRequestError("invalid_request");
+        input.client_id = hint.clientId;
+      }
+      const request = validateLogoutRequest(input, beatOidcClientsJson);
+      context.header("Cache-Control", "no-store");
+      if (!request.postLogoutRedirectUri) return context.body(null, 204);
+      const redirect = new URL(request.postLogoutRedirectUri);
+      if (request.state) redirect.searchParams.set("state", request.state);
+      return context.redirect(redirect.toString(), 302);
+    } catch (error) {
+      return oauthRequestError(context, error);
+    }
+  };
+  app.get("/auth/logout", logoutHandler);
+  app.post("/auth/logout", logoutHandler);
   app.post("/auth/revoke", async (context) => {
-    const contentType = context.req.header("content-type") ?? "";
-    const body = contentType.includes("application/x-www-form-urlencoded")
-      ? await context.req.parseBody()
-      : await context.req.json<{ refresh_token?: string; token?: string }>();
+    const body = await parseAuthRequest(context);
     const token =
       typeof body.token === "string"
         ? body.token

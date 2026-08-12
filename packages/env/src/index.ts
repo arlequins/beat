@@ -98,6 +98,16 @@ export const LambdaEnvironment = {
         ),
       }
     : {}),
+  ...(serverEnv.BEAT_AUTH_AUTHORIZATION_CODE_TTL_SECONDS
+    ? {
+        BEAT_AUTH_AUTHORIZATION_CODE_TTL_SECONDS: String(
+          serverEnv.BEAT_AUTH_AUTHORIZATION_CODE_TTL_SECONDS,
+        ),
+      }
+    : {}),
+  ...(serverEnv.BEAT_AUTH_CLIENTS_JSON
+    ? { BEAT_AUTH_CLIENTS_JSON: serverEnv.BEAT_AUTH_CLIENTS_JSON }
+    : {}),
   ...(serverEnv.BEAT_AUTH_ISSUER_URL
     ? { BEAT_AUTH_ISSUER_URL: serverEnv.BEAT_AUTH_ISSUER_URL }
     : {}),

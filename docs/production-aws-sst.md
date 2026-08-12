@@ -28,7 +28,11 @@ Create or update the protected `production` Environment in `arlequins/beat`:
 - limit deployment branches to protected `main`;
 - set `AWS_REGION=ap-northeast-1`;
 - set `AWS_PRODUCTION_ROLE_ARN` to the ARN emitted by `beat-sst-aws`;
-- set `BEAT_RUNTIME_SECRET_ARN` to the ARN emitted by `beat-sst-aws`.
+- set `BEAT_RUNTIME_SECRET_ARN` to the ARN emitted by `beat-sst-aws`;
+- set `BEAT_AUTH_CLIENTS_JSON` to the exact public SPA client registration
+  JSON after the Beat Agent callback URLs are finalized;
+- set `API_CORS_ORIGINS` to a comma-separated list of exact browser origins:
+  `https://arlequins.github.io` plus the final Beat Agent origin.
 
 Both ARNs are identifiers, not credentials. Do not add AWS access keys or the
 runtime JSON to GitHub Secrets, repository variables, `.env` files, or
@@ -41,6 +45,12 @@ that ARN and has an exact `secretsmanager:GetSecretValue` permission; it loads
 the JSON in its own process before importing the application. Therefore the
 values are absent from SST/Pulumi state, Lambda environment configuration,
 static assets, Git, and action logs.
+
+`BEAT_AUTH_CLIENTS_JSON` contains no secret. It is serialized into the API
+Lambda as public configuration so the authorization endpoint can enforce exact
+redirect and post-logout URI matches. Keep the sample values from
+[`docs/beat-agent-auth-integration.md`](./beat-agent-auth-integration.md) until
+the Agent production URL is known; do not invent a production callback.
 
 ## Deployment role policy handoff
 

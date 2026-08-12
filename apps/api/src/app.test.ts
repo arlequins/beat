@@ -1,9 +1,22 @@
 import type { LogRecord } from "@arlequins/logger";
 import { createLogger } from "@arlequins/logger";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createApiApp } from "./app";
 import { GourmetError } from "./gourmet";
+
+afterEach(() => vi.unstubAllEnvs());
+
+const oidcClientsJson = JSON.stringify([
+  {
+    client_id: "beat-agent-web",
+    redirect_uris: ["https://agent.example.com/auth/callback/"],
+    post_logout_redirect_uris: [
+      "https://agent.example.com/auth/logout-callback/",
+    ],
+    scopes: ["openid", "profile", "email", "offline_access"],
+  },
+]);
 
 describe("API app", () => {
   const app = createApiApp({
@@ -448,6 +461,148 @@ describe("API app", () => {
     });
     expect(emptyRevoke.status).toBe(200);
     expect(revokeRefreshToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs the Authorization Code + PKCE contract and preserves state on errors", async () => {
+    vi.stubEnv(
+      "BEAT_AUTH_CLIENTS_JSON",
+      JSON.stringify([
+        {
+          client_id: "beat-agent-web",
+          redirect_uris: ["https://agent.example.com/auth/callback/"],
+          post_logout_redirect_uris: [
+            "https://agent.example.com/auth/logout-callback/",
+          ],
+          scopes: ["openid", "profile", "email", "offline_access"],
+        },
+      ]),
+    );
+    const administrator = {
+      adminKey: "v1/admins/admin.json",
+      credentialVersion: 1,
+      email: "admin@example.com",
+      passwordHash: "hidden",
+      role: "admin" as const,
+      subject: "admin-1",
+    };
+    const tokenPair = {
+      access_token: "access-token",
+      expires_in: 600,
+      id_token: "id-token",
+      refresh_expires_in: 2_592_000,
+      refresh_token: "session.1.secret",
+      token_type: "Bearer" as const,
+    };
+    const issueAuthorizationCode = vi.fn(async () => "authorization-code");
+    const redeemAuthorizationCode = vi.fn(async () => tokenPair);
+    const authApp = createApiApp({
+      beatAuth: {
+        authenticate: vi.fn(async () => administrator),
+        issueAuthorizationCode,
+        issueTokenPair: vi.fn(),
+        jwks: vi.fn(async () => ({ keys: [] })),
+        redeemAuthorizationCode,
+        refreshTokenPair: vi.fn(async () => tokenPair),
+        revokeRefreshToken: vi.fn(async () => {}),
+        verifyAccessToken: vi.fn(async () => ({
+          email: administrator.email,
+          subject: administrator.subject,
+        })),
+        verifyIdTokenHint: vi.fn(async (hint) => {
+          if (hint === "invalid") throw new Error("invalid id token");
+          return { clientId: "beat-agent-web", subject: administrator.subject };
+        }),
+      },
+      corsOrigins: ["https://agent.example.com"],
+      beatOidcClientsJson: oidcClientsJson,
+      logger: createLogger({ service: "api", sink: () => {} }),
+      rateLimiter: false,
+    });
+    const params = {
+      client_id: "beat-agent-web",
+      redirect_uri: "https://agent.example.com/auth/callback/",
+      response_type: "code",
+      scope: "openid profile email offline_access",
+      state: "state-value",
+      nonce: "nonce-value",
+      code_challenge: "A".repeat(43),
+      code_challenge_method: "S256",
+    };
+    const form = await authApp.request(
+      `/auth/authorize?${new URLSearchParams(params)}`,
+    );
+    expect(form.status).toBe(200);
+    expect(await form.text()).not.toContain("access_token");
+    const authorization = await authApp.request("/auth/authorize", {
+      body: new URLSearchParams({
+        ...params,
+        email: administrator.email,
+        password: "correct horse battery staple",
+      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: "POST",
+    });
+    expect(authorization.status).toBe(302);
+    const callback = new URL(authorization.headers.get("location")!);
+    expect(callback.origin + callback.pathname).toBe(
+      "https://agent.example.com/auth/callback/",
+    );
+    expect(callback.searchParams.get("state")).toBe("state-value");
+    expect(callback.searchParams.get("code")).toBe("authorization-code");
+    const token = await authApp.request("/auth/token", {
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: "authorization-code",
+        client_id: "beat-agent-web",
+        redirect_uri: "https://agent.example.com/auth/callback/",
+        code_verifier: "verifier",
+      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: "POST",
+    });
+    expect(token.status).toBe(200);
+    await expect(token.json()).resolves.toMatchObject(tokenPair);
+    expect(redeemAuthorizationCode).toHaveBeenCalledWith({
+      clientId: "beat-agent-web",
+      code: "authorization-code",
+      codeVerifier: "verifier",
+      redirectUri: "https://agent.example.com/auth/callback/",
+    });
+    const logout = await authApp.request(
+      "/auth/logout?id_token_hint=id-token&post_logout_redirect_uri=https%3A%2F%2Fagent.example.com%2Fauth%2Flogout-callback%2F&state=logout-state",
+    );
+    expect(logout.status).toBe(302);
+    expect(
+      new URL(logout.headers.get("location")!).searchParams.get("state"),
+    ).toBe("logout-state");
+    const invalidLogout = await authApp.request(
+      "/auth/logout?id_token_hint=invalid&post_logout_redirect_uri=https%3A%2F%2Fagent.example.com%2Fauth%2Flogout-callback%2F",
+    );
+    expect(invalidLogout.status).toBe(400);
+
+    const deniedApp = createApiApp({
+      beatAuth: {
+        authenticate: vi.fn(async () => undefined),
+        issueTokenPair: vi.fn(),
+        jwks: vi.fn(async () => ({ keys: [] })),
+        refreshTokenPair: vi.fn(),
+        revokeRefreshToken: vi.fn(),
+        verifyAccessToken: vi.fn(),
+      },
+      corsOrigins: ["https://agent.example.com"],
+      beatOidcClientsJson: oidcClientsJson,
+      logger: createLogger({ service: "api", sink: () => {} }),
+      rateLimiter: false,
+    });
+    const denied = await deniedApp.request("/auth/authorize", {
+      body: new URLSearchParams(params),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: "POST",
+    });
+    expect(denied.status).toBe(302);
+    const deniedLocation = new URL(denied.headers.get("location")!);
+    expect(deniedLocation.searchParams.get("error")).toBe("access_denied");
+    expect(deniedLocation.searchParams.get("state")).toBe("state-value");
   });
 
   it("returns OAuth errors for invalid credentials and refresh tokens", async () => {

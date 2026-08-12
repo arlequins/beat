@@ -19,6 +19,12 @@ web application. `NEXT_PUBLIC_*` values are embedded in the static JavaScript
 bundle, so this value must be a public URL only. Do not put an API key, bearer
 token, client secret, or private callback URL in this repository or variable.
 
+The Beat web application should use the `beat-agent-web` public client and the
+same exact `/auth/callback/` and `/auth/logout-callback/` paths documented in
+[`beat-agent-auth-integration.md`](./beat-agent-auth-integration.md). The
+portfolio remains a new-window link and does not participate in the OIDC
+redirect flow.
+
 When the variable is absent, the entry point is not rendered. This keeps a
 static preview from linking visitors to a non-existent chat service.
 
