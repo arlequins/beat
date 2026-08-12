@@ -1,4 +1,4 @@
-import type { IdempotencyStorePort } from "@acme/service";
+import type { IdempotencyStorePort } from "@arlequins/service";
 import { and, eq, lt } from "drizzle-orm";
 
 import type { Database } from "./client";

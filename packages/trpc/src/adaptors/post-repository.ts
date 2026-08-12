@@ -1,7 +1,7 @@
-import type { Database } from "@acme/db-backbone/client";
-import { createDrizzlePostRepository as createRepository } from "@acme/db-backbone/post-repository";
-import type { Cache } from "@acme/s3-cache";
-import type { ContentRepository } from "@acme/service";
+import type { Database } from "@arlequins/db-backbone/client";
+import { createDrizzlePostRepository as createRepository } from "@arlequins/db-backbone/post-repository";
+import type { Cache } from "@arlequins/s3-cache";
+import type { ContentRepository } from "@arlequins/service";
 
 export function createDrizzlePostRepository(
   database: Database,

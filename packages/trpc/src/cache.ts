@@ -1,7 +1,7 @@
-import { serverEnv } from "@acme/env";
-import { createLogger, createTelemetry } from "@acme/logger";
-import type { Cache } from "@acme/s3-cache";
-import { CacheNamespace, createS3Cache } from "@acme/s3-cache";
+import { serverEnv } from "@arlequins/env";
+import { createLogger, createTelemetry } from "@arlequins/logger";
+import type { Cache } from "@arlequins/s3-cache";
+import { CacheNamespace, createS3Cache } from "@arlequins/s3-cache";
 import { S3Client } from "@aws-sdk/client-s3";
 
 let databaseCache: Cache | undefined;

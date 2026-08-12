@@ -91,7 +91,7 @@ destination set, for example:
 pnpm dev:local
 
 # Portfolio repository
-NEXT_PUBLIC_BEAT_APP_URL=http://localhost:3000 pnpm --filter @acme/web dev -- --port 3001
+NEXT_PUBLIC_BEAT_APP_URL=http://localhost:3000 pnpm --filter @arlequins/web dev -- --port 3001
 ```
 
 Open the portfolio at `http://localhost:3001`, choose **Beat과 대화하기**, and

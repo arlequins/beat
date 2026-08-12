@@ -3,7 +3,7 @@
 ## Asynchronous Boundaries
 
 Application code publishes events, enqueues jobs, and creates one-time schedules
-through provider-neutral ports from `@acme/service`. `apps/api` includes
+through provider-neutral ports from `@arlequins/service`. `apps/api` includes
 inspectable in-memory adapters for local development and tests, plus adapters
 for EventBridge, SQS, and EventBridge Scheduler. Keep AWS resource names, ARNs,
 and credentials in the composition root; do not pass cloud SDK types into use
@@ -39,10 +39,10 @@ web -> tRPC router -> application service -> repository/file port
                                 Drizzle and S3 adapters
 ```
 
-- `@acme/service` owns use cases, domain records, and ports. It has no database,
+- `@arlequins/service` owns use cases, domain records, and ports. It has no database,
   cache, HTTP, cloud SDK, or logger implementation dependencies.
-- `@acme/trpc` owns transport routers, adapter decoration, and composition.
-- `@acme/db-backbone` owns Drizzle schemas, migrations, the database client,
+- `@arlequins/trpc` owns transport routers, adapter decoration, and composition.
+- `@arlequins/db-backbone` owns Drizzle schemas, migrations, the database client,
   and Drizzle repository adapters.
 - `apps/web` consumes browser-safe tRPC contracts and applies the same
   permission vocabulary used by API middleware.

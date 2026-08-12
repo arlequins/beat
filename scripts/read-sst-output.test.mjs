@@ -16,7 +16,7 @@ describe("SST output reader", () => {
 
   it("ignores pnpm banners and trailing command output around the state", () => {
     const source = `
-> @acme/api@ with-env /workspace/apps/api
+> @arlequins/api@ with-env /workspace/apps/api
 > dotenv -- sst state export --stage production
 
 {

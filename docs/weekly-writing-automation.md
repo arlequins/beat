@@ -22,7 +22,7 @@ For one run on `2026-08-03`, the automation must:
 3. Set `reviewStatus: unreviewed`, include source links, and retain the
    writer's date and judgment in the article.
 4. Run `pnpm content:check` and
-   `pnpm turbo run build --filter=@acme/web...`.
+   `pnpm turbo run build --filter=@arlequins/web...`.
 5. Commit only those content files, push the branch, and create a PR into
    `main` with a title such as `content: weekly IT brief — 2026-08-03`.
 6. Stop when a validation step fails. It must not fall back to a direct push

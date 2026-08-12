@@ -3,13 +3,13 @@
 /**
  * Bootstrap app: no deployed resources. Aligns AWS provider (profile/region) with web/api.
  * `pnpm env:pull` / `env:push`: Secrets Manager — `pull-secret-env.mjs` / `push-secret-env.mjs` + `scripts/lib/shared.mjs`.
- * Optional: `pnpm --filter @acme/sst-bootstrap sst:install` for SST platform types.
+ * Optional: `pnpm --filter @arlequins/sst-bootstrap sst:install` for SST platform types.
  *
- * SST disallows top-level imports — `app()` loads {@link serverEnv}, {@link sstAwsRegion}, {@link Stage} from `@acme/env` via dynamic import.
+ * SST disallows top-level imports — `app()` loads {@link serverEnv}, {@link sstAwsRegion}, {@link Stage} from `@arlequins/env` via dynamic import.
  */
 export default $config({
   async app(input) {
-    const { serverEnv, sstAwsRegion, Stage } = await import("@acme/env");
+    const { serverEnv, sstAwsRegion, Stage } = await import("@arlequins/env");
     const localAwsProfile = serverEnv.SST_AWS_PROFILE?.trim();
     const region = sstAwsRegion();
 

@@ -1,5 +1,5 @@
-import type { LogRecord } from "@acme/logger";
-import { createLogger } from "@acme/logger";
+import type { LogRecord } from "@arlequins/logger";
+import { createLogger } from "@arlequins/logger";
 import { describe, expect, it, vi } from "vitest";
 
 import { createApiApp } from "./app";

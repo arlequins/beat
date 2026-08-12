@@ -3,7 +3,11 @@ import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-const sstPackages = ["@acme/api", "@acme/batch", "@acme/sst-bootstrap"];
+const sstPackages = [
+  "@arlequins/api",
+  "@arlequins/batch",
+  "@arlequins/sst-bootstrap",
+];
 
 const authFreeEnv = { ...process.env };
 for (const key of [
@@ -42,7 +46,7 @@ function run(args, env = process.env) {
 }
 
 console.log("Building SST configuration dependencies");
-run(["--filter", "@acme/env", "run", "build"], authFreeEnv);
+run(["--filter", "@arlequins/env", "run", "build"], authFreeEnv);
 
 for (const packageName of sstPackages) {
   console.log(`\nSST provider check: ${packageName}`);
@@ -53,7 +57,7 @@ console.log("\nSST deployment preset tests");
 run(
   [
     "--filter",
-    "@acme/api",
+    "@arlequins/api",
     "with-env",
     "vitest",
     "run",

@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@acme/ui";
+import { cn } from "@arlequins/ui";
 import { Tabs as TabsPrimitive } from "radix-ui";
 
 export const Tabs = TabsPrimitive.Root;

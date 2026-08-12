@@ -3,7 +3,10 @@ import { loadBeatRuntimeSecret } from "./runtime-secret";
 export async function handler() {
   await loadBeatRuntimeSecret();
   const [{ createLogger, createTelemetry }, { reconcileBeatProductionState }] =
-    await Promise.all([import("@acme/logger"), import("./reconciliation")]);
+    await Promise.all([
+      import("@arlequins/logger"),
+      import("./reconciliation"),
+    ]);
   const stage = process.env.SST_STAGE ?? "production";
   let failureMetricEmitted = false;
   const logger = createLogger({ service: "beat-reconciler" });

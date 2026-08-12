@@ -1,7 +1,10 @@
-import { authApi, provisionSessionUser } from "@acme/auth";
-import { db } from "@acme/db-backbone/client";
-import { serverEnv } from "@acme/env";
-import { createContentService, createFileUploadService } from "@acme/service";
+import { authApi, provisionSessionUser } from "@arlequins/auth";
+import { db } from "@arlequins/db-backbone/client";
+import { serverEnv } from "@arlequins/env";
+import {
+  createContentService,
+  createFileUploadService,
+} from "@arlequins/service";
 import { createDatabaseUserProvisioning } from "../adaptors/auth-user";
 import { createDrizzlePostRepository } from "../adaptors/post-repository";
 import { createS3FileUploadAdapter } from "../adaptors/s3-file-upload";

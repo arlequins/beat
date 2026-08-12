@@ -1,5 +1,5 @@
 {
-  "name": "@acme/types",
+  "name": "@arlequins/types",
   "private": true,
   "type": "module",
   "exports": {
@@ -22,10 +22,10 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@acme/env": "workspace:*"
+    "@arlequins/env": "workspace:*"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "typescript": "catalog:"
   }
 }

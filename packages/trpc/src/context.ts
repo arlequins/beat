@@ -1,6 +1,6 @@
-import type { AuthSession, TRPCAuth } from "@acme/auth";
-import type { Logger, Telemetry } from "@acme/logger";
-import type { ContentService, FileUploadService } from "@acme/service";
+import type { AuthSession, TRPCAuth } from "@arlequins/auth";
+import type { Logger, Telemetry } from "@arlequins/logger";
+import type { ContentService, FileUploadService } from "@arlequins/service";
 
 export type TRPCServices = {
   content: ContentService;

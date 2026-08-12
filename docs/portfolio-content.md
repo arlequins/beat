@@ -6,7 +6,7 @@ to Vercel without a database, API, or identity provider.
 ## Run locally
 
 ```bash
-pnpm --filter @acme/web dev
+pnpm --filter @arlequins/web dev
 ```
 
 Open <http://localhost:3000>. The first run may need `pnpm install` at the

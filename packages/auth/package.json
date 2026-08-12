@@ -1,5 +1,5 @@
 {
-  "name": "@acme/auth",
+  "name": "@arlequins/auth",
   "private": true,
   "type": "module",
   "exports": {
@@ -16,12 +16,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@acme/env": "workspace:*",
+    "@arlequins/env": "workspace:*",
     "jose": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

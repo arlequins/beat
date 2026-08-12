@@ -49,4 +49,4 @@ adjustment before closing the incident.
 
 ## Integration Ports
 
-`@acme/logger` exposes OpenTelemetry-backed `Telemetry` and a replaceable `ErrorReporter`. Projects can register an OpenTelemetry SDK/exporter at process startup and inject a vendor error reporter without changing API or domain code. With no SDK or reporter configured, tracing and reporting safely remain no-op while CloudWatch EMF metrics continue through stdout.
+`@arlequins/logger` exposes OpenTelemetry-backed `Telemetry` and a replaceable `ErrorReporter`. Projects can register an OpenTelemetry SDK/exporter at process startup and inject a vendor error reporter without changing API or domain code. With no SDK or reporter configured, tracing and reporting safely remain no-op while CloudWatch EMF metrics continue through stdout.

@@ -1,8 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 
-import { DEFAULT_LOCALHOST_SITE_URL } from "@acme/env/public-defaults";
-import { serverEnv } from "@acme/env/server-env";
-import type { Logger } from "@acme/logger";
+import { DEFAULT_LOCALHOST_SITE_URL } from "@arlequins/env/public-defaults";
+import { serverEnv } from "@arlequins/env/server-env";
+import type { Logger } from "@arlequins/logger";
 import { type OpenAPIHono, z } from "@hono/zod-openapi";
 
 import type { ApiBindings } from "./app";

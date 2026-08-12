@@ -16,7 +16,7 @@ branding:
 - `--name` sets the npm-safe repository and SST application slug.
 - `--display-name` sets web metadata and shell branding. It defaults to a
   title-cased version of `--name`.
-- `--scope` replaces the `@acme/*` workspace namespace.
+- `--scope` replaces the `@arlequins/*` workspace namespace.
 - `--domain` replaces example hostnames.
 - `--preset` and `--features` choose optional modules; `--prune` removes them.
 
@@ -37,7 +37,7 @@ Run `pnpm turbo gen` and select one of these generators:
 | `app` | A runnable TypeScript workspace under `apps/` |
 | `package` | A compiled TypeScript library under `packages/` |
 | `domain` | A DIP-aligned tRPC domain with types, port, service, adapter, composition, use case, router registration, and contract update |
-| `feature` | A clean-architecture command or query across `@acme/service` and `@acme/trpc`, including its first unit test |
+| `feature` | A clean-architecture command or query across `@arlequins/service` and `@arlequins/trpc`, including its first unit test |
 
 Names must be lowercase kebab-case. The active package scope is read from the initialized workspace instead of being hard-coded.
 

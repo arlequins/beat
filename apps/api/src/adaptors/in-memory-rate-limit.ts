@@ -1,4 +1,4 @@
-import type { RateLimitPort } from "@acme/service";
+import type { RateLimitPort } from "@arlequins/service";
 
 type WindowEntry = { count: number; resetAt: Date };
 

@@ -1,4 +1,4 @@
-import { cn } from "@acme/ui";
+import { cn } from "@arlequins/ui";
 
 export function Textarea({
   className,

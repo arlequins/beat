@@ -1,7 +1,7 @@
 import {
   ApiDeploymentPreset,
   resolveApiDeploymentConfig,
-} from "@acme/env/api-deployment";
+} from "@arlequins/env/api-deployment";
 import { describe, expect, it } from "vitest";
 
 describe("resolveApiDeploymentConfig", () => {

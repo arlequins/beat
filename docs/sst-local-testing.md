@@ -24,7 +24,7 @@ Use a single-workspace check when iterating on one config:
 
 ```bash
 pnpm sst:ws api install
-pnpm --filter @acme/api typecheck
+pnpm --filter @arlequins/api typecheck
 ```
 
 ## Local Application Runtime

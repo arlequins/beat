@@ -1,12 +1,12 @@
 /**
- * Delegates to `runDrizzleSeeds` from `@acme/shared/seed` (runs `seeds/*.ts` beside this file).
- * See `@acme/shared` for ledger schema, ordering, and `stage` from `resolveDeployStage()`.
+ * Delegates to `runDrizzleSeeds` from `@arlequins/shared/seed` (runs `seeds/*.ts` beside this file).
+ * See `@arlequins/shared` for ledger schema, ordering, and `stage` from `resolveDeployStage()`.
  */
 /// <reference types="node" />
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { serverEnv } from "@acme/env";
-import { runDrizzleSeeds } from "@acme/shared/seed";
+import { serverEnv } from "@arlequins/env";
+import { runDrizzleSeeds } from "@arlequins/shared/seed";
 
 import { closeDatabasePool, db } from "../src/client";
 

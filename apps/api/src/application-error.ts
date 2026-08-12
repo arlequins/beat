@@ -1,7 +1,7 @@
 import {
   ApplicationErrorCode,
   toApplicationErrorContract,
-} from "@acme/service";
+} from "@arlequins/service";
 
 const HttpStatusByApplicationCode = {
   [ApplicationErrorCode.CONFLICT]: 409,

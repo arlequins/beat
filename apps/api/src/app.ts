@@ -1,8 +1,12 @@
-import { DEFAULT_LOCALHOST_SITE_URL } from "@acme/env/public-defaults";
-import { serverEnv } from "@acme/env/server-env";
-import type { ErrorReporter, Logger, Telemetry } from "@acme/logger";
-import { createLogger, createTelemetry, noopErrorReporter } from "@acme/logger";
-import type { RateLimitPort } from "@acme/service";
+import { DEFAULT_LOCALHOST_SITE_URL } from "@arlequins/env/public-defaults";
+import { serverEnv } from "@arlequins/env/server-env";
+import type { ErrorReporter, Logger, Telemetry } from "@arlequins/logger";
+import {
+  createLogger,
+  createTelemetry,
+  noopErrorReporter,
+} from "@arlequins/logger";
+import type { RateLimitPort } from "@arlequins/service";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import { bodyLimit } from "hono/body-limit";

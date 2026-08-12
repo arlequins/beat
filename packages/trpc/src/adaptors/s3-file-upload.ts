@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { FileStoragePort } from "@acme/service";
+import type { FileStoragePort } from "@arlequins/service";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 

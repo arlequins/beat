@@ -22,7 +22,7 @@ This document defines how AI coding agents should work in this repository.
 ## Editing Rules
 
 - Use named imports and named exports by default. Follow [TypeScript conventions](typescript.md).
-- Use `@acme/*` for internal package references.
+- Use `@arlequins/*` for internal package references.
 - Keep public APIs explicit through package `exports`.
 - Add comments only when they clarify non-obvious behavior.
 - Do not introduce default exports except for documented framework or tooling exceptions.
@@ -32,7 +32,7 @@ This document defines how AI coding agents should work in this repository.
 ## Monorepo Awareness
 
 - Run commands from the repository root unless a package-specific command is clearly more appropriate.
-- Use workspace-aware commands such as `pnpm -F @acme/<package> <script>` for targeted checks.
+- Use workspace-aware commands such as `pnpm -F @arlequins/<package> <script>` for targeted checks.
 - When adding an application, package, or tRPC domain, prefer `pnpm turbo gen`.
 - When adding or changing Turborepo tasks, update `turbo.json` with cacheability and `outputs` decisions.
 
@@ -52,7 +52,7 @@ Always report verification results. If a check cannot be run, explain why.
 ## Environment and Secrets
 
 - Do not invent or commit secrets.
-- Do not read `process.env` directly in application code. Use the shared environment package, such as `@acme/env`.
+- Do not read `process.env` directly in application code. Use the shared environment package, such as `@arlequins/env`.
 - Use `env:pull` and `env:push` only when the user specifically asks or the task requires secret synchronization.
 - Treat cloud, database, and production operations as high-impact. Confirm the target stage before acting.
 
@@ -71,6 +71,6 @@ See [tRPC router convention](trpc.md) for the full pattern.
 
 - Write repository documentation in English.
 - Avoid references to one-off source projects unless documenting attribution or migration history.
-- Use `@acme/*` in package examples.
+- Use `@arlequins/*` in package examples.
 - Keep docs actionable: include commands, paths, and rules that can guide future implementation.
 - Update [docs index](../README.md) when adding new documentation pages.

@@ -205,19 +205,19 @@ importers:
 
   apps/api:
     dependencies:
-      '@acme/db-backbone':
+      '@arlequins/db-backbone':
         specifier: workspace:*
         version: link:../../packages/db-backbone
-      '@acme/env':
+      '@arlequins/env':
         specifier: workspace:*
         version: link:../../packages/env
-      '@acme/logger':
+      '@arlequins/logger':
         specifier: workspace:*
         version: link:../../packages/logger
-      '@acme/service':
+      '@arlequins/service':
         specifier: workspace:*
         version: link:../../packages/service
-      '@acme/trpc':
+      '@arlequins/trpc':
         specifier: workspace:*
         version: link:../../packages/trpc
       '@aws-sdk/client-eventbridge':
@@ -254,7 +254,7 @@ importers:
         specifier: 'catalog:'
         version: 6.2.3
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@hono/node-server':
@@ -281,23 +281,23 @@ importers:
 
   apps/batch:
     dependencies:
-      '@acme/db-backbone':
+      '@arlequins/db-backbone':
         specifier: workspace:^
         version: link:../../packages/db-backbone
-      '@acme/env':
+      '@arlequins/env':
         specifier: workspace:*
         version: link:../../packages/env
-      '@acme/logger':
+      '@arlequins/logger':
         specifier: workspace:*
         version: link:../../packages/logger
-      '@acme/service':
+      '@arlequins/service':
         specifier: workspace:^
         version: link:../../packages/service
       '@aws-sdk/client-sfn':
         specifier: ^3.1090.0
         version: 3.1090.0
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/aws-lambda':
@@ -318,7 +318,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@acme/env':
+      '@arlequins/env':
         specifier: workspace:*
         version: link:../../packages/env
       '@t3-oss/env-nextjs':
@@ -346,10 +346,10 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
-      '@acme/tailwind-config':
+      '@arlequins/tailwind-config':
         specifier: workspace:*
         version: link:../../tooling/tailwind
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/node':
@@ -376,7 +376,7 @@ importers:
 
   packages/auth:
     dependencies:
-      '@acme/env':
+      '@arlequins/env':
         specifier: workspace:*
         version: link:../env
       jose:
@@ -386,7 +386,7 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/node':
@@ -401,16 +401,16 @@ importers:
 
   packages/db-backbone:
     dependencies:
-      '@acme/env':
+      '@arlequins/env':
         specifier: workspace:*
         version: link:../env
-      '@acme/service':
+      '@arlequins/service':
         specifier: workspace:*
         version: link:../service
-      '@acme/shared':
+      '@arlequins/shared':
         specifier: workspace:*
         version: link:../shared
-      '@acme/types':
+      '@arlequins/types':
         specifier: workspace:*
         version: link:../types
       drizzle-orm:
@@ -426,7 +426,7 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@testcontainers/postgresql':
@@ -457,7 +457,7 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/node':
@@ -491,7 +491,7 @@ importers:
         specifier: 'catalog:'
         version: 0.221.0(@opentelemetry/api@1.9.1)
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/node':
@@ -513,7 +513,7 @@ importers:
         specifier: 'catalog:'
         version: 2.2.6
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/node':
@@ -528,7 +528,7 @@ importers:
 
   packages/service:
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/node':
@@ -543,17 +543,17 @@ importers:
 
   packages/shared:
     dependencies:
-      '@acme/env':
+      '@arlequins/env':
         specifier: workspace:*
         version: link:../env
-      '@acme/types':
+      '@arlequins/types':
         specifier: workspace:*
         version: link:../types
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(postgres@3.4.9)
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/node':
@@ -568,25 +568,25 @@ importers:
 
   packages/trpc:
     dependencies:
-      '@acme/auth':
+      '@arlequins/auth':
         specifier: workspace:*
         version: link:../auth
-      '@acme/db-backbone':
+      '@arlequins/db-backbone':
         specifier: workspace:*
         version: link:../db-backbone
-      '@acme/env':
+      '@arlequins/env':
         specifier: workspace:*
         version: link:../env
-      '@acme/logger':
+      '@arlequins/logger':
         specifier: workspace:*
         version: link:../logger
-      '@acme/s3-cache':
+      '@arlequins/s3-cache':
         specifier: workspace:*
         version: link:../s3-cache
-      '@acme/service':
+      '@arlequins/service':
         specifier: workspace:*
         version: link:../service
-      '@acme/validators':
+      '@arlequins/validators':
         specifier: workspace:*
         version: link:../validators
       '@aws-sdk/client-s3':
@@ -608,7 +608,7 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/node':
@@ -623,11 +623,11 @@ importers:
 
   packages/types:
     dependencies:
-      '@acme/env':
+      '@arlequins/env':
         specifier: workspace:*
         version: link:../env
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       typescript:
@@ -655,10 +655,10 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
     devDependencies:
-      '@acme/tailwind-config':
+      '@arlequins/tailwind-config':
         specifier: workspace:*
         version: link:../../tooling/tailwind
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@storybook/addon-a11y':
@@ -722,7 +722,7 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       typescript:
@@ -737,7 +737,7 @@ importers:
         specifier: 'catalog:'
         version: 9.9.1
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../typescript
       '@types/node':
@@ -755,10 +755,10 @@ importers:
 
   tooling/sst-bootstrap:
     devDependencies:
-      '@acme/env':
+      '@arlequins/env':
         specifier: workspace:*
         version: link:../../packages/env
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../typescript
       '@aws-sdk/client-secrets-manager':
@@ -786,7 +786,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.3
     devDependencies:
-      '@acme/tsconfig':
+      '@arlequins/tsconfig':
         specifier: workspace:*
         version: link:../typescript
       '@types/node':

@@ -1,4 +1,4 @@
-import { ResourceConflictError } from "@acme/service";
+import { ResourceConflictError } from "@arlequins/service";
 import { TRPCError } from "@trpc/server";
 import { describe, expect, it } from "vitest";
 

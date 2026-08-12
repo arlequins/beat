@@ -1,5 +1,5 @@
 {
-  "name": "@acme/trpc",
+  "name": "@arlequins/trpc",
   "private": true,
   "type": "module",
   "exports": {
@@ -24,13 +24,13 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@acme/auth": "workspace:*",
-    "@acme/db-backbone": "workspace:*",
-    "@acme/env": "workspace:*",
-    "@acme/logger": "workspace:*",
-    "@acme/s3-cache": "workspace:*",
-    "@acme/service": "workspace:*",
-    "@acme/validators": "workspace:*",
+    "@arlequins/auth": "workspace:*",
+    "@arlequins/db-backbone": "workspace:*",
+    "@arlequins/env": "workspace:*",
+    "@arlequins/logger": "workspace:*",
+    "@arlequins/s3-cache": "workspace:*",
+    "@arlequins/service": "workspace:*",
+    "@arlequins/validators": "workspace:*",
     "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/s3-request-presigner": "catalog:",
     "@trpc/server": "catalog:",
@@ -39,7 +39,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@arlequins/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
