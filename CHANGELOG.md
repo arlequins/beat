@@ -2,6 +2,19 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.4.1...template-t3-turbo-sst-v1.5.0) (2026-08-12)
+
+
+### Features
+
+* deploy static web through GitHub Pages ([#34](https://github.com/arlequins/beat/issues/34)) ([c632e85](https://github.com/arlequins/beat/commit/c632e85343553327be213b5e5aa3b4b5908b2da2))
+
+
+### Bug Fixes
+
+* restrict function URL CORS ([#36](https://github.com/arlequins/beat/issues/36)) ([7b6ca67](https://github.com/arlequins/beat/commit/7b6ca67b05a3a04aefbf03cf8e0ac83b63e8d665))
+* use supported function URL CORS methods ([#37](https://github.com/arlequins/beat/issues/37)) ([1ec675b](https://github.com/arlequins/beat/commit/1ec675b3f0edbb12687bb545f1731dd5977152b8))
+
 ## [1.4.1](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.4.0...template-t3-turbo-sst-v1.4.1) (2026-08-12)
 
 
