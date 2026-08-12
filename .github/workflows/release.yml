@@ -31,6 +31,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           permission-contents: write
           permission-pull-requests: write
+          permission-workflows: write
       - name: Create or update release
         if: steps.app-token.outputs.token != ''
         uses: googleapis/release-please-action@v4

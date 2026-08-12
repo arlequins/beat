@@ -112,12 +112,14 @@ operation.
 Release Please exchanges the protected `production` Environment secrets
 `BEAT_GITHUB_APP_ID` and `BEAT_GITHUB_APP_PRIVATE_KEY` for a short-lived GitHub
 App installation token. The app must be installed on `arlequins/beat` and have
-only Contents and Pull requests read/write access. The existing GitHub App
-installation ID is not needed by this token exchange.
+Contents, Pull requests, and Workflows read/write access. The existing GitHub
+App installation ID is not needed by this token exchange.
 
-The workflow explicitly requests those two write permissions while minting its
-short-lived token. GitHub refuses the run if the installation has not accepted
-either permission, rather than silently falling back to a weaker token.
+The workflow explicitly requests those three write permissions while minting
+its short-lived token. GitHub refuses the run if the installation has not
+accepted any requested permission, rather than silently falling back to a
+weaker token. GitHub's Releases API requires both Contents and Workflows write
+permission for GitHub App installation tokens.
 
 Keep these source materials separate from AWS credentials, Beat administrator
 credentials, and GitHub content-publication credentials. The private key is
