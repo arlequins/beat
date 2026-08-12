@@ -9,8 +9,8 @@ production deployment role.
 
 The API stack owns only its state, immutable ledger, cache, and upload buckets,
 API Lambda, reconciliation Lambda, API endpoint, and application monitoring.
-The web stack owns its private CloudFront-origin asset bucket and distribution.
 The batch stack owns its Lambda, Step Functions, and EventBridge resources.
+GitHub Pages owns the static frontend and is not an AWS/SST application.
 
 All application-created buckets have versioning, AES-256 default encryption,
 bucket-owner-enforced ownership, every Block Public Access option, and a
@@ -69,8 +69,8 @@ anomaly monitor.
    plan as an artifact; no local `sst diff` is permitted.
 3. Review the workflow log and artifact. For API, confirm the Lambda has only
    the secret ARN (not secret values), named S3 permissions, and retained
-   private buckets. For web, confirm CloudFront is the only asset-bucket
-   reader. For batch, confirm log retention and no unneeded data access.
+   private buckets. For batch, confirm log retention and no unneeded data
+   access. GitHub Pages web delivery has no SST diff.
 4. Run **Production deployment** from the same `main` commit. Paste that exact
    commit SHA into `reviewed_commit`; the workflow rejects a stale SHA.
 5. The API deployment reads its generated `apiUrl` from SST state, records only

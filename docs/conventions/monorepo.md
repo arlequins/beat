@@ -62,7 +62,7 @@ Run common tasks from the repository root through Turborepo.
 | `pnpm build`                      | Production build for all workspaces.              |
 | `pnpm dev`                        | Start development servers in watch mode.          |
 | `pnpm dev:next`                   | Watch the web app and its dependencies.           |
-| `pnpm dev:sst`                    | Start `web`, `api`, and `batch` in SST mode.      |
+| `pnpm dev:sst`                    | Start `api` and `batch` in SST mode.               |
 | `pnpm check` / `pnpm check:fix`   | Biome lint, format, and assist checks.            |
 | `pnpm lint` / `pnpm lint:fix`     | Biome lint, optionally with automatic fixes.      |
 | `pnpm format` / `pnpm format:fix` | Biome format, optionally with automatic fixes.    |

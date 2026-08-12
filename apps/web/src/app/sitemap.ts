@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { siteConfig } from "~/config/site";
+import { siteUrl } from "~/config/site";
 import { getProjects } from "~/lib/github";
 import { localePath, locales } from "~/lib/i18n";
 import { getPosts } from "~/lib/posts";
@@ -8,7 +8,7 @@ import { getPosts } from "~/lib/posts";
 export const dynamic = "force-static";
 
 function absoluteUrl(path: string) {
-  return new URL(path, siteConfig.url).toString();
+  return siteUrl(path);
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

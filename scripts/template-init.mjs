@@ -112,9 +112,6 @@ export function pathsToPrune(options) {
       "apps/api/sst-env.d.ts",
       "apps/api/sst-globals.d.ts",
       "apps/api/sst.config.ts",
-      "apps/web/sst-env.d.ts",
-      "apps/web/sst-globals.d.ts",
-      "apps/web/sst.config.ts",
       "scripts/sst-workspace.mjs",
       "scripts/test-sst.mjs",
       "tooling/sst-bootstrap",
@@ -248,7 +245,6 @@ export function transformContent(relativePath, source, options) {
   if (options.domain) output = output.split("example.com").join(options.domain);
 
   const appName = new Map([
-    ["apps/web/sst.config.ts", "web"],
     ["apps/api/sst.config.ts", "api"],
     ["apps/batch/sst.config.ts", "batch"],
     ["tooling/sst-bootstrap/sst.config.ts", "bootstrap"],

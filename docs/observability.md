@@ -38,8 +38,8 @@ Unset the endpoint to return to the dependency-free local mode.
 
 The `Production availability monitor` workflow runs hourly and can also be
 started manually. It assumes the protected production deployment role through
-GitHub OIDC, reads only the public `webUrl` and `apiUrl` SST outputs into
-temporary runner files, verifies HTTPS, and checks the website and API health
+GitHub OIDC, reads only the public `apiUrl` SST output into a temporary runner
+file, verifies HTTPS, and checks the GitHub Pages website and API health
 endpoint.
 
 It never reads the runtime secret. A failure creates one open GitHub issue with

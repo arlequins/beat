@@ -28,7 +28,7 @@
     "dev": "turbo watch dev --continue",
     "dev:local": "pnpm db:start && pnpm exec dotenv -e .env.localhost -- pnpm db:setup && pnpm exec dotenv -e .env.localhost -- pnpm dev",
     "dev:next": "turbo watch dev -F @acme/web...",
-    "dev:sst": "turbo run sst:dev --continue -F @acme/web -F @acme/api -F @acme/batch",
+    "dev:sst": "turbo run sst:dev --continue -F @acme/api -F @acme/batch",
     "batch:run": "pnpm -C apps/batch with-env pnpm dlx tsx scripts/dev.ts",
     "check": "biome check .",
     "check:changed": "node scripts/check-changed.mjs",

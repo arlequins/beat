@@ -8,8 +8,6 @@
         "apigateway:GET",
         "cloudformation:DescribeStacks",
         "cloudformation:ListStackResources",
-        "cloudfront:GetDistribution",
-        "cloudfront:ListDistributions",
         "events:DescribeRule",
         "iam:GetPolicy",
         "iam:GetRole",
@@ -65,8 +63,6 @@
       "Resource": [
         "arn:aws:s3:::api-production-*",
         "arn:aws:s3:::api-production-*/*",
-        "arn:aws:s3:::web-production-*",
-        "arn:aws:s3:::web-production-*/*",
         "arn:aws:s3:::sst-*",
         "arn:aws:s3:::sst-*/*"
       ]
@@ -92,10 +88,8 @@
       "Resource": [
         "arn:aws:iam::AWS_ACCOUNT_ID:role/api-production-*",
         "arn:aws:iam::AWS_ACCOUNT_ID:role/batch-production-*",
-        "arn:aws:iam::AWS_ACCOUNT_ID:role/web-production-*",
         "arn:aws:iam::AWS_ACCOUNT_ID:policy/api-production-*",
-        "arn:aws:iam::AWS_ACCOUNT_ID:policy/batch-production-*",
-        "arn:aws:iam::AWS_ACCOUNT_ID:policy/web-production-*"
+        "arn:aws:iam::AWS_ACCOUNT_ID:policy/batch-production-*"
       ]
     },
     {
@@ -132,18 +126,6 @@
           "aws:RequestedRegion": "ap-northeast-1"
         }
       }
-    },
-    {
-      "Sid": "ManageBeatCloudFrontSiteOnly",
-      "Effect": "Allow",
-      "Action": [
-        "cloudfront:CreateDistribution",
-        "cloudfront:CreateInvalidation",
-        "cloudfront:DeleteDistribution",
-        "cloudfront:TagResource",
-        "cloudfront:UpdateDistribution"
-      ],
-      "Resource": "*"
     }
   ]
 }

@@ -51,6 +51,8 @@ local application; the pages below explain design decisions and ongoing work.
 
 ## Deployment and Operations
 
+- [GitHub Pages production frontend](github-pages-production.md): static web
+  deployment, `/beat` path, CORS boundary, monitoring, and CloudFront retirement.
 - [Vercel deployment](vercel-deployment.md): two-project Vercel deployment for
   the static web app and Hono API, with Neon PostgreSQL.
 - [Deployment and supply-chain security](deployment-security.md): GitHub OIDC,

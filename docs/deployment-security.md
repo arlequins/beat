@@ -12,8 +12,10 @@ Store role ARNs as GitHub variables. Role ARNs identify resources and are not cr
 - `production` environment: `BEAT_RUNTIME_SECRET_ARN` — full ARN of the JSON secret validated by the protected API plan/deploy job and read by the API Lambda at runtime
 
 Set `AWS_REGION` as an environment variable. Do not store AWS access keys in GitHub.
-`BEAT_PRODUCTION_API_URL` is not used: the protected API deployment reads its
-own `apiUrl` output from SST state and smoke-tests that one URL.
+The GitHub Pages workflow reads the deployed public API URL from existing SST
+state through OIDC. This endpoint is compiled into the browser bundle, but no
+API URL needs to be copied into an Environment variable and no credential is
+made browser-visible.
 
 Start with the trust-policy template in [`docs/iam/github-oidc-trust-policy.json`](./iam/github-oidc-trust-policy.json). Replace placeholders and retain only the production subject before applying it. The deployment permission policy is intentionally separate from the baseline role: review [`Production AWS/SST handoff`](./production-aws-sst.md), start from its bounded policy template, then constrain each action and resource from the protected production diff evidence.
 
@@ -131,7 +133,11 @@ finish any pending Release Please release.
 
 ## Headers and CSP
 
-The Hono API uses `secureHeaders` and strict CORS. For the statically exported web application, configure a CloudFront response-headers policy with HSTS, `X-Content-Type-Options`, `Referrer-Policy`, frame restrictions, and a tested Content Security Policy. Start CSP in report-only mode because OIDC issuer and API origins vary by generated project, then enforce it after collecting violations. Do not hard-code a template-wide production issuer.
+The Hono API uses `secureHeaders` and strict CORS. GitHub Pages manages HTTPS
+for the static web host and does not provide a repository-level response-header
+policy. Keep browser-visible secrets out of the export, enforce API headers and
+CORS at the Hono boundary, and add a static CSP only after testing all required
+API and identity origins.
 
 ## Application Request Guards
 
