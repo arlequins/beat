@@ -109,14 +109,19 @@ operation.
 
 ## Release automation credential
 
-Release Please intentionally uses a separate `RELEASE_PLEASE_TOKEN` repository
-secret because pull requests created with the default workflow token do not
-start the repository's normal CI workflows. Use a fine-grained token or GitHub
-App user token limited to this repository with Contents and Pull requests
-read/write access. Never reuse an AWS, Beat administrator, or GitHub content
-publication credential. A manual Release workflow run fails when this secret is
-absent; push runs leave a clear inactive summary without blocking application
-CI.
+Release Please exchanges the protected `production` Environment secrets
+`BEAT_GITHUB_APP_ID` and `BEAT_GITHUB_APP_PRIVATE_KEY` for a short-lived GitHub
+App installation token. The app must be installed on `arlequins/beat` and have
+only Contents and Pull requests read/write access. The existing GitHub App
+installation ID is not needed by this token exchange.
+
+Keep these source materials separate from AWS credentials, Beat administrator
+credentials, and GitHub content-publication credentials. The private key is
+never logged, committed, put in SST state, or exposed to the browser. When the
+two Environment secrets are absent, push-triggered release runs finish with an
+explicit **Release deferred** summary instead of failing application CI. After
+configuring them, run the **Release** workflow manually from `main` once to
+finish any pending Release Please release.
 
 ## Headers and CSP
 

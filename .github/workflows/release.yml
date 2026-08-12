@@ -6,16 +6,33 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   release-please:
+    environment: production
     runs-on: ubuntu-latest
+    env:
+      RELEASE_APP_ID: ${{ secrets.BEAT_GITHUB_APP_ID }}
+      RELEASE_APP_PRIVATE_KEY: ${{ secrets.BEAT_GITHUB_APP_PRIVATE_KEY }}
     steps:
+      - name: Report missing release credential
+        if: env.RELEASE_APP_ID == '' || env.RELEASE_APP_PRIVATE_KEY == ''
+        run: |
+          echo "## Release deferred" >> "$GITHUB_STEP_SUMMARY"
+          echo "Configure the protected production Environment secrets BEAT_GITHUB_APP_ID and BEAT_GITHUB_APP_PRIVATE_KEY to enable Release Please." >> "$GITHUB_STEP_SUMMARY"
+      - name: Create short-lived GitHub App token
+        id: app-token
+        if: env.RELEASE_APP_ID != '' && env.RELEASE_APP_PRIVATE_KEY != ''
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ env.RELEASE_APP_ID }}
+          private-key: ${{ env.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
       - name: Create or update release
+        if: steps.app-token.outputs.token != ''
         uses: googleapis/release-please-action@v4
         with:
-          token: ${{ github.token }}
+          token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
