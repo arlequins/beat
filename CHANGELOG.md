@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.6.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.5.0...template-t3-turbo-sst-v1.6.0) (2026-08-12)
+
+
+### Features
+
+* **api:** add OIDC authorization code PKCE flow ([#40](https://github.com/arlequins/beat/issues/40)) ([1fea542](https://github.com/arlequins/beat/commit/1fea5420ba22e71f04bbe11869a0c86d558808f3))
+
 ## [1.5.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.4.1...template-t3-turbo-sst-v1.5.0) (2026-08-12)
 
 
