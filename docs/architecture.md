@@ -100,9 +100,10 @@ comma-separated allowlist and defaults to `NEXT_PUBLIC_SITE_URL`.
 - `apps/api/sst.config.ts` selects a Lambda Function URL or API Gateway HTTP API preset.
 - Optional VPC variables attach API and batch Lambdas to private resources.
 
-Set the protected `BEAT_PRODUCTION_API_URL` variable to the API's public URL
-before publishing the web application. API CORS allows the exact Pages origin
-`https://arlequins.github.io`.
+The Pages deployment resolves the generated API URL from protected SST state;
+do not set `BEAT_PRODUCTION_API_URL`. API CORS allows only the exact Pages
+origin `https://arlequins.github.io` at both the Function URL and application
+layers.
 
 ## Extension Rules
 

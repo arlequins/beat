@@ -122,17 +122,33 @@ export default $config({
         },
       ],
     });
-    const uploadOrigins = (
-      serverEnv.API_CORS_ORIGINS ?? "http://localhost:3000"
-    )
+    const corsOrigins = (serverEnv.API_CORS_ORIGINS ?? "http://localhost:3000")
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean);
+    const functionUrlCors = {
+      allowHeaders: [
+        "Authorization",
+        "Content-Type",
+        "Trpc-Accept",
+        "X-Request-Id",
+      ],
+      allowMethods: ["DELETE", "GET", "PATCH", "POST", "PUT", "OPTIONS"],
+      allowOrigins: corsOrigins,
+      exposeHeaders: [
+        "RateLimit-Limit",
+        "RateLimit-Remaining",
+        "RateLimit-Reset",
+        "Retry-After",
+        "X-Request-Id",
+      ],
+      maxAge: "1 day",
+    } as const;
     const uploadBucket = createPrivateBucket("Uploads", {
       cors: {
         allowHeaders: ["content-type"],
         allowMethods: ["PUT"],
-        allowOrigins: uploadOrigins,
+        allowOrigins: corsOrigins,
       },
       lifecycle: [
         {
@@ -361,7 +377,12 @@ export default $config({
 
     const api = new sst.aws.Function("Api", {
       ...handler,
-      url: router ? { router: { instance: router } } : true,
+      // Direct Function URLs otherwise enable wildcard CORS before Hono handles
+      // the preflight request. Keep the direct endpoint boundary aligned with
+      // the app; Router deployments use the Router's edge boundary instead.
+      url: router
+        ? { router: { instance: router } }
+        : { cors: functionUrlCors },
     });
 
     return {

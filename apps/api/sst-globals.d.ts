@@ -96,6 +96,27 @@ declare const sst: {
         permissions?: Record<string, unknown>[];
         url?:
           | boolean
+          | {
+              cors?:
+                | false
+                | {
+                    allowCredentials?: boolean;
+                    allowHeaders?: readonly string[];
+                    allowMethods?: readonly (
+                      | "DELETE"
+                      | "GET"
+                      | "HEAD"
+                      | "OPTIONS"
+                      | "PATCH"
+                      | "POST"
+                      | "PUT"
+                      | "*"
+                    )[];
+                    allowOrigins?: readonly string[];
+                    exposeHeaders?: readonly string[];
+                    maxAge?: string;
+                  };
+            }
           | { router: { instance: { url: string }; path?: string } };
         vpc?: {
           subnets: string[];
