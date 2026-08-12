@@ -18,6 +18,12 @@ jobs:
   check:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      # Match the protected deploy workflow so `sst state export` reads the
+      # existing ap-northeast-1 state instead of initializing its us-east-1
+      # default. The ARN is a resource identifier, not a secret value.
+      SST_AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
+      BEAT_RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
     outputs:
       api_url: ${{ steps.urls.outputs.api_url }}
       web_url: ${{ steps.urls.outputs.web_url }}
