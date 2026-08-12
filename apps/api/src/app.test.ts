@@ -22,6 +22,33 @@ describe("API app", () => {
     expect(response.headers.get("x-request-id")).toBeTruthy();
   });
 
+  it("allows preflight requests only from configured browser origins", async () => {
+    const allowed = await app.request("/api/echo", {
+      headers: {
+        "Access-Control-Request-Headers": "authorization,content-type",
+        "Access-Control-Request-Method": "POST",
+        Origin: "http://localhost:3000",
+      },
+      method: "OPTIONS",
+    });
+    const rejected = await app.request("/api/echo", {
+      headers: {
+        "Access-Control-Request-Method": "POST",
+        Origin: "https://untrusted.example",
+      },
+      method: "OPTIONS",
+    });
+
+    expect(allowed.status).toBe(204);
+    expect(allowed.headers.get("access-control-allow-origin")).toBe(
+      "http://localhost:3000",
+    );
+    expect(allowed.headers.get("access-control-allow-methods")).toContain(
+      "POST",
+    );
+    expect(rejected.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
   it("reports readiness when required dependencies are available", async () => {
     const readyApp = createApiApp({
       corsOrigins: ["http://localhost:3000"],

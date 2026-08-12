@@ -43,8 +43,11 @@ that build; local development stays at `/`.
 
 The Pages origin sent by browsers is `https://arlequins.github.io`, not the
 `/beat` path. The protected API SST workflow therefore fixes
-`API_CORS_ORIGINS` to that exact origin and passes the Pages site URL to the
-Lambda for generated public links. After merging this change:
+`API_CORS_ORIGINS` to that exact origin and applies it both to the Hono
+application and to the Lambda Function URL's platform-level CORS preflight
+handler. This prevents the Function URL default wildcard from bypassing the
+application allowlist. It also passes the Pages site URL to the Lambda for
+generated public links. After merging this change:
 
 1. let the protected Pages workflow publish successfully;
 2. run **Production infrastructure diff** for `api` from the same `main` SHA;
