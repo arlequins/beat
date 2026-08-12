@@ -65,9 +65,14 @@ The production monitor checks the Pages URL directly and resolves only the API
 URL from SST state. It no longer reads web SST state or deploys a CloudFront
 site.
 
-The previous CloudFront distribution and asset bucket are deliberately left
-retained during this migration. They are not an active deployment target after
-this change. Keep them untouched until Pages and API CORS have been observed in
-production, then retire the legacy stack only through a separately reviewed,
-protected GitHub Actions change. Do not use a local `sst remove`; retained
-production resources must not be deleted as an incidental migration side effect.
+The previous CloudFront distribution was retired after Pages and API CORS were
+observed in production. The protected `beat-sst-aws` inventory and retirement
+workflows verified the exact `sst:app=web` and `sst:stage=production` target,
+disabled it, waited for propagation, and removed only that distribution. The
+versioned `web-production-*` asset bucket remains retained with its object
+versions; no bucket contents were deleted. The obsolete web deployment IAM
+policies were then removed through a reviewed bootstrap diff/deploy.
+
+Do not use a local `sst remove` or delete the retained bucket as an incidental
+migration side effect. Any future bucket-retention change requires its own
+data-retention review and protected GitHub Actions workflow.
