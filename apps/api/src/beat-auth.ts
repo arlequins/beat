@@ -1,4 +1,5 @@
 import {
+  createHash,
   createHmac,
   randomBytes,
   randomUUID,
@@ -13,10 +14,11 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { importJWK, jwtVerify, SignJWT } from "jose";
+import { decodeJwt, importJWK, jwtVerify, SignJWT } from "jose";
 
 const ACCESS_TOKEN_TTL_SECONDS = 10 * 60;
 const DEFAULT_REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
+const DEFAULT_AUTHORIZATION_CODE_TTL_SECONDS = 60;
 
 export type ActiveAdmin = {
   adminKey: string;
@@ -48,12 +50,30 @@ type RefreshSession = {
   subject: string;
 };
 
+type AuthorizationCodeState = {
+  adminKey: string;
+  clientId: string;
+  codeChallenge: string;
+  codeChallengeMethod: "S256";
+  createdAt: string;
+  credentialVersion: number;
+  expiresAt: string;
+  nonce: string;
+  redirectUri: string;
+  schemaVersion: 1;
+  scope: string[];
+  status: "active" | "used";
+  subject: string;
+  usedAt?: string;
+};
+
 type StoredJson = {
   etag: string;
   value: unknown;
 };
 
 type BeatAuthConfig = {
+  authorizationCodeTtlSeconds: number;
   audience: string;
   issuer: string;
   keyId: string;
@@ -74,9 +94,26 @@ export type BeatTokenPair = {
   token_type: "Bearer";
 };
 
+export type BeatAuthorizationCodeRequest = {
+  clientId: string;
+  codeChallenge: string;
+  codeChallengeMethod: "S256";
+  nonce: string;
+  redirectUri: string;
+  scope: string[];
+};
+
+export type BeatAuthorizationCodeTokenResponse = BeatTokenPair & {
+  id_token: string;
+};
+
 export class BeatAuthError extends Error {
   constructor(
-    readonly code: "conflict" | "invalid_credentials" | "invalid_refresh_token",
+    readonly code:
+      | "conflict"
+      | "invalid_authorization_code"
+      | "invalid_credentials"
+      | "invalid_refresh_token",
   ) {
     super(code);
     this.name = "BeatAuthError";
@@ -90,6 +127,9 @@ function required(value: string | undefined, name: string) {
 
 function config(): BeatAuthConfig {
   return {
+    authorizationCodeTtlSeconds:
+      serverEnv.BEAT_AUTH_AUTHORIZATION_CODE_TTL_SECONDS ??
+      DEFAULT_AUTHORIZATION_CODE_TTL_SECONDS,
     audience: required(serverEnv.BEAT_AUTH_AUDIENCE, "BEAT_AUTH_AUDIENCE"),
     issuer: required(
       serverEnv.BEAT_AUTH_ISSUER_URL,
@@ -141,6 +181,22 @@ function adminKey(email: string, authConfig: BeatAuthConfig) {
 
 function sessionKey(sessionId: string, authConfig: BeatAuthConfig) {
   return `${authConfig.statePrefix}/oauth/sessions/${sessionId}.json`;
+}
+
+function authorizationCodeKey(codeHash: string, authConfig: BeatAuthConfig) {
+  return `${authConfig.statePrefix}/oauth/codes/${codeHash}.json`;
+}
+
+function hashAuthorizationCode(code: string) {
+  return createHash("sha256").update(code).digest("hex");
+}
+
+function verifyPkce(codeVerifier: string, codeChallenge: string) {
+  const expected = Buffer.from(
+    createHash("sha256").update(codeVerifier).digest("base64url"),
+  );
+  const actual = Buffer.from(codeChallenge);
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
 function secretHash(secret: string, authConfig: BeatAuthConfig) {
@@ -271,6 +327,29 @@ function isRefreshSession(value: unknown): value is RefreshSession {
     typeof row.secretHash === "string" &&
     typeof row.sessionId === "string" &&
     (row.status === "active" || row.status === "revoked") &&
+    typeof row.subject === "string"
+  );
+}
+
+function isAuthorizationCodeState(
+  value: unknown,
+): value is AuthorizationCodeState {
+  if (!value || typeof value !== "object") return false;
+  const row = value as Record<string, unknown>;
+  return (
+    row.schemaVersion === 1 &&
+    typeof row.adminKey === "string" &&
+    typeof row.clientId === "string" &&
+    typeof row.codeChallenge === "string" &&
+    row.codeChallengeMethod === "S256" &&
+    typeof row.createdAt === "string" &&
+    typeof row.credentialVersion === "number" &&
+    typeof row.expiresAt === "string" &&
+    typeof row.nonce === "string" &&
+    typeof row.redirectUri === "string" &&
+    Array.isArray(row.scope) &&
+    row.scope.every((scope) => typeof scope === "string") &&
+    (row.status === "active" || row.status === "used") &&
     typeof row.subject === "string"
   );
 }
@@ -497,10 +576,13 @@ export async function authenticateBeatAdmin(
   return stored.value;
 }
 
-export async function issueBeatAccessToken(admin: ActiveAdmin) {
+export async function issueBeatAccessToken(
+  admin: ActiveAdmin,
+  clientId = config().audience,
+) {
   const authConfig = config();
   return new SignJWT({
-    client_id: authConfig.audience,
+    client_id: clientId,
     credential_version: admin.credentialVersion,
     email: admin.email,
     jti: randomUUID(),
@@ -517,6 +599,66 @@ export async function issueBeatAccessToken(admin: ActiveAdmin) {
     .setIssuer(authConfig.issuer)
     .setSubject(admin.subject)
     .sign(await importJWK(authConfig.privateJwk, "ES256"));
+}
+
+export async function issueBeatIdToken(
+  admin: ActiveAdmin,
+  clientId: string,
+  nonce: string,
+) {
+  const authConfig = config();
+  return new SignJWT({
+    email: admin.email,
+    jti: randomUUID(),
+    nonce,
+    role: admin.role,
+  })
+    .setProtectedHeader({
+      alg: "ES256",
+      kid: authConfig.keyId,
+      typ: "JWT",
+    })
+    .setAudience(clientId)
+    .setExpirationTime(`${ACCESS_TOKEN_TTL_SECONDS}s`)
+    .setIssuedAt()
+    .setIssuer(authConfig.issuer)
+    .setSubject(admin.subject)
+    .sign(await importJWK(authConfig.privateJwk, "ES256"));
+}
+
+export async function verifyBeatIdTokenHint(token: string) {
+  const authConfig = config();
+  let decoded: ReturnType<typeof decodeJwt>;
+  try {
+    decoded = decodeJwt(token);
+  } catch {
+    throw new BeatAuthError("invalid_credentials");
+  }
+  const audience =
+    typeof decoded.aud === "string"
+      ? decoded.aud
+      : Array.isArray(decoded.aud) && typeof decoded.aud[0] === "string"
+        ? decoded.aud[0]
+        : undefined;
+  if (!audience) throw new BeatAuthError("invalid_credentials");
+  const publicJwk = { ...authConfig.privateJwk };
+  delete publicJwk.d;
+  const { payload } = await jwtVerify(
+    token,
+    await importJWK(publicJwk, "ES256"),
+    {
+      algorithms: ["ES256"],
+      audience,
+      issuer: authConfig.issuer,
+    },
+  );
+  if (
+    typeof payload.sub !== "string" ||
+    typeof payload.nonce !== "string" ||
+    payload.role !== "admin"
+  )
+    throw new BeatAuthError("invalid_credentials");
+  return { clientId: audience, subject: payload.sub };
 }
 
 function newRefreshToken(sessionId: string, generation: number) {
@@ -603,11 +745,113 @@ export async function issueBeatTokenPair(
     now,
   );
   return {
-    access_token: await issueBeatAccessToken(admin),
+    access_token: await issueBeatAccessToken(admin, clientId),
     expires_in: ACCESS_TOKEN_TTL_SECONDS,
     refresh_expires_in: authConfig.refreshTokenTtlSeconds,
     refresh_token: refresh.token,
     token_type: "Bearer",
+  };
+}
+
+export async function issueBeatAuthorizationCode(
+  admin: ActiveAdmin,
+  input: BeatAuthorizationCodeRequest,
+  client = new S3Client({}),
+) {
+  const authConfig = config();
+  const code = randomBytes(32).toString("base64url");
+  const now = new Date();
+  const state: AuthorizationCodeState = {
+    adminKey: admin.adminKey,
+    clientId: input.clientId,
+    codeChallenge: input.codeChallenge,
+    codeChallengeMethod: input.codeChallengeMethod,
+    createdAt: now.toISOString(),
+    credentialVersion: admin.credentialVersion,
+    expiresAt: new Date(
+      now.getTime() + authConfig.authorizationCodeTtlSeconds * 1_000,
+    ).toISOString(),
+    nonce: input.nonce,
+    redirectUri: input.redirectUri,
+    schemaVersion: 1,
+    scope: input.scope,
+    status: "active",
+    subject: admin.subject,
+  };
+  await putJson(client, {
+    bucket: authConfig.stateBucket,
+    ifNoneMatch: "*",
+    key: authorizationCodeKey(hashAuthorizationCode(code), authConfig),
+    value: state,
+  });
+  await appendLedgerEvent(
+    "authorization-code-created",
+    { clientId: state.clientId, subject: state.subject },
+    client,
+    authConfig,
+    now,
+  );
+  return code;
+}
+
+export async function redeemBeatAuthorizationCode(
+  input: {
+    clientId: string;
+    code: string;
+    codeVerifier: string;
+    redirectUri: string;
+  },
+  client = new S3Client({}),
+): Promise<BeatAuthorizationCodeTokenResponse> {
+  const authConfig = config();
+  const key = authorizationCodeKey(
+    hashAuthorizationCode(input.code),
+    authConfig,
+  );
+  const stored = await getJson(client, authConfig.stateBucket, key);
+  if (!stored || !isAuthorizationCodeState(stored.value))
+    throw new BeatAuthError("invalid_authorization_code");
+  const state = stored.value;
+  if (
+    state.status !== "active" ||
+    Date.parse(state.expiresAt) <= Date.now() ||
+    state.clientId !== input.clientId ||
+    state.redirectUri !== input.redirectUri ||
+    state.codeChallengeMethod !== "S256" ||
+    !verifyPkce(input.codeVerifier, state.codeChallenge)
+  )
+    throw new BeatAuthError("invalid_authorization_code");
+  const admin = await readAdminByKey(state.adminKey, client, authConfig);
+  if (
+    admin?.value.status !== "active" ||
+    admin.value.subject !== state.subject ||
+    admin.value.credentialVersion !== state.credentialVersion
+  )
+    throw new BeatAuthError("invalid_authorization_code");
+  const now = new Date();
+  try {
+    await putJson(client, {
+      bucket: authConfig.stateBucket,
+      ifMatch: stored.etag,
+      key,
+      value: { ...state, status: "used", usedAt: now.toISOString() },
+    });
+  } catch (error) {
+    if (isPreconditionFailed(error))
+      throw new BeatAuthError("invalid_authorization_code");
+    throw error;
+  }
+  const tokens = await issueBeatTokenPair(admin.value, state.clientId, client);
+  await appendLedgerEvent(
+    "authorization-code-redeemed",
+    { clientId: state.clientId, subject: state.subject },
+    client,
+    authConfig,
+    now,
+  );
+  return {
+    ...tokens,
+    id_token: await issueBeatIdToken(admin.value, state.clientId, state.nonce),
   };
 }
 
@@ -688,7 +932,7 @@ export async function refreshBeatTokenPair(
     now,
   );
   return {
-    access_token: await issueBeatAccessToken(admin.value),
+    access_token: await issueBeatAccessToken(admin.value, session.clientId),
     expires_in: ACCESS_TOKEN_TTL_SECONDS,
     refresh_expires_in: Math.max(
       0,

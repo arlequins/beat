@@ -39,7 +39,8 @@ jobs:
       SST_AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
       DEPLOY_ROLE_ARN: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
       BEAT_RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
-      API_CORS_ORIGINS: https://arlequins.github.io
+      API_CORS_ORIGINS: ${{ vars.API_CORS_ORIGINS || 'https://arlequins.github.io' }}
+      BEAT_AUTH_CLIENTS_JSON: ${{ vars.BEAT_AUTH_CLIENTS_JSON }}
       NEXT_PUBLIC_SITE_URL: https://arlequins.github.io/beat
     concurrency:
       group: sst-production-${{ inputs.application }}

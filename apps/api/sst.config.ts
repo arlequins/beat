@@ -105,6 +105,11 @@ export default $config({
         },
         {
           expiresIn: "2 days",
+          id: "expire-authorization-codes",
+          prefix: `${statePrefix}/oauth/codes/`,
+        },
+        {
+          expiresIn: "2 days",
           id: "expire-rate-limit-windows",
           prefix: `${statePrefix}/rate-limit/`,
         },

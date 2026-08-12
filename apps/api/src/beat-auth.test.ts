@@ -1,4 +1,4 @@
-import { randomBytes, scrypt as scryptCallback } from "node:crypto";
+import { createHash, randomBytes, scrypt as scryptCallback } from "node:crypto";
 
 import {
   GetObjectCommand,
@@ -296,6 +296,68 @@ describe("Beat S3 authentication", () => {
     await expect(
       auth.refreshBeatTokenPair(tokens.refresh_token, harness.client),
     ).rejects.toMatchObject({ code: "invalid_refresh_token" });
+  });
+
+  it("redeems a one-time authorization code with S256 PKCE and a nonce ID token", async () => {
+    const harness = s3Harness();
+    const { auth, publicKey } = await loadAuth();
+    await auth.createBeatAdmin(
+      "admin@example.com",
+      "correct horse battery staple",
+      harness.client,
+    );
+    const administrator = await auth.authenticateBeatAdmin(
+      "admin@example.com",
+      "correct horse battery staple",
+      harness.client,
+    );
+    const verifier = randomBytes(32).toString("base64url");
+    const challenge = createHash("sha256").update(verifier).digest("base64url");
+    const code = await auth.issueBeatAuthorizationCode(
+      administrator!,
+      {
+        clientId: "beat-agent-web",
+        codeChallenge: challenge,
+        codeChallengeMethod: "S256",
+        nonce: "nonce-from-agent",
+        redirectUri: "https://agent.example.com/auth/callback/",
+        scope: ["openid", "profile", "email"],
+      },
+      harness.client,
+    );
+    const tokens = await auth.redeemBeatAuthorizationCode(
+      {
+        clientId: "beat-agent-web",
+        code,
+        codeVerifier: verifier,
+        redirectUri: "https://agent.example.com/auth/callback/",
+      },
+      harness.client,
+    );
+    expect(tokens.id_token).toBeTruthy();
+    await expect(
+      jwtVerify(tokens.id_token, publicKey, {
+        audience: "beat-agent-web",
+        issuer: "https://api.example.com/auth",
+      }),
+    ).resolves.toMatchObject({
+      payload: { nonce: "nonce-from-agent", role: "admin" },
+    });
+    await expect(auth.verifyBeatIdTokenHint(tokens.id_token)).resolves.toEqual({
+      clientId: "beat-agent-web",
+      subject: administrator?.subject,
+    });
+    await expect(
+      auth.redeemBeatAuthorizationCode(
+        {
+          clientId: "beat-agent-web",
+          code,
+          codeVerifier: verifier,
+          redirectUri: "https://agent.example.com/auth/callback/",
+        },
+        harness.client,
+      ),
+    ).rejects.toMatchObject({ code: "invalid_authorization_code" });
   });
 
   it("publishes a private-key-free JWKS and checks both buckets", async () => {
