@@ -2,6 +2,18 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.1](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.4.0...template-t3-turbo-sst-v1.4.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* build monitor workspace dependencies ([#27](https://github.com/arlequins/beat/issues/27)) ([392e14d](https://github.com/arlequins/beat/commit/392e14dba4443cc83e9cbec5479d021230a1aa87))
+* configure monitor SST runtime ([#28](https://github.com/arlequins/beat/issues/28)) ([17abce6](https://github.com/arlequins/beat/commit/17abce619659396f7188cccab849917afaedad87))
+* request release app workflow permission ([#32](https://github.com/arlequins/beat/issues/32)) ([9fe4804](https://github.com/arlequins/beat/commit/9fe4804a6e01fcc9499f17aacc9c04cbecd24579))
+* request release app write permissions ([#31](https://github.com/arlequins/beat/issues/31)) ([f65231b](https://github.com/arlequins/beat/commit/f65231bf34729e4b60fe145ed7370fe210126ce7))
+* restrict SST to production ([#30](https://github.com/arlequins/beat/issues/30)) ([2c9f24d](https://github.com/arlequins/beat/commit/2c9f24d23051811050af5cccb0d7ff26da9c71f0))
+* use GitHub App for releases ([#29](https://github.com/arlequins/beat/issues/29)) ([d82584a](https://github.com/arlequins/beat/commit/d82584a64162a7f50472901c3b3b66770af5fa1c))
+
 ## [1.4.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.3.0...template-t3-turbo-sst-v1.4.0) (2026-08-11)
 
 
