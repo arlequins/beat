@@ -3,12 +3,7 @@ import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-const sstPackages = [
-  "@acme/web",
-  "@acme/api",
-  "@acme/batch",
-  "@acme/sst-bootstrap",
-];
+const sstPackages = ["@acme/api", "@acme/batch", "@acme/sst-bootstrap"];
 
 const authFreeEnv = { ...process.env };
 for (const key of [

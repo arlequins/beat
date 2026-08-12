@@ -95,12 +95,14 @@ comma-separated allowlist and defaults to `NEXT_PUBLIC_SITE_URL`.
 
 ## Deployment
 
-- `apps/web/sst.config.ts` deploys the static Next.js export to S3 and CloudFront.
+- GitHub Pages deploys the static Next.js export at `/beat`; AWS does not host
+  the public frontend.
 - `apps/api/sst.config.ts` selects a Lambda Function URL or API Gateway HTTP API preset.
 - Optional VPC variables attach API and batch Lambdas to private resources.
 
-After deploying the API, set `NEXT_PUBLIC_API_URL` to its public URL before
-building and deploying the web app.
+Set the protected `BEAT_PRODUCTION_API_URL` variable to the API's public URL
+before publishing the web application. API CORS allows the exact Pages origin
+`https://arlequins.github.io`.
 
 ## Extension Rules
 

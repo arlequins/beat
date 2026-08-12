@@ -190,14 +190,14 @@ describe("template:init", () => {
   it("previews without writing and then initializes tracked text files", async () => {
     const root = await mkdtemp(join(tmpdir(), "template-init-"));
     const packagePath = join(root, "package.json");
-    const sstPath = join(root, "apps/web/sst.config.ts");
-    await mkdir(join(root, "apps/web"), { recursive: true });
+    const sstPath = join(root, "apps/api/sst.config.ts");
+    await mkdir(join(root, "apps/api"), { recursive: true });
     await writeFile(
       packagePath,
       '{"name":"template-t3-turbo-sst","dependencies":{"@acme/env":"workspace:*"}}\n',
     );
-    await writeFile(sstPath, 'name: "web"; // example.com @acme/web\n');
-    const files = ["package.json", "apps/web/sst.config.ts"];
+    await writeFile(sstPath, 'name: "api"; // example.com @acme/api\n');
+    const files = ["package.json", "apps/api/sst.config.ts"];
     const options = {
       name: "customer-portal",
       scope: "@company",
@@ -219,7 +219,7 @@ describe("template:init", () => {
     });
     assert.equal(
       await readFile(sstPath, "utf8"),
-      'name: "customer-portal-web"; // customer.example.org @company/web\n',
+      'name: "customer-portal-api"; // customer.example.org @company/api\n',
     );
   });
 

@@ -7,8 +7,14 @@ await jiti.import("./src/env");
 
 /** @type {import("next").NextConfig} */
 const config = {
-  /** Static HTML export for S3 + CloudFront (no OpenNext / Node server in AWS for this app) */
+  /** Static HTML export for GitHub Pages (no Node server for this app). */
   output: "export",
+
+  /**
+   * GitHub Pages project sites are served below the repository name. Keep the
+   * local preview and any future custom-domain export rooted at `/`.
+   */
+  ...(process.env.GITHUB_PAGES === "true" ? { basePath: "/beat" } : {}),
 
   poweredByHeader: false,
 

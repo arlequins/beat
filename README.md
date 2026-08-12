@@ -1,9 +1,9 @@
 # Beat
 
 Arlequin's Korean-first portfolio, technical writing workflow, and
-administrator-only Beat entry point. Production runs on AWS with static
-CloudFront delivery, a Hono Lambda API, and S3-primary identity and workflow
-state.
+administrator-only Beat entry point. Production serves the static frontend from
+GitHub Pages, with a Hono Lambda API and S3-primary identity and workflow
+state on AWS.
 
 ## Stack
 
@@ -14,7 +14,7 @@ state.
 | API | Hono, local Node.js server, AWS Lambda deployment |
 | Primary data | Versioned S3 state and Object Lock immutable ledger |
 | Authentication | Beat-issued ES256 access JWTs and rotating refresh tokens |
-| Infrastructure | SST Ion, CloudFront, Lambda, Step Functions, EventBridge |
+| Infrastructure | GitHub Pages, SST Ion API, Lambda, Step Functions, EventBridge |
 | Testing | Vitest coverage, Playwright, accessibility checks |
 
 Internal packages use the placeholder scope `@acme/*`. The initializer replaces
@@ -164,15 +164,16 @@ and [Template Readiness](./docs/template-readiness.md).
 
 ## Deployment
 
-- Web builds as a static export for S3 and CloudFront.
+- Web builds as a static export for GitHub Pages at `arlequins.github.io/beat`.
 - API deploys through a Lambda Function URL or API Gateway HTTP API preset.
 - Optional batch workflows use Step Functions, Lambda, and EventBridge
   schedules.
 
-The selected production-only profile uses AWS only. Neon and Vercel are not required.
-Never run a production SST diff, deploy, or remove command locally; use the
-protected GitHub Actions procedure in
-[Production AWS/SST handoff](./docs/production-aws-sst.md).
+The selected production-only profile uses GitHub Pages for web delivery and AWS
+for the API and data plane. Neon and Vercel are not required. Never run a
+production SST diff, deploy, or remove command locally; use the protected
+GitHub Actions procedures in [GitHub Pages production frontend](./docs/github-pages-production.md)
+and [Production AWS/SST handoff](./docs/production-aws-sst.md).
 
 Read [Deployment and Supply-Chain Security](./docs/deployment-security.md) before
 configuring GitHub OIDC roles or production environments. Deployment-specific

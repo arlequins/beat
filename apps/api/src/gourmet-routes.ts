@@ -322,8 +322,8 @@ export function registerGourmetRoutes(
       return context.json(
         {
           detailUrl: new URL(
-            `/gourmet/?entry=${encodeURIComponent(entry.slug)}`,
-            serverEnv.NEXT_PUBLIC_SITE_URL ?? DEFAULT_LOCALHOST_SITE_URL,
+            `gourmet/?entry=${encodeURIComponent(entry.slug)}`,
+            `${(serverEnv.NEXT_PUBLIC_SITE_URL ?? DEFAULT_LOCALHOST_SITE_URL).replace(/\/$/, "")}/`,
           ).toString(),
           entry,
           status: "saved",

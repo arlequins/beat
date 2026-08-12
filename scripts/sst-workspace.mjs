@@ -2,7 +2,6 @@
 import { spawnSync } from "node:child_process";
 
 const PACKAGES = {
-  web: "@acme/web",
   api: "@acme/api",
   batch: "@acme/batch",
 };
@@ -21,7 +20,7 @@ const forwardedArguments = forward[0] === "--" ? forward.slice(1) : forward;
 
 if (!appKey || !cmdKey) {
   console.error(
-    "Usage: pnpm sst:ws <web|api|batch> <dev|diff|deploy|install|types|remove> [-- extra sst args]\n" +
+    "Usage: pnpm sst:ws <api|batch> <dev|diff|deploy|install|types|remove> [-- extra sst args]\n" +
       "Example: pnpm sst:ws api deploy -- --stage production",
   );
   process.exit(1);

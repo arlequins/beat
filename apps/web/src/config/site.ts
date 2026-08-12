@@ -14,3 +14,9 @@ export const siteConfig = {
   shortName: "A×L",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
 } as const;
+
+/** Preserve a GitHub Pages project path such as `/beat` in absolute URLs. */
+export function siteUrl(path = "") {
+  const base = `${siteConfig.url.replace(/\/$/, "")}/`;
+  return new URL(path.replace(/^\//, ""), base).toString();
+}

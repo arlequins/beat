@@ -17,8 +17,8 @@ Use two application data buckets with different guarantees:
 | `beat-ledger-production` | Authentication, authorization, review, and publication events | Append-only objects protected by Object Lock |
 | `beat-state-production` | Current administrator state, authorization codes, refresh sessions, rate-limit windows, drafts, and job state | Versioned objects updated with ETag conditional writes |
 
-The deployed static site remains in its SST-managed S3 and CloudFront resources.
-It is not an application database.
+The deployed static site is published through GitHub Pages. It is not an
+application database and has no access to the private S3 data buckets.
 
 Amazon S3 provides strong read-after-write consistency for successful object
 writes, reads, and listings. Updates to one key are atomic. Conditional writes
@@ -44,7 +44,7 @@ Beat administration API on Lambda
   `-- GitHub App: branch, commit, pull request, and review status
 
 GitHub main branch
-  `-- GitHub Actions -> static build -> S3 + CloudFront
+  `-- GitHub Actions -> static build -> GitHub Pages
 
 Beat Agent
   `-- verifies Beat JWTs through issuer discovery and JWKS

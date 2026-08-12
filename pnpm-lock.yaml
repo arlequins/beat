@@ -15,6 +15,9 @@ catalogs:
     '@aws-sdk/client-scheduler':
       specifier: ^3.1092.0
       version: 3.1092.0
+    '@aws-sdk/client-secrets-manager':
+      specifier: ^3.1090.0
+      version: 3.1090.0
     '@aws-sdk/client-sqs':
       specifier: ^3.1092.0
       version: 3.1092.0
@@ -361,9 +364,6 @@ importers:
       jiti:
         specifier: ^2.7.0
         version: 2.7.0
-      sst:
-        specifier: 4.17.1
-        version: 4.17.1
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.3

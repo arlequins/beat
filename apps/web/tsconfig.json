@@ -8,13 +8,6 @@
     },
     "plugins": [{ "name": "next" }]
   },
-  "include": [
-    "src",
-    "next.config.js",
-    ".next/types/**/*.ts",
-    "sst.config.ts",
-    "sst-env.d.ts",
-    "sst-globals.d.ts"
-  ],
+  "include": ["src", "next.config.js", ".next/types/**/*.ts"],
   "exclude": ["node_modules", ".next", "out"]
 }

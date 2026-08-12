@@ -1,7 +1,7 @@
 "use client";
 
 import { Languages } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import {
   isLocale,
@@ -40,6 +40,7 @@ function localeFromSelection(value: string): Locale | undefined {
 
 export function LanguageSwitcher() {
   const pathname = usePathname() ?? "/";
+  const router = useRouter();
   const locale = currentLocale(pathname);
   const basePath = withoutLocale(pathname);
 
@@ -59,7 +60,7 @@ export function LanguageSwitcher() {
         onChange={(event) => {
           const nextLocale = localeFromSelection(event.currentTarget.value);
           if (nextLocale) {
-            window.location.assign(localePath(nextLocale, basePath));
+            router.push(localePath(nextLocale, basePath));
           }
         }}
       >
