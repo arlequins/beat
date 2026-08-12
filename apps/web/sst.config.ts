@@ -6,33 +6,26 @@
  * SST disallows top-level imports — `@acme/env` is loaded via dynamic `import()` in `app` / `run`.
  * `app()` uses validated {@link serverEnv}, {@link sstAwsRegion}, {@link Stage} for the AWS provider.
  *
- * Run local SST commands from this package (cwd = `apps/web`). Production
- * deployment is deliberately restricted to the protected GitHub Action.
+ * Beat has one deployed SST stage: production. Its deployment is deliberately
+ * restricted to the protected GitHub Action.
  */
 export default $config({
   async app(input) {
-    const { serverEnv, sstAwsRegion, Stage } = await import("@acme/env");
-    if (
-      input?.stage === Stage.PRODUCTION &&
-      process.env.GITHUB_ACTIONS !== "true"
-    )
+    const { sstAwsRegion, Stage } = await import("@acme/env");
+    if (input?.stage !== Stage.PRODUCTION)
+      throw new Error("Beat has one SST stage: production");
+    if (process.env.GITHUB_ACTIONS !== "true")
       throw new Error(
         "Beat production deployment is allowed only from protected GitHub Actions",
       );
-    const localAwsProfile = serverEnv.SST_AWS_PROFILE?.trim();
     const region = sstAwsRegion();
 
     return {
       name: "web",
-      removal: input?.stage === Stage.PRODUCTION ? "retain" : "remove",
-      protect: input?.stage === Stage.PRODUCTION,
+      removal: "retain",
+      protect: true,
       home: "aws",
-      providers: {
-        aws: {
-          region,
-          ...(localAwsProfile ? { profile: localAwsProfile } : {}),
-        },
-      },
+      providers: { aws: { region } },
     };
   },
   async run() {
@@ -54,11 +47,6 @@ export default $config({
       build: {
         command: "pnpm run build",
         output: "out",
-      },
-      dev: {
-        command: "pnpm run dev",
-        directory: ".",
-        title: "web",
       },
       transform: {
         assets: (args) => {

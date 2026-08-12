@@ -26,7 +26,7 @@ operations also require read access to the one runtime secret described below.
 
 ## Environments and Branch Protection
 
-Create a `production` GitHub Environment with required reviewers, prevent self-review, restrict deployment to protected release branches or tags, and configure an approval timeout. Protect `main` and `develop`, require the CI and Security checks, require review, dismiss stale approvals, and disallow force pushes.
+Create only one GitHub Environment, `production`, with required reviewers, prevent self-review, restrict deployment to `main`, and configure an approval timeout. Protect `main`, require the CI and Security checks, require review, dismiss stale approvals, and disallow force pushes. Beat has no cloud development, staging, preview, or second SST stage.
 
 Pull requests never receive AWS credentials and do not create cloud previews.
 Only an approved manual production workflow dispatched from `main` can assume
