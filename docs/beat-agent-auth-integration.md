@@ -119,3 +119,20 @@ Beat provisions two private production buckets:
   `If-None-Match: *` and Object Lock Compliance retention.
 
 Beat Agent receives no AWS credentials and never accesses either bucket.
+
+## Current production handoff
+
+The Beat Agent production web app is published at
+`https://arlequins.github.io/beat-agent/`, with the API at
+`https://p3akjheufygfnr54k7vhz6kria0inkun.lambda-url.ap-northeast-1.on.aws/`.
+Its OIDC issuer is the API origin plus `/auth`. The portfolio's protected
+GitHub Pages build uses
+`NEXT_PUBLIC_BEAT_APP_URL=https://arlequins.github.io/beat-agent` and opens
+that app in a new window; it never forwards an access or refresh token. These
+URLs were verified after the Agent `v0.6.1` release on 2026-08-13.
+
+The Agent API is intentionally running without a production model provider
+until an approved Bedrock model ID and exact model ARN are selected. Complete
+the model configuration as a separate protected infrastructure change; never
+commit a placeholder model value or broaden the runtime role to discover
+models dynamically.
