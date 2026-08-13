@@ -1,0 +1,46 @@
+---
+title: "2025–2026 프런트엔드·TypeScript 이슈 읽기 지도"
+excerpt: 2025년과 2026년에 프런트엔드와 TypeScript의 기본값을 바꾼 사건들을 한 번에 탐색하는 편집 지도입니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2026-08-13"
+readTime: 5 min read
+tags:
+  - Frontend
+  - TypeScript
+  - Editorial Map
+---
+
+> 2025–2026 이슈 시리즈를 묶은 공개 미확정본입니다. 각 글의 원문 출처와 현재 지원 범위는 도입 전에 다시 확인해야 합니다.
+
+## 2025년: 익숙한 기본값을 다시 고르는 해
+
+2025년 글은 “무엇을 설치할까”보다 “어떤 경계를 운영할까”에 초점을 맞춥니다. Create React App의 종료, Vite 7과 Node 24, TypeScript 5.8·5.9, React Compiler, React Server Components 보안 이슈를 따라가면 도구 선택이 렌더링·배포·보안 계약과 연결되는 흐름이 보입니다.
+
+- [Create React App의 종료](/ko/posts/frontend-issues-2025-create-react-app-sunset)
+- [React Compiler 1.0](/ko/posts/frontend-issues-2025-react-compiler)
+- [React 19.2의 화면 수명](/ko/posts/frontend-issues-2025-react-19-2)
+- [TypeScript 5.8](/ko/posts/typescript-issues-2025-5-8), [TypeScript 5.9](/ko/posts/typescript-issues-2025-5-9)
+- [Vite 7](/ko/posts/frontend-issues-2025-vite-7), [Node.js 24](/ko/posts/frontend-issues-2025-node-24)
+- [Interop 2025](/ko/posts/frontend-issues-2025-interop), [Interop의 Web UI](/ko/posts/frontend-issues-2025-interop-ui)
+- [ESLint flat config](/ko/posts/frontend-issues-2025-eslint-flat-config)
+- [RSC 보안](/ko/posts/frontend-issues-2025-rsc-security), [WebAssembly 경계](/ko/posts/frontend-issues-2025-webassembly-boundary)
+- [TypeScript 네이티브 툴체인 로드맵](/ko/posts/typescript-issues-2025-native-roadmap)
+
+## 2026년: 에이전트와 실행 경계가 만나는 해
+
+2026년 글은 에이전트가 읽고 수정할 수 있는 프로젝트, Next.js의 플랫폼·보안·탐색 경험, Vite 8의 Rolldown, React Foundation, Node.js 26, TypeScript 6·7의 네이티브 전환을 다룹니다. 빠른 생성보다 재현 가능한 지침과 되돌릴 수 있는 배포가 중요해집니다.
+
+- [TypeScript 6의 전환](/ko/posts/typescript-issues-2026-6-transition), [TypeScript 7 네이티브](/ko/posts/typescript-issues-2026-7-native)
+- [Next.js 어댑터](/ko/posts/frontend-issues-2026-next-adapters), [에이전트가 읽는 Next.js](/ko/posts/frontend-issues-2026-next-agent-ready)
+- [Next.js 월간 보안 릴리스](/ko/posts/frontend-issues-2026-next-security), [Node.js 26과 Temporal](/ko/posts/frontend-issues-2026-node-26-temporal)
+- [Vite 8과 Rolldown](/ko/posts/frontend-issues-2026-vite-8-rolldown)
+- [React Foundation](/ko/posts/frontend-issues-2026-react-foundation), [RSC 보안 후속](/ko/posts/frontend-issues-2026-rsc-security-followup)
+- [에이전트 우선 문서](/ko/posts/frontend-issues-2026-agent-first-docs), [Instant Navigation](/ko/posts/frontend-issues-2026-instant-navigation)
+- [웹 플랫폼 선택](/ko/posts/frontend-issues-2026-web-platform-choices)
+
+## 읽는 순서
+
+처음 읽는다면 2025년의 CRA·Node·Vite 글로 실행 경계를 잡고, TypeScript 5.8·5.9와 네이티브 로드맵으로 언어 도구의 방향을 확인하는 순서를 권합니다. 그 다음 React·RSC 보안 글과 2026년의 에이전트·플랫폼 글을 읽으면 “새 기능을 채택할지”를 버전 숫자만으로 결정하지 않는 기준을 만들 수 있습니다.
+
+이 지도 자체도 고정된 결론이 아니라 편집 인덱스입니다. 각 글의 검토 상태와 공식 출처를 확인하면서 팀의 브라우저 지원 정책, 빌드 재현성, 배포 승인 경계를 함께 업데이트하세요.
