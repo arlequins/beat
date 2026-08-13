@@ -4,6 +4,7 @@ import type { PostSummary } from "~/lib/posts";
 type LocalizedArticle = {
   excerpt: string;
   intro: string;
+  links?: Array<{ label: string; slug: string }>;
   sections: Array<{ heading: string; paragraphs: string[] }>;
   title: string;
 };
@@ -14,8 +15,15 @@ function editorialArticle(
   intro: string,
   heading: string,
   paragraphs: string[],
+  links?: Array<{ label: string; slug: string }>,
 ): LocalizedArticle {
-  return { title, excerpt, intro, sections: [{ heading, paragraphs }] };
+  return {
+    title,
+    excerpt,
+    intro,
+    ...(links ? { links } : {}),
+    sections: [{ heading, paragraphs }],
+  };
 }
 
 const english: Record<string, LocalizedArticle> = {
@@ -27,6 +35,21 @@ const english: Record<string, LocalizedArticle> = {
     [
       "The 2025 posts connect Create React App's sunset, Node 24, Vite 7, TypeScript 5.8 and 5.9, React Compiler, and RSC security to the question of who owns the runtime and deployment boundary.",
       "The 2026 posts follow TypeScript 6 and 7, Next.js adapters and agent-ready workflows, Vite 8 with Rolldown, React Foundation, Node 26, and the browser platform choices that make automation safe to review.",
+    ],
+    [
+      {
+        label: "2025 frontend issues",
+        slug: "frontend-issues-2025-create-react-app-sunset",
+      },
+      { label: "2025 TypeScript issues", slug: "typescript-issues-2025-5-8" },
+      {
+        label: "2026 frontend issues",
+        slug: "frontend-issues-2026-next-adapters",
+      },
+      {
+        label: "2026 TypeScript issues",
+        slug: "typescript-issues-2026-6-transition",
+      },
     ],
   ),
   "ai-agent-template-workflow": {
@@ -418,6 +441,21 @@ const japanese: Record<string, LocalizedArticle> = {
     [
       "2025年の記事では、Create React App の終了、Node 24、Vite 7、TypeScript 5.8・5.9、React Compiler、RSC のセキュリティを、誰がランタイムと配布の境界を担うかという問いにつなげます。",
       "2026年の記事では、TypeScript 6・7、Next.js のアダプターとエージェント対応、Rolldown 搭載 Vite 8、React Foundation、Node 26、レビュー可能な自動化のためのブラウザ選択を追います。",
+    ],
+    [
+      {
+        label: "2025年フロントエンド issue",
+        slug: "frontend-issues-2025-create-react-app-sunset",
+      },
+      { label: "2025年 TypeScript issue", slug: "typescript-issues-2025-5-8" },
+      {
+        label: "2026年フロントエンド issue",
+        slug: "frontend-issues-2026-next-adapters",
+      },
+      {
+        label: "2026年 TypeScript issue",
+        slug: "typescript-issues-2026-6-transition",
+      },
     ],
   ),
   "ai-agent-template-workflow": {

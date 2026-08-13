@@ -44,3 +44,16 @@ endpoint.
 
 It never reads the runtime secret. A failure creates one open GitHub issue with
 a link to the failed run; the issue is not duplicated while it remains open.
+
+## Batch failure alerts
+
+The shared Step Functions failure path publishes a small, allowlisted summary to
+`ALERT_TOPIC_ARN` after retries are exhausted. The batch Lambda receives only
+`sns:Publish` on that exact topic ARN; it does not log the original Step
+Functions input because that input may contain content or credentials.
+
+Configure the topic ARN in the protected production environment and subscribe
+the topic to the operator's preferred channel (email, incident tooling, or an
+HTTPS endpoint). Leaving the variable unset keeps the failure path operational
+but emits a clear disabled-alert warning, which is appropriate for local and
+qualification runs.
