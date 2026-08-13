@@ -1,0 +1,28 @@
+---
+title: "2026 TypeScript 이슈 05 — 7.0 네이티브 포트의 10배라는 숫자 읽기"
+excerpt: Go 기반 TypeScript 7.0의 성능 약속을 실제 팀의 병목과 호환성 질문으로 번역합니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2026-07-08"
+readTime: 7 min read
+tags:
+  - TypeScript
+  - Compiler
+  - Developer Experience
+---
+
+> TypeScript 공식 7.0 발표를 바탕으로 작성한 공개 미확정본입니다.
+
+## 빠른 컴파일러는 제품 기능이다
+
+TypeScript 7.0은 컴파일러와 언어 서비스를 Go 기반 네이티브 포트로 제공하며 TypeScript 6.0 대비 큰 성능 향상을 목표로 합니다. 대규모 모노레포에서는 타입 검사가 짧아지는 것 자체가 반복 실험의 질을 바꿀 수 있습니다.
+
+## 숫자보다 호환성 매트릭스
+
+성능 수치는 저장소 크기·캐시·증분 빌드에 따라 달라집니다. compiler API, tsserver 플러그인, 생성 코드, declaration 결과가 기존 버전과 같은지 별도 매트릭스로 비교해야 합니다. 빠르지만 다른 타입 결과를 내는 도구는 안전한 업그레이드가 아닙니다.
+
+## 운영 가능한 도입
+
+네이티브 포트는 전용 CI에서 먼저 실행하고, 기존 `tsc`를 기준으로 결과 차이를 보고합니다. 에디터가 새 언어 서비스를 사용하더라도 빌드와 릴리스는 재현 가능한 버전으로 고정해 팀마다 다른 타입 결과가 나오지 않게 합니다.
+
+출처: [Announcing TypeScript 7.0](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)

@@ -1,0 +1,28 @@
+---
+title: "2026 프런트엔드 이슈 18 — 문서가 에이전트의 첫 번째 인터페이스가 될 때"
+excerpt: AGENTS.md와 Markdown 문서 엔드포인트가 사람과 AI의 프레임워크 사용법을 어떻게 함께 바꾸는지 기록합니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2026-06-26"
+readTime: 6 min read
+tags:
+  - AI Agents
+  - Documentation
+  - Next.js
+---
+
+> Next.js 16.3 AI 개선 발표를 바탕으로 한 공개 미확정본입니다.
+
+## 문서는 검색 결과가 아니라 실행 전제다
+
+버전과 맞는 `AGENTS.md`, Markdown 문서, actionable error는 에이전트가 오래된 블로그 글이나 추측에 기대지 않도록 하는 장치입니다. 프레임워크가 에이전트를 사용자로 인정하면 문서의 구조와 최신성도 제품 품질이 됩니다.
+
+## 사람도 같은 혜택을 받는다
+
+에이전트가 읽기 좋은 문서는 사람에게도 빠르게 찾고 복사하고 검증하기 좋습니다. 명령의 전제, 변경되는 파일, 실패했을 때의 다음 행동을 짧게 적으면 온보딩과 장애 대응이 함께 좋아집니다.
+
+## 저장소에 적용하기
+
+루트에는 공통 원칙만 두고, 앱·패키지별로 버전과 실행 명령을 좁혀 적습니다. 비밀값과 개인 환경은 문서에서 제외하고, CI가 문서에 적힌 명령을 실제로 실행해 drift를 발견하게 합니다.
+
+출처: [Next.js 16.3 AI Improvements](https://nextjs.org/blog/next-16-3-ai-improvements)

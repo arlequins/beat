@@ -1,0 +1,28 @@
+---
+title: "2026 프런트엔드 이슈 15 — Vite 8과 번들러의 재편"
+excerpt: Vite 8의 Rolldown 기반 전환이 플러그인, 빌드 속도, 소스맵 계약에 주는 영향을 정리합니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2026-03-12"
+readTime: 7 min read
+tags:
+  - Vite
+  - Rolldown
+  - Build Performance
+---
+
+> Vite 공식 Vite 8 안정 버전 발표를 바탕으로 한 공개 미확정본입니다. 실제 플러그인 지원과 빌드 결과는 도입 시 다시 확인해야 합니다.
+
+## 개발 서버와 번들러가 같은 방향으로 움직인다
+
+Vite 8은 Rolldown을 기반으로 번들링 경로를 재편하는 흐름을 보여줍니다. Rust 기반 도구 체인으로 개발과 프로덕션의 차이를 줄이고, 큰 프로젝트에서 빌드 시간을 낮추려는 시도입니다.
+
+## 빠른 빌드가 회귀를 숨길 수 있다
+
+번들러가 바뀌면 플러그인 훅, CSS 순서, dynamic import, source map이 달라질 수 있습니다. 속도 벤치마크 하나만 보지 말고 route fixture, 에셋 해시, 오류 stack trace를 기존 Vite와 비교해야 합니다.
+
+## 마이그레이션 경계
+
+공식 플러그인부터 버전을 맞추고 사내 플러그인은 최소 재현 프로젝트로 검증합니다. 첫 PR에서는 빌드 경로만 바꾸고 브라우저 타깃과 프레임워크 업그레이드는 분리해, 문제가 생겼을 때 원인을 되돌릴 수 있게 합니다.
+
+출처: [Vite 8.0 is out!](https://vite.dev/blog/announcing-vite8)

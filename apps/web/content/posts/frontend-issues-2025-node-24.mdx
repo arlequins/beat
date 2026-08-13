@@ -1,0 +1,28 @@
+---
+title: "2025 프런트엔드 이슈 05 — Node.js 24를 개발 서버의 기반으로 볼 때"
+excerpt: V8 13.6, npm 11, AsyncContextFrame, URLPattern을 브라우저 앱의 서버 경계와 함께 살펴봅니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2025-05-06"
+readTime: 5 min read
+tags:
+  - Node.js
+  - Runtime
+  - JavaScript
+---
+
+> Node.js 공식 릴리스 노트를 바탕으로 작성한 공개 미확정본입니다.
+
+## 프런트엔드의 바닥도 움직인다
+
+Node.js 24는 V8 13.6과 npm 11을 포함하고, `URLPattern`을 전역으로 제공하며 `AsyncLocalStorage`의 기본 구현을 바꿨습니다. 브라우저 코드만 보던 팀도 개발 서버, 테스트 러너, 프리렌더러가 어떤 Node를 기대하는지 확인해야 합니다.
+
+## 비동기 컨텍스트의 의미
+
+AsyncContextFrame은 요청 추적과 로깅 같은 비동기 컨텍스트를 더 현대적인 방향으로 밀어갑니다. 하지만 프레임워크의 런타임 추상화가 이 변화를 어떻게 감싸는지 확인하지 않으면, 로컬과 CI의 관측값이 달라질 수 있습니다.
+
+## LTS 전에 할 일
+
+Current 버전은 바로 운영 기준으로 삼기보다 CI의 매트릭스에 넣어 호환성을 확인합니다. 패키지 매니저, 네이티브 모듈, Playwright 브라우저 설치를 함께 고정하고, 10월 LTS 전환 시점에 다시 결정합니다.
+
+출처: [Node.js 24.0.0](https://nodejs.org/en/blog/release/v24.0.0)

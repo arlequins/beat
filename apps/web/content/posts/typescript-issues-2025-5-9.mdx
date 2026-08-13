@@ -1,0 +1,28 @@
+---
+title: "2025 TypeScript 이슈 02 — 5.9의 tsconfig와 읽히는 설정"
+excerpt: TypeScript 5.9의 간결한 tsc --init, import defer, 확장 가능한 hover가 팀 설정에 주는 의미를 정리합니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2025-08-01"
+readTime: 6 min read
+tags:
+  - TypeScript
+  - Tooling
+  - DX
+---
+
+> 공식 TypeScript 5.9 발표를 기준으로 작성한 공개 미확정본입니다.
+
+## 설정 파일은 사람을 위한 문서다
+
+5.9의 `tsc --init`은 오래된 옵션을 모두 주석으로 늘어놓기보다 현대적인 프로젝트에 필요한 출발점을 간결하게 제시합니다. 팀이 실제로 사용하는 옵션을 읽고 수정하기 쉬워진다는 점이 작은 변화처럼 보여도 큰 차이를 만듭니다.
+
+## 지연 로딩과 에디터 경험
+
+`import defer` 지원은 모듈 초기화 시점을 더 분명하게 다룰 수 있게 합니다. 확장 가능한 hover와 최대 hover 길이 설정은 복잡한 제네릭을 읽는 비용을 낮춥니다. 타입 시스템의 기능뿐 아니라 타입을 읽는 순간의 마찰도 생산성의 일부입니다.
+
+## 팀에서 확인할 것
+
+새 `tsconfig`를 그대로 복사하지 말고 현재 빌드·테스트·에디터 경로와 비교합니다. `import defer`는 실행 순서를 바꾸므로 번들러의 트리 셰이킹과 사이드 이펙트 테스트를 함께 업데이트해야 합니다.
+
+출처: [Announcing TypeScript 5.9](https://devblogs.microsoft.com/typescript/announcing-typescript-5-9/)

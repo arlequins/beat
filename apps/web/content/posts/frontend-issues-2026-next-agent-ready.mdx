@@ -1,0 +1,28 @@
+---
+title: "2026 프런트엔드 이슈 12 — 에이전트가 읽고 고치는 Next.js 프로젝트"
+excerpt: AGENTS.md, 브라우저 로그 전달, MCP와 actionable errors가 개발 환경을 에이전트의 첫 사용자로 바꾸는 과정을 살펴봅니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2026-03-18"
+readTime: 7 min read
+tags:
+  - Next.js
+  - AI Agents
+  - Developer Experience
+---
+
+> Next.js의 agentic future와 16.2·16.3 발표를 바탕으로 한 공개 미확정본입니다.
+
+## 에이전트는 문서가 없으면 추측한다
+
+Next.js는 버전에 맞는 문서를 `AGENTS.md`로 제공하고, 브라우저 로그를 터미널로 전달하며, React 상태를 읽는 브라우저 도구와 MCP를 실험하고 있습니다. 에이전트가 코드를 바꾸기 전에 프레임워크의 실제 규칙과 런타임 오류를 볼 수 있게 하려는 움직임입니다.
+
+## “고쳐줘”를 재현 가능한 입력으로
+
+브라우저 오류를 복사해 붙이는 대신 URL·로그·컴포넌트 상태·재현 단계가 구조화되면 에이전트의 수정이 검증 가능해집니다. 반대로 로그에 토큰과 개인정보가 섞이면 개발 편의 기능이 새로운 유출 경로가 됩니다.
+
+## 프로젝트에 들이는 최소 경계
+
+저장소 지침, 실행 가능한 검증 명령, 금지된 파일과 비밀값 규칙을 먼저 작성합니다. 에이전트에게 변경 권한을 줄 때는 읽기·쓰기·배포를 분리하고, 최종 merge는 사람이 승인하는 구조를 유지합니다.
+
+출처: [Building Next.js for an agentic future](https://nextjs.org/blog/agentic-future), [Next.js 16.2 AI improvements](https://nextjs.org/blog/next-16-2-ai)
