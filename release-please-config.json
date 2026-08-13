@@ -3,7 +3,7 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "package-name": "template-t3-turbo-sst",
+      "package-name": "beat",
       "changelog-path": "CHANGELOG.md",
       "include-v-in-tag": true
     }

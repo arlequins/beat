@@ -15,9 +15,12 @@ blocked, pending, and manually approved updates.
 ## Release Please
 
 Release Please reads Conventional Commits on `main` and maintains one release
-PR for the repository. The PR updates `package.json`,
+PR for the Beat application. The repository package is named `beat`; the
+template initializer's internal `template-t3-turbo-sst` token remains only as
+the source identity that gets replaced when generating a new application. The
+PR updates `package.json`,
 `.release-please-manifest.json`, and `CHANGELOG.md`. Merging it creates a
-`vX.Y.Z` tag and a GitHub Release.
+`beat-vX.Y.Z` tag and a GitHub Release.
 
 Create a fine-grained token that can read repository contents and write
 contents and pull requests, then store it as `RELEASE_PLEASE_TOKEN`. A GitHub

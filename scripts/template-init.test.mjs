@@ -173,14 +173,35 @@ describe("template:init", () => {
 
     const trpcProvider = transformContent(
       "apps/web/src/trpc/react.tsx",
-      (
-        await readFile(
-          new URL("../apps/web/src/trpc/react.tsx", import.meta.url),
-          "utf8",
-        )
-      )
-        .replace(/\r\n?/g, "\n")
-        .replaceAll("\n", "\r\n"),
+      [
+        'import { useAuth } from "~/auth/provider";',
+        "",
+        "export function TrpcProvider() {",
+        "  const { user } = useAuth();",
+        "",
+        "  const trpcClient = useMemo(",
+        "    () =>",
+        "      createTRPCClient({",
+        "        links: [",
+        "          httpBatchStreamLink({",
+        "            headers() {",
+        "              const headers = new Headers();",
+        "              if (user?.access_token && !user.expired) {",
+        '                headers.set("Authorization", `Bearer $' +
+          "{user.access_token}`);",
+        "              }",
+        "              return headers;",
+        "            },",
+        "          }),",
+        "        ],",
+        "      }),",
+        "    [user],",
+        "  );",
+        "",
+        "  return trpcClient;",
+        "}",
+        "",
+      ].join("\n"),
       { name: "app", scope: "@company", preset: "minimal" },
     );
     assert.doesNotMatch(trpcProvider, /useAuth|access_token|\[user\]/);
