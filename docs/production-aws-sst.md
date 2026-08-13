@@ -46,6 +46,12 @@ the JSON in its own process before importing the application. Therefore the
 values are absent from SST/Pulumi state, Lambda environment configuration,
 static assets, Git, and action logs.
 
+The runtime secret must also contain the Google SSO client values described in
+[`deployment-security.md`](./deployment-security.md). The callback is the
+Beat API origin followed by `/auth/google/callback`; do not use the Agent
+Pages URL as the Google callback. The Agent continues to use Beat's OIDC
+issuer and never receives a Google client secret.
+
 `BEAT_AUTH_CLIENTS_JSON` contains no secret. It is serialized into the API
 Lambda as public configuration so the authorization endpoint can enforce exact
 redirect and post-logout URI matches. Keep the sample values from

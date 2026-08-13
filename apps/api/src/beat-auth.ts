@@ -15,6 +15,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { decodeJwt, importJWK, jwtVerify, SignJWT } from "jose";
+import { GOOGLE_ALLOWED_EMAIL } from "./beat-google";
 
 const ACCESS_TOKEN_TTL_SECONDS = 10 * 60;
 const DEFAULT_REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
@@ -24,6 +25,8 @@ export type ActiveAdmin = {
   adminKey: string;
   credentialVersion: number;
   email: string;
+  identityProvider?: "google";
+  identitySubject?: string;
   passwordHash: string;
   role: "admin";
   subject: string;
@@ -429,6 +432,7 @@ export async function createBeatAdmin(
   email: string,
   password: string,
   client = new S3Client({}),
+  identity?: { provider: "google"; subject: string },
 ) {
   const authConfig = config();
   const normalizedEmail = normalizeEmail(email);
@@ -438,6 +442,12 @@ export async function createBeatAdmin(
     adminKey: key,
     credentialVersion: 1,
     email: normalizedEmail,
+    ...(identity
+      ? {
+          identityProvider: identity.provider,
+          identitySubject: identity.subject,
+        }
+      : {}),
     passwordHash: await derivePasswordHash(password),
     revision: 1,
     role: "admin",
@@ -574,6 +584,67 @@ export async function authenticateBeatAdmin(
   )
     return undefined;
   return stored.value;
+}
+
+/**
+ * Authenticate the one explicitly allowed Google identity and bind its
+ * stable subject to the existing S3 administrator record on first use.
+ */
+export async function authenticateBeatGoogleAdmin(
+  email: string,
+  subject: string,
+  client = new S3Client({}),
+): Promise<ActiveAdmin | undefined> {
+  const authConfig = config();
+  const normalizedEmail = normalizeEmail(email);
+  if (normalizedEmail !== GOOGLE_ALLOWED_EMAIL) return undefined;
+  const key = adminKey(normalizedEmail, authConfig);
+  let stored = await readAdminByKey(key, client, authConfig);
+  if (!stored) {
+    try {
+      await createBeatAdmin(
+        normalizedEmail,
+        randomBytes(32).toString("base64url"),
+        client,
+        { provider: "google", subject },
+      );
+      stored = await readAdminByKey(key, client, authConfig);
+    } catch (error) {
+      if (!(error instanceof BeatAuthError)) throw error;
+      if (error.code !== "conflict") throw error;
+      stored = await readAdminByKey(key, client, authConfig);
+    }
+  }
+  if (stored?.value.status !== "active") return undefined;
+  if (stored.value.identityProvider === "google")
+    return stored.value.identitySubject === subject ? stored.value : undefined;
+  const now = new Date();
+  const linked: AdminState = {
+    ...stored.value,
+    identityProvider: "google",
+    identitySubject: subject,
+    revision: stored.value.revision + 1,
+    updatedAt: now.toISOString(),
+  };
+  try {
+    await putJson(client, {
+      bucket: authConfig.stateBucket,
+      ifMatch: stored.etag,
+      key,
+      value: linked,
+    });
+  } catch (error) {
+    if (isPreconditionFailed(error)) return undefined;
+    throw error;
+  }
+  await appendLedgerEvent(
+    "google-identity-linked",
+    { adminKey: key, email: normalizedEmail, subject },
+    client,
+    authConfig,
+    now,
+  );
+  return linked;
 }
 
 export async function issueBeatAccessToken(
