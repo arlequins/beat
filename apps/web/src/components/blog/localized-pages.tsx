@@ -330,11 +330,13 @@ export async function LocalizedPostDetail(props: {
       </header>
       <div className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-3xl">
-          <aside className="paper-panel mb-10 border-[#07959a]/35 p-5 text-sm leading-6 text-slate-700">
-            {props.locale === "en"
-              ? "Lumen prepared this translation from the Korean original. Arlequin has not completed its final review yet."
-              : "この翻訳は韓国語の原文をもとに Lumen が作成しました。Arlequin の最終レビュー前です。"}
-          </aside>
+          {post.frontmatter.reviewStatus === "unreviewed" ? (
+            <aside className="paper-panel mb-10 border-[#07959a]/35 p-5 text-sm leading-6 text-slate-700">
+              {props.locale === "en"
+                ? "Lumen prepared this translation from the Korean original. Arlequin has not completed its final review yet."
+                : "この翻訳は韓国語の原文をもとに Lumen が作成しました。Arlequin の最終レビュー前です。"}
+            </aside>
+          ) : null}
           <div className="prose-content text-[1.05rem] leading-8 text-slate-700">
             <p>{translation.intro}</p>
             {translation.sections.map((section) => (
@@ -345,6 +347,30 @@ export async function LocalizedPostDetail(props: {
                 ))}
               </section>
             ))}
+            {translation.links ? (
+              <nav
+                aria-label={
+                  props.locale === "en" ? "Issue series" : "Issue series"
+                }
+              >
+                <h2>
+                  {props.locale === "en"
+                    ? "Explore the series"
+                    : "シリーズを読む"}
+                </h2>
+                <ul>
+                  {translation.links.map((link) => (
+                    <li key={link.slug}>
+                      <Link
+                        href={localePath(props.locale, `/posts/${link.slug}/`)}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : null}
           </div>
         </div>
       </div>

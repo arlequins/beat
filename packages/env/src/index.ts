@@ -114,6 +114,9 @@ export const LambdaEnvironment = {
   ...(serverEnv.BEAT_AUTH_AUDIENCE
     ? { BEAT_AUTH_AUDIENCE: serverEnv.BEAT_AUTH_AUDIENCE }
     : {}),
+  ...(serverEnv.ALERT_TOPIC_ARN
+    ? { ALERT_TOPIC_ARN: serverEnv.ALERT_TOPIC_ARN }
+    : {}),
 
   NEXT_PUBLIC_SITE_URL: clientEnv.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_API_URL: clientEnv.NEXT_PUBLIC_API_URL,
