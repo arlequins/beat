@@ -8,6 +8,9 @@ export const RequiredBeatRuntimeKeys = [
   "BEAT_AUTH_AUDIENCE",
   "BEAT_AUTH_SIGNING_PRIVATE_JWK",
   "BEAT_AUTH_SIGNING_KEY_ID",
+  "BEAT_AUTH_GOOGLE_CLIENT_ID",
+  "BEAT_AUTH_GOOGLE_CLIENT_SECRET",
+  "BEAT_AUTH_GOOGLE_REDIRECT_URI",
   "BEAT_GOURMET_ACTION_API_KEY",
   "GITHUB_APP_ID",
   "GITHUB_APP_INSTALLATION_ID",
@@ -34,6 +37,15 @@ export function validateBeatRuntimeSecret(input) {
     !issuer.pathname.replace(/\/$/, "").endsWith("/auth")
   )
     throw new Error("BEAT_AUTH_ISSUER_URL must be an HTTPS /auth issuer");
+  const googleRedirect = new URL(input.BEAT_AUTH_GOOGLE_REDIRECT_URI);
+  if (
+    googleRedirect.protocol !== "https:" ||
+    googleRedirect.toString() !==
+      `${input.BEAT_AUTH_ISSUER_URL.replace(/\/$/, "")}/google/callback`
+  )
+    throw new Error(
+      "BEAT_AUTH_GOOGLE_REDIRECT_URI must be an HTTPS /auth/google/callback URL",
+    );
   let signingJwk;
   try {
     signingJwk = JSON.parse(input.BEAT_AUTH_SIGNING_PRIVATE_JWK);

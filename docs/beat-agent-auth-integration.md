@@ -29,6 +29,11 @@ Beat exposes these discovery fields from the issuer above:
 - `revocation_endpoint`: `{issuer}/revoke`
 - `end_session_endpoint`: `{issuer}/logout`
 
+When Google SSO is configured in Beat, the authorization endpoint redirects the
+browser to Google, verifies the returned identity, and resumes this same OIDC
+Authorization Code + PKCE request. The Agent only sees Beat-issued OIDC
+tokens; it does not integrate with Google directly.
+
 The public client is registered by the protected production Environment variable
 `BEAT_AUTH_CLIENTS_JSON`; it is not a secret and must not be placed in the
 runtime secret. Use exact strings for both callbacks, including the trailing

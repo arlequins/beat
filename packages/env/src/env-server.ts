@@ -91,6 +91,12 @@ export const serverEnv = createEnv({
     BEAT_AUTH_AUDIENCE: z.string().min(1).optional(),
     BEAT_AUTH_SIGNING_PRIVATE_JWK: z.string().min(1).optional(),
     BEAT_AUTH_SIGNING_KEY_ID: z.string().min(1).optional(),
+    /** Google OIDC client used by Beat's hosted sign-in flow. */
+    BEAT_AUTH_GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+    /** Google OAuth client secret; keep it in the protected runtime secret. */
+    BEAT_AUTH_GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+    /** Exact Google OAuth callback URL registered in Google Cloud Console. */
+    BEAT_AUTH_GOOGLE_REDIRECT_URI: z.url().optional(),
     /** Separate bearer secret for the personal Custom GPT gourmet Action. */
     BEAT_GOURMET_ACTION_API_KEY: z.string().min(32).optional(),
     /** Public portfolio origin used when API responses return browser links. */
@@ -201,6 +207,9 @@ export const serverEnv = createEnv({
     BEAT_AUTH_AUDIENCE: process.env.BEAT_AUTH_AUDIENCE,
     BEAT_AUTH_SIGNING_PRIVATE_JWK: process.env.BEAT_AUTH_SIGNING_PRIVATE_JWK,
     BEAT_AUTH_SIGNING_KEY_ID: process.env.BEAT_AUTH_SIGNING_KEY_ID,
+    BEAT_AUTH_GOOGLE_CLIENT_ID: process.env.BEAT_AUTH_GOOGLE_CLIENT_ID,
+    BEAT_AUTH_GOOGLE_CLIENT_SECRET: process.env.BEAT_AUTH_GOOGLE_CLIENT_SECRET,
+    BEAT_AUTH_GOOGLE_REDIRECT_URI: process.env.BEAT_AUTH_GOOGLE_REDIRECT_URI,
     BEAT_GOURMET_ACTION_API_KEY: process.env.BEAT_GOURMET_ACTION_API_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     BEAT_ADMIN_BOOTSTRAP_EMAIL: process.env.BEAT_ADMIN_BOOTSTRAP_EMAIL,

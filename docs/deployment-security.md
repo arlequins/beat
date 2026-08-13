@@ -55,6 +55,9 @@ The JSON object must contain these string values:
   "BEAT_AUTH_AUDIENCE": "beat-agent",
   "BEAT_AUTH_SIGNING_PRIVATE_JWK": "{...}",
   "BEAT_AUTH_SIGNING_KEY_ID": "beat-auth-2026-01",
+  "BEAT_AUTH_GOOGLE_CLIENT_ID": "...apps.googleusercontent.com",
+  "BEAT_AUTH_GOOGLE_CLIENT_SECRET": "...",
+  "BEAT_AUTH_GOOGLE_REDIRECT_URI": "https://api.example.com/auth/google/callback",
   "BEAT_GOURMET_ACTION_API_KEY": "...at least 32 random characters...",
   "GITHUB_APP_ID": "...",
   "GITHUB_APP_INSTALLATION_ID": "...",
@@ -62,6 +65,14 @@ The JSON object must contain these string values:
   "GITHUB_CONTENT_REPOSITORY": "arlequins/beat"
 }
 ```
+
+Beat's hosted OIDC sign-in uses Google SSO. Register the exact redirect URI
+`https://<beat-api-origin>/auth/google/callback` in Google Cloud Console and
+keep the OAuth client ID and secret in this runtime secret. The application
+accepts only the configured personal account; the default allowlist is
+`tiret.rouge@gmail.com`. A verified Google email is not sufficient by itself:
+the Google `sub`, issuer, audience, nonce, and email verification flag are all
+checked before the Beat OIDC code is issued.
 
 The S3 state and ledger bucket names are not secret values. SST creates both
 buckets and injects their generated names into the Lambda environment. The

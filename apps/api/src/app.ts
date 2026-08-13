@@ -18,6 +18,7 @@ import { createS3RateLimitAdapter } from "./adaptors/s3-rate-limit";
 import { mapApplicationErrorToHttp } from "./application-error";
 import {
   authenticateBeatAdmin,
+  authenticateBeatGoogleAdmin,
   type BeatAuthError,
   beatJwks,
   checkBeatStorageReadiness,
@@ -35,6 +36,12 @@ import {
   getBeatDraft,
   saveBeatDraft,
 } from "./beat-content";
+import {
+  createGoogleAuthorizationUrl,
+  exchangeGoogleAuthorizationCode,
+  isGoogleSsoConfigured,
+  verifyGoogleAuthorizationState,
+} from "./beat-google";
 import {
   authorizationForm,
   BeatOidcConfigurationError,
@@ -57,6 +64,7 @@ export type ApiBindings = {
 export type CreateApiAppOptions = {
   beatAuth?: {
     authenticate: typeof authenticateBeatAdmin;
+    authenticateGoogle?: typeof authenticateBeatGoogleAdmin;
     issueAuthorizationCode?: typeof issueBeatAuthorizationCode;
     issueTokenPair: typeof issueBeatTokenPair;
     jwks: typeof beatJwks;
@@ -134,6 +142,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   const beatOidcClientsJson = options.beatOidcClientsJson;
   const auth = {
     authenticate: authenticateBeatAdmin,
+    authenticateGoogle: authenticateBeatGoogleAdmin,
     issueAuthorizationCode: issueBeatAuthorizationCode,
     issueTokenPair: issueBeatTokenPair,
     jwks: beatJwks,
@@ -219,6 +228,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   const guardedPaths = [
     "/auth/authorize",
     "/auth/login",
+    "/auth/google/*",
     "/auth/token",
     "/auth/refresh",
     "/admin/content/*",
@@ -300,7 +310,10 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   };
   const authorizeErrorRedirect = (
     context: Context<ApiBindings>,
-    request: ReturnType<typeof validateAuthorizationRequest>,
+    request: Pick<
+      ReturnType<typeof validateAuthorizationRequest>,
+      "redirectUri" | "state"
+    >,
     error = "access_denied",
   ) => {
     const redirect = new URL(request.redirectUri);
@@ -346,9 +359,45 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
         "Content-Security-Policy",
         "default-src 'none'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; style-src 'unsafe-inline'",
       );
+      if (isGoogleSsoConfigured())
+        return context.redirect(createGoogleAuthorizationUrl(request), 302);
       return context.html(authorizationForm(request));
     } catch (error) {
       return oauthRequestError(context, error);
+    }
+  });
+  app.get("/auth/google/callback", async (context) => {
+    const query = new URL(context.req.url).searchParams;
+    const rawState = query.get("state");
+    if (!rawState) return context.json({ error: "invalid_request" }, 400);
+    let state: ReturnType<typeof verifyGoogleAuthorizationState>;
+    try {
+      state = verifyGoogleAuthorizationState(rawState);
+    } catch {
+      return context.json({ error: "invalid_request" }, 400);
+    }
+    const providerError = query.get("error");
+    if (providerError)
+      return authorizeErrorRedirect(context, state.request, "access_denied");
+    const code = query.get("code");
+    if (!code) return authorizeErrorRedirect(context, state.request);
+    try {
+      const identity = await exchangeGoogleAuthorizationCode(code, state.nonce);
+      const administrator = await (
+        auth.authenticateGoogle ?? authenticateBeatGoogleAdmin
+      )(identity.email, identity.subject);
+      if (!administrator)
+        return authorizeErrorRedirect(context, state.request, "access_denied");
+      const authorizationCode = await (
+        auth.issueAuthorizationCode ?? issueBeatAuthorizationCode
+      )(administrator, state.request);
+      const redirect = new URL(state.request.redirectUri);
+      redirect.searchParams.set("code", authorizationCode);
+      redirect.searchParams.set("state", state.request.state);
+      context.header("Cache-Control", "no-store");
+      return context.redirect(redirect.toString(), 302);
+    } catch {
+      return authorizeErrorRedirect(context, state.request, "access_denied");
     }
   });
   app.post("/auth/authorize", async (context) => {
