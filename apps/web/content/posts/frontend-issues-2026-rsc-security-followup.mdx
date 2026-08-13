@@ -1,0 +1,28 @@
+---
+title: "2026 프런트엔드 이슈 17 — RSC 후속 취약점과 패치의 기억"
+excerpt: React Server Components의 후속 DoS·소스 노출 이슈가 패치 이후 운영 검증을 왜 요구하는지 설명합니다.
+category: weekly
+reviewStatus: unreviewed
+publishedAt: "2026-01-26"
+readTime: 6 min read
+tags:
+  - React
+  - Next.js
+  - Security
+---
+
+> React 공식 보안 공지와 후속 업데이트를 바탕으로 한 공개 미확정본입니다.
+
+## 첫 패치가 마지막 답이 아닐 수 있다
+
+2025년 12월의 RSC 취약점 대응 이후에도 DoS와 소스 코드 노출에 대한 후속 공지가 이어졌습니다. 취약점 대응은 한 번의 `npm install`이 아니라 영향 범위와 패치의 완전성을 계속 확인하는 과정입니다.
+
+## 캐시와 배포가 문제를 연장한다
+
+서버 함수·RSC payload·정적 asset이 서로 다른 릴리스에서 제공되면 패치된 코드와 오래된 클라이언트가 섞일 수 있습니다. CDN purge, 함수 교체, 컨테이너 재빌드, 롤백 대상을 같은 릴리스 단위로 묶어야 합니다.
+
+## 보안 회고의 산출물
+
+영향받은 버전, 실제 사용 경로, 업그레이드 버전, 검증한 URL과 로그를 짧은 문서로 남깁니다. 다음 경보가 왔을 때 같은 사람이 없어도 대응할 수 있는 것이 패치의 완료 기준입니다.
+
+출처: [React Server Components security update](https://react.dev/blog/2025/12/11/denial-of-service-and-source-code-exposure-in-react-server-components)

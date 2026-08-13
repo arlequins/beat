@@ -1,0 +1,28 @@
+---
+title: "2025 프런트엔드 이슈 08 — React Server Components 보안 패치의 교훈"
+excerpt: RSC 프로토콜 취약점이 프레임워크 업데이트, SBOM, 배포 검증을 어떻게 하나의 작업으로 묶었는지 기록합니다.
+category: weekly
+reviewStatus: unreviewed
+publishedAt: "2025-12-03"
+readTime: 6 min read
+tags:
+  - Security
+  - React Server Components
+  - Supply Chain
+---
+
+> React와 Next.js의 공식 보안 공지를 기준으로 한 공개 미확정본입니다. 보안 버전은 현재 프로젝트의 릴리스 라인에서 다시 확인해야 합니다.
+
+## 프런트엔드도 프로토콜을 운영한다
+
+2025년 12월 공개된 React Server Components 취약점은 서버와 브라우저 사이의 직렬화 프로토콜이 공격 표면이 될 수 있음을 보여주었습니다. “프런트엔드 의존성”이라는 분류만으로는 서버 런타임 위험을 설명할 수 없습니다.
+
+## 패치 PR은 시작일 뿐이다
+
+패키지 버전을 올린 뒤 lockfile, 빌드 산출물, 배포된 런타임이 같은 버전인지 확인해야 합니다. 취약점이 있는 경로를 실제로 사용하는지와 관계없이, 공식 패치 버전으로 이동하고 캐시된 이미지·함수도 교체하는 것이 기본입니다.
+
+## 다음 사고를 줄이는 목록
+
+SBOM과 dependency review를 CI에 넣고, 보안 릴리스 알림을 일반 기능 PR과 분리합니다. RSC·서버 액션·직렬화 경계를 사용하는 앱은 클라이언트 테스트만으로 충분하지 않으므로 서버 요청의 오류와 권한도 회귀 테스트에 포함해야 합니다.
+
+출처: [Critical Security Vulnerability in React Server Components](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components)

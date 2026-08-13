@@ -1,0 +1,28 @@
+---
+title: "2025 프런트엔드 이슈 03 — React 19.2의 Activity와 화면의 생명주기"
+excerpt: Activity, useEffectEvent, Performance Tracks가 UI의 상태와 측정을 어떻게 다시 나누는지 살펴봅니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2025-10-02"
+readTime: 6 min read
+tags:
+  - React
+  - UI Architecture
+  - Observability
+---
+
+> React 공식 릴리스 노트를 읽고 작성한 공개 미확정본입니다.
+
+## 숨김과 제거 사이에 Activity가 놓인다
+
+React 19.2의 `<Activity />`는 화면을 조건부로 완전히 제거하는 대신, 보이지 않는 활동을 숨기고 우선순위를 조정하는 모델을 제시합니다. 탭, 작성 중인 폼, 최근 방문 화면처럼 다시 돌아올 가능성이 높은 UI의 상태를 어디에 둘지 선택지가 늘었습니다.
+
+## 효과와 측정의 언어가 세분화된다
+
+`useEffectEvent`는 이벤트성 로직과 렌더링에 반응하는 효과를 구분하는 데 도움을 줍니다. Performance Tracks는 React 작업을 브라우저 성능 기록에서 읽기 쉽게 만듭니다. 둘 다 “무엇을 최적화할까”보다 “어떤 생명주기에서 일이 일어나는가”를 먼저 묻게 합니다.
+
+## 적용할 때의 질문
+
+Activity를 도입하기 전에 숨겨진 화면이 메모리와 접근성에 어떤 영향을 주는지 확인합니다. 효과를 바꾸기 전에는 외부 시스템 동기화인지 사용자 이벤트인지 분류합니다. 새 API는 멋진 문법보다 상태 보존과 측정 가능성을 개선할 때 가치가 있습니다.
+
+출처: [React 19.2](https://react.dev/blog/2025/10/01/react-19-2)

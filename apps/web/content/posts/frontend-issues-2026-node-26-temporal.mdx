@@ -1,0 +1,28 @@
+---
+title: "2026 프런트엔드 이슈 14 — Node.js 26의 Temporal과 날짜의 경계"
+excerpt: Temporal 기본 활성화가 프런트엔드·SSR·데이터 직렬화에서 Date의 오래된 가정을 어떻게 드러내는지 정리합니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2026-05-05"
+readTime: 6 min read
+tags:
+  - Node.js
+  - Temporal
+  - Web APIs
+---
+
+> Node.js 26 공식 릴리스 노트를 바탕으로 한 공개 미확정본입니다.
+
+## 날짜를 문자열로 보내는 관습의 비용
+
+Node.js 26은 Temporal API를 기본 활성화했습니다. `Date`가 가진 시간대·달력·변경 가능성의 모호함을 줄이는 표준 API가 서버 런타임에 가까워진 셈입니다.
+
+## SSR과 브라우저의 일치
+
+서버가 `Temporal.ZonedDateTime`을 사용하더라도 JSON 경계에서는 명시적인 문자열 포맷이 필요합니다. 브라우저 지원 여부, polyfill 크기, 날짜를 어느 시간대로 표시할지까지 제품 계약으로 정해야 합니다. 서버만 새 API로 바꾸면 hydration 결과가 달라질 수 있습니다.
+
+## 도입 체크리스트
+
+먼저 회계·예약처럼 시간대가 중요한 도메인의 내부 타입을 정의하고, API 스키마에는 UTC instant와 표시 시간대를 분리합니다. 기존 `Date`를 일괄 교체하기보다 새 모듈부터 Temporal을 사용해 직렬화 테스트를 쌓는 편이 좋습니다.
+
+출처: [Node.js 26.0.0](https://nodejs.org/en/blog/release/v26.0.0)

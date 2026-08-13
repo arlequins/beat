@@ -1,0 +1,28 @@
+---
+title: "2026 프런트엔드 이슈 19 — Instant Navigation과 캐시를 제품 경험으로"
+excerpt: Next.js 16.3의 instant navigation과 partial prefetching이 서버·클라이언트 캐시 계약을 어떻게 드러내는지 정리합니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2026-06-25"
+readTime: 7 min read
+tags:
+  - Next.js
+  - Caching
+  - Performance
+---
+
+> Next.js 공식 Instant Navigations 발표를 바탕으로 한 공개 미확정본입니다.
+
+## 빠른 화면은 더 많은 캐시를 뜻하지 않는다
+
+Next.js 16.3은 navigation을 즉시 보이게 하는 Stream·Cache·Block 선택과 partial prefetching을 소개했습니다. 사용자는 SPA처럼 빠른 전환을 보지만, 개발자는 어떤 shell을 재사용하고 어떤 데이터는 다시 받아야 하는지 결정해야 합니다.
+
+## 캐시 경계가 API 계약이 된다
+
+사용자별 데이터나 권한이 있는 화면을 너무 넓게 캐시하면 오류가 보안 문제가 됩니다. 반대로 모든 것을 Block하면 새 기능의 체감 이점이 사라집니다. 경로·쿠키·태그·재검증 시간을 한 문서에서 연결해 관리해야 합니다.
+
+## 검증할 지표
+
+첫 navigation과 두 번째 navigation의 TTFB, INP, 데이터 신선도를 같은 계정으로 비교합니다. 뒤로 가기와 모바일 저속 네트워크에서 오래된 shell이 보이지 않는지 확인하고, 캐시 무효화 실패를 로그로 재현할 수 있게 합니다.
+
+출처: [Next.js 16.3 Instant Navigations](https://nextjs.org/blog/next-16-3-instant-navigations)

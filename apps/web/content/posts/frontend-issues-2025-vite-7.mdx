@@ -1,0 +1,28 @@
+---
+title: "2025 프런트엔드 이슈 04 — Vite 7과 ESM 전환의 현실"
+excerpt: Vite 7의 Node 지원 범위, ESM 전용 배포, Baseline 기본값이 도구 체인에 요구하는 준비를 정리합니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2025-06-24"
+readTime: 6 min read
+tags:
+  - Vite
+  - ESM
+  - Browser Support
+---
+
+> Vite 공식 릴리스 글을 바탕으로 한 공개 미확정본입니다.
+
+## 빌드 도구가 런타임 기준을 정한다
+
+Vite 7은 Node.js 20.19+와 22.12+를 요구하고 Node 18을 놓았습니다. Vite 자체를 ESM으로 배포하면서 `require(esm)` 지원에 기대는 선택입니다. 프런트엔드의 빌드 도구 업그레이드가 곧 CI와 개발자의 Node 버전 정책이 됩니다.
+
+## Baseline Widely Available이 기본값이 되다
+
+기본 브라우저 타깃이 `modules`에서 `baseline-widely-available`로 바뀌면서 “얼마나 오래된 브라우저를 지원할 것인가”를 통계가 아닌 공통 언어로 관리할 수 있게 됐습니다. 다만 사내 임베디드 브라우저나 WebView가 있다면 기본값을 그대로 믿어서는 안 됩니다.
+
+## 업그레이드 전 실험
+
+Node 버전을 먼저 고정하고 CJS 플러그인, Vitest, SSR 어댑터를 함께 테스트합니다. 브라우저 타깃을 바꾼 뒤에는 번들 크기와 실제 대상 브라우저의 기능 테스트를 비교합니다. ESM 전환은 한 번의 설정 변경이 아니라 공급망 전체의 계약입니다.
+
+출처: [Vite 7.0 is out!](https://vite.dev/blog/announcing-vite7)

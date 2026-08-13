@@ -1,0 +1,28 @@
+---
+title: "2025 TypeScript 이슈 03 — 7을 준비하는 네이티브 컴파일러 로드맵"
+excerpt: TypeScript 7의 Go 기반 포팅 계획이 타입체커와 편집기 성능에 던지는 질문을 정리합니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2025-12-02"
+readTime: 6 min read
+tags:
+  - TypeScript
+  - Compiler
+  - Performance
+---
+
+> TypeScript 팀의 2025년 12월 로드맵 업데이트를 바탕으로 한 공개 미확정본입니다.
+
+## 언어 기능보다 도구의 처리량
+
+TypeScript 팀은 컴파일러와 언어 서비스를 네이티브 코드로 옮기는 작업을 공개했습니다. 목표는 대규모 프로젝트에서 타입 검사와 편집기 응답을 빠르게 만드는 것이지만, 동시에 플러그인과 API의 호환성이라는 비용도 생깁니다.
+
+## 포팅은 팀의 빌드 계약을 흔든다
+
+타입체커가 빨라져도 프로젝트 참조, 생성 코드, declaration emit, IDE 플러그인이 같은 결과를 내는지 확인해야 합니다. 속도 향상 수치보다 현재 저장소에서 병목이 어디인지 먼저 측정해야 도입 판단이 가능합니다.
+
+## 2025년에 할 준비
+
+오래된 compiler API 의존을 찾고, `tsc`와 에디터 버전을 lockfile에 고정합니다. nightly나 네이티브 미리보기는 별도 CI job에서만 시험하고, 결과가 다르면 기존 체인을 기준으로 되돌릴 수 있게 합니다.
+
+출처: [Progress on TypeScript 7](https://devblogs.microsoft.com/typescript/progress-on-typescript-7-december-2025/)

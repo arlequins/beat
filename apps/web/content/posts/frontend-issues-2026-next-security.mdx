@@ -1,0 +1,28 @@
+---
+title: "2026 프런트엔드 이슈 13 — 월간 보안 릴리스가 배포 리듬을 바꾼다"
+excerpt: Next.js의 정기 보안 릴리스 전환을 프레임워크 업데이트와 운영 검증의 문제로 다룹니다.
+category: weekly
+reviewStatus: unreviewed
+publishedAt: "2026-07-20"
+readTime: 6 min read
+tags:
+  - Next.js
+  - Security
+  - Operations
+---
+
+> Next.js 공식 2026년 7월 보안 공지를 바탕으로 한 공개 미확정본입니다.
+
+## 보안 패치가 예외 작업이 아니게 되다
+
+Next.js는 2026년부터 더 정기적인 보안 패치와 사전 공지를 제공하는 릴리스 절차를 소개했습니다. 운영팀은 기능 릴리스만 기다리는 대신, 지원 중인 release line을 계속 추적해야 합니다.
+
+## 버전 숫자보다 산출물
+
+`package.json`이 패치됐다는 사실만으로는 충분하지 않습니다. lockfile, Docker 이미지, Lambda bundle, CDN 캐시와 source map이 같은 수정 버전을 가리키는지 확인해야 합니다. 실제 URL에서 헤더·RSC 응답·정적 자산을 smoke test로 검사하는 이유입니다.
+
+## 작게 자동화하기
+
+Dependabot이나 Renovate PR에 보안 라벨을 붙이고, 테스트가 끝나면 별도 승인 흐름으로 배포합니다. 패치가 실패하면 이전 빌드로 되돌릴 수 있도록 릴리스 산출물과 데이터 마이그레이션을 분리해 두는 것이 안전합니다.
+
+출처: [July 2026 Security Release](https://nextjs.org/blog/july-2026-security-release)

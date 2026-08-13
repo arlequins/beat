@@ -1,0 +1,28 @@
+---
+title: "2025 TypeScript 이슈 01 — 5.8이 알려준 런타임 문법의 방향"
+excerpt: TypeScript 5.8의 반환식 검사와 import attributes 지원을 모듈 런타임과 연결해 설명합니다.
+category: deep-dive
+reviewStatus: unreviewed
+publishedAt: "2025-02-28"
+readTime: 6 min read
+tags:
+  - TypeScript
+  - Modules
+  - JavaScript
+---
+
+> Microsoft TypeScript 팀의 5.8 발표를 바탕으로 한 공개 미확정본입니다.
+
+## 타입 검사는 의도를 더 가까이 본다
+
+TypeScript 5.8은 조건부 반환식의 각 분기를 더 세밀하게 검사합니다. 캐시에서 값을 꺼내거나 새 값을 만드는 코드처럼, 한 분기에서 반환 타입이 우연히 맞아 보이는 버그를 컴파일 단계에서 발견할 가능성이 커졌습니다.
+
+## `assert`에서 `with`로
+
+Node.js와 모듈 생태계가 import attributes를 향하는 흐름에 맞춰 JSON import의 `with { type: "json" }` 문법을 지원합니다. 이 변화는 타입 문법보다 실행 환경의 표준화가 먼저 움직인다는 사실을 보여줍니다. `module`과 `moduleResolution`을 함께 설정하고 실제 런타임에서 확인해야 합니다.
+
+## 마이그레이션 체크리스트
+
+반환식이 복잡한 유틸리티부터 CI에서 새 컴파일러로 검사하고, JSON import는 번들러와 Node 실행을 각각 테스트합니다. 타입 버전만 올리는 것이 아니라 패키지의 ESM·CJS 경계를 같이 기록하는 것이 핵심입니다.
+
+출처: [Announcing TypeScript 5.8](https://devblogs.microsoft.com/typescript/announcing-typescript-5-8/)
