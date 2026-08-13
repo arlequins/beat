@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.7.0...template-t3-turbo-sst-v1.8.0) (2026-08-13)
+
+
+### Features
+
+* **content:** add frontend and TypeScript issue index ([#47](https://github.com/arlequins/beat/issues/47)) ([18020a9](https://github.com/arlequins/beat/commit/18020a989e85804dea06702dc1b1321e35ee74e5))
+
 ## [1.7.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.6.0...template-t3-turbo-sst-v1.7.0) (2026-08-13)
 
 
