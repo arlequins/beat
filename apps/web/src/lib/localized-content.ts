@@ -19,6 +19,16 @@ function editorialArticle(
 }
 
 const english: Record<string, LocalizedArticle> = {
+  "frontend-typescript-issues-2025-2026-index": editorialArticle(
+    "A reading map for frontend and TypeScript issues in 2025–2026",
+    "An editorial map for the events that changed frontend and TypeScript defaults across 2025 and 2026.",
+    "This series is easier to use as a map than as a timeline. Start with runtime and build boundaries, then move through rendering, security, agents, and platform support.",
+    "Choose a path through the series",
+    [
+      "The 2025 posts connect Create React App's sunset, Node 24, Vite 7, TypeScript 5.8 and 5.9, React Compiler, and RSC security to the question of who owns the runtime and deployment boundary.",
+      "The 2026 posts follow TypeScript 6 and 7, Next.js adapters and agent-ready workflows, Vite 8 with Rolldown, React Foundation, Node 26, and the browser platform choices that make automation safe to review.",
+    ],
+  ),
   "ai-agent-template-workflow": {
     title: "How Arlequin and Lumen build products together",
     excerpt:
@@ -400,6 +410,16 @@ const english: Record<string, LocalizedArticle> = {
 };
 
 const japanese: Record<string, LocalizedArticle> = {
+  "frontend-typescript-issues-2025-2026-index": editorialArticle(
+    "2025–2026年フロントエンド・TypeScript issue 読書マップ",
+    "2025年と2026年にフロントエンドと TypeScript の前提を変えた出来事を探す編集マップです。",
+    "このシリーズは時系列よりも地図として読むと便利です。まずランタイムとビルドの境界を確認し、レンダリング、セキュリティ、エージェント、プラットフォームへ進みます。",
+    "シリーズの読み方を選ぶ",
+    [
+      "2025年の記事では、Create React App の終了、Node 24、Vite 7、TypeScript 5.8・5.9、React Compiler、RSC のセキュリティを、誰がランタイムと配布の境界を担うかという問いにつなげます。",
+      "2026年の記事では、TypeScript 6・7、Next.js のアダプターとエージェント対応、Rolldown 搭載 Vite 8、React Foundation、Node 26、レビュー可能な自動化のためのブラウザ選択を追います。",
+    ],
+  ),
   "ai-agent-template-workflow": {
     title: "Arlequin と Lumen が製品をつくる方法",
     excerpt:
