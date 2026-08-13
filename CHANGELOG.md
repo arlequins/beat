@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.6.0...template-t3-turbo-sst-v1.7.0) (2026-08-13)
+
+
+### Features
+
+* **auth:** add Google SSO bridge for Beat OIDC ([#44](https://github.com/arlequins/beat/issues/44)) ([a50e928](https://github.com/arlequins/beat/commit/a50e928b2551be029b0d1b5fac494ec11cad9e35))
+
 ## [1.6.0](https://github.com/arlequins/beat/compare/template-t3-turbo-sst-v1.5.0...template-t3-turbo-sst-v1.6.0) (2026-08-12)
 
 
