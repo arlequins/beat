@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.13.0](https://github.com/arlequins/beat/compare/beat-v1.12.2...beat-v1.13.0) (2026-08-14)
+
+
+### Features
+
+* **admin:** show repository posts in editorial console ([#62](https://github.com/arlequins/beat/issues/62)) ([cd83180](https://github.com/arlequins/beat/commit/cd831809d960557bd11dd8569a398c7c787f4e7d))
+
 ## [1.12.2](https://github.com/arlequins/beat/compare/beat-v1.12.1...beat-v1.12.2) (2026-08-14)
 
 
