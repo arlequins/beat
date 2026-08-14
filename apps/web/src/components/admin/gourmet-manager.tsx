@@ -282,14 +282,14 @@ export function GourmetManager() {
           method: "POST",
         },
       );
-      if (!response.ok) throw new Error("사진 검토 PR을 만들지 못했습니다.");
+      if (!response.ok) throw new Error("사진을 S3에 저장하지 못했습니다.");
       const updated = (await response.json()) as GourmetEntry;
       setEntries((current) =>
         current.map((entry) => (entry.id === updated.id ? updated : entry)),
       );
       setForm(formFor(updated));
       setMessage(
-        "사진 PR을 만들었습니다. GitHub에서 병합하면 정적 사이트에 게시됩니다.",
+        "사진을 S3에 저장했습니다. 공개 기록의 이미지는 API를 통해 전달됩니다.",
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "사진 처리 실패");
@@ -466,7 +466,7 @@ export function GourmetManager() {
               <>
                 <label className="flex cursor-pointer items-center gap-2 border border-[var(--line)] px-5 py-3 font-bold">
                   <ImagePlus className="size-4" />
-                  사진 PR 만들기
+                  S3에 사진 저장
                   <input
                     accept="image/jpeg,image/png,image/webp"
                     className="sr-only"
@@ -487,18 +487,28 @@ export function GourmetManager() {
               </>
             ) : null}
           </div>
-          {selected?.images.map((image) => (
-            <a
-              className="inline-flex items-center gap-2 text-sm font-bold text-[var(--accent-foreground)] underline"
-              href={image.prUrl}
-              key={image.id}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <Utensils className="size-4" />
-              사진 PR 검토하기 <ExternalLink className="size-3.5" />
-            </a>
-          ))}
+          {selected?.images.map((image) =>
+            image.prUrl ? (
+              <a
+                className="inline-flex items-center gap-2 text-sm font-bold text-[var(--accent-foreground)] underline"
+                href={image.prUrl}
+                key={image.id}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <Utensils className="size-4" />
+                사진 PR 검토하기 <ExternalLink className="size-3.5" />
+              </a>
+            ) : (
+              <span
+                className="inline-flex items-center gap-2 text-sm font-bold text-[var(--muted-foreground)]"
+                key={image.id}
+              >
+                <Utensils className="size-4" />
+                S3에 저장된 사진
+              </span>
+            ),
+          )}
           {message ? (
             <p
               aria-live="polite"

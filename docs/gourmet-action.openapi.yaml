@@ -205,11 +205,17 @@ components:
               type: array
               items:
                 type: object
+                required: [id, altText, publicPath]
                 properties:
                   id: { type: string }
                   altText: { type: string }
-                  publicPath: { type: string }
-                  prUrl: { type: string, format: uri }
+                  publicPath:
+                    type: string
+                    description: API image path. The browser resolves it against the configured API origin.
+                  prUrl:
+                    type: string
+                    format: uri
+                    description: Legacy GitHub review URL. New S3-backed images do not include this field.
     GourmetList:
       type: object
       required: [entries, page, total]

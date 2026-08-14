@@ -3,10 +3,10 @@
 Beat Gourmet is a production-oriented personal meal log. A Custom GPT can save
 structured text after the user confirms it, while the public portfolio renders
 only `published` records. Administrators use the existing Beat login to edit,
-publish, archive, and attach reviewed photographs.
+publish, archive, and attach photographs.
 
 For the request-by-request connection between ChatGPT, Beat authentication, S3,
-the administrator browser, GitHub image PRs, and the public site, see the
+the administrator browser, and the public site, see the
 [end-to-end integration guide](gourmet-integration-flow.md).
 
 ## Storage decision
@@ -17,25 +17,19 @@ The two data classes deliberately use different systems of record:
 | --- | --- | --- |
 | Current meal record | Versioned Beat state bucket | Low-volume JSON updates with ETag conflict detection |
 | Record history and audit | Object Lock ledger bucket | Append-only operational evidence |
-| Optimized meal image | `apps/web/public/gourmet/` in GitHub | A reviewable PR publishes the asset with the static site |
+| Optimized meal image | Versioned Beat state bucket (`v1/gourmet/images/`) | The private API streams published images with immutable cache headers |
 
-Images are not stored in the state or ledger bucket. In the administrator
-browser, the selected file is orientation-corrected, resized to at most 1,600
-pixels on its long edge, converted to WebP, and compressed below 768 KiB. The
-canvas conversion discards EXIF metadata, including embedded location data.
+Images are stored in the private state bucket, not in the GitHub repository or
+the ledger bucket. In the administrator browser, the selected file is
+orientation-corrected, resized to at most 1,600 pixels on its long edge,
+converted to WebP, and compressed below 768 KiB. The canvas conversion discards
+EXIF metadata, including embedded location data.
+
 The API independently validates the declared type, magic bytes, extension, and
-size before a GitHub App creates a dedicated image branch and pull request.
-
-Merging that PR places the image in the static export and triggers the normal
-GitHub Actions deployment. Until the image PR is merged, its URL can be absent
-from the currently deployed site. This is an intentional review boundary.
-
-Repository storage is suitable here because this is a personal, low-volume
-archive of already-compressed assets. It should be reconsidered if images grow
-quickly, originals must be retained, uploads exceed GitHub's Contents API
-limits, or repository clone/build performance becomes material. Do not commit
-raw phone photographs or use Git LFS for assets expected to be copied directly
-by the current static build.
+size before writing the object under a content-hash key. Public pages never
+read the bucket directly: `/api/gourmet/images/:entryId/:imageId` verifies that
+the entry is published, reads the object, and streams it with cache headers.
+This keeps the bucket private while avoiding a growing image history in GitHub.
 
 ## API and authorization
 
@@ -44,11 +38,12 @@ Public requests can list and read only published records:
 ```text
 GET /api/gourmet/entries
 GET /api/gourmet/entries/{id-or-slug}
+GET /api/gourmet/images/{entryId}/{imageId}
 ```
 
 The separate `BEAT_GOURMET_ACTION_API_KEY` Bearer credential can create and
 update records and request recent context. It is not a Beat administrator JWT,
-cannot archive records, and cannot create image pull requests.
+cannot archive records, and cannot upload images.
 
 ```text
 POST  /api/gourmet/entries
@@ -57,7 +52,7 @@ GET   /api/gourmet/context
 ```
 
 The existing Beat access JWT can call all record APIs. Only that administrator
-principal can archive records or attach a repository image:
+principal can archive records or attach an image to the private state bucket:
 
 ```text
 DELETE /api/gourmet/entries/{id-or-slug}
@@ -105,9 +100,9 @@ ledger buckets are reused after the production stack is deployed.
 
 1. Log in at `/admin/` and create a draft Gourmet record.
 2. Publish it, then confirm it appears at `/gourmet/`.
-3. Attach a phone photo and inspect the generated GitHub pull request.
-4. Confirm the committed file is WebP and contains no original EXIF payload.
-5. Merge the image PR and wait for the static deployment check.
-6. Configure the Custom GPT Action using
+3. Attach a phone photo and confirm it is stored in the private state bucket.
+4. Open the public record and confirm the API image URL returns the WebP with
+   cache headers; the original EXIF payload is not present.
+5. Configure the Custom GPT Action using
    [`gourmet-action.openapi.yaml`](gourmet-action.openapi.yaml), then run the
    create and context operations in Preview.

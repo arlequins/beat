@@ -6,7 +6,7 @@ export type GourmetImage = {
   altText: string;
   byteSize: number;
   id: string;
-  prUrl: string;
+  prUrl?: string;
   publicPath: string;
 };
 
@@ -54,5 +54,7 @@ export function gourmetDate(entry: GourmetEntry) {
 }
 
 export function publicGourmetImage(image: GourmetImage) {
+  if (image.publicPath.startsWith("/api/"))
+    return `${gourmetApiUrl()}${image.publicPath}`;
   return image.publicPath;
 }

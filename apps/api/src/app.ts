@@ -206,6 +206,11 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       telemetry.metric("ColdStart", 1, "Count", { stage });
     }
   });
+  app.use("*", async (context, next) => {
+    await next();
+    if (context.req.path.startsWith("/api/gourmet/images/"))
+      context.header("Cross-Origin-Resource-Policy", "cross-origin");
+  });
   app.use(
     "*",
     secureHeaders({
