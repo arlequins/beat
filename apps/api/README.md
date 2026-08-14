@@ -23,7 +23,8 @@ pnpm --filter @arlequins/api sst:deploy
 | `POST /auth/login` | Administrator login and initial token pair. |
 | `POST /auth/token` | Atomic refresh-token rotation. |
 | `POST /auth/revoke` | Refresh-session revocation. |
-| `GET /admin/content/drafts/:slug` | Read the current S3 draft revision. |
+| `GET /admin/content` | List repository posts and S3 draft heads for the administrator console. |
+| `GET /admin/content/drafts/:slug` | Read the current S3 draft revision, or the repository MDX source when no draft exists. |
 | `PUT /admin/content/drafts/:slug` | Save an immutable revision and conditionally move its head. |
 | `POST /admin/content/drafts/:slug/confirm` | Confirm a revision and open its GitHub review PR. |
 

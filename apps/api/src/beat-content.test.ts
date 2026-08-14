@@ -245,6 +245,63 @@ describe("Beat S3 content", () => {
     ).rejects.toMatchObject({ code: "not_found" });
   });
 
+  it("lists repository posts and lets S3 drafts override their source record", async () => {
+    const harness = s3Harness();
+    const content = await loadContent();
+    const source =
+      "---\ntitle: Weekly Test\ncategory: weekly\npublishedAt: 2026-08-01\nreviewStatus: reviewed\n---\n\nPublished";
+    const request = vi.fn(async (input: string | URL) => {
+      const url = String(input);
+      if (url.includes("/contents/apps/web/content/posts?"))
+        return Response.json([{ name: "weekly-test.mdx", type: "file" }]);
+      if (url.includes("/contents/apps/web/content/posts/weekly-test.mdx?"))
+        return Response.json({
+          content: Buffer.from(source).toString("base64"),
+        });
+      throw new Error(`unexpected GitHub request ${url}`);
+    }) as typeof fetch;
+
+    await expect(
+      content.listBeatContentRecords(harness.client, request),
+    ).resolves.toEqual([
+      {
+        category: "weekly",
+        origin: "repository",
+        publishedAt: "2026-08-01",
+        reviewStatus: "reviewed",
+        revision: 0,
+        slug: "weekly-test",
+        status: "published",
+        title: "Weekly Test",
+      },
+    ]);
+
+    await content.saveBeatDraft(
+      {
+        expectedRevision: 0,
+        slug: "weekly-test",
+        source: "---\ntitle: Draft\n---\n\nDraft",
+        title: "Draft",
+        updatedBy: "admin-1",
+      },
+      harness.client,
+    );
+    await expect(
+      content.listBeatContentRecords(harness.client, request),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        origin: "draft",
+        revision: 1,
+        slug: "weekly-test",
+        status: "draft",
+        title: "Draft",
+      }),
+    ]);
+    await expect(
+      content.getBeatContentDraft("weekly-test", harness.client, request),
+    ).resolves.toMatchObject({ origin: "draft", revision: 1 });
+  });
+
   it("replays pending publication jobs and records merged pull requests", async () => {
     const harness = s3Harness();
     const content = await loadContent();

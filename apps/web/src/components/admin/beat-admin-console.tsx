@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink, LogOut, Save, Send, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GourmetManager } from "~/components/admin/gourmet-manager";
 
 import {
@@ -25,6 +25,18 @@ type Publication = {
   status: "pending" | "opened";
 };
 
+type ContentRecord = {
+  category?: string;
+  origin: "draft" | "repository";
+  publishedAt?: string;
+  reviewStatus?: "reviewed" | "unreviewed";
+  revision: number;
+  slug: string;
+  status: "confirmed" | "draft" | "published";
+  title: string;
+  updatedAt?: string;
+};
+
 export function BeatAdminConsole() {
   const [authenticated, setAuthenticated] = useState(false);
   const [slug, setSlug] = useState("");
@@ -35,6 +47,7 @@ export function BeatAdminConsole() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [prUrl, setPrUrl] = useState<string>();
+  const [records, setRecords] = useState<ContentRecord[]>([]);
 
   useEffect(() => {
     const sync = () => setAuthenticated(hasPersistentBeatAdminSession());
@@ -59,14 +72,37 @@ export function BeatAdminConsole() {
     }
   }
 
-  async function loadDraft() {
-    if (!slug) return;
+  const loadRecords = useCallback(async () => {
+    setBusy(true);
+    try {
+      const response = await authorizedBeatAdminRequest("/admin/content");
+      if (!response.ok) throw new Error("기사 목록을 불러올 수 없습니다.");
+      const result = (await response.json()) as { records: ContentRecord[] };
+      setRecords(result.records);
+      if (!result.records.length)
+        setMessage("저장소와 초안에 기록이 없습니다.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "기사 목록 조회 실패",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authenticated) void loadRecords();
+  }, [authenticated, loadRecords]);
+
+  async function loadDraft(selectedSlug = slug) {
+    if (!selectedSlug) return;
+    setSlug(selectedSlug);
     setBusy(true);
     setMessage("");
     setPrUrl(undefined);
     try {
       const response = await authorizedBeatAdminRequest(
-        `/admin/content/drafts/${encodeURIComponent(slug)}`,
+        `/admin/content/drafts/${encodeURIComponent(selectedSlug)}`,
       );
       if (response.status === 404) {
         setRevision(0);
@@ -82,7 +118,11 @@ export function BeatAdminConsole() {
       setTitle(draft.title);
       setSource(draft.source);
       setStatus(draft.status);
-      setMessage(`리비전 ${draft.revision}을 불러왔습니다.`);
+      setMessage(
+        draft.revision === 0
+          ? "저장소의 원문을 불러왔습니다. 저장하면 새 초안이 됩니다."
+          : `리비전 ${draft.revision}을 불러왔습니다.`,
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "초안 조회 실패");
     } finally {
@@ -112,6 +152,7 @@ export function BeatAdminConsole() {
       setRevision(draft.revision);
       setStatus(draft.status);
       setMessage(`리비전 ${draft.revision}을 S3에 저장했습니다.`);
+      void loadRecords();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "초안 저장 실패");
     } finally {
@@ -138,6 +179,7 @@ export function BeatAdminConsole() {
       setPrUrl(publication.prUrl);
       setRevision((current) => current + 1);
       setMessage("확정본으로 기록하고 GitHub 검토 요청을 만들었습니다.");
+      void loadRecords();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "확정 실패");
     } finally {
@@ -206,6 +248,52 @@ export function BeatAdminConsole() {
         >
           불러오기
         </button>
+      </div>
+
+      <div className="grid gap-4 border border-[var(--line)] bg-[var(--surface)] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-serif text-2xl font-black">기사 목록</h2>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              저장소의 발행 글과 S3에 저장된 초안을 함께 표시합니다.
+            </p>
+          </div>
+          <button
+            className="border border-[var(--line)] px-4 py-2 text-sm font-bold disabled:opacity-50"
+            disabled={busy}
+            onClick={() => void loadRecords()}
+            type="button"
+          >
+            목록 새로고침
+          </button>
+        </div>
+        {records.length ? (
+          <div className="grid gap-2">
+            {records.map((record) => (
+              <button
+                className="grid gap-1 border border-[var(--line)] p-3 text-left transition-colors hover:bg-[var(--background)] md:grid-cols-[1fr_auto] md:items-center"
+                key={record.slug}
+                onClick={() => void loadDraft(record.slug)}
+                type="button"
+              >
+                <span>
+                  <span className="block font-bold">{record.title}</span>
+                  <span className="mt-1 block font-mono text-xs text-[var(--muted-foreground)]">
+                    {record.slug}
+                  </span>
+                </span>
+                <span className="text-xs font-bold tracking-[0.12em] text-[var(--muted-foreground)] uppercase">
+                  {record.origin === "repository" ? "저장소" : "S3 초안"} ·{" "}
+                  {record.status}
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="border border-dashed border-[var(--line)] p-4 text-sm text-[var(--muted-foreground)]">
+            저장소와 초안에 기록이 없습니다.
+          </p>
+        )}
       </div>
 
       <div className="grid gap-4 border border-[var(--line)] bg-[var(--surface)] p-5">

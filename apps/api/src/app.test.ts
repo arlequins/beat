@@ -688,6 +688,15 @@ describe("API app", () => {
       updatedBy: "admin-1",
     };
     const saveDraft = vi.fn(async () => draft);
+    const listRecords = vi.fn(async () => [
+      {
+        origin: "repository" as const,
+        revision: 0,
+        slug: "weekly-test",
+        status: "published" as const,
+        title: "Test",
+      },
+    ]);
     const confirmAndPublish = vi.fn(async () => ({
       branch: "content/weekly-test-r2",
       draftRevision: 2,
@@ -713,6 +722,7 @@ describe("API app", () => {
       beatContent: {
         confirmAndPublish,
         getDraft: vi.fn(async () => draft),
+        listRecords,
         saveDraft,
       },
       corsOrigins: ["http://localhost:3000"],
@@ -723,6 +733,13 @@ describe("API app", () => {
       Authorization: "Bearer access-token",
       "Content-Type": "application/json",
     };
+    const records = await adminApp.request("/admin/content", { headers });
+    expect(records.status).toBe(200);
+    await expect(records.json()).resolves.toMatchObject({
+      records: [{ slug: "weekly-test", status: "published" }],
+    });
+    expect(listRecords).toHaveBeenCalledOnce();
+
     const loaded = await adminApp.request("/admin/content/drafts/weekly-test", {
       headers,
     });

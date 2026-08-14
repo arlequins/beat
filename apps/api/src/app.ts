@@ -33,7 +33,9 @@ import {
 import {
   type BeatContentError,
   confirmAndPublishBeatDraft,
+  getBeatContentDraft,
   getBeatDraft,
+  listBeatContentRecords,
   saveBeatDraft,
 } from "./beat-content";
 import {
@@ -77,6 +79,8 @@ export type CreateApiAppOptions = {
   beatContent?: {
     confirmAndPublish: typeof confirmAndPublishBeatDraft;
     getDraft: typeof getBeatDraft;
+    getContentDraft?: typeof getBeatContentDraft;
+    listRecords?: typeof listBeatContentRecords;
     saveDraft: typeof saveBeatDraft;
   };
   gourmet?: Parameters<typeof registerGourmetRoutes>[1]["gourmet"];
@@ -164,7 +168,9 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   };
   const content = options.beatContent ?? {
     confirmAndPublish: confirmAndPublishBeatDraft,
+    getContentDraft: getBeatContentDraft,
     getDraft: getBeatDraft,
+    listRecords: listBeatContentRecords,
     saveDraft: saveBeatDraft,
   };
 
@@ -580,11 +586,20 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       return context.json({ error: "Draft revision conflict" }, 409);
     return undefined;
   };
+  app.get("/admin/content", async (context) => {
+    const administrator = await authenticatedAdministrator(context);
+    if (!administrator) return context.json({ error: "Unauthorized" }, 401);
+    return context.json({
+      records: await (content.listRecords ?? listBeatContentRecords)(),
+    });
+  });
   app.get("/admin/content/drafts/:slug", async (context) => {
     const administrator = await authenticatedAdministrator(context);
     if (!administrator) return context.json({ error: "Unauthorized" }, 401);
     try {
-      const draft = await content.getDraft(context.req.param("slug"));
+      const draft = await (content.getContentDraft ?? content.getDraft)(
+        context.req.param("slug"),
+      );
       return draft
         ? context.json(draft)
         : context.json({ error: "Draft not found" }, 404);

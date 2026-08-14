@@ -24,6 +24,27 @@ export type BeatDraft = {
   updatedBy: string;
 };
 
+export type BeatContentRecord = {
+  category?: string;
+  origin: "draft" | "repository";
+  publishedAt?: string;
+  reviewStatus?: "reviewed" | "unreviewed";
+  revision: number;
+  slug: string;
+  status: "confirmed" | "draft" | "published";
+  title: string;
+  updatedAt?: string;
+};
+
+export type BeatRepositoryPost = {
+  origin: "repository";
+  revision: 0;
+  slug: string;
+  source: string;
+  status: "draft";
+  title: string;
+};
+
 export type PublicationJob = {
   branch: string;
   completedAt?: string;
@@ -398,6 +419,175 @@ async function githubRequest<T>(
   const value =
     response.status === 204 ? undefined : ((await response.json()) as T);
   return { response, value };
+}
+
+function decodeGitHubContent(content: string) {
+  return Buffer.from(content.replaceAll("\n", ""), "base64").toString("utf8");
+}
+
+function frontmatterField(source: string, field: string) {
+  const match = source.match(
+    new RegExp(`^${field}:\\s*(?:"([^"]*)"|'([^']*)'|(.+))$`, "m"),
+  );
+  return (match?.[1] ?? match?.[2] ?? match?.[3])?.trim();
+}
+
+async function repositoryPostSource(
+  slug: string,
+  request: typeof fetch,
+  contentConfig: ContentConfig,
+) {
+  const installation = await createGitHubInstallationToken(request);
+  const result = await githubRequest<{ content?: string }>(
+    request,
+    installation.token,
+    `https://api.github.com/repos/${contentConfig.repository}/contents/apps/web/content/posts/${slug}.mdx?ref=main`,
+  );
+  if (result.response.status === 404) return undefined;
+  if (!result.response.ok || !result.value?.content)
+    throw new Error(`GitHub content lookup failed (${result.response.status})`);
+  return decodeGitHubContent(result.value.content);
+}
+
+export async function getBeatRepositoryPost(
+  slug: string,
+  request: typeof fetch = fetch,
+) {
+  const contentConfig = config();
+  const safeSlug = validateSlug(slug);
+  const source = await repositoryPostSource(safeSlug, request, contentConfig);
+  if (!source) return undefined;
+  return {
+    origin: "repository" as const,
+    revision: 0 as const,
+    slug: safeSlug,
+    source,
+    status: "draft" as const,
+    title: frontmatterField(source, "title") ?? safeSlug,
+  } satisfies BeatRepositoryPost;
+}
+
+async function repositoryContentRecords(
+  request: typeof fetch,
+  contentConfig: ContentConfig,
+): Promise<BeatContentRecord[]> {
+  const installation = await createGitHubInstallationToken(request);
+  const result = await githubRequest<
+    { name?: string; path?: string; type?: string }[]
+  >(
+    request,
+    installation.token,
+    `https://api.github.com/repos/${contentConfig.repository}/contents/apps/web/content/posts?ref=main`,
+  );
+  if (!result.response.ok || !Array.isArray(result.value))
+    throw new Error(`GitHub content index failed (${result.response.status})`);
+  const files = result.value.filter(
+    (entry) =>
+      entry.type === "file" &&
+      typeof entry.name === "string" &&
+      entry.name.endsWith(".mdx"),
+  );
+  const records: Array<BeatContentRecord | undefined> = await Promise.all(
+    files.map(async (entry): Promise<BeatContentRecord | undefined> => {
+      const slug = entry.name!.replace(/\.mdx$/, "");
+      if (!SLUG_PATTERN.test(slug)) return undefined;
+      const source = await repositoryPostSource(slug, request, contentConfig);
+      if (!source) return undefined;
+      const reviewStatus = frontmatterField(source, "reviewStatus");
+      return {
+        category: frontmatterField(source, "category"),
+        origin: "repository" as const,
+        publishedAt: frontmatterField(source, "publishedAt"),
+        ...(reviewStatus === "reviewed" || reviewStatus === "unreviewed"
+          ? { reviewStatus }
+          : {}),
+        revision: 0,
+        slug,
+        status: "published" as const,
+        title: frontmatterField(source, "title") ?? slug,
+      } satisfies BeatContentRecord;
+    }),
+  );
+  return records.filter((record): record is BeatContentRecord =>
+    Boolean(record),
+  );
+}
+
+async function draftContentRecords(
+  client: S3Client,
+  contentConfig: ContentConfig,
+) {
+  const records: BeatContentRecord[] = [];
+  let continuationToken: string | undefined;
+  do {
+    const page = await client.send(
+      new ListObjectsV2Command({
+        Bucket: contentConfig.stateBucket,
+        ContinuationToken: continuationToken,
+        Prefix: `${contentConfig.statePrefix}/drafts/`,
+      }),
+    );
+    for (const object of page.Contents ?? []) {
+      const prefix = `${contentConfig.statePrefix}/drafts/`;
+      const key = object.Key;
+      if (!key?.startsWith(prefix) || !key.endsWith("/head.json")) continue;
+      const slug = key.slice(prefix.length, -"/head.json".length);
+      if (!SLUG_PATTERN.test(slug)) continue;
+      const stored = await getJson<BeatDraft>(
+        client,
+        contentConfig.stateBucket,
+        key,
+      );
+      if (!stored || !isDraft(stored.value)) continue;
+      records.push({
+        origin: "draft",
+        revision: stored.value.revision,
+        slug: stored.value.slug,
+        status: stored.value.status,
+        title: stored.value.title,
+        updatedAt: stored.value.updatedAt,
+      });
+    }
+    continuationToken = page.IsTruncated
+      ? page.NextContinuationToken
+      : undefined;
+  } while (continuationToken);
+  return records;
+}
+
+export async function listBeatContentRecords(
+  client = new S3Client({}),
+  request: typeof fetch = fetch,
+) {
+  const contentConfig = config();
+  const [repository, drafts] = await Promise.all([
+    repositoryContentRecords(request, contentConfig),
+    draftContentRecords(client, contentConfig),
+  ]);
+  const records = new Map(repository.map((record) => [record.slug, record]));
+  for (const draft of drafts) {
+    const existing = records.get(draft.slug);
+    records.set(draft.slug, {
+      ...existing,
+      ...draft,
+      title: draft.title || existing?.title || draft.slug,
+    });
+  }
+  return [...records.values()].sort((left, right) =>
+    (right.publishedAt ?? right.updatedAt ?? right.slug).localeCompare(
+      left.publishedAt ?? left.updatedAt ?? left.slug,
+    ),
+  );
+}
+
+export async function getBeatContentDraft(
+  slug: string,
+  client = new S3Client({}),
+  request: typeof fetch = fetch,
+) {
+  const draft = await getBeatDraft(slug, client);
+  if (draft) return { ...draft, origin: "draft" as const };
+  return getBeatRepositoryPost(slug, request);
 }
 
 async function openGitHubPullRequest(
