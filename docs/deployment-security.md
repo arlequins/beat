@@ -69,8 +69,12 @@ The JSON object must contain these string values:
 Beat's hosted OIDC sign-in uses Google SSO. Register the exact redirect URI
 `https://<beat-api-origin>/auth/google/callback` in Google Cloud Console and
 keep the OAuth client ID and secret in this runtime secret. The application
-accepts only the configured personal account; the default allowlist is
-`tiret.rouge@gmail.com`. A verified Google email is not sufficient by itself:
+accepts only the configured personal account; the production test account
+currently allowlisted for the hosted admin flow is `tiret.rouge@gmail.com`.
+Add that address under **Google Cloud Console → APIs & Services → OAuth consent
+screen → Test users** while the consent screen is in Testing, and use the same
+Google account at `https://arlequins.github.io/beat/admin/`. A verified Google
+email is not sufficient by itself:
 the Google `sub`, issuer, audience, nonce, and email verification flag are all
 checked before the Beat OIDC code is issued.
 

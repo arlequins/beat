@@ -130,32 +130,14 @@ export default $config({
         },
       ],
     });
-    const corsOrigins = (
-      serverEnv.API_CORS_ORIGINS ?? DEFAULT_LOCALHOST_SITE_URL
-    )
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean);
-    const functionUrlCors = {
-      allowHeaders: [
-        "Authorization",
-        "Content-Type",
-        "Trpc-Accept",
-        "X-Request-Id",
-      ],
-      // AWS Function URL CORS supports GET, PUT, HEAD, POST, PATCH, DELETE,
-      // or `*`; OPTIONS preflight is handled by the Function URL itself.
-      allowMethods: ["DELETE", "GET", "PATCH", "POST", "PUT"],
-      allowOrigins: corsOrigins,
-      exposeHeaders: [
-        "RateLimit-Limit",
-        "RateLimit-Remaining",
-        "RateLimit-Reset",
-        "Retry-After",
-        "X-Request-Id",
-      ],
-      maxAge: "1 day",
-    } as const;
+    const corsOrigins = [
+      ...new Set(
+        (serverEnv.API_CORS_ORIGINS ?? DEFAULT_LOCALHOST_SITE_URL)
+          .split(",")
+          .map((origin) => origin.trim().replace(/\/+$/, ""))
+          .filter(Boolean),
+      ),
+    ];
     const uploadBucket = createPrivateBucket("Uploads", {
       cors: {
         allowHeaders: ["content-type"],
@@ -389,12 +371,9 @@ export default $config({
 
     const api = new sst.aws.Function("Api", {
       ...handler,
-      // Direct Function URLs otherwise enable wildcard CORS before Hono handles
-      // the preflight request. Keep the direct endpoint boundary aligned with
-      // the app; Router deployments use the Router's edge boundary instead.
-      url: router
-        ? { router: { instance: router } }
-        : { cors: functionUrlCors },
+      // Hono is the single CORS boundary for direct Function URLs. Configuring
+      // AWS Function URL CORS as well would append a duplicate header.
+      url: router ? { router: { instance: router } } : { cors: false },
     });
 
     return {

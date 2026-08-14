@@ -305,13 +305,13 @@ export function GourmetManager() {
     <section className="mt-16 grid gap-6 border-t border-[var(--line)] pt-12">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold tracking-[0.16em] text-[var(--accent)] uppercase">
+          <p className="text-xs font-bold tracking-[0.16em] text-[var(--accent-foreground)] uppercase">
             Gourmet workspace
           </p>
           <h2 className="mt-2 font-serif text-4xl font-black">
             식사 기록 관리
           </h2>
-          <p className="mt-2 text-sm text-[var(--muted)]">
+          <p className="mt-2 text-sm text-[var(--muted-foreground)]">
             기록은 S3, 최적화된 사진은 GitHub PR에서 검토합니다.
           </p>
         </div>
@@ -344,13 +344,13 @@ export function GourmetManager() {
               type="button"
             >
               <span className="block font-bold">{entry.restaurantName}</span>
-              <span className="mt-1 block text-xs text-[var(--muted)]">
+              <span className="mt-1 block text-xs text-[var(--muted-foreground)]">
                 {entry.menuName} · {entry.rating.toFixed(1)} · {entry.status}
               </span>
             </button>
           ))}
           {!entries.length ? (
-            <p className="p-5 text-sm text-[var(--muted)]">
+            <p className="p-5 text-sm text-[var(--muted-foreground)]">
               아직 기록이 없습니다.
             </p>
           ) : null}
@@ -488,7 +488,7 @@ export function GourmetManager() {
           </div>
           {selected?.images.map((image) => (
             <a
-              className="inline-flex items-center gap-2 text-sm font-bold text-[var(--accent)] underline"
+              className="inline-flex items-center gap-2 text-sm font-bold text-[var(--accent-foreground)] underline"
               href={image.prUrl}
               key={image.id}
               rel="noopener noreferrer"
@@ -499,7 +499,10 @@ export function GourmetManager() {
             </a>
           ))}
           {message ? (
-            <p aria-live="polite" className="text-sm text-[var(--muted)]">
+            <p
+              aria-live="polite"
+              className="text-sm text-[var(--muted-foreground)]"
+            >
               {message}
             </p>
           ) : null}

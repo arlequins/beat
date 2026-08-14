@@ -29,6 +29,9 @@
     --coral: #f06449;
     --cyan: #79e6e0;
     --gold: #f6c85f;
+    --surface: var(--card);
+    --line: var(--border);
+    --shadow-accent: rgba(240, 100, 73, 0.22);
   }
   :root.dark {
     --ink: #f8f1e4;
@@ -36,6 +39,9 @@
     --plum: #241024;
     --paper: #111326;
     --paper-deep: #1b2034;
+    --surface: var(--card);
+    --line: var(--border);
+    --shadow-accent: rgba(121, 230, 224, 0.24);
   }
   * {
     @apply border-border;

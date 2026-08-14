@@ -6,12 +6,12 @@ import { skipEnvValidation } from "@arlequins/env/skip-validation";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod/v4";
 
-const defaultOidcAuthority = `${
+const defaultOidcAuthority = `${(
   typeof process.env.NEXT_PUBLIC_API_URL === "string" &&
   process.env.NEXT_PUBLIC_API_URL.trim().length > 0
     ? process.env.NEXT_PUBLIC_API_URL
     : DEFAULT_LOCALHOST_API_URL
-}/auth`;
+).replace(/\/+$/, "")}/auth`;
 
 /**
  * Public env for the Next.js client bundle. Do **not** import `serverEnv` here — it runs in the browser
