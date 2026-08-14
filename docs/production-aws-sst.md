@@ -30,7 +30,12 @@ Create or update the protected `production` Environment in `arlequins/beat`:
 - set `AWS_PRODUCTION_ROLE_ARN` to the ARN emitted by `beat-sst-aws`;
 - set `BEAT_RUNTIME_SECRET_ARN` to the ARN emitted by `beat-sst-aws`;
 - set `BEAT_AUTH_CLIENTS_JSON` to the exact public SPA client registration
-  JSON after the Beat Agent callback URLs are finalized;
+  JSON after the Beat Agent callback URLs are finalized. It must include both
+  `beat-agent-web` and the portfolio's `beat-admin-web` client:
+
+  ```json
+  [{"client_id":"beat-agent-web","redirect_uris":["https://arlequins.github.io/beat-agent/auth/callback/"],"post_logout_redirect_uris":["https://arlequins.github.io/beat-agent/auth/logout-callback/"],"scopes":["openid","profile","email","offline_access"]},{"client_id":"beat-admin-web","redirect_uris":["https://arlequins.github.io/beat/admin/callback/"],"post_logout_redirect_uris":["https://arlequins.github.io/beat/admin/"],"scopes":["openid","profile","email","offline_access"]}]
+  ```
 - set `API_CORS_ORIGINS` to a comma-separated list of exact browser origins:
   `https://arlequins.github.io` plus the final Beat Agent origin.
 
@@ -57,6 +62,12 @@ Lambda as public configuration so the authorization endpoint can enforce exact
 redirect and post-logout URI matches. Keep the sample values from
 [`docs/beat-agent-auth-integration.md`](./beat-agent-auth-integration.md) until
 the Agent production URL is known; do not invent a production callback.
+
+The portfolio administrator page at `https://arlequins.github.io/beat/admin/`
+uses the `beat-admin-web` public client with Authorization Code + PKCE S256.
+It starts at Beat's authorization endpoint, where the configured Google SSO
+identity is checked, and stores only the resulting Beat token pair in the
+browser session. The portfolio never receives or stores a Google client secret.
 
 ## Deployment role policy handoff
 

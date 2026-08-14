@@ -16,6 +16,7 @@
     "@arlequins/env": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "gray-matter": "^4.0.3",
+    "jose": "catalog:",
     "lucide-react": "catalog:",
     "next": "^16.2.10",
     "next-mdx-remote": "^5.0.0",
