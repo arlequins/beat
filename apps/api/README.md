@@ -27,7 +27,7 @@ pnpm --filter @arlequins/api sst:deploy
 | `PUT /admin/content/drafts/:slug` | Save an immutable revision and conditionally move its head. |
 | `POST /admin/content/drafts/:slug/confirm` | Confirm a revision and open its GitHub review PR. |
 
-Open `http://localhost:5000/docs`, select an operation, and use the request
+Open `http://localhost:45100/docs`, select an operation, and use the request
 client to send it to the current API host. The explorer persists authorization
 locally so protected HTTP operations can reuse a bearer token when they are
 added.

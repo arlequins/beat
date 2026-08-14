@@ -4,9 +4,9 @@ import { createPipelineFailureNotifier } from ".";
 
 describe("createPipelineFailureNotifier", () => {
   it("publishes only an allowlisted failure summary", async () => {
-    const send = vi.fn().mockResolvedValue({});
+    const publish = vi.fn().mockResolvedValue(undefined);
     const notify = createPipelineFailureNotifier({
-      client: { send },
+      client: { publish },
       topicArn: "arn:aws:sns:ap-northeast-1:123456789012:beat-alerts",
     });
 
@@ -20,23 +20,23 @@ describe("createPipelineFailureNotifier", () => {
       },
     });
 
-    expect(send).toHaveBeenCalledOnce();
-    const command = send.mock.calls[0]?.[0];
-    expect(command.input.TopicArn).toContain("beat-alerts");
-    expect(command.input.Message).toContain("States.Timeout");
-    expect(command.input.Message).not.toContain("privateToken");
-    expect(command.input.Message).not.toContain("do-not-publish");
+    expect(publish).toHaveBeenCalledOnce();
+    const message = publish.mock.calls[0]?.[0];
+    expect(message.topicArn).toContain("beat-alerts");
+    expect(message.message).toContain("States.Timeout");
+    expect(message.message).not.toContain("privateToken");
+    expect(message.message).not.toContain("do-not-publish");
   });
 
   it("does not publish when the topic is not configured", async () => {
-    const send = vi.fn();
+    const publish = vi.fn();
     const notify = createPipelineFailureNotifier({
-      client: { send },
+      client: { publish },
       topicArn: "",
     });
 
     await notify({ batchId: "weekly", errorEvent: { Error: "States.ALL" } });
 
-    expect(send).not.toHaveBeenCalled();
+    expect(publish).not.toHaveBeenCalled();
   });
 });

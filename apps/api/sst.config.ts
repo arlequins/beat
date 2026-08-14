@@ -21,6 +21,9 @@ export default $config({
     };
   },
   async run() {
+    const { DEFAULT_LOCALHOST_SITE_URL } = await import(
+      "@arlequins/env/public-defaults"
+    );
     const {
       ApiDeploymentPreset,
       beatAuthStatePrefix,
@@ -127,7 +130,9 @@ export default $config({
         },
       ],
     });
-    const corsOrigins = (serverEnv.API_CORS_ORIGINS ?? "http://localhost:3000")
+    const corsOrigins = (
+      serverEnv.API_CORS_ORIGINS ?? DEFAULT_LOCALHOST_SITE_URL
+    )
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean);

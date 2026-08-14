@@ -1,10 +1,10 @@
 import * as oidc from "oidc-provider";
 
-const port = Number(process.env.OIDC_MOCK_PORT ?? "5556");
+const port = Number(process.env.OIDC_MOCK_PORT ?? "45556");
 const issuer = process.env.OIDC_MOCK_ISSUER ?? `http://localhost:${port}`;
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:43100";
 const apiResource =
-  process.env.NEXT_PUBLIC_OIDC_RESOURCE ?? "http://localhost:5000";
+  process.env.NEXT_PUBLIC_OIDC_RESOURCE ?? "http://localhost:45100";
 const clientId = process.env.NEXT_PUBLIC_OIDC_CLIENT_ID ?? "local-web";
 
 const provider = new oidc.Provider(issuer, {

@@ -11,7 +11,7 @@ Set this value in the portfolio web project's local environment and in its
 hosting provider before building:
 
 ```dotenv
-NEXT_PUBLIC_BEAT_APP_URL=http://localhost:3000
+NEXT_PUBLIC_BEAT_APP_URL=http://localhost:43100
 ```
 
 For production, replace the localhost value with the HTTPS origin of the Beat
@@ -97,7 +97,7 @@ destination set, for example:
 pnpm dev:local
 
 # Portfolio repository
-NEXT_PUBLIC_BEAT_APP_URL=http://localhost:3000 pnpm --filter @arlequins/web dev -- --port 3001
+WEB_PORT=43200 NEXT_PUBLIC_BEAT_APP_URL=http://localhost:43200 pnpm --filter @arlequins/web dev
 ```
 
 Open the portfolio at `http://localhost:3001`, choose **Beat과 대화하기**, and

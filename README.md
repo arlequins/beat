@@ -71,9 +71,14 @@ pnpm install
 pnpm dev:local
 ```
 
-Open `http://localhost:3000`. The development identity provider accepts any
+Open `http://localhost:43100`. The development identity provider accepts any
 non-empty username and password. PostgreSQL uses host port `55433` by default.
 Stop the database with `pnpm db:stop`.
+
+The local web, API, and OIDC ports are configurable through `WEB_PORT`,
+`API_PORT`, and `OIDC_MOCK_PORT`. The uncommon defaults are `43100`, `45100`,
+and `45556`; when changing a port, update the matching `NEXT_PUBLIC_*` URL and
+`API_CORS_ORIGINS` in `.env.localhost` as well.
 
 ### Static portfolio
 
@@ -84,19 +89,19 @@ while you are preparing content:
 pnpm --filter @arlequins/web dev
 ```
 
-Open `http://localhost:3000` and edit the starter content as described in
+Open `http://localhost:43100` and edit the starter content as described in
 [Portfolio content](./docs/portfolio-content.md).
 
 The production Beat API endpoints are:
 
-- Liveness: `http://localhost:5000/health/live`
-- S3-backed readiness: `http://localhost:5000/health/ready`
-- Interactive API explorer: `http://localhost:5000/docs`
-- OpenAPI document: `http://localhost:5000/openapi.json`
-- Login: `http://localhost:5000/auth/login`
-- Token refresh: `http://localhost:5000/auth/token`
-- Administrator console: `http://localhost:3000/admin/`
-- Gourmet records: `http://localhost:3000/gourmet/`
+- Liveness: `http://localhost:45100/health/live`
+- S3-backed readiness: `http://localhost:45100/health/ready`
+- Interactive API explorer: `http://localhost:45100/docs`
+- OpenAPI document: `http://localhost:45100/openapi.json`
+- Login: `http://localhost:45100/auth/login`
+- Token refresh: `http://localhost:45100/auth/token`
+- Administrator console: `http://localhost:43100/admin/`
+- Gourmet records: `http://localhost:43100/gourmet/`
 
 See [S3-primary production architecture](./docs/s3-primary-data-architecture.md)
 for the production request flow and

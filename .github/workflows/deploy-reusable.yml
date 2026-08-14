@@ -72,6 +72,14 @@ jobs:
             test "${{ inputs.operation }}" = deploy
           fi
 
+      - name: Validate Beat and Agent production handoff
+        if: inputs.environment == 'production' && inputs.application == 'api' && inputs.operation != 'remove'
+        env:
+          API_CORS_ORIGINS: ${{ env.API_CORS_ORIGINS }}
+          BEAT_AUTH_CLIENTS_JSON: ${{ env.BEAT_AUTH_CLIENTS_JSON }}
+          NEXT_PUBLIC_BEAT_APP_URL: ${{ vars.NEXT_PUBLIC_BEAT_APP_URL }}
+        run: node scripts/validate-production-handoff.mjs
+
       - name: Require Beat production runtime secret
         if: inputs.environment == 'production' && inputs.application == 'api' && inputs.operation != 'remove'
         env:

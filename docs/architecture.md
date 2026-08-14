@@ -82,16 +82,19 @@ pnpm dev:local
 This starts PostgreSQL, applies migrations and seeds, and runs the local OIDC
 provider, API, and web app. The defaults are:
 
-- Web: `http://localhost:3000`
-- API: `http://localhost:5000`
-- Liveness: `http://localhost:5000/health/live`
-- Readiness: `http://localhost:5000/health/ready`
-- API explorer: `http://localhost:5000/docs`
-- OpenAPI contract: `http://localhost:5000/openapi.json`
-- tRPC: `http://localhost:5000/api/trpc`
+- Web: `http://localhost:43100`
+- API: `http://localhost:45100`
+- Liveness: `http://localhost:45100/health/live`
+- Readiness: `http://localhost:45100/health/ready`
+- API explorer: `http://localhost:45100/docs`
+- OpenAPI contract: `http://localhost:45100/openapi.json`
+- tRPC: `http://localhost:45100/api/trpc`
 
-`API_PORT` changes the local API port. `API_CORS_ORIGINS` accepts a
-comma-separated allowlist and defaults to `NEXT_PUBLIC_SITE_URL`.
+`WEB_PORT`, `API_PORT`, and `OIDC_MOCK_PORT` change the local web, API, and
+OIDC mock ports. `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_URL`, and
+`API_CORS_ORIGINS` must be updated together when a port changes.
+`API_CORS_ORIGINS` accepts a comma-separated allowlist and defaults to
+`NEXT_PUBLIC_SITE_URL`.
 
 ## Deployment
 

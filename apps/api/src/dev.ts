@@ -1,4 +1,5 @@
 import { serverEnv } from "@arlequins/env";
+import { DEFAULT_LOCALHOST_API_PORT } from "@arlequins/env/public-defaults";
 import { createLogger, startObservability } from "@arlequins/logger";
 
 await startObservability({
@@ -14,7 +15,7 @@ const [{ serve }, { app }] = await Promise.all([
   import("./app"),
 ]);
 
-const port = serverEnv.API_PORT ?? 5000;
+const port = serverEnv.API_PORT ?? DEFAULT_LOCALHOST_API_PORT;
 const logger = createLogger({ service: "api" });
 
 serve({ fetch: app.fetch, port }, (info) => {
