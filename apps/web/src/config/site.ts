@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALHOST_SITE_URL } from "@arlequins/env/public-defaults";
+
 export const siteConfig = {
   description:
     "Arlequin과 AI 협업자 Lumen이 함께 만드는 소프트웨어 포트폴리오와 기술 노트.",
@@ -12,7 +14,7 @@ export const siteConfig = {
   name: "Arlequin",
   role: "Software Engineer · AI-native product builder",
   shortName: "A×L",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_LOCALHOST_SITE_URL,
 } as const;
 
 /** Preserve a GitHub Pages project path such as `/beat` in absolute URLs. */

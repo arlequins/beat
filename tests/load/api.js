@@ -12,7 +12,7 @@ export const options = {
 };
 
 export default function () {
-  const baseUrl = __ENV.API_URL || "http://localhost:5000";
+  const baseUrl = __ENV.API_URL || "http://localhost:45100";
   const response = http.get(`${baseUrl}/health/live`);
   check(response, { "liveness is healthy": (result) => result.status === 200 });
   sleep(1);

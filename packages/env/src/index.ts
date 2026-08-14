@@ -23,8 +23,11 @@ export {
   sstAwsRegion,
 } from "./env-server.js";
 export {
+  DEFAULT_LOCALHOST_API_PORT,
   DEFAULT_LOCALHOST_API_URL,
+  DEFAULT_LOCALHOST_OIDC_PORT,
   DEFAULT_LOCALHOST_SITE_URL,
+  DEFAULT_LOCALHOST_WEB_PORT,
 } from "./public-defaults.js";
 export { skipEnvValidation } from "./skip-validation.js";
 export {

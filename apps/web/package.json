@@ -5,7 +5,7 @@
   "scripts": {
     "build": "pnpm with-env next build",
     "clean": "git clean -xdf .cache .next .turbo node_modules",
-    "dev": "pnpm with-env next dev",
+    "dev": "pnpm with-env next dev --port ${WEB_PORT:-43100}",
     "format": "biome format .",
     "lint": "biome lint .",
     "preview": "npx --yes serve@14 out",

@@ -9,8 +9,10 @@ to Vercel without a database, API, or identity provider.
 pnpm --filter @arlequins/web dev
 ```
 
-Open <http://localhost:3000>. The first run may need `pnpm install` at the
+Open <http://localhost:43100>. The first run may need `pnpm install` at the
 repository root.
+
+Set `WEB_PORT` to use another local web port; the default is `43100`.
 
 ## Edit your identity
 

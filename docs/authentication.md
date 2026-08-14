@@ -20,8 +20,8 @@ Register a public SPA client with Authorization Code and PKCE enabled. Do not is
 For local development, allow these exact redirect URIs:
 
 ```text
-http://localhost:3000/auth/callback/
-http://localhost:3000/auth/logout-callback/
+http://localhost:43100/auth/callback/
+http://localhost:43100/auth/logout-callback/
 ```
 
 Register equivalent HTTPS URIs for each deployed environment. The provider must expose an [OpenID Provider Configuration document](https://openid.net/specs/openid-connect-discovery-1_0.html) and issue signed JWT access tokens for the configured API audience.
