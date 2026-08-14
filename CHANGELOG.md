@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.11.0](https://github.com/arlequins/beat/compare/beat-v1.10.0...beat-v1.11.0) (2026-08-14)
+
+
+### Features
+
+* harden production handoff and alert boundaries ([#53](https://github.com/arlequins/beat/issues/53)) ([b44a9e6](https://github.com/arlequins/beat/commit/b44a9e6ef95eb824b0d5354d66723f2b54f5c7e3))
+
 ## [1.10.0](https://github.com/arlequins/beat/compare/beat-v1.9.0...beat-v1.10.0) (2026-08-13)
 
 
