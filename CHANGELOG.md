@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.12.1](https://github.com/arlequins/beat/compare/beat-v1.12.0...beat-v1.12.1) (2026-08-14)
+
+
+### Bug Fixes
+
+* harden hosted admin oidc and theme contrast ([a504db4](https://github.com/arlequins/beat/commit/a504db42a01a4043a8faf7d039a973aa7ab24912))
+
 ## [1.12.0](https://github.com/arlequins/beat/compare/beat-v1.11.0...beat-v1.12.0) (2026-08-14)
 
 
