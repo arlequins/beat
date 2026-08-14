@@ -1,5 +1,3 @@
-import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
-
 /** Called when any pipeline step fails after its configured retries. */
 export type PipelineFailurePayload = {
   /** From `lambdaInvoke.payload.batchId` in `sst.config.ts` (one shared failure Lambda). */
@@ -9,15 +7,18 @@ export type PipelineFailurePayload = {
 };
 
 type PipelineFailureAlertClient = {
-  send(command: PublishCommand): Promise<unknown>;
+  publish(input: {
+    message: string;
+    subject: string;
+    topicArn: string;
+  }): Promise<void>;
 };
 
 type PipelineFailureNotifierOptions = {
-  client?: PipelineFailureAlertClient;
-  topicArn?: string;
+  client: PipelineFailureAlertClient;
+  topicArn: string | undefined;
 };
 
-const snsClient = new SNSClient({});
 const safeErrorKeys = [
   "Error",
   "Cause",
@@ -43,14 +44,10 @@ function safeErrorDetails(errorEvent: unknown): Record<string, string> {
 }
 
 export function createPipelineFailureNotifier(
-  options: PipelineFailureNotifierOptions = {},
+  options: PipelineFailureNotifierOptions,
 ) {
-  const client = options.client ?? snsClient;
-
   return async (payload: PipelineFailurePayload): Promise<void> => {
-    const topicArn =
-      options.topicArn ??
-      (await import("@arlequins/env")).serverEnv.ALERT_TOPIC_ARN;
+    const topicArn = options.topicArn;
     const details = safeErrorDetails(payload.errorEvent);
     const message = JSON.stringify({
       service: "beat-batch",
@@ -67,13 +64,11 @@ export function createPipelineFailureNotifier(
     }
 
     try {
-      await client.send(
-        new PublishCommand({
-          Message: message,
-          Subject: `Beat batch failed: ${payload.batchId}`.slice(0, 100),
-          TopicArn: topicArn,
-        }),
-      );
+      await options.client.publish({
+        message,
+        subject: `Beat batch failed: ${payload.batchId}`.slice(0, 100),
+        topicArn,
+      });
       console.warn(
         "[PipelineFailure] alert published",
         JSON.stringify({ batchId: payload.batchId }),
@@ -88,10 +83,4 @@ export function createPipelineFailureNotifier(
       );
     }
   };
-}
-
-export async function notifyPipelineFailureAlert(
-  payload: PipelineFailurePayload,
-): Promise<void> {
-  await createPipelineFailureNotifier()(payload);
 }

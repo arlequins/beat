@@ -64,6 +64,8 @@ local application; the pages below explain design decisions and ongoing work.
   observability integration points.
 - [Production API runtime diagnostics](production-runtime-diagnostics.md):
   GitHub Actions-only, redacted CloudWatch initialization-failure triage.
+- [Production handoff status](production-handoff.md): current Beat/Agent public
+  contracts, completion checklist, and protected configuration blockers.
 - [Semantic versioning](semantic-versioning.md): release impact and repository
   version policy.
 

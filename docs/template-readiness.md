@@ -40,6 +40,10 @@ its related code, tests, environment variables, and documentation.
   restore verification, and rollback guidance.
 - [x] Replaceable tracing and error reporting with CloudWatch metrics, alarms,
   and an incident runbook.
+- [x] Protected production infrastructure diff, redacted Lambda diagnostics,
+  and public availability monitoring through GitHub Actions/OIDC.
+- [x] Allowlisted batch failure alerts with exact SNS publish permissions and
+  no raw workflow input in logs.
 - [x] Provider-neutral application rate limiting, request body limits, and
   explicit API security headers with standard 413/429 responses.
 
@@ -60,6 +64,8 @@ its related code, tests, environment variables, and documentation.
 - [x] PostgreSQL migration upgrades and tRPC contract regression tests.
 - [x] Chromium and mobile-emulated Playwright authentication and accessibility coverage.
 - [x] Protected production smoke tests and a documented load-test policy.
+- [x] Exact Beat Agent callback/logout, CORS, audience, and version handoff
+  validation without embedding runtime secrets.
 - [x] Required production endpoint variables with explicit manual confirmation
   and visible failure when cloud qualification is not configured.
 - [x] Environment schema synchronization and changed-workspace checks.

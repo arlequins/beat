@@ -79,6 +79,8 @@ jobs:
 
       - name: Record diagnostic boundary
         run: |
-          echo "### Production API runtime diagnostics" >> "$GITHUB_STEP_SUMMARY"
-          echo "Read only filtered Lambda events around deployment run \`$DEPLOYMENT_RUN_ID\`." >> "$GITHUB_STEP_SUMMARY"
-          echo "Event messages are redacted before output and are not uploaded as artifacts." >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### Production API runtime diagnostics"
+            echo "Read only filtered Lambda events around deployment run \`$DEPLOYMENT_RUN_ID\`."
+            echo "Event messages are redacted before output and are not uploaded as artifacts."
+          } >> "$GITHUB_STEP_SUMMARY"
