@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.12.0](https://github.com/arlequins/beat/compare/beat-v1.11.0...beat-v1.12.0) (2026-08-14)
+
+
+### Features
+
+* **auth:** use Google SSO for admin web login ([cd56ab4](https://github.com/arlequins/beat/commit/cd56ab4cc44e459c28ed1deae09bf817dea649de))
+
 ## [1.11.0](https://github.com/arlequins/beat/compare/beat-v1.10.0...beat-v1.11.0) (2026-08-14)
 
 
