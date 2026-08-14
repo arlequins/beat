@@ -52,11 +52,13 @@ Action은 확인된 텍스트만 저장하고, 사진은 관리자가 `/admin/`�
 | Beat 관리자 | Beat ES256 access JWT | 브라우저 `localStorage('beat-admin-session')` | 전체 상태 조회·생성·수정·보관, 사진 PR | GitHub App 비밀키 직접 사용 |
 | Beat API | GitHub App installation token | 요청마다 서버에서 단기 발급 | 이미지 브랜치·커밋·PR 생성 | 토큰을 브라우저나 Action에 노출 |
 
-관리자 로그인은 `/auth/login`에서 access token과 refresh token을 받는다.
-브라우저는 access token 만료가 60초 이내로 남으면 `/auth/token`에 refresh token을
-보내 두 토큰을 회전한다. API는 관리자 요청의 access JWT를 검증하며 세션 쿠키를
-사용하지 않는다. 로그아웃은 로컬 저장값을 먼저 지우고 `/auth/revoke`로 refresh
-token을 폐기한다.
+관리자는 포트폴리오의 `/admin/`에서 Google SSO로 로그인한다. Beat의 OIDC
+Authorization Code + PKCE 흐름이 Google 계정을 확인한 뒤 access token과
+refresh token을 발급한다. 브라우저는 access token 만료가 60초 이내로 남으면
+`/auth/token`으로 refresh token을 갱신하고, API는 관리자 요청의 access JWT를
+검증하며 세션 쿠키를 사용하지 않는다. 로그아웃할 때는 로컬 저장값을 먼저
+지운 뒤 `/auth/revoke`로 refresh token을 폐기한다. 기존 `/auth/login` API는
+하위 호환을 위해 유지하지만 포트폴리오 UI에서는 사용하지 않는다.
 
 Action API key는 관리자 JWT가 아니다. API가 고정 시간 비교로 두 자격 증명을
 구분하므로 Action key를 알아도 기록을 보관하거나 이미지 PR을 만들 수 없다.

@@ -12,7 +12,7 @@ runtime secrets or AWS credentials.
 | Beat Agent | `https://arlequins.github.io/beat-agent/` |
 | Agent API | `https://p3akjheufygfnr54k7vhz6kria0inkun.lambda-url.ap-northeast-1.on.aws/` |
 | Beat OIDC issuer for Agent | `https://4kfwvp7y2qoprape5p2jr5qvra0ekgcl.lambda-url.ap-northeast-1.on.aws/auth` |
-| OIDC client | `beat-agent-web` |
+| OIDC clients | `beat-agent-web`, `beat-admin-web` |
 | Access-token audience | `beat-agent` |
 | JWT algorithm | `ES256` |
 
@@ -20,12 +20,19 @@ The portfolio opens the Agent in a new window. It never forwards an access
 token, refresh token, workspace identifier, or conversation data.
 
 The protected Beat production Environment carries the exact public callback
-registration for the Pages-hosted Agent:
+registrations for the Pages-hosted Agent and portfolio administrator:
 
 ```text
 https://arlequins.github.io/beat-agent/auth/callback/
 https://arlequins.github.io/beat-agent/auth/logout-callback/
+https://arlequins.github.io/beat/admin/callback/
+https://arlequins.github.io/beat/admin/
 ```
+
+The portfolio's `/admin/` page uses Google SSO through `beat-admin-web` and
+does not display or submit an email/password form. The existing protected
+administrator operation still uses a one-time password only to bootstrap or
+rotate the S3 administrator record; it is not a browser login method.
 
 The API CORS allowlist contains the browser origin
 `https://arlequins.github.io`; paths such as `/beat/` and `/beat-agent/` are not

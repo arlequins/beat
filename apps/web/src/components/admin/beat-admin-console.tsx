@@ -1,15 +1,15 @@
 "use client";
 
 import { ExternalLink, LogOut, Save, Send, ShieldCheck } from "lucide-react";
-import { type FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { GourmetManager } from "~/components/admin/gourmet-manager";
 
 import {
   authorizedBeatAdminRequest,
   BeatAdminSessionEvent,
   hasPersistentBeatAdminSession,
-  loginBeatAdmin,
   logoutBeatAdmin,
+  startBeatAdminGoogleLogin,
 } from "~/lib/beat-admin-session";
 
 type Draft = {
@@ -27,8 +27,6 @@ type Publication = {
 
 export function BeatAdminConsole() {
   const [authenticated, setAuthenticated] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [slug, setSlug] = useState("");
   const [title, setTitle] = useState("");
   const [source, setSource] = useState("---\n");
@@ -49,15 +47,11 @@ export function BeatAdminConsole() {
     };
   }, []);
 
-  async function login(event: FormEvent) {
-    event.preventDefault();
+  async function loginWithGoogle() {
     setBusy(true);
     setMessage("");
     try {
-      await loginBeatAdmin(email, password);
-      setPassword("");
-      setAuthenticated(true);
-      setMessage("관리자 로그인이 유지됩니다.");
+      await startBeatAdminGoogleLogin();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "로그인 실패");
     } finally {
@@ -153,51 +147,26 @@ export function BeatAdminConsole() {
 
   if (!authenticated)
     return (
-      <form
-        className="mx-auto grid max-w-md gap-4 border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0.5rem_0.5rem_0_var(--shadow-accent)]"
-        onSubmit={login}
-      >
+      <section className="mx-auto grid max-w-md gap-4 border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0.5rem_0.5rem_0_var(--shadow-accent)]">
         <ShieldCheck className="size-8 text-[var(--accent)]" />
         <div>
           <h1 className="font-serif text-3xl font-black">Beat 관리자</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            관리자 계정으로 로그인하면 Beat 채팅과 기사 검토 도구가 열립니다.
+            Google 계정으로 로그인하면 Beat 채팅과 기사 검토 도구가 열립니다.
           </p>
         </div>
-        <label className="grid gap-2 text-sm font-bold">
-          이메일
-          <input
-            autoComplete="username"
-            className="border border-[var(--line)] bg-[var(--background)] px-3 py-2"
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            type="email"
-            value={email}
-          />
-        </label>
-        <label className="grid gap-2 text-sm font-bold">
-          비밀번호
-          <input
-            autoComplete="current-password"
-            className="border border-[var(--line)] bg-[var(--background)] px-3 py-2"
-            minLength={16}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            type="password"
-            value={password}
-          />
-        </label>
         <button
           className="bg-[var(--foreground)] px-4 py-3 font-bold text-[var(--background)] disabled:opacity-50"
           disabled={busy}
-          type="submit"
+          onClick={() => void loginWithGoogle()}
+          type="button"
         >
-          로그인
+          Google 계정으로 계속
         </button>
         {message ? (
           <p className="text-sm text-[var(--muted)]">{message}</p>
         ) : null}
-      </form>
+      </section>
     );
 
   return (
