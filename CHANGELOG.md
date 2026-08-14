@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.14.0](https://github.com/arlequins/beat/compare/beat-v1.13.0...beat-v1.14.0) (2026-08-14)
+
+
+### Features
+
+* **web:** streamline admin and gourmet empty states ([#64](https://github.com/arlequins/beat/issues/64)) ([08e5cc6](https://github.com/arlequins/beat/commit/08e5cc64cb86f3efd1a49780f3f36b9f17895044))
+
 ## [1.13.0](https://github.com/arlequins/beat/compare/beat-v1.12.2...beat-v1.13.0) (2026-08-14)
 
 
