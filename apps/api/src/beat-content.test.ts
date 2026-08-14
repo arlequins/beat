@@ -302,6 +302,74 @@ describe("Beat S3 content", () => {
     ).resolves.toMatchObject({ origin: "draft", revision: 1 });
   });
 
+  it("ignores unsupported repository entries and reports lookup failures", async () => {
+    const harness = s3Harness();
+    const content = await loadContent();
+    harness.objects.set("beat-state/v1/drafts/not safe/head.json", {
+      body: "{}",
+      etag: '"invalid-slug"',
+    });
+    harness.objects.set("beat-state/v1/drafts/invalid/head.json", {
+      body: JSON.stringify({ schemaVersion: 1 }),
+      etag: '"invalid-draft"',
+    });
+    const request = vi.fn(async (input: string | URL) => {
+      const url = String(input);
+      if (url.includes("/contents/apps/web/content/posts?"))
+        return Response.json([
+          { name: "README.md", type: "file" },
+          { name: "nested.mdx", type: "dir" },
+          { name: "BAD_NAME.mdx", type: "file" },
+          { name: "missing.mdx", type: "file" },
+          { name: "untitled.mdx", type: "file" },
+        ]);
+      if (url.includes("/missing.mdx?"))
+        return Response.json({ message: "Not Found" }, { status: 404 });
+      if (url.includes("/untitled.mdx?"))
+        return Response.json({
+          content: Buffer.from("Body only").toString("base64"),
+        });
+      if (url.includes("/empty.mdx?")) return Response.json({});
+      throw new Error(`unexpected GitHub request ${url}`);
+    }) as typeof fetch;
+
+    const records = await content.listBeatContentRecords(
+      harness.client,
+      request,
+    );
+    expect(records).toEqual([
+      {
+        category: undefined,
+        origin: "repository",
+        publishedAt: undefined,
+        revision: 0,
+        slug: "untitled",
+        status: "published",
+        title: "untitled",
+      },
+    ]);
+    await expect(
+      content.getBeatRepositoryPost("missing", request),
+    ).resolves.toBeUndefined();
+    await expect(
+      content.getBeatRepositoryPost("empty", request),
+    ).rejects.toThrow("GitHub content lookup failed");
+  });
+
+  it("rejects an unavailable repository index", async () => {
+    const harness = s3Harness();
+    const content = await loadContent();
+    const request = vi.fn(async (input: string | URL) => {
+      if (String(input).includes("/contents/apps/web/content/posts?"))
+        return Response.json({ message: "Unavailable" }, { status: 503 });
+      throw new Error(`unexpected GitHub request ${String(input)}`);
+    }) as typeof fetch;
+
+    await expect(
+      content.listBeatContentRecords(harness.client, request),
+    ).rejects.toThrow("GitHub content index failed");
+  });
+
   it("replays pending publication jobs and records merged pull requests", async () => {
     const harness = s3Harness();
     const content = await loadContent();
