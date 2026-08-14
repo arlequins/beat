@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.12.2](https://github.com/arlequins/beat/compare/beat-v1.12.1...beat-v1.12.2) (2026-08-14)
+
+
+### Bug Fixes
+
+* load Google runtime credentials in Lambda ([#60](https://github.com/arlequins/beat/issues/60)) ([4860133](https://github.com/arlequins/beat/commit/4860133241d344c6494d7d844cbeda4bc7672d4a))
+
 ## [1.12.1](https://github.com/arlequins/beat/compare/beat-v1.12.0...beat-v1.12.1) (2026-08-14)
 
 
