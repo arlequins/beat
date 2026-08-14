@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowLeft, ArrowUpRight, MapPin, Search, Star } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  MapPin,
+  Search,
+  Star,
+  Utensils,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -18,6 +25,10 @@ import { type Locale, localePath } from "~/lib/i18n";
 const text = {
   en: {
     allAreas: "All areas",
+    adminLink: "Open the editor",
+    emptyBody:
+      "Save a meal from mobile Beat or add the first record in the admin editor.",
+    emptyTitle: "The table is waiting for its first note.",
     back: "All records",
     discoveries: "Discoveries",
     empty: "No meals match these filters yet.",
@@ -37,6 +48,10 @@ const text = {
   },
   ja: {
     allAreas: "すべてのエリア",
+    adminLink: "管理画面を開く",
+    emptyBody:
+      "モバイルBeatから食事を記録するか、管理画面で最初のノートを追加してください。",
+    emptyTitle: "最初のノートを待っています。",
     back: "すべての記録",
     discoveries: "新しい発見",
     empty: "条件に合う食事の記録はまだありません。",
@@ -56,6 +71,10 @@ const text = {
   },
   ko: {
     allAreas: "모든 지역",
+    adminLink: "관리 화면 열기",
+    emptyBody:
+      "모바일 Beat에서 식사를 기록하거나 관리자 화면에서 첫 기록을 추가해 주세요.",
+    emptyTitle: "첫 번째 기록을 기다리고 있습니다.",
     back: "전체 기록",
     discoveries: "새로운 발견",
     empty: "조건에 맞는 식사 기록이 아직 없습니다.",
@@ -295,9 +314,24 @@ export function GourmetBrowser(props: { locale: Locale }) {
           </p>
         ) : null}
         {!message && list?.entries.length === 0 ? (
-          <p className="py-16 text-center text-[var(--muted-foreground)]">
-            {labels.empty}
-          </p>
+          <div className="mx-auto my-12 max-w-xl border border-dashed border-[var(--line)] bg-[var(--surface)] p-8 text-center sm:p-12">
+            <Utensils
+              aria-hidden="true"
+              className="mx-auto size-8 text-[var(--accent-foreground)]"
+            />
+            <h2 className="mt-5 font-serif text-3xl font-black tracking-[-0.03em]">
+              {labels.emptyTitle}
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[var(--muted-foreground)]">
+              {labels.emptyBody}
+            </p>
+            <Link
+              className="mt-6 inline-flex border border-[var(--line)] px-4 py-2 text-sm font-bold hover:border-[var(--accent-foreground)] hover:text-[var(--accent-foreground)]"
+              href={localePath(props.locale, "/admin/")}
+            >
+              {labels.adminLink}
+            </Link>
+          </div>
         ) : null}
         <div className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {list?.entries.map((entry) => (

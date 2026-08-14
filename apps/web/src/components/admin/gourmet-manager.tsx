@@ -350,8 +350,9 @@ export function GourmetManager() {
             </button>
           ))}
           {!entries.length ? (
-            <p className="p-5 text-sm text-[var(--muted-foreground)]">
-              아직 기록이 없습니다.
+            <p className="p-5 text-sm leading-6 text-[var(--muted-foreground)]">
+              아직 기록이 없습니다. 오른쪽의 <strong>새 기록</strong>으로 직접
+              추가하거나 모바일 Beat에서 식사 내용을 보내 주세요.
             </p>
           ) : null}
         </aside>
