@@ -95,12 +95,19 @@ export type CreateApiAppOptions = {
 
 let coldStart = true;
 
+function normalizeCorsOrigins(origins: string[]): string[] {
+  return [
+    ...new Set(
+      origins
+        .map((origin) => origin.trim().replace(/\/+$/, ""))
+        .filter(Boolean),
+    ),
+  ];
+}
+
 function configuredCorsOrigins(): string[] {
   const configured = serverEnv.API_CORS_ORIGINS ?? DEFAULT_LOCALHOST_SITE_URL;
-  return configured
-    .split(",")
-    .map((origin) => origin.trim().replace(/\/$/, ""))
-    .filter(Boolean);
+  return normalizeCorsOrigins(configured.split(","));
 }
 
 export function createApiApp(options: CreateApiAppOptions = {}) {
@@ -117,7 +124,9 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       }
     },
   });
-  const corsOrigins = options.corsOrigins ?? configuredCorsOrigins();
+  const corsOrigins = normalizeCorsOrigins(
+    options.corsOrigins ?? configuredCorsOrigins(),
+  );
   const rootLogger = options.logger ?? createLogger({ service: "api" });
   const readinessCheck = options.readinessCheck ?? checkBeatStorageReadiness;
   const externalChecks = options.externalReadinessChecks ?? {};

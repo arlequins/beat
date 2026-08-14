@@ -62,6 +62,20 @@ describe("API app", () => {
     expect(rejected.headers.get("access-control-allow-origin")).toBeNull();
   });
 
+  it("normalizes duplicate CORS origins before emitting headers", async () => {
+    const duplicateOriginApp = createApiApp({
+      corsOrigins: ["http://localhost:3000/", "http://localhost:3000"],
+      logger: createLogger({ service: "api", sink: () => {} }),
+    });
+    const response = await duplicateOriginApp.request("/health/live", {
+      headers: { Origin: "http://localhost:3000" },
+    });
+
+    expect(response.headers.get("access-control-allow-origin")).toBe(
+      "http://localhost:3000",
+    );
+  });
+
   it("reports readiness when required dependencies are available", async () => {
     const readyApp = createApiApp({
       corsOrigins: ["http://localhost:3000"],

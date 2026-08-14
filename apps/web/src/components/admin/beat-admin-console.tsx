@@ -148,10 +148,10 @@ export function BeatAdminConsole() {
   if (!authenticated)
     return (
       <section className="mx-auto grid max-w-md gap-4 border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0.5rem_0.5rem_0_var(--shadow-accent)]">
-        <ShieldCheck className="size-8 text-[var(--accent)]" />
+        <ShieldCheck className="size-8 text-[var(--accent-foreground)]" />
         <div>
           <h1 className="font-serif text-3xl font-black">Beat 관리자</h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">
+          <p className="mt-2 text-sm text-[var(--muted-foreground)]">
             Google 계정으로 로그인하면 Beat 채팅과 기사 검토 도구가 열립니다.
           </p>
         </div>
@@ -164,7 +164,7 @@ export function BeatAdminConsole() {
           Google 계정으로 계속
         </button>
         {message ? (
-          <p className="text-sm text-[var(--muted)]">{message}</p>
+          <p className="text-sm text-[var(--muted-foreground)]">{message}</p>
         ) : null}
       </section>
     );
@@ -173,7 +173,7 @@ export function BeatAdminConsole() {
     <section className="mx-auto grid max-w-5xl gap-6">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
         <div>
-          <p className="text-xs font-bold tracking-[0.16em] text-[var(--accent)] uppercase">
+          <p className="text-xs font-bold tracking-[0.16em] text-[var(--accent-foreground)] uppercase">
             S3 editorial workspace
           </p>
           <h1 className="mt-2 font-serif text-4xl font-black">기사 검토</h1>
@@ -251,11 +251,11 @@ export function BeatAdminConsole() {
           </button>
         </div>
         {message ? (
-          <p className="text-sm text-[var(--muted)]">{message}</p>
+          <p className="text-sm text-[var(--muted-foreground)]">{message}</p>
         ) : null}
         {prUrl ? (
           <a
-            className="flex items-center gap-2 font-bold text-[var(--accent)] underline"
+            className="flex items-center gap-2 font-bold text-[var(--accent-foreground)] underline"
             href={prUrl}
             rel="noopener noreferrer"
             target="_blank"

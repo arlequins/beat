@@ -77,7 +77,7 @@ const text = {
 
 function Rating(props: { value: number }) {
   return (
-    <span className="inline-flex items-center gap-1 font-semibold text-[var(--accent)]">
+    <span className="inline-flex items-center gap-1 font-semibold text-[var(--accent-foreground)]">
       <Star aria-hidden="true" className="size-3.5 fill-current" />
       {props.value.toFixed(1)}
     </span>
@@ -104,7 +104,7 @@ function GourmetPhoto(props: {
           src={publicGourmetImage(props.image)}
         />
       ) : (
-        <div className="absolute inset-0 grid place-items-center text-xs font-bold tracking-[0.15em] text-[var(--muted)] uppercase">
+        <div className="absolute inset-0 grid place-items-center text-xs font-bold tracking-[0.15em] text-[var(--muted-foreground)] uppercase">
           {props.pendingLabel}
         </div>
       )}
@@ -183,7 +183,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
     return (
       <article className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-20">
         <Link
-          className="inline-flex items-center gap-2 text-sm font-bold text-[var(--muted)] hover:text-[var(--accent)]"
+          className="inline-flex items-center gap-2 text-sm font-bold text-[var(--muted-foreground)] hover:text-[var(--accent-foreground)]"
           href={localePath(props.locale, "/gourmet/")}
         >
           <ArrowLeft className="size-4" /> {labels.back}
@@ -198,14 +198,14 @@ export function GourmetBrowser(props: { locale: Locale }) {
             />
           </div>
           <div className="self-center">
-            <p className="brand-eyebrow text-[var(--accent)]">
+            <p className="brand-eyebrow text-[var(--accent-foreground)]">
               {gourmetDate(selected)} · {selected.source}
             </p>
             <h1 className="display-serif mt-4 text-5xl tracking-[-0.05em]">
               {selected.restaurantName}
             </h1>
             <p className="mt-3 text-xl font-semibold">{selected.menuName}</p>
-            <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-[var(--muted)]">
+            <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-[var(--muted-foreground)]">
               <Rating value={selected.rating} />
               {selected.area ? (
                 <span className="inline-flex items-center gap-1">
@@ -268,7 +268,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
       <section className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-20">
         <div className="grid gap-3 border-y border-[var(--line)] py-5 sm:grid-cols-[1fr_14rem]">
           <label className="flex items-center gap-3 border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
-            <Search className="size-4 text-[var(--muted)]" />
+            <Search className="size-4 text-[var(--muted-foreground)]" />
             <input
               aria-label={labels.search}
               className="w-full bg-transparent outline-none"
@@ -290,10 +290,12 @@ export function GourmetBrowser(props: { locale: Locale }) {
           </select>
         </div>
         {message ? (
-          <p className="py-16 text-center text-[var(--muted)]">{message}</p>
+          <p className="py-16 text-center text-[var(--muted-foreground)]">
+            {message}
+          </p>
         ) : null}
         {!message && list?.entries.length === 0 ? (
-          <p className="py-16 text-center text-[var(--muted)]">
+          <p className="py-16 text-center text-[var(--muted-foreground)]">
             {labels.empty}
           </p>
         ) : null}
@@ -308,18 +310,18 @@ export function GourmetBrowser(props: { locale: Locale }) {
                 />
                 <div className="mt-5 flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold text-[var(--muted)]">
+                    <p className="text-xs font-semibold text-[var(--muted-foreground)]">
                       {gourmetDate(entry)}
                       {entry.area ? ` · ${entry.area}` : ""}
                     </p>
                     <h2 className="display-serif mt-2 text-2xl tracking-[-0.035em]">
                       {entry.restaurantName}
                     </h2>
-                    <p className="mt-1 text-sm text-[var(--muted)]">
+                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
                       {entry.menuName}
                     </p>
                   </div>
-                  <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--accent)]" />
+                  <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--accent-foreground)]" />
                 </div>
                 <div className="mt-3">
                   <Rating value={entry.rating} />
