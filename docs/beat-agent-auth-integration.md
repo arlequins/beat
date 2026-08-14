@@ -64,6 +64,17 @@ not log callback query strings.
 refresh session. Beat still preserves the legacy direct endpoints below for
 existing administrators and local operators.
 
+The portfolio administrator page is a separate public client. Register it in
+the same `BEAT_AUTH_CLIENTS_JSON` value with these exact URIs:
+
+```json
+{"client_id":"beat-admin-web","redirect_uris":["https://arlequins.github.io/beat/admin/callback/"],"post_logout_redirect_uris":["https://arlequins.github.io/beat/admin/"],"scopes":["openid","profile","email","offline_access"]}
+```
+
+`https://arlequins.github.io/beat/admin/` starts the Google SSO flow. The
+portfolio generates state, nonce, and an S256 PKCE verifier in the browser,
+checks the returned Beat ID token, and never sends a password to the API.
+
 ## Legacy token API
 
 Authenticate directly with Beat. Never send the password to the Agent API:

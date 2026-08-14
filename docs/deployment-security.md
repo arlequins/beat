@@ -94,6 +94,11 @@ and `authLedgerBucket` values emitted by the Production deployment. After the
 run, rotate or remove that environment secret. Administrator emails are normal
 workflow inputs; never enter a password as an input.
 
+This operator-only password bootstraps or rotates the stored administrator
+record. The portfolio never exposes it: browser administrators sign in only
+through the configured Google SSO identity and the `beat-admin-web` OIDC
+client.
+
 Use `disable-admin` with the target email for account disablement. The workflow
 serializes all protected operations and requires a `production` confirmation.
 

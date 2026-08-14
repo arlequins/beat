@@ -54,7 +54,7 @@ links. After merging this change:
 2. run **Production infrastructure diff** for `api` from the same `main` SHA;
 3. review the API-only diff, then run **Production deployment** with that exact
    reviewed SHA; and
-4. verify public pages, `/admin/` login and refresh, Gourmet reads, and an
+4. verify public pages, Google SSO at `/admin/` and token refresh, Gourmet reads, and an
    upload preflight from the Pages URL.
 
 The API deployment and all AWS operations remain GitHub Actions + OIDC only.
