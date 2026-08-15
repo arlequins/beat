@@ -6,6 +6,7 @@ export type GourmetImage = {
   altText: string;
   byteSize: number;
   id: string;
+  mimeType?: string;
   prUrl?: string;
   publicPath: string;
 };

@@ -994,7 +994,15 @@ describe("API app", () => {
           etag: '"image-v1"',
           lastModified: new Date("2026-08-05T00:00:00.000Z"),
         })),
+        getAdminImage: vi.fn(async () => ({
+          body: new Uint8Array([0x52, 0x49, 0x46, 0x46]),
+          contentLength: 4,
+          contentType: "image/webp" as const,
+          etag: '"image-v1"',
+          lastModified: new Date("2026-08-05T00:00:00.000Z"),
+        })),
         list,
+        removeImage: vi.fn(async () => baseEntry),
         update,
       } as never,
       gourmetActionApiKey: "gourmet-action-key-at-least-32-characters",
@@ -1161,5 +1169,24 @@ describe("API app", () => {
       },
     );
     expect(attached.status).toBe(200);
+    const adminImage = await gourmetApp.request(
+      "/admin/gourmet/entries/published-entry/images/image-1",
+      { headers: adminHeaders },
+    );
+    expect(adminImage.status).toBe(200);
+    expect(adminImage.headers.get("cache-control")).toBe("private, no-store");
+    expect(
+      (
+        await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/images/image-1",
+          { headers: actionHeaders, method: "DELETE" },
+        )
+      ).status,
+    ).toBe(403);
+    const removed = await gourmetApp.request(
+      "/admin/gourmet/entries/published-entry/images/image-1",
+      { headers: adminHeaders, method: "DELETE" },
+    );
+    expect(removed.status).toBe(200);
   });
 });

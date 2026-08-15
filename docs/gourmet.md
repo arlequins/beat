@@ -57,7 +57,17 @@ principal can archive records or attach an image to the private state bucket:
 ```text
 DELETE /api/gourmet/entries/{id-or-slug}
 POST   /admin/gourmet/entries/{id-or-slug}/images
+GET    /admin/gourmet/entries/{id-or-slug}/images/{image-id}
+DELETE /admin/gourmet/entries/{id-or-slug}/images/{image-id}
 ```
+
+The administrator image GET route is authenticated and non-cacheable, so the
+admin screen can preview draft images without making them public. The image
+delete endpoint removes the image metadata from the current record
+revision. It intentionally does not delete the private S3 object: bucket
+versioning and the deployment role's lack of `s3:DeleteObject` preserve a
+recoverable original. After the metadata is removed, the public image route
+returns `404` even if an older object version still exists.
 
 Create requests accept `Idempotency-Key`. Repeating an identical payload with
 the same key returns the same record; reusing it for a different payload returns
@@ -103,6 +113,10 @@ ledger buckets are reused after the production stack is deployed.
 3. Attach a phone photo and confirm it is stored in the private state bucket.
 4. Open the public record and confirm the API image URL returns the WebP with
    cache headers; the original EXIF payload is not present.
-5. Configure the Custom GPT Action using
+5. Return to `/admin/`, select the published record, preview the image, and
+   use `사진 분리` if the metadata should no longer be shown. Confirm the
+   record revision changes and the public image URL returns `404`; do not
+   expect the retained S3 object to be deleted.
+6. Configure the Custom GPT Action using
    [`gourmet-action.openapi.yaml`](gourmet-action.openapi.yaml), then run the
    create and context operations in Preview.

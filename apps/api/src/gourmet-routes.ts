@@ -15,8 +15,10 @@ import {
   type GourmetListFilter,
   getGourmetEntry,
   getGourmetImage,
+  getGourmetImageForAdmin,
   gourmetContext,
   listGourmetEntries,
+  removeGourmetImage,
   updateGourmetEntry,
 } from "./gourmet";
 
@@ -27,8 +29,10 @@ type GourmetPort = {
   create: typeof createGourmetEntry;
   delete: typeof deleteGourmetEntry;
   get: typeof getGourmetEntry;
+  getAdminImage?: typeof getGourmetImageForAdmin;
   getImage?: typeof getGourmetImage;
   list: typeof listGourmetEntries;
+  removeImage?: typeof removeGourmetImage;
   update: typeof updateGourmetEntry;
 };
 
@@ -217,7 +221,9 @@ export function registerGourmetRoutes(
     list: listGourmetEntries,
     update: updateGourmetEntry,
     ...options.gourmet,
+    getAdminImage: options.gourmet?.getAdminImage ?? getGourmetImageForAdmin,
     getImage: options.gourmet?.getImage ?? getGourmetImage,
+    removeImage: options.gourmet?.removeImage ?? removeGourmetImage,
   };
   const principal = async (context: {
     req: { header: (name: string) => string | undefined };
@@ -449,6 +455,51 @@ export function registerGourmetRoutes(
     }
   });
 
+  app.get("/admin/gourmet/entries/:id/images/:imageId", async (context) => {
+    const user = await principal(context);
+    if (user?.kind !== "admin")
+      return context.json(
+        {
+          error: {
+            code: "FORBIDDEN",
+            message: "Administrator authentication is required",
+            requestId: context.get("requestId"),
+          },
+        },
+        403,
+      );
+    try {
+      const image = await gourmet.getAdminImage(
+        context.req.param("id"),
+        context.req.param("imageId"),
+      );
+      const headers = new Headers({
+        "Cache-Control": "private, no-store",
+        "Content-Type": image.contentType,
+      });
+      if (image.contentLength !== undefined)
+        headers.set("Content-Length", String(image.contentLength));
+      return new Response(image.body as unknown as BodyInit, {
+        headers,
+        status: 200,
+      });
+    } catch (error) {
+      return (
+        errorResponse(context, error) ??
+        context.json(
+          {
+            error: {
+              code: "INTERNAL",
+              message: "Unable to load gourmet image",
+              requestId: context.get("requestId"),
+            },
+          },
+          500,
+        )
+      );
+    }
+  });
+
   app.patch("/api/gourmet/entries/:id", async (context) => {
     const user = await principal(context);
     if (!user)
@@ -535,6 +586,36 @@ export function registerGourmetRoutes(
           user.subject,
         ),
       );
+    } catch (error) {
+      return errorResponse(context, error) ?? invalid(context);
+    }
+  });
+
+  app.delete("/admin/gourmet/entries/:id/images/:imageId", async (context) => {
+    const user = await principal(context);
+    if (user?.kind !== "admin")
+      return context.json(
+        {
+          error: {
+            code: "FORBIDDEN",
+            message: "Administrator authentication is required",
+            requestId: context.get("requestId"),
+          },
+        },
+        403,
+      );
+    try {
+      const entry = await gourmet.removeImage(
+        context.req.param("id"),
+        context.req.param("imageId"),
+        user.subject,
+      );
+      log(context, "gourmet.image_removed", {
+        entryId: entry.id,
+        imageId: context.req.param("imageId"),
+        requestId: context.get("requestId"),
+      });
+      return context.json(entry);
     } catch (error) {
       return errorResponse(context, error) ?? invalid(context);
     }
