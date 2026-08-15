@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.16.0](https://github.com/arlequins/beat/compare/beat-v1.15.0...beat-v1.16.0) (2026-08-15)
+
+
+### Features
+
+* **gourmet:** manage private images in admin ([ebc0809](https://github.com/arlequins/beat/commit/ebc0809451931f1bced3fdf5692c538e37d7e38d))
+
 ## [1.15.0](https://github.com/arlequins/beat/compare/beat-v1.14.0...beat-v1.15.0) (2026-08-15)
 
 
