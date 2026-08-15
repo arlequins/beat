@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.15.0](https://github.com/arlequins/beat/compare/beat-v1.14.0...beat-v1.15.0) (2026-08-15)
+
+
+### Features
+
+* **gourmet:** store images in private S3 ([0e035eb](https://github.com/arlequins/beat/commit/0e035eba7731602ed9e63cbea2f2ec102221a6bf))
+
 ## [1.14.0](https://github.com/arlequins/beat/compare/beat-v1.13.0...beat-v1.14.0) (2026-08-14)
 
 
