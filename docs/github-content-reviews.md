@@ -15,7 +15,7 @@ needed.
 
 1. A weekly-writing automation or contributor opens a pull request instead of
    pushing a new MDX file straight to `main`.
-2. A change under `apps/web/content/`, `apps/web/public/gourmet/`, or `docs/`
+2. A change under `apps/web/content/` or `docs/`
    triggers the code-owner review request for `@arlequins`.
 3. GitHub Mobile notifies the reviewer. Check the article's sources, date,
    judgment, and `reviewStatus`; use **Request changes** for revisions or

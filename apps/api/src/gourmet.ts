@@ -7,7 +7,6 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { createGitHubInstallationToken } from "./github-app";
 
 const IMAGE_TYPES = {
   "image/jpeg": ["jpg", "jpeg"],
@@ -28,9 +27,9 @@ export type GourmetImage = {
   id: string;
   mimeType: keyof typeof IMAGE_TYPES;
   originalFilename: string;
-  prUrl: string;
+  prUrl?: string;
   publicPath: string;
-  repositoryPath: string;
+  repositoryPath?: string;
   sortOrder: number;
   storageKey: string;
   width: number | null;
@@ -150,6 +149,10 @@ function entriesPrefix(value: GourmetConfig) {
 
 function revisionKey(id: string, revision: number, value: GourmetConfig) {
   return `${value.statePrefix}/gourmet/entries/${id}/revisions/${revision}.json`;
+}
+
+function imageKey(entryId: string, imageId: string, value: GourmetConfig) {
+  return `${value.statePrefix}/gourmet/images/${entryId}/${imageId}`;
 }
 
 function bodyToString(body: unknown) {
@@ -572,109 +575,6 @@ function magicMime(bytes: Uint8Array): keyof typeof IMAGE_TYPES | undefined {
   return undefined;
 }
 
-async function githubRequest<T>(
-  request: typeof fetch,
-  token: string,
-  url: string,
-  init?: RequestInit,
-) {
-  const response = await request(url, {
-    ...init,
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      "X-GitHub-Api-Version": "2026-03-10",
-      ...init?.headers,
-    },
-  });
-  const value =
-    response.status === 204 ? undefined : ((await response.json()) as T);
-  return { response, value };
-}
-
-async function publishImagePullRequest(
-  input: { branch: string; content: Buffer; path: string; title: string },
-  request: typeof fetch,
-) {
-  const repository = required(
-    serverEnv.GITHUB_CONTENT_REPOSITORY,
-    "GITHUB_CONTENT_REPOSITORY",
-  );
-  const installation = await createGitHubInstallationToken(request);
-  const baseUrl = `https://api.github.com/repos/${repository}`;
-  const main = await githubRequest<{ object?: { sha?: string } }>(
-    request,
-    installation.token,
-    `${baseUrl}/git/ref/heads/main`,
-  );
-  const mainSha = main.value?.object?.sha;
-  if (!main.response.ok || !mainSha)
-    throw new Error(`GitHub main ref lookup failed (${main.response.status})`);
-  const created = await githubRequest(
-    request,
-    installation.token,
-    `${baseUrl}/git/refs`,
-    {
-      body: JSON.stringify({ ref: `refs/heads/${input.branch}`, sha: mainSha }),
-      method: "POST",
-    },
-  );
-  if (!created.response.ok && created.response.status !== 422)
-    throw new Error(
-      `GitHub branch creation failed (${created.response.status})`,
-    );
-  const existing = await githubRequest<{ sha?: string }>(
-    request,
-    installation.token,
-    `${baseUrl}/contents/${input.path}?ref=${encodeURIComponent(input.branch)}`,
-  );
-  if (!existing.response.ok && existing.response.status !== 404)
-    throw new Error(`GitHub image lookup failed (${existing.response.status})`);
-  const updated = await githubRequest(
-    request,
-    installation.token,
-    `${baseUrl}/contents/${input.path}`,
-    {
-      body: JSON.stringify({
-        branch: input.branch,
-        content: input.content.toString("base64"),
-        message: `content: add gourmet image ${input.title}`,
-        ...(existing.value?.sha ? { sha: existing.value.sha } : {}),
-      }),
-      method: "PUT",
-    },
-  );
-  if (!updated.response.ok)
-    throw new Error(`GitHub image update failed (${updated.response.status})`);
-  const pull = await githubRequest<{ html_url?: string }>(
-    request,
-    installation.token,
-    `${baseUrl}/pulls`,
-    {
-      body: JSON.stringify({
-        base: "main",
-        body: "Adds an optimized, EXIF-free gourmet image. Review and merge to publish it on the static site.",
-        head: input.branch,
-        title: `content: add gourmet image for ${input.title}`,
-      }),
-      method: "POST",
-    },
-  );
-  if (pull.response.ok && pull.value?.html_url) return pull.value.html_url;
-  if (pull.response.status === 422) {
-    const owner = repository.split("/")[0];
-    const existingPull = await githubRequest<{ html_url?: string }[]>(
-      request,
-      installation.token,
-      `${baseUrl}/pulls?state=open&head=${encodeURIComponent(`${owner}:${input.branch}`)}&base=main`,
-    );
-    if (existingPull.response.ok && existingPull.value?.[0]?.html_url)
-      return existingPull.value[0].html_url;
-  }
-  throw new Error(`GitHub image pull request failed (${pull.response.status})`);
-}
-
 export async function attachGourmetImage(
   entryId: string,
   input: {
@@ -685,7 +585,6 @@ export async function attachGourmetImage(
   },
   subject: string,
   client = new S3Client({}),
-  request: typeof fetch = fetch,
 ) {
   const stored = await getGourmetEntry(entryId, client);
   if (!stored || stored.entry.status === "deleted")
@@ -719,21 +618,27 @@ export async function attachGourmetImage(
   const imageId = digest.slice(0, 16);
   const existing = stored.entry.images.find((image) => image.id === imageId);
   if (existing) return summary(stored.entry);
-  const extension = IMAGE_TYPES[input.contentType][0];
-  const repositoryPath = `apps/web/public/gourmet/${stored.entry.id}/${imageId}.${extension}`;
-  const branch = `content/gourmet-${stored.entry.slug}-${imageId}`.slice(
-    0,
-    240,
-  );
-  const prUrl = await publishImagePullRequest(
-    {
-      branch,
-      content,
-      path: repositoryPath,
-      title: stored.entry.restaurantName,
-    },
-    request,
-  );
+  const value = config();
+  const storageKey = imageKey(stored.entry.id, imageId, value);
+  try {
+    await client.send(
+      new PutObjectCommand({
+        Body: content,
+        Bucket: value.stateBucket,
+        CacheControl: "public, max-age=31536000, immutable",
+        ContentType: input.contentType,
+        IfNoneMatch: "*",
+        Key: storageKey,
+        Metadata: {
+          "original-filename": encodeURIComponent(input.originalFilename),
+        },
+      }),
+    );
+  } catch (error) {
+    // The content-hash key makes an existing object safe to reuse after a
+    // previous request lost a state-head race.
+    if (!isConflict(error)) throw error;
+  }
   const image: GourmetImage = {
     altText: input.altText,
     byteSize: content.length,
@@ -742,11 +647,9 @@ export async function attachGourmetImage(
     id: imageId,
     mimeType: input.contentType,
     originalFilename: input.originalFilename,
-    prUrl,
-    publicPath: `/gourmet/${stored.entry.id}/${imageId}.${extension}`,
-    repositoryPath,
+    publicPath: `/api/gourmet/images/${stored.entry.id}/${imageId}`,
     sortOrder: stored.entry.images.length,
-    storageKey: repositoryPath,
+    storageKey,
     width: null,
   };
   return updateGourmetEntry(
@@ -758,6 +661,47 @@ export async function attachGourmetImage(
     subject,
     client,
   );
+}
+
+export async function getGourmetImage(
+  entryId: string,
+  imageId: string,
+  client = new S3Client({}),
+) {
+  const value = config();
+  const stored = await getGourmetEntry(entryId, client);
+  if (stored?.entry.status !== "published")
+    throw new GourmetError("image_not_found", "Gourmet image was not found");
+  const image = stored.entry.images.find(
+    (candidate) => candidate.id === imageId,
+  );
+  if (!image || image.storageKey !== imageKey(entryId, imageId, value))
+    throw new GourmetError("image_not_found", "Gourmet image was not found");
+  try {
+    const response = await client.send(
+      new GetObjectCommand({
+        Bucket: value.stateBucket,
+        Key: image.storageKey,
+      }),
+    );
+    if (!response.Body)
+      throw new GourmetError(
+        "storage_unavailable",
+        "Gourmet image body is missing",
+      );
+    return {
+      body: await response.Body.transformToByteArray(),
+      contentLength: response.ContentLength,
+      contentType: image.mimeType,
+      etag: response.ETag,
+      lastModified: response.LastModified,
+    };
+  } catch (error) {
+    if (error instanceof GourmetError) throw error;
+    if (isMissing(error))
+      throw new GourmetError("image_not_found", "Gourmet image was not found");
+    throw error;
+  }
 }
 
 export async function gourmetContext(

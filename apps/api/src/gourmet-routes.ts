@@ -14,6 +14,7 @@ import {
   type GourmetInput,
   type GourmetListFilter,
   getGourmetEntry,
+  getGourmetImage,
   gourmetContext,
   listGourmetEntries,
   updateGourmetEntry,
@@ -26,6 +27,7 @@ type GourmetPort = {
   create: typeof createGourmetEntry;
   delete: typeof deleteGourmetEntry;
   get: typeof getGourmetEntry;
+  getImage?: typeof getGourmetImage;
   list: typeof listGourmetEntries;
   update: typeof updateGourmetEntry;
 };
@@ -206,7 +208,7 @@ export function registerGourmetRoutes(
     verifyAccessToken: (token: string) => Promise<Administrator>;
   },
 ) {
-  const gourmet: GourmetPort = options.gourmet ?? {
+  const gourmet: Required<GourmetPort> = {
     attachImage: attachGourmetImage,
     context: gourmetContext,
     create: createGourmetEntry,
@@ -214,6 +216,8 @@ export function registerGourmetRoutes(
     get: getGourmetEntry,
     list: listGourmetEntries,
     update: updateGourmetEntry,
+    ...options.gourmet,
+    getImage: options.gourmet?.getImage ?? getGourmetImage,
   };
   const principal = async (context: {
     req: { header: (name: string) => string | undefined };
@@ -396,6 +400,46 @@ export function registerGourmetRoutes(
             error: {
               code: "INTERNAL",
               message: "Unable to load gourmet entry",
+              requestId: context.get("requestId"),
+            },
+          },
+          500,
+        )
+      );
+    }
+  });
+
+  app.get("/api/gourmet/images/:entryId/:imageId", async (context) => {
+    try {
+      const image = await gourmet.getImage(
+        context.req.param("entryId"),
+        context.req.param("imageId"),
+      );
+      const requestEtag = context.req.header("if-none-match");
+      const headers = new Headers({
+        "Cache-Control": "public, max-age=3600, s-maxage=86400, immutable",
+        "Content-Type": image.contentType,
+        "Cross-Origin-Resource-Policy": "cross-origin",
+      });
+      if (image.contentLength !== undefined)
+        headers.set("Content-Length", String(image.contentLength));
+      if (image.etag) headers.set("ETag", image.etag);
+      if (image.lastModified)
+        headers.set("Last-Modified", image.lastModified.toUTCString());
+      if (image.etag && requestEtag === image.etag)
+        return new Response(null, { headers, status: 304 });
+      return new Response(image.body as unknown as BodyInit, {
+        headers,
+        status: 200,
+      });
+    } catch (error) {
+      return (
+        errorResponse(context, error) ??
+        context.json(
+          {
+            error: {
+              code: "INTERNAL",
+              message: "Unable to load gourmet image",
               requestId: context.get("requestId"),
             },
           },

@@ -271,6 +271,9 @@ describe("API app", () => {
     expect(response.headers.get("referrer-policy")).toBe("no-referrer");
     expect(response.headers.get("permissions-policy")).toContain("camera=()");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("cross-origin-resource-policy")).toBe(
+      "same-site",
+    );
   });
 
   it("accepts the separate Gourmet Action key and preserves idempotency headers", async () => {
@@ -984,6 +987,13 @@ describe("API app", () => {
             etag: '"v1"',
           };
         }),
+        getImage: vi.fn(async () => ({
+          body: new Uint8Array([0x52, 0x49, 0x46, 0x46]),
+          contentLength: 4,
+          contentType: "image/webp" as const,
+          etag: '"image-v1"',
+          lastModified: new Date("2026-08-05T00:00:00.000Z"),
+        })),
         list,
         update,
       } as never,
@@ -1037,6 +1047,22 @@ describe("API app", () => {
     expect(
       (await gourmetApp.request("/api/gourmet/entries/published-entry")).status,
     ).toBe(200);
+    const image = await gourmetApp.request(
+      "/api/gourmet/images/published-entry/image-1",
+    );
+    expect(image.status).toBe(200);
+    expect(image.headers.get("content-type")).toBe("image/webp");
+    expect(image.headers.get("cross-origin-resource-policy")).toBe(
+      "cross-origin",
+    );
+    expect(
+      (
+        await gourmetApp.request(
+          "/api/gourmet/images/published-entry/image-1",
+          { headers: { "If-None-Match": '"image-v1"' } },
+        )
+      ).status,
+    ).toBe(304);
     expect(
       (await gourmetApp.request("/api/gourmet/entries/draft-entry")).status,
     ).toBe(404);

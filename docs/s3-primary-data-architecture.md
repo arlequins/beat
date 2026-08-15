@@ -15,7 +15,7 @@ Use two application data buckets with different guarantees:
 | Bucket | Data | Mutation model |
 | --- | --- | --- |
 | `beat-ledger-production` | Authentication, authorization, review, and publication events | Append-only objects protected by Object Lock |
-| `beat-state-production` | Current administrator state, authorization codes, refresh sessions, rate-limit windows, drafts, and job state | Versioned objects updated with ETag conditional writes |
+| `beat-state-production` | Current administrator state, authorization codes, refresh sessions, rate-limit windows, drafts, job state, and optimized Gourmet images | Versioned objects updated with ETag conditional writes |
 
 The deployed static site is published through GitHub Pages. It is not an
 application database and has no access to the private S3 data buckets.
@@ -39,9 +39,9 @@ Beat identity API on Lambda
   `-- ledger bucket: immutable security events
 
 Beat administration API on Lambda
-  |-- state bucket: drafts and publishing jobs
+  |-- state bucket: drafts, publishing jobs, and private Gourmet images
   |-- ledger bucket: immutable review and publishing events
-  `-- GitHub App: branch, commit, pull request, and review status
+  `-- GitHub App: branch, commit, pull request, and review status for article content
 
 GitHub main branch
   `-- GitHub Actions -> static build -> GitHub Pages
@@ -50,9 +50,28 @@ Beat Agent
   `-- verifies Beat JWTs through issuer discovery and JWKS
 ```
 
-GitHub is authoritative for published content. S3 is authoritative for Beat
-identity, working drafts, workflow state, and the audit trail. A pull request is
-not published content, and an S3 draft is not public content.
+GitHub is authoritative for published MDX content. S3 is authoritative for Beat
+identity, Gourmet records and images, working drafts, workflow state, and the
+audit trail. A pull request is not published content, and an S3 draft is not
+public content.
+
+## Key layout
+
+The state bucket keeps Gourmet image bytes separate from the JSON revisions while
+remaining under the same least-privilege prefix granted to the API Lambda:
+
+```text
+v1/gourmet/entries/{entry-id}/head.json
+v1/gourmet/entries/{entry-id}/revisions/{revision}.json
+v1/gourmet/images/{entry-id}/{image-id}
+```
+
+Image objects are optimized WebP bytes written by the administrator API. They are
+not public S3 objects and are never copied into `apps/web/public/`. The API image
+route checks that the entry is `published`, verifies the exact expected key under
+the image prefix, and streams the bytes with cache validators. This keeps browser
+credentials and bucket URLs out of the static site while allowing immutable
+cacheable delivery.
 
 ## Bucket controls
 
@@ -111,6 +130,7 @@ v1/drafts/{postId}/head.json
 v1/publication-jobs/{idempotencyKey}.json
 v1/gourmet/entries/{entryId}/head.json
 v1/gourmet/entries/{entryId}/revisions/{revision}.json
+v1/gourmet/images/{entryId}/{imageId}
 
 # Immutable ledger bucket
 v1/events/auth/{yyyy}/{mm}/{dd}/{timestamp}-{eventId}.json

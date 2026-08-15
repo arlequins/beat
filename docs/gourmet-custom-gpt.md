@@ -60,8 +60,9 @@ Therefore the supported production flow is:
 2. The returned detail link opens Beat Gourmet.
 3. An administrator logs in at `/admin/`, selects the record, and attaches the
    phone image.
-4. The browser removes metadata and optimizes the image; the GitHub App opens a
-   pull request for mobile review and merge.
+4. The browser removes metadata and optimizes the image; the API stores the
+   WebP in the private S3 state bucket.
 
 This boundary avoids depending on an undocumented attachment representation and
-keeps repository writes behind Beat administrator authentication.
+keeps image writes behind Beat administrator authentication and the private
+state-bucket boundary.

@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-type StoredObject = { body: string; etag: string };
+type StoredObject = { body: string | Uint8Array; etag: string };
 
 function s3Harness() {
   const objects = new Map<string, StoredObject>();
@@ -15,7 +15,7 @@ function s3Harness() {
     const input = (
       command as {
         input: {
-          Body?: string;
+          Body?: string | Uint8Array;
           Bucket: string;
           IfMatch?: string;
           IfNoneMatch?: string;
@@ -42,7 +42,16 @@ function s3Harness() {
           name: "NoSuchKey",
         });
       return {
-        Body: { transformToString: async () => stored.body },
+        Body: {
+          transformToByteArray: async () =>
+            typeof stored.body === "string"
+              ? new TextEncoder().encode(stored.body)
+              : stored.body,
+          transformToString: async () =>
+            typeof stored.body === "string"
+              ? stored.body
+              : new TextDecoder().decode(stored.body),
+        },
         ETag: stored.etag,
       };
     }
@@ -57,7 +66,13 @@ function s3Harness() {
           name: "PreconditionFailed",
         });
       version += 1;
-      objects.set(key, { body: String(input.Body), etag: `"v${version}"` });
+      objects.set(key, {
+        body:
+          input.Body instanceof Uint8Array
+            ? new Uint8Array(input.Body)
+            : String(input.Body),
+        etag: `"v${version}"`,
+      });
       return {};
     }
     throw new Error("unexpected command");
@@ -70,14 +85,7 @@ async function loadGourmet() {
   vi.stubEnv("BEAT_AUTH_LEDGER_BUCKET", "beat-ledger");
   vi.stubEnv("BEAT_AUTH_STATE_PREFIX", "v1");
   vi.stubEnv("BEAT_AUTH_LEDGER_RETENTION_DAYS", "365");
-  vi.stubEnv("GITHUB_CONTENT_REPOSITORY", "arlequins/beat");
   vi.resetModules();
-  vi.doMock("./github-app", () => ({
-    createGitHubInstallationToken: vi.fn(async () => ({
-      expires_at: "2026-08-05T01:00:00.000Z",
-      token: "installation-token",
-    })),
-  }));
   return import("./gourmet");
 }
 
@@ -105,7 +113,6 @@ const input = {
 };
 
 afterEach(() => {
-  vi.doUnmock("./github-app");
   vi.unstubAllEnvs();
 });
 
@@ -227,7 +234,7 @@ describe("Gourmet S3 records", () => {
     expect(empty).toMatchObject({ averageRating: null, recentEntries: [] });
   });
 
-  it("validates an optimized image and opens a repository pull request", async () => {
+  it("validates an optimized image and stores it in S3", async () => {
     const harness = s3Harness();
     const gourmet = await loadGourmet();
     const created = await gourmet.createGourmetEntry(
@@ -235,29 +242,6 @@ describe("Gourmet S3 records", () => {
       { subject: "admin-1" },
       harness.client,
     );
-    const request = vi.fn(
-      async (requestInput: string | URL, init?: RequestInit) => {
-        const url = String(requestInput);
-        if (url.endsWith("/git/ref/heads/main"))
-          return Response.json({ object: { sha: "main-sha" } });
-        if (url.endsWith("/git/refs"))
-          return Response.json({}, { status: 201 });
-        if (url.includes("/contents/") && init?.method !== "PUT")
-          return Response.json({}, { status: 404 });
-        if (url.includes("/contents/") && init?.method === "PUT") {
-          expect(JSON.parse(String(init.body))).toMatchObject({
-            branch: expect.stringContaining("content/gourmet-"),
-          });
-          return Response.json({}, { status: 201 });
-        }
-        if (url.endsWith("/pulls"))
-          return Response.json(
-            { html_url: "https://github.com/arlequins/beat/pull/40" },
-            { status: 201 },
-          );
-        throw new Error(`unexpected GitHub request ${url}`);
-      },
-    ) as typeof fetch;
     const webp = Buffer.concat([
       Buffer.from("RIFF"),
       Buffer.alloc(4),
@@ -274,13 +258,24 @@ describe("Gourmet S3 records", () => {
       },
       "admin-1",
       harness.client,
-      request,
     );
     expect(updated.images[0]).toMatchObject({
-      prUrl: "https://github.com/arlequins/beat/pull/40",
-      publicPath: expect.stringMatching(/^\/gourmet\//),
-      repositoryPath: expect.stringMatching(/^apps\/web\/public\/gourmet\//),
+      publicPath: expect.stringMatching(/^\/api\/gourmet\/images\//),
+      storageKey: expect.stringMatching(/^v1\/gourmet\/images\//),
     });
+    expect(updated.images[0]?.prUrl).toBeUndefined();
+    expect(
+      [...harness.objects.keys()].some((key) =>
+        key.includes("/v1/gourmet/images/"),
+      ),
+    ).toBe(true);
+    const image = await gourmet.getGourmetImage(
+      created.id,
+      updated.images[0]?.id ?? "",
+      harness.client,
+    );
+    expect([...image.body]).toEqual([...webp]);
+    expect(image.contentType).toBe("image/webp");
     const repeated = await gourmet.attachGourmetImage(
       created.id,
       {
@@ -291,7 +286,6 @@ describe("Gourmet S3 records", () => {
       },
       "admin-1",
       harness.client,
-      request,
     );
     expect(repeated.images).toHaveLength(1);
     await expect(
@@ -305,7 +299,6 @@ describe("Gourmet S3 records", () => {
         },
         "admin-1",
         harness.client,
-        request,
       ),
     ).rejects.toMatchObject({ code: "image_invalid" });
     await expect(
@@ -321,7 +314,6 @@ describe("Gourmet S3 records", () => {
         },
         "admin-1",
         harness.client,
-        request,
       ),
     ).rejects.toMatchObject({ code: "image_invalid" });
     await expect(
@@ -337,8 +329,20 @@ describe("Gourmet S3 records", () => {
         },
         "admin-1",
         harness.client,
-        request,
       ),
     ).rejects.toMatchObject({ code: "image_invalid" });
+    await gourmet.updateGourmetEntry(
+      created.id,
+      { expectedRevision: 2, status: "draft" },
+      "admin-1",
+      harness.client,
+    );
+    await expect(
+      gourmet.getGourmetImage(
+        created.id,
+        updated.images[0]?.id ?? "",
+        harness.client,
+      ),
+    ).rejects.toMatchObject({ code: "image_not_found" });
   });
 });

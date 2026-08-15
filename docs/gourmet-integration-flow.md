@@ -1,17 +1,17 @@
 # Beat Gourmet 연계 흐름
 
 이 문서는 모바일 ChatGPT에서 식사 내용을 정리한 뒤 Beat에 저장하고,
-관리자가 사진을 검토해 GitHub PR로 게시하며, 최종적으로 포트폴리오의
-`gourmet` 화면에서 공개하는 전체 연결을 설명한다. 운영 중 문제가 생기면
+관리자가 사진을 S3에 보관하며, 최종적으로 포트폴리오의 `gourmet` 화면에서
+공개하는 전체 연결을 설명한다. 운영 중 문제가 생기면
 어느 경계에서 실패했는지 이 문서를 기준으로 확인한다.
 
 구현의 핵심 원칙은 다음과 같다.
 
 - 구조화된 식사 기록의 원본은 S3다.
-- 사진 원본은 ChatGPT Action이나 S3에 보내지 않는다.
-- 브라우저에서 최적화한 사진만 GitHub PR로 검토하고 저장한다.
-- 공개 화면은 S3의 `published` 기록과 병합된 저장소 이미지만 보여준다.
-- Custom GPT, Beat 관리자, GitHub App은 서로 다른 인증 수단을 사용한다.
+- ChatGPT Action은 확인된 텍스트만 저장하고 사진 바이트는 보내지 않는다.
+- 관리자가 브라우저에서 최적화한 사진은 private S3 state bucket에 저장한다.
+- 공개 화면은 S3의 `published` 기록과 API가 전달하는 S3 이미지만 보여준다.
+- Custom GPT와 Beat 관리자는 서로 다른 인증 수단을 사용한다.
 
 ## 한눈에 보는 연결 관계
 
@@ -23,8 +23,6 @@ flowchart LR
   state["S3 state bucket<br/>현재값과 리비전"]
   ledger["S3 ledger bucket<br/>불변 감사 이벤트"]
   admin["Beat 관리자 화면<br/>/admin/"]
-  github["GitHub App<br/>이미지 브랜치와 PR"]
-  review["GitHub Mobile<br/>Arlequin 검토"]
   web["Beat 정적 사이트<br/>/gourmet/"]
 
   user -->|"대화와 사진 해석"| gpt
@@ -32,13 +30,11 @@ flowchart LR
   api -->|"조건부 쓰기"| state
   api -->|"append-only 이벤트"| ledger
   admin -->|"Beat access JWT<br/>기록 관리와 최적화 사진"| api
-  api -->|"installation token<br/>WebP 커밋"| github
-  github -->|"CODEOWNERS PR"| review
-  review -->|"승인과 main 병합"| web
   web -->|"공개 API 조회<br/>published만"| api
+  api -->|"private S3 image stream"| web
 ```
 
-사진을 ChatGPT 대화에 첨부하는 것과 Beat 저장소에 게시하는 것은 별개의
+사진을 ChatGPT 대화에 첨부하는 것과 Beat의 S3 기록에 저장하는 것은 별개의
 단계다. ChatGPT는 사진을 보고 메뉴를 이해하는 데 사용할 수 있지만, 현재
 Action 계약에는 원본 파일 바이트를 Beat API로 전달하는 필드가 없다. 따라서
 Action은 확인된 텍스트만 저장하고, 사진은 관리자가 `/admin/`에서 다시 선택한다.
@@ -47,10 +43,10 @@ Action은 확인된 텍스트만 저장하고, 사진은 관리자가 `/admin/`�
 
 | 주체 | Bearer 값 | 저장 위치 | 허용 작업 | 금지 작업 |
 | --- | --- | --- | --- | --- |
-| 일반 방문자 | 없음 | 없음 | `published` 목록과 상세 조회 | 초안 조회, 생성, 수정, 보관, 사진 PR |
-| Custom GPT Action | `BEAT_GOURMET_ACTION_API_KEY` | OpenAI GPT Action 인증 설정과 API 런타임 시크릿 | 기록 조회·생성·수정, 최근 맥락 조회 | 보관, 사진 PR, 관리자 로그인 |
-| Beat 관리자 | Beat ES256 access JWT | 브라우저 `localStorage('beat-admin-session')` | 전체 상태 조회·생성·수정·보관, 사진 PR | GitHub App 비밀키 직접 사용 |
-| Beat API | GitHub App installation token | 요청마다 서버에서 단기 발급 | 이미지 브랜치·커밋·PR 생성 | 토큰을 브라우저나 Action에 노출 |
+| 일반 방문자 | 없음 | 없음 | `published` 목록·상세·이미지 조회 | 초안 조회, 생성, 수정, 보관, 이미지 업로드 |
+| Custom GPT Action | `BEAT_GOURMET_ACTION_API_KEY` | OpenAI GPT Action 인증 설정과 API 런타임 시크릿 | 기록 조회·생성·수정, 최근 맥락 조회 | 보관, 이미지 업로드, 관리자 로그인 |
+| Beat 관리자 | Beat ES256 access JWT | 브라우저 `localStorage('beat-admin-session')` | 전체 상태 조회·생성·수정·보관, 이미지 업로드 | S3 자격 증명 직접 사용 |
+| Beat API | Lambda 실행 역할 | AWS 런타임 | S3 기록·이미지 읽기/쓰기 | 자격 증명을 브라우저나 Action에 노출 |
 
 관리자는 포트폴리오의 `/admin/`에서 Google SSO로 로그인한다. Beat의 OIDC
 Authorization Code + PKCE 흐름이 Google 계정을 확인한 뒤 access token과
@@ -61,7 +57,7 @@ refresh token을 발급한다. 브라우저는 access token 만료가 60초 이�
 하위 호환을 위해 유지하지만 포트폴리오 UI에서는 사용하지 않는다.
 
 Action API key는 관리자 JWT가 아니다. API가 고정 시간 비교로 두 자격 증명을
-구분하므로 Action key를 알아도 기록을 보관하거나 이미지 PR을 만들 수 없다.
+구분하므로 Action key를 알아도 기록을 보관하거나 이미지를 업로드할 수 없다.
 
 ## 1. ChatGPT에서 텍스트 기록 저장
 
@@ -171,7 +167,7 @@ API는 `head.json`의 ETag를 `If-Match`에 넣어 조건부 갱신하고
 보관은 `DELETE /api/gourmet/entries/{id-or-slug}`이며 관리자 access JWT만
 허용된다. 실제 S3 객체를 삭제하지 않고 상태를 `deleted`로 바꾸는 soft delete다.
 
-## 3. 관리자가 사진 PR 생성
+## 3. 관리자가 사진을 S3에 저장
 
 ```mermaid
 sequenceDiagram
@@ -179,25 +175,20 @@ sequenceDiagram
   participant Browser as /admin/ 브라우저
   participant API as Beat API
   participant S3 as S3 기록
-  participant GH as GitHub App/API
-  actor Reviewer as GitHub Mobile
 
   Admin->>Browser: 관리자 로그인 후 기록과 사진 선택
   Browser->>Browser: 방향 보정, 1600px 이하, WebP 압축, EXIF 제거
   Browser->>API: POST /admin/gourmet/entries/{id}/images + access JWT
   API->>API: MIME, magic bytes, 확장자, 768 KiB 검증
-  API->>GH: installation token 발급 및 main SHA 조회
-  API->>GH: content/gourmet-* 브랜치와 WebP 커밋
-  API->>GH: 이미지 게시 PR 생성
-  API->>S3: publicPath와 prUrl을 새 리비전에 기록
+  API->>S3: v1/gourmet/images/{entry-id}/{image-id}에 WebP 저장
+  API->>S3: publicPath와 storageKey를 새 리비전에 기록
   API-->>Browser: 갱신된 엔트리 반환
-  Reviewer->>GH: CODEOWNERS 검토 후 main 병합
 ```
 
 브라우저 처리 순서는 다음과 같다.
 
 1. 관리자가 `/admin/`에 로그인하고 Gourmet 기록을 선택한다.
-2. `사진 PR 만들기`에서 JPEG, PNG 또는 WebP를 선택한다.
+2. `S3에 사진 저장`에서 JPEG, PNG 또는 WebP를 선택한다.
 3. `createImageBitmap(..., { imageOrientation: "from-image" })`으로 휴대폰 방향을
    반영한다.
 4. 긴 변을 최대 1,600px로 줄이고 WebP 품질과 해상도를 단계적으로 낮춰
@@ -220,22 +211,18 @@ Content-Type: application/json
 ```
 
 API는 base64를 디코딩한 뒤 선언된 MIME, 실제 magic bytes, 확장자와 768KiB
-상한을 다시 검증한다. 통과하면 GitHub App installation token을 서버에서 발급해
-다음 작업을 수행한다.
+상한을 다시 검증한다. 통과하면 서버의 Lambda 역할로 private state bucket에
+다음 키로 저장한다.
 
-- 브랜치: `content/gourmet-<slug>-<image-id>`
-- 저장 경로: `apps/web/public/gourmet/<entry-id>/<image-id>.webp`
-- PR 제목: `content: add gourmet image for <restaurant-name>`
-- PR 본문: 최적화 및 EXIF 제거 사실과 병합 후 게시된다는 설명
+- 저장 경로: `v1/gourmet/images/<entry-id>/<image-id>`
+- 객체 메타데이터: 원본 파일명(퍼센트 인코딩)
+- 캐시: `public, max-age=31536000, immutable`
 
 이미지 ID는 엔트리 ID와 이미지 바이트의 SHA-256 digest에서 결정된다. 같은 사진을
-다시 보내면 같은 이미지로 판단해 중복 PR을 만들지 않는다. PR URL과 정적
-`publicPath`는 S3 엔트리의 새 리비전에 즉시 기록된다.
-
-PR이 병합되기 전에는 S3 엔트리가 이미지 경로를 가리키더라도 배포된 정적 파일이
-아직 없다. 공개 화면은 이미지 로드 실패를 `사진 검토 중` 자리표시자로 처리한다.
-`apps/web/public/gourmet/`에는 CODEOWNERS가 지정되어 있으므로 Arlequin이 GitHub
-Mobile에서 사진을 확인하고 승인·병합하는 것이 게시 경계다.
+다시 보내면 같은 이미지로 판단해 같은 객체를 가리키는 idempotent 기록이 된다.
+이미지 공개 경로는 `/api/gourmet/images/{entry-id}/{image-id}`이며, API는
+`published` 엔트리의 이미지와 안전한 S3 key만 스트리밍한다. 저장 직후에도
+비공개·초안 엔트리의 이미지는 공개되지 않는다.
 
 ## 4. 정적 사이트에서 공개
 
@@ -249,13 +236,18 @@ GET /api/gourmet/entries/{slug}
 ```
 
 인증 없는 요청은 API가 강제로 `published`만 반환한다. 상세 주소는 새 S3 레코드를
-Next.js 빌드가 미리 알 수 없기 때문에 `/gourmet/?entry={slug}`를 사용한다. 이미지
-PR이 main에 병합되고 정상 배포되면 `publicPath`의 파일이 정적 사이트와 같은
-origin에서 제공된다.
+Next.js 빌드가 미리 알 수 없기 때문에 `/gourmet/?entry={slug}`를 사용한다. 공개
+이미지는 API의 공개 스트림 경로에서 제공되며, 브라우저에는 S3 자격 증명을 전달하지
+않는다.
 
-텍스트 수정은 S3에 저장되는 즉시 공개 API에 반영된다. 반면 사진 추가는 코드
-리뷰와 main 병합 및 정적 사이트 배포가 끝나야 보인다. 두 공개 시점이 다르다는 점이
-의도된 설계다.
+```text
+GET /api/gourmet/images/{entry-id}/{image-id}
+If-None-Match: "<etag>"
+```
+
+텍스트 수정과 사진 추가는 모두 S3에 저장되는 즉시 공개 API에 반영된다. 단, 공개
+시점은 엔트리가 `published`로 확정된 뒤이며, 이미지 자체는 private bucket에 남고
+API가 권한 경계를 대신 집행한다.
 
 ## 프로덕션 설정 순서
 
@@ -274,7 +266,7 @@ origin에서 제공된다.
    - `GITHUB_APP_INSTALLATION_ID`
    - `GITHUB_APP_PRIVATE_KEY`
    - `GITHUB_CONTENT_REPOSITORY`
-3. API를 먼저 배포하고 HTTPS origin, S3 접근 권한, GitHub App 설치 권한을
+3. API를 먼저 배포하고 HTTPS origin과 private state bucket 접근 권한을
    확인한다.
 4. `NEXT_PUBLIC_API_URL`과 `NEXT_PUBLIC_SITE_URL`을 프로덕션 origin으로 고정하고
    `API_CORS_ORIGINS`에는 정확한 포트폴리오 origin만 허용한다.
@@ -286,7 +278,8 @@ origin에서 제공된다.
 7. GPT Action 인증을 API Key, Bearer로 설정하고 서버와 동일한
    `BEAT_GOURMET_ACTION_API_KEY`를 입력한다.
 8. Action Preview에서 context, create, idempotent replay, get, update를 확인한다.
-9. 관리자 화면에서 사진 PR을 하나 만들고 GitHub Mobile에서 검토·병합한다.
+9. 관리자 화면에서 사진을 S3에 저장하고, 공개로 확정한 엔트리에서 이미지가
+   API 경로로 로드되는지 확인한다.
 10. 배포 완료 후 한국어·영어·일본어 Gourmet 목록, 상세 링크와 사진을 모바일에서
     확인한다.
 
@@ -302,9 +295,9 @@ origin에서 제공된다.
 | 생성이 `409` | idempotency | 같은 key에 다른 본문을 쓰지 말고, 확정 메시지마다 안정적인 새 key 사용 |
 | 수정이 `409` | revision/ETag | 최신 엔트리를 다시 읽고 사용자에게 수정안을 다시 확인 |
 | 요청이 `400` | 입력 스키마 또는 이미지 검증 | 평점 단위, 필수 문자열, 배열 수, MIME·확장자·크기를 확인 |
-| API가 `500` | S3 또는 GitHub App 설정 | request ID로 로그를 찾고 bucket 환경값, IAM, GitHub App secret과 설치 권한 확인 |
+| API가 `500` | S3 설정 또는 IAM | request ID로 로그를 찾고 bucket 환경값과 Lambda 역할의 state prefix 권한 확인 |
 | 공개 목록에 기록이 없음 | 공개 상태 | 엔트리가 `published`인지 관리자 화면에서 확인 |
-| `사진 검토 중`이 계속 표시 | GitHub PR/정적 배포 | 엔트리의 `prUrl`을 열어 PR 병합 및 후속 배포 성공 확인 |
+| 이미지가 표시되지 않음 | 공개 상태 또는 이미지 key | 엔트리가 `published`인지, `storageKey`가 `v1/gourmet/images/` 아래인지, API 응답이 200인지 확인 |
 | 관리자 로그인이 반복 만료 | JWT refresh | 로컬 session의 refresh 만료, `/auth/token`, issuer/audience 설정 확인 |
 
 API key, JWT, refresh token, GitHub App private key, installation token은 로그와
@@ -314,11 +307,10 @@ PR에 포함하면 안 된다. 장애 공유에는 응답의 `requestId`, HTTP �
 ## 구현 파일 지도
 
 - API 라우트와 권한 분리: [`apps/api/src/gourmet-routes.ts`](../apps/api/src/gourmet-routes.ts)
-- S3 리비전·감사 이벤트와 이미지 PR: [`apps/api/src/gourmet.ts`](../apps/api/src/gourmet.ts)
+- S3 리비전·감사 이벤트와 이미지 저장/스트림: [`apps/api/src/gourmet.ts`](../apps/api/src/gourmet.ts)
 - GitHub App token 발급: [`apps/api/src/github-app.ts`](../apps/api/src/github-app.ts)
 - Custom GPT OpenAPI 계약: [`gourmet-action.openapi.yaml`](gourmet-action.openapi.yaml)
 - 관리자 access/refresh token 처리: [`apps/web/src/lib/beat-admin-session.ts`](../apps/web/src/lib/beat-admin-session.ts)
 - 관리자 기록·사진 화면: [`apps/web/src/components/admin/gourmet-manager.tsx`](../apps/web/src/components/admin/gourmet-manager.tsx)
 - 공개 목록·상세·사진 fallback: [`apps/web/src/components/gourmet/gourmet-browser.tsx`](../apps/web/src/components/gourmet/gourmet-browser.tsx)
-- 이미지 CODEOWNERS: [`.github/CODEOWNERS`](../.github/CODEOWNERS)
 - 프로덕션 시크릿 로딩: [`.github/workflows/deploy-reusable.yml`](../.github/workflows/deploy-reusable.yml)
