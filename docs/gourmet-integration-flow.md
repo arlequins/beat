@@ -224,6 +224,23 @@ API는 base64를 디코딩한 뒤 선언된 MIME, 실제 magic bytes, 확장자�
 `published` 엔트리의 이미지와 안전한 S3 key만 스트리밍한다. 저장 직후에도
 비공개·초안 엔트리의 이미지는 공개되지 않는다.
 
+관리자가 잘못 올린 사진을 기록에서 분리하려면 다음 요청을 보낸다.
+
+```http
+GET /admin/gourmet/entries/{id-or-slug}/images/{image-id} HTTP/1.1
+Authorization: Bearer <BEAT_ADMIN_ACCESS_JWT>
+
+DELETE /admin/gourmet/entries/{id-or-slug}/images/{image-id} HTTP/1.1
+Authorization: Bearer <BEAT_ADMIN_ACCESS_JWT>
+```
+
+첫 번째 요청은 `private, no-store` 응답으로 초안 사진을 관리자 브라우저에서만
+미리보게 한다. 두 번째 작업은 조건부 리비전 갱신으로 이미지 메타데이터만 제거한다. API 역할에는
+`s3:DeleteObject`가 없으므로 private S3 객체와 버전은 복구를 위해 보존된다.
+메타데이터가 사라진 뒤에는 엔트리가 공개 상태여도 해당 이미지 스트림이
+`404`를 반환한다. 초안의 이미지는 공개 URL 대신 위의 인증된 관리자 스트림으로만
+미리 볼 수 있다.
+
 ## 4. 정적 사이트에서 공개
 
 `/gourmet/`, `/en/gourmet/`, `/ja/gourmet/`는 빌드 시점에 모든 식사 데이터를
@@ -298,6 +315,7 @@ API가 권한 경계를 대신 집행한다.
 | API가 `500` | S3 설정 또는 IAM | request ID로 로그를 찾고 bucket 환경값과 Lambda 역할의 state prefix 권한 확인 |
 | 공개 목록에 기록이 없음 | 공개 상태 | 엔트리가 `published`인지 관리자 화면에서 확인 |
 | 이미지가 표시되지 않음 | 공개 상태 또는 이미지 key | 엔트리가 `published`인지, `storageKey`가 `v1/gourmet/images/` 아래인지, API 응답이 200인지 확인 |
+| 사진을 분리했는데 S3 객체가 남아 있음 | 의도된 복구 경계 | 기록 리비전에서 메타데이터가 제거됐는지와 공개 이미지가 `404`인지 확인한다. 객체 삭제는 운영 역할에 허용하지 않는다 |
 | 관리자 로그인이 반복 만료 | JWT refresh | 로컬 session의 refresh 만료, `/auth/token`, issuer/audience 설정 확인 |
 
 API key, JWT, refresh token, GitHub App private key, installation token은 로그와

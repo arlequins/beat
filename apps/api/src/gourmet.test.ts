@@ -344,5 +344,32 @@ describe("Gourmet S3 records", () => {
         harness.client,
       ),
     ).rejects.toMatchObject({ code: "image_not_found" });
+    const adminImage = await gourmet.getGourmetImageForAdmin(
+      created.id,
+      updated.images[0]?.id ?? "",
+      harness.client,
+    );
+    expect([...adminImage.body]).toEqual([...webp]);
+
+    const removed = await gourmet.removeGourmetImage(
+      created.id,
+      updated.images[0]?.id ?? "",
+      "admin-1",
+      harness.client,
+    );
+    expect(removed.images).toHaveLength(0);
+    expect(
+      [...harness.objects.keys()].some((key) =>
+        key.includes("/v1/gourmet/images/"),
+      ),
+    ).toBe(true);
+    await expect(
+      gourmet.removeGourmetImage(
+        created.id,
+        updated.images[0]?.id ?? "",
+        "admin-1",
+        harness.client,
+      ),
+    ).rejects.toMatchObject({ code: "image_not_found" });
   });
 });

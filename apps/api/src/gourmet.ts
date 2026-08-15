@@ -663,14 +663,41 @@ export async function attachGourmetImage(
   );
 }
 
-export async function getGourmetImage(
+export async function removeGourmetImage(
+  entryId: string,
+  imageId: string,
+  subject: string,
+  client = new S3Client({}),
+) {
+  const stored = await getGourmetEntry(entryId, client);
+  if (!stored || stored.entry.status === "deleted")
+    throw new GourmetError("not_found", "Gourmet entry was not found");
+  if (!stored.entry.images.some((image) => image.id === imageId))
+    throw new GourmetError("image_not_found", "Gourmet image was not found");
+  return updateGourmetEntry(
+    entryId,
+    {
+      expectedRevision: stored.entry.revision,
+      images: stored.entry.images.filter((image) => image.id !== imageId),
+    },
+    subject,
+    client,
+  );
+}
+
+async function readGourmetImage(
   entryId: string,
   imageId: string,
   client = new S3Client({}),
+  requirePublished = true,
 ) {
   const value = config();
   const stored = await getGourmetEntry(entryId, client);
-  if (stored?.entry.status !== "published")
+  if (
+    !stored ||
+    stored.entry.status === "deleted" ||
+    (requirePublished && stored.entry.status !== "published")
+  )
     throw new GourmetError("image_not_found", "Gourmet image was not found");
   const image = stored.entry.images.find(
     (candidate) => candidate.id === imageId,
@@ -702,6 +729,22 @@ export async function getGourmetImage(
       throw new GourmetError("image_not_found", "Gourmet image was not found");
     throw error;
   }
+}
+
+export function getGourmetImage(
+  entryId: string,
+  imageId: string,
+  client = new S3Client({}),
+) {
+  return readGourmetImage(entryId, imageId, client, true);
+}
+
+export function getGourmetImageForAdmin(
+  entryId: string,
+  imageId: string,
+  client = new S3Client({}),
+) {
+  return readGourmetImage(entryId, imageId, client, false);
 }
 
 export async function gourmetContext(

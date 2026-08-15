@@ -8,6 +8,7 @@ import {
   Trash2,
   Utensils,
 } from "lucide-react";
+import Image from "next/image";
 import {
   type ChangeEvent,
   useCallback,
@@ -17,7 +18,12 @@ import {
 } from "react";
 
 import { authorizedBeatAdminRequest } from "~/lib/beat-admin-session";
-import type { GourmetEntry, GourmetList } from "~/lib/gourmet";
+import {
+  type GourmetEntry,
+  type GourmetImage,
+  type GourmetList,
+  publicGourmetImage,
+} from "~/lib/gourmet";
 
 type FormState = {
   area: string;
@@ -164,6 +170,40 @@ export function GourmetManager() {
     () => entries.find((entry) => entry.id === selectedId),
     [entries, selectedId],
   );
+  const [adminImageUrls, setAdminImageUrls] = useState<Record<string, string>>(
+    {},
+  );
+
+  useEffect(() => {
+    let disposed = false;
+    const objectUrls: string[] = [];
+    setAdminImageUrls({});
+    if (!selected || selected.status === "published") return () => undefined;
+
+    void Promise.all(
+      selected.images.map(async (image) => {
+        try {
+          const response = await authorizedBeatAdminRequest(
+            `/admin/gourmet/entries/${selected.id}/images/${image.id}`,
+          );
+          if (!response.ok) return;
+          const objectUrl = URL.createObjectURL(await response.blob());
+          objectUrls.push(objectUrl);
+          if (!disposed)
+            setAdminImageUrls((current) => ({
+              ...current,
+              [image.id]: objectUrl,
+            }));
+        } catch {
+          // Keep the file metadata visible when a preview cannot be fetched.
+        }
+      }),
+    );
+    return () => {
+      disposed = true;
+      for (const objectUrl of objectUrls) URL.revokeObjectURL(objectUrl);
+    };
+  }, [selected]);
 
   const loadEntries = useCallback(async () => {
     setBusy(true);
@@ -298,6 +338,35 @@ export function GourmetManager() {
     }
   }
 
+  async function removeImage(image: GourmetImage) {
+    if (!selected || !window.confirm("이 사진을 기록에서 분리할까요?")) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await authorizedBeatAdminRequest(
+        `/admin/gourmet/entries/${selected.id}/images/${image.id}`,
+        { method: "DELETE" },
+      );
+      if (response.status === 409)
+        throw new Error(
+          "다른 변경이 먼저 저장되었습니다. 목록을 새로고침해 주세요.",
+        );
+      if (!response.ok) throw new Error("사진을 기록에서 분리하지 못했습니다.");
+      const updated = (await response.json()) as GourmetEntry;
+      setEntries((current) =>
+        current.map((entry) => (entry.id === updated.id ? updated : entry)),
+      );
+      setForm(formFor(updated));
+      setMessage(
+        "사진을 기록에서 분리했습니다. 원본 S3 객체는 복구를 위해 보존됩니다.",
+      );
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "사진 처리 실패");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
 
@@ -312,7 +381,7 @@ export function GourmetManager() {
             식사 기록 관리
           </h2>
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-            기록은 S3, 최적화된 사진은 GitHub PR에서 검토합니다.
+            기록과 최적화된 사진은 모두 private S3에 저장합니다.
           </p>
         </div>
         <div className="flex gap-2">
@@ -487,28 +556,69 @@ export function GourmetManager() {
               </>
             ) : null}
           </div>
-          {selected?.images.map((image) =>
-            image.prUrl ? (
-              <a
-                className="inline-flex items-center gap-2 text-sm font-bold text-[var(--accent-foreground)] underline"
-                href={image.prUrl}
-                key={image.id}
-                rel="noopener noreferrer"
-                target="_blank"
+          {selected?.images.map((image) => (
+            <div
+              className="grid gap-3 border border-[var(--line)] bg-[var(--background)] p-3 sm:grid-cols-[8rem_1fr_auto] sm:items-center"
+              key={image.id}
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-[var(--surface)]">
+                {(
+                  selected.status === "published"
+                    ? publicGourmetImage(image)
+                    : adminImageUrls[image.id]
+                ) ? (
+                  <Image
+                    alt={image.altText}
+                    className="object-cover"
+                    fill
+                    loading="lazy"
+                    sizes="128px"
+                    src={
+                      selected.status === "published"
+                        ? publicGourmetImage(image)
+                        : adminImageUrls[image.id]!
+                    }
+                  />
+                ) : (
+                  <span className="absolute inset-0 grid place-items-center p-3 text-center text-xs font-bold text-[var(--muted-foreground)]">
+                    미리보기를 불러오는 중
+                  </span>
+                )}
+              </div>
+              <div className="grid gap-1 text-sm">
+                <p className="font-bold">{image.altText}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  {image.mimeType ?? "image/webp"} ·{" "}
+                  {image.byteSize.toLocaleString()} bytes
+                </p>
+                {image.prUrl ? (
+                  <a
+                    className="inline-flex items-center gap-2 text-xs font-bold text-[var(--accent-foreground)] underline"
+                    href={image.prUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <Utensils className="size-3.5" />
+                    기존 GitHub 검토 링크 <ExternalLink className="size-3" />
+                  </a>
+                ) : (
+                  <span className="text-xs text-[var(--muted-foreground)]">
+                    private S3 이미지
+                  </span>
+                )}
+              </div>
+              <button
+                aria-label={`${image.altText} 사진 분리`}
+                className="inline-flex items-center justify-center gap-2 border border-red-500/40 px-3 py-2 text-xs font-bold text-red-600"
+                disabled={busy}
+                onClick={() => void removeImage(image)}
+                type="button"
               >
-                <Utensils className="size-4" />
-                사진 PR 검토하기 <ExternalLink className="size-3.5" />
-              </a>
-            ) : (
-              <span
-                className="inline-flex items-center gap-2 text-sm font-bold text-[var(--muted-foreground)]"
-                key={image.id}
-              >
-                <Utensils className="size-4" />
-                S3에 저장된 사진
-              </span>
-            ),
-          )}
+                <Trash2 className="size-3.5" />
+                사진 분리
+              </button>
+            </div>
+          ))}
           {message ? (
             <p
               aria-live="polite"
