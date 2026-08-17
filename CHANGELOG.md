@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.17.0](https://github.com/arlequins/beat/compare/beat-v1.16.0...beat-v1.17.0) (2026-08-17)
+
+
+### Features
+
+* **api:** add ChatGPT MCP Gourmet import ([#71](https://github.com/arlequins/beat/issues/71)) ([66c7ebe](https://github.com/arlequins/beat/commit/66c7ebe8846fd9ff53cff4403157bacbc5585d4f))
+
 ## [1.16.0](https://github.com/arlequins/beat/compare/beat-v1.15.0...beat-v1.16.0) (2026-08-15)
 
 
