@@ -23,7 +23,7 @@ import {
 } from "./gourmet";
 
 type Administrator = { subject: string };
-type GourmetPort = {
+export type GourmetPort = {
   attachImage: typeof attachGourmetImage;
   context: typeof gourmetContext;
   create: typeof createGourmetEntry;

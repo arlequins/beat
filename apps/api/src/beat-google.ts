@@ -18,6 +18,7 @@ type GoogleStateRequest = Pick<
   | "codeChallenge"
   | "codeChallengeMethod"
   | "nonce"
+  | "resource"
   | "redirectUri"
   | "scope"
   | "state"

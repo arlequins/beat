@@ -49,6 +49,8 @@ type RefreshSession = {
   schemaVersion: 1;
   secretHash: string;
   sessionId: string;
+  resource?: string;
+  scope?: string[];
   status: "active" | "revoked";
   subject: string;
 };
@@ -63,6 +65,7 @@ type AuthorizationCodeState = {
   expiresAt: string;
   nonce: string;
   redirectUri: string;
+  resource?: string;
   schemaVersion: 1;
   scope: string[];
   status: "active" | "used";
@@ -102,6 +105,7 @@ export type BeatAuthorizationCodeRequest = {
   codeChallenge: string;
   codeChallengeMethod: "S256";
   nonce: string;
+  resource?: string;
   redirectUri: string;
   scope: string[];
 };
@@ -329,6 +333,10 @@ function isRefreshSession(value: unknown): value is RefreshSession {
     typeof row.lastUsedAt === "string" &&
     typeof row.secretHash === "string" &&
     typeof row.sessionId === "string" &&
+    (row.resource === undefined || typeof row.resource === "string") &&
+    (row.scope === undefined ||
+      (Array.isArray(row.scope) &&
+        row.scope.every((scope) => typeof scope === "string"))) &&
     (row.status === "active" || row.status === "revoked") &&
     typeof row.subject === "string"
   );
@@ -350,6 +358,7 @@ function isAuthorizationCodeState(
     typeof row.expiresAt === "string" &&
     typeof row.nonce === "string" &&
     typeof row.redirectUri === "string" &&
+    (row.resource === undefined || typeof row.resource === "string") &&
     Array.isArray(row.scope) &&
     row.scope.every((scope) => typeof scope === "string") &&
     (row.status === "active" || row.status === "used") &&
@@ -650,6 +659,8 @@ export async function authenticateBeatGoogleAdmin(
 export async function issueBeatAccessToken(
   admin: ActiveAdmin,
   clientId = config().audience,
+  audience = config().audience,
+  scope: string[] = [],
 ) {
   const authConfig = config();
   return new SignJWT({
@@ -658,13 +669,14 @@ export async function issueBeatAccessToken(
     email: admin.email,
     jti: randomUUID(),
     role: admin.role,
+    ...(scope.length > 0 ? { scope: scope.join(" ") } : {}),
   })
     .setProtectedHeader({
       alg: "ES256",
       kid: authConfig.keyId,
       typ: "at+jwt",
     })
-    .setAudience(authConfig.audience)
+    .setAudience(audience)
     .setExpirationTime(`${ACCESS_TOKEN_TTL_SECONDS}s`)
     .setIssuedAt()
     .setIssuer(authConfig.issuer)
@@ -781,8 +793,11 @@ export async function issueBeatTokenPair(
   admin: ActiveAdmin,
   clientId = config().audience,
   client = new S3Client({}),
+  options: { audience?: string; scope?: string[] } = {},
 ): Promise<BeatTokenPair> {
   const authConfig = config();
+  const audience = options.audience ?? authConfig.audience;
+  const scope = options.scope ?? [];
   const sessionId = randomUUID();
   const refresh = newRefreshToken(sessionId, 1);
   const now = new Date();
@@ -799,6 +814,8 @@ export async function issueBeatTokenPair(
     schemaVersion: 1,
     secretHash: secretHash(refresh.secret, authConfig),
     sessionId,
+    ...(options.audience ? { resource: options.audience } : {}),
+    ...(scope.length > 0 ? { scope } : {}),
     status: "active",
     subject: admin.subject,
   };
@@ -816,7 +833,7 @@ export async function issueBeatTokenPair(
     now,
   );
   return {
-    access_token: await issueBeatAccessToken(admin, clientId),
+    access_token: await issueBeatAccessToken(admin, clientId, audience, scope),
     expires_in: ACCESS_TOKEN_TTL_SECONDS,
     refresh_expires_in: authConfig.refreshTokenTtlSeconds,
     refresh_token: refresh.token,
@@ -844,6 +861,7 @@ export async function issueBeatAuthorizationCode(
     ).toISOString(),
     nonce: input.nonce,
     redirectUri: input.redirectUri,
+    ...(input.resource ? { resource: input.resource } : {}),
     schemaVersion: 1,
     scope: input.scope,
     status: "active",
@@ -870,6 +888,7 @@ export async function redeemBeatAuthorizationCode(
     clientId: string;
     code: string;
     codeVerifier: string;
+    resource?: string;
     redirectUri: string;
   },
   client = new S3Client({}),
@@ -887,6 +906,7 @@ export async function redeemBeatAuthorizationCode(
     state.status !== "active" ||
     Date.parse(state.expiresAt) <= Date.now() ||
     state.clientId !== input.clientId ||
+    (state.resource ?? undefined) !== (input.resource ?? undefined) ||
     state.redirectUri !== input.redirectUri ||
     state.codeChallengeMethod !== "S256" ||
     !verifyPkce(input.codeVerifier, state.codeChallenge)
@@ -912,7 +932,10 @@ export async function redeemBeatAuthorizationCode(
       throw new BeatAuthError("invalid_authorization_code");
     throw error;
   }
-  const tokens = await issueBeatTokenPair(admin.value, state.clientId, client);
+  const tokens = await issueBeatTokenPair(admin.value, state.clientId, client, {
+    audience: state.resource,
+    scope: state.scope,
+  });
   await appendLedgerEvent(
     "authorization-code-redeemed",
     { clientId: state.clientId, subject: state.subject },
@@ -1003,7 +1026,12 @@ export async function refreshBeatTokenPair(
     now,
   );
   return {
-    access_token: await issueBeatAccessToken(admin.value, session.clientId),
+    access_token: await issueBeatAccessToken(
+      admin.value,
+      session.clientId,
+      session.resource ?? authConfig.audience,
+      session.scope ?? [],
+    ),
     expires_in: ACCESS_TOKEN_TTL_SECONDS,
     refresh_expires_in: Math.max(
       0,
@@ -1076,7 +1104,11 @@ export async function beatJwks() {
   };
 }
 
-export async function verifyBeatAccessToken(token: string) {
+export async function verifyBeatAccessTokenForAudience(
+  token: string,
+  audience: string,
+  requiredScopes: string[] = [],
+) {
   const authConfig = config();
   const publicJwk = { ...authConfig.privateJwk };
   delete publicJwk.d;
@@ -1085,7 +1117,7 @@ export async function verifyBeatAccessToken(token: string) {
     await importJWK(publicJwk, "ES256"),
     {
       algorithms: ["ES256"],
-      audience: authConfig.audience,
+      audience,
       issuer: authConfig.issuer,
     },
   );
@@ -1095,8 +1127,23 @@ export async function verifyBeatAccessToken(token: string) {
     payload.role !== "admin"
   )
     throw new BeatAuthError("invalid_credentials");
+  const scopes =
+    typeof payload.scope === "string"
+      ? payload.scope.split(/\s+/).filter(Boolean)
+      : [];
+  if (requiredScopes.some((scope) => !scopes.includes(scope)))
+    throw new BeatAuthError("invalid_credentials");
   return {
     email: payload.email,
+    scopes,
     subject: payload.sub,
   };
+}
+
+export async function verifyBeatAccessToken(token: string) {
+  const principal = await verifyBeatAccessTokenForAudience(
+    token,
+    config().audience,
+  );
+  return { email: principal.email, subject: principal.subject };
 }

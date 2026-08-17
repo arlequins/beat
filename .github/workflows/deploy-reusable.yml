@@ -41,6 +41,7 @@ jobs:
       BEAT_RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
       API_CORS_ORIGINS: ${{ vars.API_CORS_ORIGINS || 'https://arlequins.github.io' }}
       BEAT_AUTH_CLIENTS_JSON: ${{ vars.BEAT_AUTH_CLIENTS_JSON }}
+      BEAT_MCP_RESOURCE: ${{ vars.BEAT_MCP_RESOURCE }}
       NEXT_PUBLIC_SITE_URL: https://arlequins.github.io/beat
     concurrency:
       group: sst-production-${{ inputs.application }}

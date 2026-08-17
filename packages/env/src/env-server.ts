@@ -99,6 +99,8 @@ export const serverEnv = createEnv({
     BEAT_AUTH_GOOGLE_REDIRECT_URI: z.url().optional(),
     /** Separate bearer secret for the personal Custom GPT gourmet Action. */
     BEAT_GOURMET_ACTION_API_KEY: z.string().min(32).optional(),
+    /** Canonical HTTPS resource identifier exposed by the ChatGPT MCP server. */
+    BEAT_MCP_RESOURCE: z.url().optional(),
     /** Public portfolio origin used when API responses return browser links. */
     NEXT_PUBLIC_SITE_URL: z.url().optional(),
     /** One-time operator input consumed only by the administrator bootstrap script. */
@@ -211,6 +213,7 @@ export const serverEnv = createEnv({
     BEAT_AUTH_GOOGLE_CLIENT_SECRET: process.env.BEAT_AUTH_GOOGLE_CLIENT_SECRET,
     BEAT_AUTH_GOOGLE_REDIRECT_URI: process.env.BEAT_AUTH_GOOGLE_REDIRECT_URI,
     BEAT_GOURMET_ACTION_API_KEY: process.env.BEAT_GOURMET_ACTION_API_KEY,
+    BEAT_MCP_RESOURCE: process.env.BEAT_MCP_RESOURCE,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     BEAT_ADMIN_BOOTSTRAP_EMAIL: process.env.BEAT_ADMIN_BOOTSTRAP_EMAIL,
     BEAT_ADMIN_BOOTSTRAP_PASSWORD: process.env.BEAT_ADMIN_BOOTSTRAP_PASSWORD,

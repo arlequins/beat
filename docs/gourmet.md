@@ -1,9 +1,11 @@
 # Beat Gourmet records
 
-Beat Gourmet is a production-oriented personal meal log. A Custom GPT can save
-structured text after the user confirms it, while the public portfolio renders
-only `published` records. Administrators use the existing Beat login to edit,
-publish, archive, and attach photographs.
+Beat Gourmet is a production-oriented personal meal log. A Custom GPT Action
+or the OAuth-protected ChatGPT MCP connector can save structured text after the
+user confirms it, while the public portfolio renders only `published` records.
+Administrators use the existing Beat login to edit, publish, archive, and
+attach photographs. The MCP path is documented in
+[ChatGPT MCP import for Gourmet](gourmet-chatgpt-mcp.md).
 
 For the request-by-request connection between ChatGPT, Beat authentication, S3,
 the administrator browser, and the public site, see the
@@ -95,6 +97,13 @@ Add a random value of at least 32 characters to the API runtime JSON secret:
   "BEAT_GOURMET_ACTION_API_KEY": "replace-with-a-long-random-value"
 }
 ```
+
+For the ChatGPT MCP connector, also set the non-secret production variable
+`BEAT_MCP_RESOURCE` to `https://<beat-api-origin>/mcp` and add the connector's
+exact callback URI, resource, and `gourmet:read`/`gourmet:write` scopes to
+`BEAT_AUTH_CLIENTS_JSON`. Do not put the MCP resource or callback placeholder
+in a browser `NEXT_PUBLIC_*` variable. Follow the dedicated
+[MCP setup guide](gourmet-chatgpt-mcp.md) before enabling the connector.
 
 The same secret already contains the GitHub App values used by article
 publication. Its installation needs repository `Contents: read/write` and

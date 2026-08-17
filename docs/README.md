@@ -26,6 +26,8 @@ local application; the pages below explain design decisions and ongoing work.
    credential, schema, instructions, Preview checks, and photo boundary.
 10. [Gourmet end-to-end integration](gourmet-integration-flow.md) traces the
     exact ChatGPT, Beat API, S3, administrator, GitHub PR, and public-site flow.
+11. [ChatGPT MCP import for Gourmet](gourmet-chatgpt-mcp.md) documents the
+    OAuth-protected, preview-first bridge from ChatGPT context to S3 drafts.
 
 ## Development
 
