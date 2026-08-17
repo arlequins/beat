@@ -147,6 +147,23 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-08-17": {
+    title: "Weekly IT Brief — Reducing replacement cost before it arrives",
+    excerpt:
+      "A developer's view of Node.js 26.6, browser lifecycle changes, and AWS service transitions through compatibility and migration readiness.",
+    intro:
+      "This week's signal is less about adopting every new capability quickly and more about making infrastructure changes small, observable, and reversible.",
+    sections: [
+      {
+        heading: "Three changes to treat as migration work",
+        paragraphs: [
+          "Node.js 26.6 expands the Current line with FFI and test-runner capabilities. Add it to CI first, then exercise native boundaries, time handling, and HTTP paths before treating it as a production default ahead of its LTS transition.",
+          "Chrome's staged unload deprecation means a page exit is not a reliable transaction boundary. Persist important work as it happens, validate any visibilitychange or pagehide fallback, and keep backend writes safe to retry.",
+          "AWS lifecycle announcements turn managed-service dependencies into owned migration work. Inventory usage, record the new-customer cutoff, owner and alternative, then move through read-only validation, limited traffic, and an explicit rollback condition.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -549,6 +566,23 @@ const japanese: Record<string, LocalizedArticle> = {
           "評価環境も本番のセキュリティ課題として扱います。短命で最小権限の認証情報を使い、エージェントが何を読み、書き、外部へ送ったかを追える監査記録を残します。",
           "MCP 統合は API と同じようにバージョン管理します。プロトコルの契約を記録し、制限したトークンで重要な読み取り操作をテストし、変更を作る操作には人の承認を残します。",
           "モデル提供者はアダプター境界の後ろに置きます。モデル変更は可観測性、コスト上限、データ経路、フォールバックも変えるため、発表ではなく元に戻せる配布として扱います。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-08-17": {
+    title: "週刊 IT ブリーフ — 先に交換コストを下げる開発",
+    excerpt:
+      "Node.js 26.6、ブラウザーのライフサイクル変更、AWS のサービス移行を、互換性と移行準備の観点から整理します。",
+    intro:
+      "今週の焦点は新機能を急いで採用することより、基盤の変更を小さく、観測可能で、元に戻せる形にすることです。",
+    sections: [
+      {
+        heading: "移行作業として扱う三つの変化",
+        paragraphs: [
+          "Node.js 26.6 は FFI とテストランナーの機能を Current 系列に加えます。LTS 移行前に本番の標準と決めるのではなく、まず CI に追加し、ネイティブ境界、時刻処理、HTTP 経路を確認します。",
+          "Chrome による unload の段階的な廃止は、ページ離脱を信頼できるトランザクション境界として扱えないことを意味します。重要な作業は途中で保存し、visibilitychange や pagehide の補助経路を検証し、バックエンドの書き込みは再試行に安全なものにします。",
+          "AWS のライフサイクル告知は、マネージドサービスの依存関係も所有する移行作業に変えます。利用状況、期限、担当者、代替案を記録し、読み取り専用の検証、限定トラフィック、明示的なロールバック条件の順に進めます。",
         ],
       },
     ],
