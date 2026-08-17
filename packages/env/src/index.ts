@@ -87,6 +87,9 @@ export const LambdaEnvironment = {
     ? { BEAT_RUNTIME_SECRET_ARN: serverEnv.BEAT_RUNTIME_SECRET_ARN }
     : {}),
   BEAT_AUTH_STATE_PREFIX: beatAuthStatePrefix(),
+  ...(serverEnv.BEAT_MCP_RESOURCE
+    ? { BEAT_MCP_RESOURCE: serverEnv.BEAT_MCP_RESOURCE }
+    : {}),
   ...(serverEnv.BEAT_AUTH_LEDGER_RETENTION_DAYS
     ? {
         BEAT_AUTH_LEDGER_RETENTION_DAYS: String(

@@ -19,6 +19,25 @@ const clients = JSON.stringify([
   },
 ]);
 
+const mcpClients = JSON.stringify([
+  {
+    client_id: "chatgpt-gourmet",
+    redirect_uris: ["https://chatgpt.com/connector/oauth/callback-example"],
+    post_logout_redirect_uris: [
+      "https://chatgpt.com/connector/oauth/callback-example",
+    ],
+    resources: ["https://api.example.com/mcp"],
+    scopes: [
+      "openid",
+      "profile",
+      "email",
+      "offline_access",
+      "gourmet:read",
+      "gourmet:write",
+    ],
+  },
+]);
+
 afterEach(() => vi.unstubAllEnvs());
 
 describe("Beat OIDC client contract", () => {
@@ -112,5 +131,66 @@ describe("Beat OIDC client contract", () => {
     expect(form).toContain("form-action 'self'");
     expect(form).not.toContain("access_token");
     expect(form).not.toContain("refresh_token");
+  });
+
+  it("binds Gourmet scopes and the resource indicator to an exact client", () => {
+    const request = validateAuthorizationRequest(
+      {
+        client_id: "chatgpt-gourmet",
+        redirect_uri: "https://chatgpt.com/connector/oauth/callback-example",
+        resource: "https://api.example.com/mcp",
+        response_type: "code",
+        scope: "openid profile email offline_access gourmet:read gourmet:write",
+        state: "state",
+        nonce: "nonce",
+        code_challenge: "A".repeat(43),
+        code_challenge_method: "S256",
+      },
+      mcpClients,
+    );
+    expect(request.resource).toBe("https://api.example.com/mcp");
+    expect(request.scope).toContain("gourmet:write");
+    expect(() =>
+      validateAuthorizationRequest(
+        {
+          client_id: "chatgpt-gourmet",
+          redirect_uri: "https://chatgpt.com/connector/oauth/callback-example",
+          response_type: "code",
+          scope: "openid gourmet:read",
+          state: "state",
+          nonce: "nonce",
+          code_challenge: "A".repeat(43),
+          code_challenge_method: "S256",
+        },
+        mcpClients,
+      ),
+    ).toThrowError(BeatOidcRequestError);
+    expect(() =>
+      validateAuthorizationRequest(
+        {
+          client_id: "chatgpt-gourmet",
+          redirect_uri: "https://chatgpt.com/connector/oauth/callback-example",
+          resource: "https://evil.example.com/mcp",
+          response_type: "code",
+          scope: "openid gourmet:read",
+          state: "state",
+          nonce: "nonce",
+          code_challenge: "A".repeat(43),
+          code_challenge_method: "S256",
+        },
+        mcpClients,
+      ),
+    ).toThrowError(BeatOidcRequestError);
+  });
+
+  it("accepts a pre-registered ChatGPT CIMD URL as an exact client id", () => {
+    const clientId = "https://chatgpt.com/oauth/example/client.json";
+    const raw = mcpClients.replace(
+      '"chatgpt-gourmet"',
+      JSON.stringify(clientId),
+    );
+    expect(configuredBeatOidcClients(raw).get(clientId)?.clientId).toBe(
+      clientId,
+    );
   });
 });

@@ -1,6 +1,14 @@
 import { serverEnv } from "@arlequins/env/server-env";
 
 const SUPPORTED_SCOPES = [
+  "gourmet:read",
+  "gourmet:write",
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+] as const;
+const DEFAULT_SCOPES = [
   "openid",
   "profile",
   "email",
@@ -12,6 +20,7 @@ export type BeatOidcClient = {
   clientId: string;
   postLogoutRedirectUris: string[];
   redirectUris: string[];
+  resources: string[];
   scopes: string[];
 };
 
@@ -21,6 +30,7 @@ export type BeatAuthorizationRequest = {
   codeChallenge: string;
   codeChallengeMethod: "S256";
   nonce: string;
+  resource?: string;
   redirectUri: string;
   scope: string[];
   state: string;
@@ -52,6 +62,22 @@ export class BeatOidcRequestError extends Error {
 
 function text(value: unknown) {
   return typeof value === "string" ? value : undefined;
+}
+
+function validClientId(value: string) {
+  if (/^[A-Za-z0-9._~-]{1,100}$/.test(value)) return true;
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      url.hostname === "chatgpt.com" &&
+      url.pathname.startsWith("/oauth/") &&
+      url.search === "" &&
+      url.hash === ""
+    );
+  } catch {
+    return false;
+  }
 }
 
 function oauthValue(value: unknown, maxLength = 2048) {
@@ -93,6 +119,11 @@ function uriList(value: unknown, field: string) {
   return value as string[];
 }
 
+function optionalUriList(value: unknown, field: string) {
+  if (value === undefined) return [];
+  return uriList(value, field);
+}
+
 export function configuredBeatOidcClients(
   raw = serverEnv.BEAT_AUTH_CLIENTS_JSON,
 ) {
@@ -116,13 +147,13 @@ export function configuredBeatOidcClients(
       throw new BeatOidcConfigurationError("Invalid client allowlist entry");
     const row = entry as Record<string, unknown>;
     const clientId = text(row.client_id);
-    if (!clientId || !/^[A-Za-z0-9._~-]{1,100}$/.test(clientId))
+    if (!clientId || !validClientId(clientId))
       throw new BeatOidcConfigurationError(
         "Invalid client_id in client allowlist",
       );
     if (clients.has(clientId))
       throw new BeatOidcConfigurationError(`Duplicate client_id ${clientId}`);
-    const scopes = row.scopes ?? [...SUPPORTED_SCOPES];
+    const scopes = row.scopes ?? [...DEFAULT_SCOPES];
     if (
       !Array.isArray(scopes) ||
       scopes.length === 0 ||
@@ -142,6 +173,7 @@ export function configuredBeatOidcClients(
         "post_logout_redirect_uris",
       ),
       redirectUris: uriList(row.redirect_uris, "redirect_uris"),
+      resources: optionalUriList(row.resources, "resources"),
       scopes: scopes as string[],
     });
   }
@@ -167,6 +199,18 @@ function parseScope(value: unknown, client: BeatOidcClient) {
   )
     throw new BeatOidcRequestError("invalid_scope");
   return scope;
+}
+
+function parseResource(value: unknown, client: BeatOidcClient) {
+  const resource = text(value);
+  if (resource === undefined) {
+    if (client.resources.length > 0)
+      throw new BeatOidcRequestError("invalid_request");
+    return undefined;
+  }
+  if (!validUri(resource) || !client.resources.includes(resource))
+    throw new BeatOidcRequestError("invalid_request");
+  return resource;
 }
 
 function baseRequest(input: Record<string, unknown>, raw?: string) {
@@ -200,12 +244,14 @@ export function validateAuthorizationRequest(
     text(input.code_challenge_method) !== "S256"
   )
     throw new BeatOidcRequestError("invalid_request");
+  const resource = parseResource(input.resource, base.client);
   return {
     client: base.client,
     clientId: base.client.clientId,
     codeChallenge,
     codeChallengeMethod: "S256" as const,
     nonce: base.nonce,
+    ...(resource ? { resource } : {}),
     redirectUri: base.redirectUri,
     scope: parseScope(input.scope, base.client),
     state: base.state,

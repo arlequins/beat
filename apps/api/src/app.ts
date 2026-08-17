@@ -28,6 +28,7 @@ import {
   refreshBeatTokenPair,
   revokeBeatRefreshToken,
   verifyBeatAccessToken,
+  verifyBeatAccessTokenForAudience,
   verifyBeatIdTokenHint,
 } from "./beat-auth";
 import {
@@ -48,12 +49,14 @@ import {
   authorizationForm,
   BeatOidcConfigurationError,
   BeatOidcRequestError,
+  configuredBeatOidcClients,
   readStringRecord,
   supportedOidcScopes,
   validateAuthorizationRequest,
   validateLogoutRequest,
 } from "./beat-oidc";
 import { registerGourmetRoutes } from "./gourmet-routes";
+import { registerMcpRoutes } from "./mcp";
 import { registerOpenApiRoutes } from "./openapi";
 
 export type ApiBindings = {
@@ -75,6 +78,11 @@ export type CreateApiAppOptions = {
     verifyIdTokenHint?: typeof verifyBeatIdTokenHint;
     revokeRefreshToken: typeof revokeBeatRefreshToken;
     verifyAccessToken: typeof verifyBeatAccessToken;
+    verifyAccessTokenForAudience?: (
+      token: string,
+      audience: string,
+      requiredScopes?: string[],
+    ) => Promise<{ email: string; subject: string; scopes?: string[] }>;
   };
   beatContent?: {
     confirmAndPublish: typeof confirmAndPublishBeatDraft;
@@ -85,6 +93,10 @@ export type CreateApiAppOptions = {
   };
   gourmet?: Parameters<typeof registerGourmetRoutes>[1]["gourmet"];
   gourmetActionApiKey?: string;
+  mcp?: {
+    issuer?: string;
+    resource?: string;
+  };
   corsOrigins?: string[];
   logger?: Logger;
   readinessCheck?: () => Promise<void>;
@@ -163,6 +175,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     redeemAuthorizationCode: redeemBeatAuthorizationCode,
     revokeRefreshToken: revokeBeatRefreshToken,
     verifyAccessToken: verifyBeatAccessToken,
+    verifyAccessTokenForAudience: verifyBeatAccessTokenForAudience,
     verifyIdTokenHint: verifyBeatIdTokenHint,
     ...options.beatAuth,
   };
@@ -254,6 +267,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     "/admin/content/*",
     "/admin/gourmet/*",
     "/api/gourmet/*",
+    "/mcp",
   ];
   for (const path of guardedPaths) {
     app.use(
@@ -347,10 +361,22 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     const issuer = serverEnv.BEAT_AUTH_ISSUER_URL?.replace(/\/$/, "");
     if (!issuer)
       return context.json({ error: "Authentication is not configured" }, 503);
+    const supportsCimd = (() => {
+      try {
+        return [
+          ...configuredBeatOidcClients(beatOidcClientsJson).values(),
+        ].some((client) =>
+          client.clientId.startsWith("https://chatgpt.com/oauth/"),
+        );
+      } catch {
+        return false;
+      }
+    })();
     context.header("Cache-Control", "public, max-age=300");
     return context.json({
       authorization_endpoint: `${issuer}/authorize`,
       code_challenge_methods_supported: ["S256"],
+      ...(supportsCimd ? { client_id_metadata_document_supported: true } : {}),
       end_session_endpoint: `${issuer}/logout`,
       grant_types_supported: ["authorization_code", "refresh_token"],
       id_token_signing_alg_values_supported: ["ES256"],
@@ -358,6 +384,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       jwks_uri: `${issuer}/jwks`,
       response_types_supported: ["code"],
       revocation_endpoint: `${issuer}/revoke`,
+      resource_parameter_supported: true,
       scopes_supported: supportedOidcScopes,
       subject_types_supported: ["public"],
       token_endpoint: `${issuer}/token`,
@@ -446,6 +473,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       codeChallenge: request.codeChallenge,
       codeChallengeMethod: request.codeChallengeMethod,
       nonce: request.nonce,
+      ...(request.resource ? { resource: request.resource } : {}),
       redirectUri: request.redirectUri,
       scope: request.scope,
     });
@@ -480,6 +508,8 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
         typeof body.redirect_uri === "string" ? body.redirect_uri : undefined;
       const codeVerifier =
         typeof body.code_verifier === "string" ? body.code_verifier : undefined;
+      const resource =
+        typeof body.resource === "string" ? body.resource : undefined;
       if (!code || !clientId || !redirectUri || !codeVerifier)
         return context.json({ error: "invalid_request" }, 400);
       try {
@@ -489,6 +519,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
           clientId,
           code,
           codeVerifier,
+          resource,
           redirectUri,
         });
         context.header("Cache-Control", "no-store");
@@ -577,6 +608,14 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     actionApiKey: options.gourmetActionApiKey,
     gourmet: options.gourmet,
     verifyAccessToken: auth.verifyAccessToken,
+  });
+  registerMcpRoutes(app, {
+    gourmet: options.gourmet,
+    issuer: options.mcp?.issuer,
+    logger: rootLogger,
+    resource: options.mcp?.resource,
+    verifyAccessTokenForAudience:
+      auth.verifyAccessTokenForAudience ?? verifyBeatAccessTokenForAudience,
   });
   const contentError = (
     context: Context<ApiBindings>,

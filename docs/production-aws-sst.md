@@ -38,6 +38,12 @@ Create or update the protected `production` Environment in `arlequins/beat`:
   ```
 - set `API_CORS_ORIGINS` to a comma-separated list of exact browser origins:
   `https://arlequins.github.io` plus the final Beat Agent origin.
+- when enabling the ChatGPT Gourmet connector, set the non-secret
+  `BEAT_MCP_RESOURCE` variable to the exact public API resource URL, normally
+  `https://<beat-api-origin>/mcp`, and add the exact ChatGPT callback client to
+  `BEAT_AUTH_CLIENTS_JSON` as described in
+  [`gourmet-chatgpt-mcp.md`](./gourmet-chatgpt-mcp.md). Leave it unset until the
+  connector callback is finalized; the MCP endpoint then remains disabled.
 
 Both ARNs are identifiers, not credentials. Do not add AWS access keys or the
 runtime JSON to GitHub Secrets, repository variables, `.env` files, or
@@ -57,7 +63,8 @@ Beat API origin followed by `/auth/google/callback`; do not use the Agent
 Pages URL as the Google callback. The Agent continues to use Beat's OIDC
 issuer and never receives a Google client secret.
 
-`BEAT_AUTH_CLIENTS_JSON` contains no secret. It is serialized into the API
+`BEAT_AUTH_CLIENTS_JSON` and `BEAT_MCP_RESOURCE` contain no secret. They are
+serialized into the API
 Lambda as public configuration so the authorization endpoint can enforce exact
 redirect and post-logout URI matches. Keep the sample values from
 [`docs/beat-agent-auth-integration.md`](./beat-agent-auth-integration.md) until
