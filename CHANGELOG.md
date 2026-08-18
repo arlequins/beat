@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.17.1](https://github.com/arlequins/beat/compare/beat-v1.17.0...beat-v1.17.1) (2026-08-18)
+
+
+### Bug Fixes
+
+* **api:** isolate browser oidc env from lambda ([#73](https://github.com/arlequins/beat/issues/73)) ([cb704b6](https://github.com/arlequins/beat/commit/cb704b6ef3a5a887b82221726fb9c59c6b00966f))
+
 ## [1.17.0](https://github.com/arlequins/beat/compare/beat-v1.16.0...beat-v1.17.0) (2026-08-17)
 
 
