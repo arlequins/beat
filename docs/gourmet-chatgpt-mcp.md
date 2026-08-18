@@ -139,6 +139,14 @@ screen.
 6. Exercise the read-only connector with a token that lacks `gourmet:write`;
    `gourmet_confirm_import` must return a scope error.
 
+For repeatable public-boundary verification, run the protected `Production MCP
+smoke` workflow from the `main` branch with the deployed API origin, the exact
+`BEAT_MCP_RESOURCE`, and the confirmation value `production`. This check
+validates protected-resource metadata, OIDC discovery, MCP initialization, and
+the unauthenticated OAuth challenge. It intentionally does not mint a user
+token or write Gourmet data; the first real preview/confirmation should be
+performed through the ChatGPT connector and reviewed in `/admin/`.
+
 This feature does not backfill all historical ChatGPT conversations in the
 background. For a complete archive, use ChatGPT's official data export and a
 separate reviewed import process; do not upload an unreviewed export directly

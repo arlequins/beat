@@ -1,0 +1,48 @@
+name: Production MCP smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: Production Beat API HTTPS origin
+        required: true
+        type: string
+      expected_resource:
+        description: Expected MCP resource URL (normally API_URL/mcp)
+        required: true
+        type: string
+      confirm:
+        description: Type production to acknowledge this protected check
+        required: true
+        type: choice
+        options: [production]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: beat-production-mcp-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+      - name: Validate protected operation
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: test "$CONFIRM" = production
+      - name: Validate public URLs
+        env:
+          API_URL: ${{ inputs.api_url }}
+          EXPECTED_RESOURCE: ${{ inputs.expected_resource }}
+        run: |
+          node -e 'for (const value of process.argv.slice(1)) { const url = new URL(value); if (url.protocol !== "https:") throw new Error(`Production URL must use HTTPS: ${value}`); }' "$API_URL" "$EXPECTED_RESOURCE"
+      - name: Check MCP OAuth boundary
+        run: node scripts/smoke-mcp.mjs "${{ inputs.api_url }}" "${{ inputs.expected_resource }}"
