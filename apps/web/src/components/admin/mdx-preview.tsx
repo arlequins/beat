@@ -21,32 +21,17 @@ function inline(value: string): ReactNode[] {
         </code>
       );
     const link = /^\[([^\]]+)\]\(([^\s)]+)\)$/.exec(part);
-    const href = link ? safeHref(link[2]) : undefined;
-    if (link && href)
+    if (link)
       return (
-        <a
-          className="font-semibold text-[var(--accent-foreground)] underline underline-offset-4"
-          href={href}
+        <span
+          className="font-semibold text-[var(--accent-foreground)] underline decoration-dotted underline-offset-4"
           key={`${part}-${index}`}
-          rel="noreferrer"
-          target="_blank"
         >
           {link[1]}
-        </a>
+        </span>
       );
     return <Fragment key={`${part}-${index}`}>{part}</Fragment>;
   });
-}
-
-function safeHref(value: string | undefined) {
-  if (!value) return undefined;
-  if (value.startsWith("/") || value.startsWith("#")) return value;
-  try {
-    const protocol = new URL(value).protocol;
-    return protocol === "http:" || protocol === "https:" ? value : undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 function withoutFrontmatter(source: string) {
