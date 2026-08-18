@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.18.0](https://github.com/arlequins/beat/compare/beat-v1.17.1...beat-v1.18.0) (2026-08-18)
+
+
+### Features
+
+* **web:** improve beat admin editing workspace ([f0dff38](https://github.com/arlequins/beat/commit/f0dff38b63cf094a6b25c0233a1ee0b6cdd9a795))
+
 ## [1.17.1](https://github.com/arlequins/beat/compare/beat-v1.17.0...beat-v1.17.1) (2026-08-18)
 
 
