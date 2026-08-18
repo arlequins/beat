@@ -15,6 +15,8 @@ export type BeatAdminSession = {
   refreshToken: string;
 };
 
+let refreshInFlight: Promise<BeatAdminSession> | undefined;
+
 type TokenResponse = {
   access_token: string;
   expires_in: number;
@@ -256,25 +258,35 @@ export function hasPersistentBeatAdminSession() {
 }
 
 async function refreshBeatAdminSession(session: BeatAdminSession) {
+  if (refreshInFlight) return refreshInFlight;
   if (session.refreshExpiresAt <= Date.now()) {
     clearBeatAdminSession();
     throw new Error("로그인이 만료되었습니다.");
   }
-  const response = await fetch(`${apiUrl()}/auth/token`, {
-    body: JSON.stringify({
-      grant_type: "refresh_token",
-      refresh_token: session.refreshToken,
-    }),
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-  });
-  if (!response.ok) {
-    clearBeatAdminSession();
-    throw new Error("로그인을 갱신할 수 없습니다.");
+  refreshInFlight = (async () => {
+    const response = await fetch(`${apiUrl()}/auth/token`, {
+      body: JSON.stringify({
+        grant_type: "refresh_token",
+        refresh_token: session.refreshToken,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+    if (!response.ok) {
+      clearBeatAdminSession();
+      throw new Error("로그인을 갱신할 수 없습니다.");
+    }
+    const refreshed = sessionFromTokens(
+      (await response.json()) as TokenResponse,
+    );
+    writeBeatAdminSession(refreshed);
+    return refreshed;
+  })();
+  try {
+    return await refreshInFlight;
+  } finally {
+    refreshInFlight = undefined;
   }
-  const refreshed = sessionFromTokens((await response.json()) as TokenResponse);
-  writeBeatAdminSession(refreshed);
-  return refreshed;
 }
 
 export async function beatAdminAccessToken() {
