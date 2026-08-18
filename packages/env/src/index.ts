@@ -2,8 +2,8 @@
  * Shared env: {@link serverEnv} (server/tooling), {@link clientEnv} (`NEXT_PUBLIC_*`), helpers.
  */
 
-import { clientEnv } from "./env-client.js";
 import { beatAuthStatePrefix, serverEnv } from "./env-server.js";
+import { DEFAULT_LOCALHOST_SITE_URL } from "./public-defaults.js";
 
 export {
   type ApiDeploymentConfig,
@@ -71,7 +71,9 @@ export const LambdaEnvironment = {
       }
     : {}),
   API_CORS_ORIGINS:
-    serverEnv.API_CORS_ORIGINS ?? clientEnv.NEXT_PUBLIC_SITE_URL,
+    serverEnv.API_CORS_ORIGINS ??
+    serverEnv.NEXT_PUBLIC_SITE_URL ??
+    DEFAULT_LOCALHOST_SITE_URL,
   API_BODY_LIMIT_BYTES: String(serverEnv.API_BODY_LIMIT_BYTES ?? 1_048_576),
   API_RATE_LIMIT_REQUESTS: String(serverEnv.API_RATE_LIMIT_REQUESTS ?? 120),
   API_RATE_LIMIT_WINDOW_SECONDS: String(
@@ -124,14 +126,11 @@ export const LambdaEnvironment = {
     ? { ALERT_TOPIC_ARN: serverEnv.ALERT_TOPIC_ARN }
     : {}),
 
-  NEXT_PUBLIC_SITE_URL: clientEnv.NEXT_PUBLIC_SITE_URL,
-  NEXT_PUBLIC_API_URL: clientEnv.NEXT_PUBLIC_API_URL,
-  NEXT_PUBLIC_OIDC_AUTHORITY: clientEnv.NEXT_PUBLIC_OIDC_AUTHORITY,
-  NEXT_PUBLIC_OIDC_CLIENT_ID: clientEnv.NEXT_PUBLIC_OIDC_CLIENT_ID,
-  ...(clientEnv.NEXT_PUBLIC_OIDC_RESOURCE
-    ? { NEXT_PUBLIC_OIDC_RESOURCE: clientEnv.NEXT_PUBLIC_OIDC_RESOURCE }
-    : {}),
-  NEXT_PUBLIC_OIDC_SCOPE: clientEnv.NEXT_PUBLIC_OIDC_SCOPE,
+  // Browser-only OIDC values belong to the static web build. Keeping them out
+  // of LambdaEnvironment prevents the API bundle from requiring NEXT_PUBLIC_*
+  // configuration during cold start.
+  NEXT_PUBLIC_SITE_URL:
+    serverEnv.NEXT_PUBLIC_SITE_URL ?? DEFAULT_LOCALHOST_SITE_URL,
   ...(serverEnv.OTEL_EXPORTER_OTLP_ENDPOINT
     ? { OTEL_EXPORTER_OTLP_ENDPOINT: serverEnv.OTEL_EXPORTER_OTLP_ENDPOINT }
     : {}),

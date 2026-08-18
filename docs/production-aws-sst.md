@@ -70,6 +70,12 @@ redirect and post-logout URI matches. Keep the sample values from
 [`docs/beat-agent-auth-integration.md`](./beat-agent-auth-integration.md) until
 the Agent production URL is known; do not invent a production callback.
 
+The browser-only `NEXT_PUBLIC_OIDC_AUTHORITY`,
+`NEXT_PUBLIC_OIDC_CLIENT_ID`, and `NEXT_PUBLIC_OIDC_SCOPE` values belong only to
+the GitHub Pages build. They are deliberately excluded from the API Lambda
+environment; the server validates Beat's own issuer and client registrations
+instead. A cold-starting Lambda must not require any `NEXT_PUBLIC_OIDC_*` value.
+
 The portfolio administrator page at `https://arlequins.github.io/beat/admin/`
 uses the `beat-admin-web` public client with Authorization Code + PKCE S256.
 It starts at Beat's authorization endpoint, where the configured Google SSO

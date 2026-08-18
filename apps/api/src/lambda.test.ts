@@ -38,4 +38,18 @@ describe("Lambda handler", () => {
     expect(mocks.startObservability).toHaveBeenCalledOnce();
     expect(mocks.handle).toHaveBeenCalledOnce();
   });
+
+  it("does not serialize browser-only OIDC variables into Lambda environment", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("NEXT_PUBLIC_OIDC_AUTHORITY", "");
+    vi.stubEnv("NEXT_PUBLIC_OIDC_CLIENT_ID", "");
+    vi.stubEnv("NEXT_PUBLIC_OIDC_SCOPE", "");
+    vi.doUnmock("@arlequins/env/server-env");
+
+    const { LambdaEnvironment } = await import("@arlequins/env");
+
+    expect(LambdaEnvironment).not.toHaveProperty("NEXT_PUBLIC_OIDC_AUTHORITY");
+    expect(LambdaEnvironment).not.toHaveProperty("NEXT_PUBLIC_OIDC_CLIENT_ID");
+    expect(LambdaEnvironment).not.toHaveProperty("NEXT_PUBLIC_OIDC_SCOPE");
+  });
 });

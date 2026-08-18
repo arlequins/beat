@@ -7,6 +7,8 @@ import {
 } from "./public-defaults.js";
 import { skipEnvValidation } from "./skip-validation.js";
 
+const defaultOidcAuthority = `${DEFAULT_LOCALHOST_API_URL.replace(/\/$/, "")}/auth`;
+
 /**
  * Next.js / Vite `NEXT_PUBLIC_*` (browser-inlined at build). Kept separate from {@link serverEnv}.
  * Use for SST `StaticSite.environment`, etc. — not for secrets.
@@ -27,15 +29,36 @@ export const clientEnv = createEnv({
           : DEFAULT_LOCALHOST_API_URL,
       z.url(),
     ),
-    NEXT_PUBLIC_OIDC_AUTHORITY: z.url(),
-    NEXT_PUBLIC_OIDC_CLIENT_ID: z.string().min(1),
+    // The browser application has its own strict env boundary. These defaults
+    // keep server-side tooling that imports the shared barrel from requiring
+    // browser-only values during Lambda initialization.
+    NEXT_PUBLIC_OIDC_AUTHORITY: z.preprocess(
+      (value) =>
+        typeof value === "string" && value.trim().length > 0
+          ? value
+          : defaultOidcAuthority,
+      z.url(),
+    ),
+    NEXT_PUBLIC_OIDC_CLIENT_ID: z.preprocess(
+      (value) =>
+        typeof value === "string" && value.trim().length > 0
+          ? value
+          : "beat-admin-web",
+      z.string().min(1),
+    ),
     NEXT_PUBLIC_OIDC_RESOURCE: z.url().optional(),
-    NEXT_PUBLIC_OIDC_SCOPE: z
-      .string()
-      .min(1)
-      .refine((scope) => scope.split(/\s+/).includes("openid"), {
-        message: "OIDC scope must include openid",
-      }),
+    NEXT_PUBLIC_OIDC_SCOPE: z.preprocess(
+      (value) =>
+        typeof value === "string" && value.trim().length > 0
+          ? value
+          : "openid profile email offline_access",
+      z
+        .string()
+        .min(1)
+        .refine((scope) => scope.split(/\s+/).includes("openid"), {
+          message: "OIDC scope must include openid",
+        }),
+    ),
   },
   runtimeEnv: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
