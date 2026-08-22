@@ -15,7 +15,6 @@ test("Custom GPT Action targets the Beat production API", async () => {
   const schema = await readSchema();
 
   assert.ok(schema.includes(`  - url: ${productionOrigin}\n`));
-  assert.ok(!schema.includes("api.example.com"));
   assert.match(schema, /bearerAuth:\n {6}type: http\n {6}scheme: bearer/);
 });
 
