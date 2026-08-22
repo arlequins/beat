@@ -50,3 +50,5 @@ and MCP delivery still have flat compatibility entry points and are the next
 candidate slices. No production behavior or AWS resource boundary changes are
 part of this refactor. Remove each compatibility barrel only after its import
 search is empty and the corresponding boundary test has moved to the slice.
+Record that cleanup as a separate conventional change so release notes retain
+the migration step.
