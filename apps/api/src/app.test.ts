@@ -1240,6 +1240,39 @@ describe("API app", () => {
         message: "gourmet.image_attached",
       }),
     );
+    const invalidClientRequest = await gourmetApp.request(
+      "/admin/gourmet/entries/published-entry/images",
+      {
+        body: JSON.stringify({
+          altText: "사진",
+          contentBase64: "UklGRgAAAABXRUJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          contentType: "image/webp",
+          originalFilename: "meal.webp",
+        }),
+        headers: {
+          ...adminHeaders,
+          "X-Client-Request-Id": "conversation content omitted",
+        },
+        method: "POST",
+      },
+    );
+    expect(invalidClientRequest.status).toBe(200);
+    expect(gourmetLogs.at(-1)).not.toHaveProperty("clientRequestId");
+    const missingClientRequest = await gourmetApp.request(
+      "/admin/gourmet/entries/published-entry/images",
+      {
+        body: JSON.stringify({
+          altText: "사진",
+          contentBase64: "UklGRgAAAABXRUJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          contentType: "image/webp",
+          originalFilename: "meal.webp",
+        }),
+        headers: adminHeaders,
+        method: "POST",
+      },
+    );
+    expect(missingClientRequest.status).toBe(200);
+    expect(gourmetLogs.at(-1)).not.toHaveProperty("clientRequestId");
     const adminImage = await gourmetApp.request(
       "/admin/gourmet/entries/published-entry/images/image-1",
       { headers: adminHeaders },
