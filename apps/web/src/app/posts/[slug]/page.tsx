@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BeatPostAssistantCard } from "~/components/blog/beat-chat-entry";
 import { LocalizedPostDetail } from "~/components/blog/localized-pages";
 import { getPost, getPosts, postCategoryMeta } from "~/lib/posts";
 import { localizedAlternates } from "~/lib/seo";
@@ -91,6 +92,11 @@ export async function KoreanPostDetailPage(props: {
             Written in dialogue: Lumen assists with research and drafting.
             Arlequin owns the final judgment.
           </p>
+          <BeatPostAssistantCard
+            excerpt={post.frontmatter.excerpt}
+            locale="ko"
+            title={post.frontmatter.title}
+          />
         </div>
       </div>
     </article>

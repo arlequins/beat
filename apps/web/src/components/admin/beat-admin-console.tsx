@@ -31,6 +31,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { AdminStudioOverview } from "~/components/admin/admin-studio-overview";
 import { GourmetManager } from "~/components/admin/gourmet-manager";
 import { MdxDiff } from "~/components/admin/mdx-diff";
 import { MdxPreview } from "~/components/admin/mdx-preview";
@@ -676,6 +677,12 @@ export function BeatAdminConsole() {
           </button>
         </div>
       </header>
+
+      <AdminStudioOverview
+        onNewArticle={startNewArticle}
+        onSelectRecord={(selectedSlug) => void loadDraft(selectedSlug)}
+        records={records}
+      />
 
       <div className="grid min-h-[42rem] gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <aside className="flex min-h-0 flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)]">

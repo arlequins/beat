@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowUpRight, Mail, PenLine } from "lucide-react";
 import Link from "next/link";
 
+import { BeatPostAssistantCard } from "~/components/blog/beat-chat-entry";
 import { siteConfig } from "~/config/site";
 import { getProject, getProjects } from "~/lib/github";
 import { type Locale, localePath } from "~/lib/i18n";
@@ -378,6 +379,11 @@ export async function LocalizedPostDetail(props: {
               </nav>
             ) : null}
           </div>
+          <BeatPostAssistantCard
+            excerpt={translation.excerpt}
+            locale={props.locale}
+            title={translation.title}
+          />
         </div>
       </div>
     </article>

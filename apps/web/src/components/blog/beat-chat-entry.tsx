@@ -236,3 +236,64 @@ export function BeatChatEntry() {
     </>
   );
 }
+
+export function BeatPostAssistantCard(props: {
+  excerpt: string;
+  locale: Locale;
+  title: string;
+}) {
+  const destination = process.env.NEXT_PUBLIC_BEAT_APP_URL?.trim();
+  const pathname = usePathname() ?? "/";
+  const [href, setHref] = useState<string>();
+  const copy = {
+    en: {
+      action: "Ask Beat about this post",
+      detail:
+        "Carry the title, source page, and excerpt into a private conversation.",
+      eyebrow: "Lumen / context handoff",
+    },
+    ja: {
+      action: "この記事を Beat に聞く",
+      detail: "タイトル、出典ページ、抜粋をプライベートな対話へ渡します。",
+      eyebrow: "Lumen / コンテキスト引き継ぎ",
+    },
+    ko: {
+      action: "이 글을 Beat에게 묻기",
+      detail: "제목·출처 페이지·발췌만 확인한 뒤 비공개 대화로 이어갑니다.",
+      eyebrow: "Lumen / 맥락 연결",
+    },
+  }[props.locale];
+
+  useEffect(() => {
+    if (!destination) return;
+    setHref(
+      beatHandoffUrl(destination, {
+        excerpt: props.excerpt,
+        title: props.title,
+        url: new URL(pathname, window.location.origin).toString(),
+      }),
+    );
+  }, [destination, pathname, props.excerpt, props.title]);
+
+  if (!destination || !href) return null;
+  return (
+    <aside className="mt-14 border border-[#79e6e0]/45 bg-[#111326] p-5 text-white shadow-[0.45rem_0.45rem_0_#f06449] sm:p-6">
+      <p className="brand-eyebrow text-[#79e6e0]">{copy.eyebrow}</p>
+      <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <p className="max-w-xl text-sm leading-6 text-slate-300">
+          {copy.detail}
+        </p>
+        <a
+          className="inline-flex shrink-0 items-center justify-center gap-2 bg-[#f06449] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#d94f38]"
+          href={href}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <MessageCircleMore aria-hidden="true" className="size-4" />
+          {copy.action}
+          <ExternalLink aria-hidden="true" className="size-3.5" />
+        </a>
+      </div>
+    </aside>
+  );
+}

@@ -21,6 +21,7 @@ import {
   publicGourmetImage,
 } from "~/lib/gourmet";
 import { type Locale, localePath } from "~/lib/i18n";
+import { gourmetTimeline } from "~/lib/studio-insights";
 
 const text = {
   en: {
@@ -38,7 +39,10 @@ const text = {
       "Meals, discoveries, and the small details worth revisiting — recorded with Beat and finally reviewed by Arlequin.",
     liked: "What stood out",
     loading: "Setting the table…",
+    average: "Average rating",
     photoPending: "Photo under review",
+    records: "records",
+    recommended: "Recommended to revisit",
     revisit: "Revisit",
     revisitNo: "Not now",
     revisitUnknown: "Undecided",
@@ -61,7 +65,10 @@ const text = {
       "食事、発見、もう一度訪れたい理由。Beatと記録し、Arlequinが最終確認したノートです。",
     liked: "良かった点",
     loading: "テーブルを準備しています…",
+    average: "平均評価",
     photoPending: "写真を読み込めません",
+    records: "件の記録",
+    recommended: "再訪したい店",
     revisit: "再訪",
     revisitNo: "保留",
     revisitUnknown: "未定",
@@ -84,7 +91,10 @@ const text = {
       "먹은 것과 발견한 맛, 다시 찾고 싶은 이유를 Beat와 기록하고 Arlequin이 최종 확인합니다.",
     liked: "좋았던 점",
     loading: "식탁을 준비하고 있습니다…",
+    average: "평균 평점",
     photoPending: "사진을 불러오지 못했습니다",
+    records: "개 기록",
+    recommended: "재방문 추천",
     revisit: "재방문",
     revisitNo: "보류",
     revisitUnknown: "미정",
@@ -197,6 +207,25 @@ export function GourmetBrowser(props: { locale: Locale }) {
       ].sort(),
     [list],
   );
+  const entries = list?.entries ?? [];
+  const timeline = useMemo(
+    () =>
+      gourmetTimeline(
+        entries,
+        props.locale === "ko"
+          ? "ko-KR"
+          : props.locale === "ja"
+            ? "ja-JP"
+            : "en-US",
+      ),
+    [entries, props.locale],
+  );
+  const averageRating = entries.length
+    ? entries.reduce((total, entry) => total + entry.rating, 0) / entries.length
+    : 0;
+  const recommendedCount = entries.filter(
+    (entry) => entry.revisit === "yes",
+  ).length;
 
   if (selectedSlug && selected)
     return (
@@ -308,6 +337,34 @@ export function GourmetBrowser(props: { locale: Locale }) {
             ))}
           </select>
         </div>
+        {!message && list ? (
+          <div className="grid grid-cols-3 gap-3 border-b border-[var(--line)] py-5">
+            <div>
+              <p className="display-serif text-3xl tracking-[-0.04em]">
+                {list.total}
+              </p>
+              <p className="mt-1 text-xs font-bold tracking-[0.1em] text-[var(--muted-foreground)] uppercase">
+                {labels.records}
+              </p>
+            </div>
+            <div>
+              <p className="display-serif text-3xl tracking-[-0.04em]">
+                {averageRating.toFixed(1)}
+              </p>
+              <p className="mt-1 text-xs font-bold tracking-[0.1em] text-[var(--muted-foreground)] uppercase">
+                {labels.average}
+              </p>
+            </div>
+            <div>
+              <p className="display-serif text-3xl tracking-[-0.04em]">
+                {recommendedCount}
+              </p>
+              <p className="mt-1 text-xs font-bold tracking-[0.1em] text-[var(--muted-foreground)] uppercase">
+                {labels.recommended}
+              </p>
+            </div>
+          </div>
+        ) : null}
         {message ? (
           <p className="py-16 text-center text-[var(--muted-foreground)]">
             {message}
@@ -333,35 +390,52 @@ export function GourmetBrowser(props: { locale: Locale }) {
             </Link>
           </div>
         ) : null}
-        <div className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-          {list?.entries.map((entry) => (
-            <article className="group" key={entry.id}>
-              <Link href={`?entry=${encodeURIComponent(entry.slug)}`} scroll>
-                <GourmetPhoto
-                  image={entry.images[0]}
-                  pendingLabel="Beat Gourmet"
-                  sizes="(max-width: 640px) 100vw, 33vw"
-                />
-                <div className="mt-5 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold text-[var(--muted-foreground)]">
-                      {gourmetDate(entry)}
-                      {entry.area ? ` · ${entry.area}` : ""}
-                    </p>
-                    <h2 className="display-serif mt-2 text-2xl tracking-[-0.035em]">
-                      {entry.restaurantName}
-                    </h2>
-                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                      {entry.menuName}
-                    </p>
-                  </div>
-                  <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--accent-foreground)]" />
-                </div>
-                <div className="mt-3">
-                  <Rating value={entry.rating} />
-                </div>
-              </Link>
-            </article>
+        <div className="mt-8 grid gap-12">
+          {timeline.map((month) => (
+            <section key={month.key}>
+              <header className="mb-5 flex items-center justify-between gap-4 border-b border-[var(--line)] pb-3">
+                <h2 className="display-serif text-2xl tracking-[-0.035em]">
+                  {month.label}
+                </h2>
+                <span className="text-xs font-bold tracking-[0.12em] text-[var(--muted-foreground)] uppercase">
+                  {month.entries.length} {labels.records}
+                </span>
+              </header>
+              <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+                {month.entries.map((entry) => (
+                  <article className="group" key={entry.id}>
+                    <Link
+                      href={`?entry=${encodeURIComponent(entry.slug)}`}
+                      scroll
+                    >
+                      <GourmetPhoto
+                        image={entry.images[0]}
+                        pendingLabel="Beat Gourmet"
+                        sizes="(max-width: 640px) 100vw, 33vw"
+                      />
+                      <div className="mt-5 flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-semibold text-[var(--muted-foreground)]">
+                            {gourmetDate(entry)}
+                            {entry.area ? ` · ${entry.area}` : ""}
+                          </p>
+                          <h3 className="display-serif mt-2 text-2xl tracking-[-0.035em]">
+                            {entry.restaurantName}
+                          </h3>
+                          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                            {entry.menuName}
+                          </p>
+                        </div>
+                        <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--accent-foreground)]" />
+                      </div>
+                      <div className="mt-3">
+                        <Rating value={entry.rating} />
+                      </div>
+                    </Link>
+                  </article>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       </section>
