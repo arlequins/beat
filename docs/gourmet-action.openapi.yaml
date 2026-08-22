@@ -85,7 +85,10 @@ paths:
       summary: Load a meal by UUID or slug.
       x-openai-isConsequential: false
       parameters:
-        - $ref: "#/components/parameters/EntryId"
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
       responses:
         "200":
           description: The requested record.
@@ -98,14 +101,15 @@ paths:
       summary: Update fields after the user confirms the proposed changes.
       x-openai-isConsequential: true
       parameters:
-        - $ref: "#/components/parameters/EntryId"
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/GourmetPatch"
+            schema: { $ref: "#/components/schemas/GourmetPatch" }
       responses:
         "200":
           description: Updated record.
@@ -130,7 +134,37 @@ paths:
           description: Aggregated recent context and matching records.
           content:
             application/json:
-              schema: { type: object, additionalProperties: true }
+              schema:
+                type: object
+                properties:
+                  averageRating: { type: number }
+                  frequentlyUsedTasteNotes:
+                    type: array
+                    items: { type: array, items: { type: string } }
+                  lowRatedEntries:
+                    type: array
+                    items: { $ref: "#/components/schemas/GourmetEntry" }
+                  nutritionTagsLast7Days:
+                    type: array
+                    items: { type: array, items: { type: string } }
+                  recentAreas:
+                    type: array
+                    items: { type: array, items: { type: string } }
+                  recentCuisineTags:
+                    type: array
+                    items: { type: array, items: { type: string } }
+                  recentCookingMethods:
+                    type: array
+                    items: { type: array, items: { type: string } }
+                  recentEntries:
+                    type: array
+                    items: { $ref: "#/components/schemas/GourmetEntry" }
+                  recentIngredients:
+                    type: array
+                    items: { type: array, items: { type: string } }
+                  revisitCandidates:
+                    type: array
+                    items: { $ref: "#/components/schemas/GourmetEntry" }
 components:
   securitySchemes:
     bearerAuth:
