@@ -33,10 +33,11 @@ async function readAdminAccessToken() {
   throw new Error("Beat 관리자 화면에서 먼저 로그인해 주세요.");
 }
 
-async function apiRequest(path, init = {}) {
+async function apiRequest(path, init = {}, clientRequestId) {
   const token = await readAdminAccessToken();
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${token}`);
+  if (clientRequestId) headers.set("X-Client-Request-Id", clientRequestId);
   if (init.body) headers.set("Content-Type", "application/json");
   const response = await fetch(`${apiOrigin()}${path}`, {
     ...init,
@@ -86,6 +87,7 @@ async function exportAssignments(assignments) {
   if (!Array.isArray(assignments) || assignments.length === 0)
     throw new Error("연결할 사진을 선택해 주세요.");
   let uploaded = 0;
+  const clientRequestId = crypto.randomUUID();
   for (const assignment of assignments) {
     if (typeof assignment?.entryId !== "string") continue;
     for (const image of assignment.images ?? []) {
@@ -93,6 +95,7 @@ async function exportAssignments(assignments) {
         `/admin/gourmet/entries/${encodeURIComponent(assignment.entryId)}/images`,
         {
           body: JSON.stringify(image),
+          clientRequestId,
           method: "POST",
         },
       );

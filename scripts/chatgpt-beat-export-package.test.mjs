@@ -18,6 +18,7 @@ test("ChatGPT exporter packaging is versioned and credential-free", async () => 
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
   assert.match(script, /beat-gourmet-chatgpt-export-v\$\{version\}\.zip/);
   assert.match(script, /createHash\("sha256"\)/);
+  assert.match(script, /"matcher\.js"/);
   assert.match(script, /BEAT_GOURMET_ACTION_API_KEY/);
   assert.doesNotMatch(script, /GITHUB_TOKEN|BEAT_GITHUB_APP_PRIVATE_KEY/);
 });

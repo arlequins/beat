@@ -38,7 +38,8 @@ describe("API app", () => {
   it("allows preflight requests only from configured browser origins", async () => {
     const allowed = await app.request("/api/echo", {
       headers: {
-        "Access-Control-Request-Headers": "authorization,content-type",
+        "Access-Control-Request-Headers":
+          "authorization,content-type,x-client-request-id",
         "Access-Control-Request-Method": "POST",
         Origin: "http://localhost:3000",
       },
@@ -221,6 +222,9 @@ describe("API app", () => {
     );
     expect(response.headers.get("access-control-allow-headers")).toContain(
       "Content-Type",
+    );
+    expect(response.headers.get("access-control-allow-headers")).toContain(
+      "X-Client-Request-Id",
     );
     expect(response.headers.get("access-control-expose-headers")).toContain(
       "RateLimit-Reset",
@@ -995,6 +999,7 @@ describe("API app", () => {
       if (id === "conflict") throw new GourmetError("conflict", "stale");
       return baseEntry;
     });
+    const gourmetLogs: LogRecord[] = [];
     const gourmetApp = createApiApp({
       beatAuth: {
         authenticate: vi.fn(),
@@ -1058,7 +1063,10 @@ describe("API app", () => {
         update,
       } as never,
       gourmetActionApiKey: "gourmet-action-key-at-least-32-characters",
-      logger: createLogger({ service: "api", sink: () => {} }),
+      logger: createLogger({
+        service: "api",
+        sink: (record) => gourmetLogs.push(record),
+      }),
       rateLimiter: false,
     });
     const actionHeaders = {
@@ -1216,11 +1224,55 @@ describe("API app", () => {
           contentType: "image/webp",
           originalFilename: "meal.webp",
         }),
-        headers: adminHeaders,
+        headers: {
+          ...adminHeaders,
+          "X-Client-Request-Id": "chatgpt-export-123",
+        },
         method: "POST",
       },
     );
     expect(attached.status).toBe(200);
+    expect(gourmetLogs).toContainEqual(
+      expect.objectContaining({
+        clientRequestId: "chatgpt-export-123",
+        entryId: "published-entry",
+        imageCount: 1,
+        message: "gourmet.image_attached",
+      }),
+    );
+    const invalidClientRequest = await gourmetApp.request(
+      "/admin/gourmet/entries/published-entry/images",
+      {
+        body: JSON.stringify({
+          altText: "사진",
+          contentBase64: "UklGRgAAAABXRUJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          contentType: "image/webp",
+          originalFilename: "meal.webp",
+        }),
+        headers: {
+          ...adminHeaders,
+          "X-Client-Request-Id": "conversation content omitted",
+        },
+        method: "POST",
+      },
+    );
+    expect(invalidClientRequest.status).toBe(200);
+    expect(gourmetLogs.at(-1)).not.toHaveProperty("clientRequestId");
+    const missingClientRequest = await gourmetApp.request(
+      "/admin/gourmet/entries/published-entry/images",
+      {
+        body: JSON.stringify({
+          altText: "사진",
+          contentBase64: "UklGRgAAAABXRUJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          contentType: "image/webp",
+          originalFilename: "meal.webp",
+        }),
+        headers: adminHeaders,
+        method: "POST",
+      },
+    );
+    expect(missingClientRequest.status).toBe(200);
+    expect(gourmetLogs.at(-1)).not.toHaveProperty("clientRequestId");
     const adminImage = await gourmetApp.request(
       "/admin/gourmet/entries/published-entry/images/image-1",
       { headers: adminHeaders },

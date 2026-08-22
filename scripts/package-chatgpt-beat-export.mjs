@@ -11,7 +11,9 @@ const expectedFiles = [
   "background.js",
   "content-beat-admin.js",
   "content-chatgpt.js",
+  "matcher.js",
   "manifest.json",
+  "package.json",
   "popup.html",
   "popup.js",
 ];

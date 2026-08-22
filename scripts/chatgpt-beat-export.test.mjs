@@ -4,6 +4,8 @@ import { test } from "node:test";
 
 const root = new URL("../tools/chatgpt-beat-export/", import.meta.url);
 
+const matcher = await import(new URL("matcher.js", root));
+
 test("ChatGPT exporter is a private MV3 extension without embedded secrets", async () => {
   const manifest = JSON.parse(
     await readFile(new URL("manifest.json", root), "utf8"),
@@ -19,6 +21,7 @@ test("ChatGPT exporter is a private MV3 extension without embedded secrets", asy
       "background.js",
       "content-chatgpt.js",
       "content-beat-admin.js",
+      "matcher.js",
       "popup.js",
     ].map((name) => readFile(new URL(name, root), "utf8")),
   );
@@ -26,4 +29,43 @@ test("ChatGPT exporter is a private MV3 extension without embedded secrets", asy
   assert.doesNotMatch(source, /BEAT_GOURMET_ACTION_API_KEY|refreshToken/);
   assert.match(source, /beat-admin-session/);
   assert.match(source, /contentBase64/);
+  assert.match(source, /X-Client-Request-Id/);
+  assert.match(source, /crypto\.randomUUID/);
+});
+
+test("matches Korean meal text deterministically and groups assignments", () => {
+  const entries = [
+    {
+      id: "b",
+      menuName: "냉면",
+      rating: 7,
+      restaurantName: "을지면옥",
+      summary: "담백한 육수",
+      tasteNotes: ["슴슴함"],
+    },
+    {
+      id: "a",
+      menuName: "돈카츠",
+      rating: 8,
+      restaurantName: "다른 식당",
+      summary: "바삭한 식감",
+      tasteNotes: [],
+    },
+  ];
+  const ranked = matcher.rankEntries(
+    entries,
+    "오늘 을지면옥 냉면은 7점, 슴슴함",
+  );
+  assert.equal(ranked[0].entry.id, "b");
+  assert.deepEqual(
+    matcher.buildAssignments([
+      { entryId: "b", images: [{ id: "1" }] },
+      { entryId: "b", images: [{ id: "2" }] },
+      { entryId: "a", images: [{ id: "3" }] },
+    ]),
+    [
+      { entryId: "b", images: [{ id: "1" }, { id: "2" }] },
+      { entryId: "a", images: [{ id: "3" }] },
+    ],
+  );
 });
