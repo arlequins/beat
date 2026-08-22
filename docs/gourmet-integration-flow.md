@@ -67,7 +67,7 @@ Action API key는 관리자 JWT가 아니다. API가 고정 시간 비교로 두
 
 ```http
 GET /api/gourmet/context?days=30&limit=30 HTTP/1.1
-Host: api.example.com
+Host: 4kfwvp7y2qoprape5p2jr5qvra0ekgcl.lambda-url.ap-northeast-1.on.aws
 Authorization: Bearer <BEAT_GOURMET_ACTION_API_KEY>
 ```
 
@@ -81,7 +81,7 @@ GPT는 식당, 메뉴, 방문일, 평점, 재방문 여부, 요약과 선택 태
 
 ```http
 POST /api/gourmet/entries HTTP/1.1
-Host: api.example.com
+Host: 4kfwvp7y2qoprape5p2jr5qvra0ekgcl.lambda-url.ap-northeast-1.on.aws
 Authorization: Bearer <BEAT_GOURMET_ACTION_API_KEY>
 Content-Type: application/json
 Idempotency-Key: chatgpt-conversation-123-confirmed-1
