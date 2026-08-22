@@ -36,7 +36,10 @@ import {
   confirmAndPublishBeatDraft,
   getBeatContentDraft,
   getBeatDraft,
+  getBeatDraftRevision,
   listBeatContentRecords,
+  listBeatDraftRevisions,
+  restoreBeatDraftRevision,
   saveBeatDraft,
 } from "./beat-content";
 import {
@@ -88,7 +91,10 @@ export type CreateApiAppOptions = {
     confirmAndPublish: typeof confirmAndPublishBeatDraft;
     getDraft: typeof getBeatDraft;
     getContentDraft?: typeof getBeatContentDraft;
+    getRevision?: typeof getBeatDraftRevision;
     listRecords?: typeof listBeatContentRecords;
+    listRevisions?: typeof listBeatDraftRevisions;
+    restoreRevision?: typeof restoreBeatDraftRevision;
     saveDraft: typeof saveBeatDraft;
   };
   gourmet?: Parameters<typeof registerGourmetRoutes>[1]["gourmet"];
@@ -183,7 +189,10 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     confirmAndPublish: confirmAndPublishBeatDraft,
     getContentDraft: getBeatContentDraft,
     getDraft: getBeatDraft,
+    getRevision: getBeatDraftRevision,
     listRecords: listBeatContentRecords,
+    listRevisions: listBeatDraftRevisions,
+    restoreRevision: restoreBeatDraftRevision,
     saveDraft: saveBeatDraft,
   };
 
@@ -653,6 +662,40 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       throw error;
     }
   });
+  app.get("/admin/content/drafts/:slug/revisions", async (context) => {
+    const administrator = await authenticatedAdministrator(context);
+    if (!administrator) return context.json({ error: "Unauthorized" }, 401);
+    try {
+      return context.json({
+        revisions: await (content.listRevisions ?? listBeatDraftRevisions)(
+          context.req.param("slug"),
+        ),
+      });
+    } catch (error) {
+      const response = contentError(context, error);
+      if (response) return response;
+      throw error;
+    }
+  });
+  app.get(
+    "/admin/content/drafts/:slug/revisions/:revision",
+    async (context) => {
+      const administrator = await authenticatedAdministrator(context);
+      if (!administrator) return context.json({ error: "Unauthorized" }, 401);
+      try {
+        return context.json(
+          await (content.getRevision ?? getBeatDraftRevision)(
+            context.req.param("slug"),
+            Number(context.req.param("revision")),
+          ),
+        );
+      } catch (error) {
+        const response = contentError(context, error);
+        if (response) return response;
+        throw error;
+      }
+    },
+  );
   app.put("/admin/content/drafts/:slug", async (context) => {
     const administrator = await authenticatedAdministrator(context);
     if (!administrator) return context.json({ error: "Unauthorized" }, 401);
@@ -695,6 +738,33 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
           expectedRevision: body.expectedRevision!,
           slug: context.req.param("slug"),
           subject: administrator.subject,
+        }),
+      );
+    } catch (error) {
+      const response = contentError(context, error);
+      if (response) return response;
+      throw error;
+    }
+  });
+  app.post("/admin/content/drafts/:slug/restore", async (context) => {
+    const administrator = await authenticatedAdministrator(context);
+    if (!administrator) return context.json({ error: "Unauthorized" }, 401);
+    const body = await context.req.json<{
+      expectedRevision?: number;
+      revision?: number;
+    }>();
+    if (
+      !Number.isSafeInteger(body.expectedRevision) ||
+      !Number.isSafeInteger(body.revision)
+    )
+      return context.json({ error: "Invalid draft revision" }, 400);
+    try {
+      return context.json(
+        await (content.restoreRevision ?? restoreBeatDraftRevision)({
+          expectedRevision: body.expectedRevision!,
+          revision: body.revision!,
+          slug: context.req.param("slug"),
+          updatedBy: administrator.subject,
         }),
       );
     } catch (error) {

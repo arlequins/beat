@@ -48,8 +48,24 @@ jobs:
           echo "api_url=$API_URL" >> "$GITHUB_OUTPUT"
       - name: Check public website
         run: curl --fail --silent --show-error --location --retry 2 https://arlequins.github.io/beat/
-      - name: Check public API
+      - name: Check API, OIDC, admin, and Gourmet contracts
         run: node scripts/smoke-api.mjs "${{ steps.urls.outputs.api_url }}"
+
+  report-recovery:
+    needs: check
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close a recovered availability issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TITLE: "Production availability monitor failed"
+        run: |
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')"
+          if test -n "$existing"; then
+            gh issue close "$existing" --repo "$GITHUB_REPOSITORY" --comment "The protected production checks recovered successfully: $RUN_URL"
+          fi
 
   report-failure:
     needs: check

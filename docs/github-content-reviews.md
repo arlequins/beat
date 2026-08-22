@@ -11,6 +11,14 @@ The GitHub pull request is the single record of review, comments, approval, CI
 results, and merge. No webhook URL, mail provider, or third-party secret is
 needed.
 
+The administrator workspace keeps the editable head and immutable revisions in
+private S3. Browser changes are debounced into `localStorage` as a device-local
+recovery copy; they are not shared until **저장** creates a new S3 revision.
+The history panel can compare any stored revision and restore it only by
+creating another revision. It never overwrites or deletes an old revision.
+Every save, confirmation, restoration, and publication transition adds an
+append-only ledger event with the administrator subject.
+
 ## Review flow
 
 1. A weekly-writing automation or contributor opens a pull request instead of

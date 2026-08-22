@@ -47,6 +47,12 @@ reconciliation success, and alarm recovery. Record timeline, impact,
 contributing conditions, actions, and owners. Add a regression test or alarm
 adjustment before closing the incident.
 
+The hourly protected monitor closes its single open availability issue only
+after the website, API readiness, OIDC/JWKS/CORS contract, unauthenticated admin
+boundary, and public Gourmet list all pass together. A closed monitor issue is
+recovery evidence, not a substitute for the authenticated administrator and
+Agent acceptance checks in the production handoff.
+
 ## Integration Ports
 
 `@arlequins/logger` exposes OpenTelemetry-backed `Telemetry` and a replaceable `ErrorReporter`. Projects can register an OpenTelemetry SDK/exporter at process startup and inject a vendor error reporter without changing API or domain code. With no SDK or reporter configured, tracing and reporting safely remain no-op while CloudWatch EMF metrics continue through stdout.

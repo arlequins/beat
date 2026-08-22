@@ -691,6 +691,20 @@ describe("API app", () => {
       updatedBy: "admin-1",
     };
     const saveDraft = vi.fn(async () => draft);
+    const listRevisions = vi.fn(async () => [
+      {
+        revision: 1,
+        schemaVersion: 1 as const,
+        slug: "weekly-test",
+        sourceBytes: 32,
+        status: "draft" as const,
+        title: "Test",
+        updatedAt: "2026-07-30T00:00:00.000Z",
+        updatedBy: "admin-1",
+      },
+    ]);
+    const getRevision = vi.fn(async () => draft);
+    const restoreRevision = vi.fn(async () => ({ ...draft, revision: 2 }));
     const listRecords = vi.fn(async () => [
       {
         origin: "repository" as const,
@@ -725,7 +739,10 @@ describe("API app", () => {
       beatContent: {
         confirmAndPublish,
         getDraft: vi.fn(async () => draft),
+        getRevision,
         listRecords,
+        listRevisions,
+        restoreRevision,
         saveDraft,
       },
       corsOrigins: ["http://localhost:3000"],
@@ -749,6 +766,21 @@ describe("API app", () => {
     expect(loaded.status).toBe(200);
     await expect(loaded.json()).resolves.toMatchObject({ revision: 1 });
 
+    const history = await adminApp.request(
+      "/admin/content/drafts/weekly-test/revisions",
+      { headers },
+    );
+    expect(history.status).toBe(200);
+    await expect(history.json()).resolves.toMatchObject({
+      revisions: [{ revision: 1, updatedBy: "admin-1" }],
+    });
+    const historical = await adminApp.request(
+      "/admin/content/drafts/weekly-test/revisions/1",
+      { headers },
+    );
+    expect(historical.status).toBe(200);
+    expect(getRevision).toHaveBeenCalledWith("weekly-test", 1);
+
     const saved = await adminApp.request("/admin/content/drafts/weekly-test", {
       body: JSON.stringify({
         expectedRevision: 0,
@@ -762,6 +794,22 @@ describe("API app", () => {
     expect(saveDraft).toHaveBeenCalledWith(
       expect.objectContaining({ updatedBy: "admin-1" }),
     );
+
+    const restored = await adminApp.request(
+      "/admin/content/drafts/weekly-test/restore",
+      {
+        body: JSON.stringify({ expectedRevision: 1, revision: 1 }),
+        headers,
+        method: "POST",
+      },
+    );
+    expect(restored.status).toBe(200);
+    expect(restoreRevision).toHaveBeenCalledWith({
+      expectedRevision: 1,
+      revision: 1,
+      slug: "weekly-test",
+      updatedBy: "admin-1",
+    });
 
     const confirmed = await adminApp.request(
       "/admin/content/drafts/weekly-test/confirm",

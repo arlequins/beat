@@ -152,6 +152,82 @@ describe("Beat S3 content", () => {
     expect(ledgerPut.input.ObjectLockMode).toBe("COMPLIANCE");
   });
 
+  it("lists revision metadata and restores an older revision as a new head", async () => {
+    const harness = s3Harness();
+    const content = await loadContent();
+    await content.saveBeatDraft(
+      {
+        expectedRevision: 0,
+        slug: "history-test",
+        source: "---\ntitle: First\n---\n\nFirst body",
+        title: "First",
+        updatedBy: "admin-1",
+      },
+      harness.client,
+    );
+    await content.saveBeatDraft(
+      {
+        expectedRevision: 1,
+        slug: "history-test",
+        source: "---\ntitle: Second\n---\n\nSecond body",
+        title: "Second",
+        updatedBy: "admin-2",
+      },
+      harness.client,
+    );
+
+    await expect(
+      content.listBeatDraftRevisions("history-test", harness.client),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        revision: 2,
+        sourceBytes: expect.any(Number),
+        title: "Second",
+        updatedBy: "admin-2",
+      }),
+      expect.objectContaining({ revision: 1, title: "First" }),
+    ]);
+    await expect(
+      content.getBeatDraftRevision("history-test", 1, harness.client),
+    ).resolves.toMatchObject({
+      revision: 1,
+      source: expect.stringContaining("First body"),
+    });
+
+    const restored = await content.restoreBeatDraftRevision(
+      {
+        expectedRevision: 2,
+        revision: 1,
+        slug: "history-test",
+        updatedBy: "admin-3",
+      },
+      harness.client,
+    );
+    expect(restored).toMatchObject({
+      revision: 3,
+      source: expect.stringContaining("First body"),
+      status: "draft",
+      title: "First",
+      updatedBy: "admin-3",
+    });
+    await expect(
+      content.restoreBeatDraftRevision(
+        {
+          expectedRevision: 2,
+          revision: 1,
+          slug: "history-test",
+          updatedBy: "admin-3",
+        },
+        harness.client,
+      ),
+    ).rejects.toMatchObject({ code: "conflict" });
+    expect(
+      [...harness.objects.values()].some(({ body }) =>
+        body.includes('"type":"draft-restored"'),
+      ),
+    ).toBe(true);
+  });
+
   it("confirms a draft and opens one idempotent GitHub pull request", async () => {
     const harness = s3Harness();
     const content = await loadContent();

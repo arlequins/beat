@@ -106,6 +106,25 @@ client.
 Use `disable-admin` with the target email for account disablement. The workflow
 serializes all protected operations and requires a `production` confirmation.
 
+### Runtime secret rotation
+
+Rotate runtime values only through the protected `production` Environment and
+GitHub OIDC. Google OAuth values are updated by the **Update Beat Google runtime
+secret** workflow in `arlequins/beat-sst-aws`; the **Initialize Beat runtime
+secret** workflow remains bootstrap-only and must not be reused as a general
+overwrite path. After any update, run Beat's production infrastructure diff for
+the exact `main` SHA, deploy through the protected workflow, and wait for the
+expanded availability monitor to verify OIDC/JWKS/CORS and the public data
+contracts.
+
+Rotate a signing key only in a dedicated change that supports an overlap window
+in JWKS for the previous and next ES256 keys. Do not replace the sole signing
+key in place while access or ID tokens remain valid. Rotate the Gourmet Action
+key, GitHub App key, or lookup secret during a maintenance window, update the
+corresponding protected consumer first, validate redaction, and revoke the old
+value after the smoke checks pass. Never copy a secret value into a workflow
+input, issue, artifact, SST state, or `NEXT_PUBLIC_*` variable.
+
 Password changes and disable operations increment the credential version, so
 existing refresh sessions can no longer rotate. Already-issued access tokens
 expire within ten minutes.
