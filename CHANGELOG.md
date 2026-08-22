@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.19.0](https://github.com/arlequins/beat/compare/beat-v1.18.0...beat-v1.19.0) (2026-08-22)
+
+
+### Features
+
+* **gourmet:** ship production Custom GPT Action ([#77](https://github.com/arlequins/beat/issues/77)) ([214748f](https://github.com/arlequins/beat/commit/214748fd475c29543a8512f7b5e5ff318b2abb1b))
+
 ## [1.18.0](https://github.com/arlequins/beat/compare/beat-v1.17.1...beat-v1.18.0) (2026-08-18)
 
 
