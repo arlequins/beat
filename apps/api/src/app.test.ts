@@ -592,6 +592,10 @@ describe("API app", () => {
     expect(
       new URL(logout.headers.get("location")!).searchParams.get("state"),
     ).toBe("logout-state");
+    const logoutWithoutRedirect = await authApp.request(
+      "/auth/logout?client_id=beat-agent-web",
+    );
+    expect(logoutWithoutRedirect.status).toBe(204);
     const invalidLogout = await authApp.request(
       "/auth/logout?id_token_hint=invalid&post_logout_redirect_uri=https%3A%2F%2Fagent.example.com%2Fauth%2Flogout-callback%2F",
     );
