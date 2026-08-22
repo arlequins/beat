@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
   title: Beat Gourmet Action
-  version: 1.0.0
+  version: 1.1.0
   description: Save and recall confirmed personal meal records in Beat.
 servers:
-  - url: https://api.example.com
+  - url: https://4kfwvp7y2qoprape5p2jr5qvra0ekgcl.lambda-url.ap-northeast-1.on.aws
 security:
   - bearerAuth: []
 paths:
@@ -12,6 +12,7 @@ paths:
     get:
       operationId: listGourmetEntries
       summary: List meal records using optional filters.
+      x-openai-isConsequential: false
       parameters:
         - in: query
           name: from
@@ -52,6 +53,7 @@ paths:
     post:
       operationId: createGourmetEntry
       summary: Save one meal after the user explicitly confirms the record.
+      x-openai-isConsequential: true
       parameters:
         - in: header
           name: Idempotency-Key
@@ -81,6 +83,7 @@ paths:
     get:
       operationId: getGourmetEntry
       summary: Load a meal by UUID or slug.
+      x-openai-isConsequential: false
       parameters:
         - $ref: "#/components/parameters/EntryId"
       responses:
@@ -93,6 +96,7 @@ paths:
     patch:
       operationId: updateGourmetEntry
       summary: Update fields after the user confirms the proposed changes.
+      x-openai-isConsequential: true
       parameters:
         - $ref: "#/components/parameters/EntryId"
       requestBody:
@@ -113,6 +117,7 @@ paths:
     get:
       operationId: getGourmetContext
       summary: Get recent preferences and patterns before making a recommendation.
+      x-openai-isConsequential: false
       parameters:
         - in: query
           name: days
