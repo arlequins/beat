@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.23.0](https://github.com/arlequins/beat/compare/beat-v1.22.2...beat-v1.23.0) (2026-08-22)
+
+
+### Features
+
+* **gourmet:** add ChatGPT photo exporter ([#94](https://github.com/arlequins/beat/issues/94)) ([223fee4](https://github.com/arlequins/beat/commit/223fee49d9f398664193794463e3c71d6badcb0b))
+
 ## [1.22.2](https://github.com/arlequins/beat/compare/beat-v1.22.1...beat-v1.22.2) (2026-08-22)
 
 
