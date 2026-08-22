@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.21.0](https://github.com/arlequins/beat/compare/beat-v1.20.0...beat-v1.21.0) (2026-08-22)
+
+
+### Features
+
+* **web:** add confirmed Beat post handoff ([#81](https://github.com/arlequins/beat/issues/81)) ([a2d876c](https://github.com/arlequins/beat/commit/a2d876c6c6a8d9fe895350330966158d7c2bd793))
+
 ## [1.20.0](https://github.com/arlequins/beat/compare/beat-v1.19.0...beat-v1.20.0) (2026-08-22)
 
 
