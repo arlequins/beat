@@ -48,4 +48,5 @@ must import from the feature slice.
 This is an incremental migration. Authentication, publication reconciliation,
 and MCP delivery still have flat compatibility entry points and are the next
 candidate slices. No production behavior or AWS resource boundary changes are
-part of this refactor.
+part of this refactor. Remove each compatibility barrel only after its import
+search is empty and the corresponding boundary test has moved to the slice.
