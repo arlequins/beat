@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.27.1](https://github.com/arlequins/beat/compare/beat-v1.27.0...beat-v1.27.1) (2026-08-22)
+
+
+### Bug Fixes
+
+* **site:** use public GitHub email ([bc5e67b](https://github.com/arlequins/beat/commit/bc5e67b0cc33756f8cf8df153e3c4ad5d9c387ca))
+
 ## [1.27.0](https://github.com/arlequins/beat/compare/beat-v1.26.0...beat-v1.27.0) (2026-08-22)
 
 
