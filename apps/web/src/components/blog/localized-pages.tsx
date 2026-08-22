@@ -317,10 +317,16 @@ export async function LocalizedPostDetail(props: {
           <p className="brand-eyebrow mt-12 text-[#79e6e0]">
             {labels(props.locale, post.frontmatter.category)}
           </p>
-          <h1 className="display-serif mt-5 text-4xl leading-[1.04] sm:text-6xl">
+          <h1
+            className="display-serif mt-5 text-4xl leading-[1.04] sm:text-6xl"
+            data-beat-context-title
+          >
             {translation.title}
           </h1>
-          <p className="mt-6 text-lg leading-8 text-slate-300 sm:text-xl">
+          <p
+            className="mt-6 text-lg leading-8 text-slate-300 sm:text-xl"
+            data-beat-context-excerpt
+          >
             {translation.excerpt}
           </p>
           <p className="mt-8 border-t border-white/15 pt-4 text-sm text-slate-400">
