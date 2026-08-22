@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.27.0](https://github.com/arlequins/beat/compare/beat-v1.26.0...beat-v1.27.0) (2026-08-22)
+
+
+### Features
+
+* **gourmet:** add Instagram share fallback ([b2d5a1d](https://github.com/arlequins/beat/commit/b2d5a1d83f1d35d489352f930d7eb724459dac19))
+
 ## [1.26.0](https://github.com/arlequins/beat/compare/beat-v1.25.0...beat-v1.26.0) (2026-08-22)
 
 
