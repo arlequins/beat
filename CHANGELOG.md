@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.26.0](https://github.com/arlequins/beat/compare/beat-v1.25.0...beat-v1.26.0) (2026-08-22)
+
+
+### Features
+
+* **gourmet:** harden ChatGPT exporter ([#101](https://github.com/arlequins/beat/issues/101)) ([c2bec76](https://github.com/arlequins/beat/commit/c2bec764a698665d50d14393a137632b86aa235d))
+
 ## [1.25.0](https://github.com/arlequins/beat/compare/beat-v1.24.0...beat-v1.25.0) (2026-08-22)
 
 
