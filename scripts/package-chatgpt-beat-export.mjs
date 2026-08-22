@@ -11,6 +11,7 @@ const expectedFiles = [
   "background.js",
   "content-beat-admin.js",
   "content-chatgpt.js",
+  "image-id.js",
   "matcher.js",
   "manifest.json",
   "package.json",
@@ -58,18 +59,38 @@ function run(command, args, cwd = root) {
   });
 }
 
-const version = await assertPackageContents();
+await assertPackageContents();
+const rootPackage = JSON.parse(
+  await readFile(join(root, "package.json"), "utf8"),
+);
+if (!/^\d+\.\d+\.\d+$/.test(rootPackage.version))
+  throw new Error("Root package version must be a semantic version");
 await rm(outputDir, { force: true, recursive: true });
 await mkdir(outputDir, { recursive: true });
-const packageRoot = join(outputDir, `beat-gourmet-chatgpt-export-v${version}`);
+const packageRoot = join(
+  outputDir,
+  `beat-gourmet-chatgpt-export-v${rootPackage.version}`,
+);
 await mkdir(packageRoot, { recursive: true });
-for (const file of expectedFiles)
+for (const file of expectedFiles) {
+  if (file === "manifest.json") {
+    const manifest = JSON.parse(await readFile(join(sourceDir, file), "utf8"));
+    await writeFile(
+      join(packageRoot, file),
+      `${JSON.stringify({ ...manifest, version: rootPackage.version }, null, 2)}\n`,
+    );
+    continue;
+  }
   await writeFile(
     join(packageRoot, file),
     await readFile(join(sourceDir, file)),
   );
+}
 
-const archive = join(outputDir, `beat-gourmet-chatgpt-export-v${version}.zip`);
+const archive = join(
+  outputDir,
+  `beat-gourmet-chatgpt-export-v${rootPackage.version}.zip`,
+);
 await run("zip", ["-qr", basename(archive), basename(packageRoot)], outputDir);
 const digest = createHash("sha256")
   .update(await readFile(archive))

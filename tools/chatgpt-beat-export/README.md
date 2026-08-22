@@ -14,8 +14,9 @@ Beat API key or a long-lived token.
    the ZIP first and select the extracted folder.
 3. Keep the signed-in Beat Admin tab open. Open the ChatGPT conversation that
    contains the meal photos.
-4. Select the **Beat Gourmet export** extension, choose **현재 대화의 사진 찾기**,
-   review the automatic entry matches, and choose **선택한 초안에 연결**.
+4. Select the **Beat Gourmet export** extension, use **관리자 로그인 상태 확인**
+   until the session is ready, choose **현재 대화의 사진 찾기**, review the
+   automatic entry matches, and choose **선택한 초안에 연결**.
 
 The extension reads the short-lived access token from the already-open Beat
 Admin page only when an export is requested. It keeps the token in memory for
@@ -43,3 +44,7 @@ conversation text and image bytes are not written to logs.
 - It does not inspect cookies, the ChatGPT account store, or browser history.
 - The existing Beat Admin session must remain open. If the access token expires,
   sign in again and retry.
+- The popup reports whether the Admin tab is missing, signed out, stale, or ready;
+  it never displays or stores the token itself.
+- Repeating an export skips images already attached to the selected draft by the
+  same content hash.

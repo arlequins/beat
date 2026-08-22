@@ -31,6 +31,27 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
+function sessionStatus(message, ready = false) {
+  const node = $("#session-status");
+  node.textContent = message;
+  node.classList.toggle("ready", ready);
+  node.classList.toggle("error", !ready);
+}
+
+async function checkAdminSession() {
+  const response = await send({ type: "CHECK_ADMIN_SESSION" });
+  if (!response.ok) {
+    sessionStatus(response.error, false);
+    return false;
+  }
+  const ready = response.session?.state === "ready";
+  sessionStatus(
+    response.session?.message ?? "관리자 로그인 상태를 확인할 수 없습니다.",
+    ready,
+  );
+  return ready;
+}
+
 function render() {
   const groups = $("#groups");
   groups.innerHTML = state.groups
@@ -69,10 +90,17 @@ async function loadEntries() {
     );
 }
 
+$("#check-session").addEventListener("click", async () => {
+  $("#check-session").disabled = true;
+  await checkAdminSession();
+  $("#check-session").disabled = false;
+});
+
 $("#extract").addEventListener("click", async () => {
   $("#extract").disabled = true;
   status("Beat 초안과 ChatGPT 사진을 확인하는 중입니다…");
   try {
+    if (!(await checkAdminSession())) return;
     await loadEntries();
     const response = await send({ type: "EXTRACT_CONVERSATION" });
     if (!response.ok) throw new Error(response.error);
@@ -85,8 +113,16 @@ $("#extract").addEventListener("click", async () => {
         text: message.text,
       };
     });
-    if (state.groups.length === 0)
-      throw new Error("현재 대화에서 읽을 수 있는 사진을 찾지 못했습니다.");
+    if (state.groups.length === 0) {
+      const diagnostics = response.data?.diagnostics;
+      if (diagnostics?.visibleImageCount === 0)
+        throw new Error(
+          "현재 화면에 로드된 사진이 없습니다. 사진이 보이는 메시지까지 스크롤한 뒤 다시 시도해 주세요.",
+        );
+      throw new Error(
+        "사진은 보이지만 직접 올린 사용자 메시지에서 찾지 못했습니다. 원본 대화에서 첨부 사진이 보이는지 확인해 주세요.",
+      );
+    }
     render();
     status("자동 연결 후보를 만들었습니다. 대상만 확인해 주세요.");
   } catch (error) {
@@ -108,7 +144,10 @@ $("#export").addEventListener("click", async () => {
       assignments: buildAssignments(state.groups),
     });
     if (!response.ok) throw new Error(response.error);
-    status(`${response.result.uploaded}장의 사진을 Beat 초안에 연결했습니다.`);
+    const skipped = response.result.skipped ?? 0;
+    status(
+      `${response.result.uploaded}장의 사진을 연결했습니다${skipped > 0 ? ` · ${skipped}장은 이미 연결되어 건너뛰었습니다` : ""}.`,
+    );
     $("#export").disabled = true;
   } catch (error) {
     status(
@@ -118,3 +157,5 @@ $("#export").addEventListener("click", async () => {
     $("#export").disabled = false;
   }
 });
+
+void checkAdminSession();
