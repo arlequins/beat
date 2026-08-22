@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.24.0](https://github.com/arlequins/beat/compare/beat-v1.23.0...beat-v1.24.0) (2026-08-22)
+
+
+### Features
+
+* **gourmet:** add exporter release guide ([#97](https://github.com/arlequins/beat/issues/97)) ([1c792dd](https://github.com/arlequins/beat/commit/1c792dd2115c6903523127a4d604f058aba4345d))
+
 ## [1.23.0](https://github.com/arlequins/beat/compare/beat-v1.22.2...beat-v1.23.0) (2026-08-22)
 
 
