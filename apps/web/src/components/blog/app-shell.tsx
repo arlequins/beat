@@ -4,11 +4,11 @@ import { GitBranch, Mail, Utensils } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { BeatChatEntry } from "~/components/blog/beat-chat-entry";
 import { BrandMark } from "~/components/blog/brand-mark";
 import { LanguageSwitcher } from "~/components/blog/language-switcher";
 import { ThemeToggle } from "~/components/blog/theme-toggle";
 import { siteConfig } from "~/config/site";
+import { BeatChatEntry } from "~/features/beat-handoff/ui/beat-chat-entry";
 import { copy, isLocale, type Locale, localePath } from "~/lib/i18n";
 
 export function AppShell(props: { children: React.ReactNode }) {

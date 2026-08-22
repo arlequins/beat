@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { KoreanGourmetPage } from "~/app/gourmet/page";
-import { GourmetBrowser } from "~/components/gourmet/gourmet-browser";
 import { isLocale, locales } from "~/lib/i18n";
 import { localizedAlternates } from "~/lib/seo";
+import { GourmetBrowser } from "~/widgets/gourmet-browser/ui/gourmet-browser";
 
 export const dynamicParams = false;
 export function generateStaticParams() {

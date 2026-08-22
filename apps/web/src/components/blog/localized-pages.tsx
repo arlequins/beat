@@ -1,8 +1,7 @@
 import { ArrowLeft, ArrowUpRight, Mail, PenLine } from "lucide-react";
 import Link from "next/link";
-
-import { BeatPostAssistantCard } from "~/components/blog/beat-chat-entry";
 import { siteConfig } from "~/config/site";
+import { BeatPostAssistantCard } from "~/features/beat-handoff/ui/beat-chat-entry";
 import { getProject, getProjects } from "~/lib/github";
 import { type Locale, localePath } from "~/lib/i18n";
 import { localizePost } from "~/lib/localized-content";

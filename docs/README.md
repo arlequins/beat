@@ -8,7 +8,9 @@ local application; the pages below explain design decisions and ongoing work.
 
 1. [Application architecture](architecture.md) explains workspace boundaries
    and the browser-to-database request flow.
-2. [Developer experience](developer-experience.md) covers generators, fast
+2. [Feature-sliced migration map](architecture-migration.md) explains the
+   server and web slice boundaries.
+3. [Developer experience](developer-experience.md) covers generators, fast
    feedback commands, and template qualification.
 3. [Template readiness](template-readiness.md) lists the capabilities to retain
    or deliberately remove when adapting the template.

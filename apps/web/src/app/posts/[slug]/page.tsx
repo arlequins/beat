@@ -2,9 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
-import { BeatPostAssistantCard } from "~/components/blog/beat-chat-entry";
 import { LocalizedPostDetail } from "~/components/blog/localized-pages";
+import { BeatPostAssistantCard } from "~/features/beat-handoff/ui/beat-chat-entry";
 import { getPost, getPosts, postCategoryMeta } from "~/lib/posts";
 import { localizedAlternates } from "~/lib/seo";
 
