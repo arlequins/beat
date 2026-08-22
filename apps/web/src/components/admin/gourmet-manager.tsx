@@ -22,6 +22,7 @@ import {
   type GourmetList,
   publicGourmetImage,
 } from "~/entities/gourmet";
+import { GourmetShareButton } from "~/features/gourmet-share/ui/gourmet-share-button";
 import { authorizedBeatAdminRequest } from "~/lib/beat-admin-session";
 
 type FormState = {
@@ -608,6 +609,21 @@ export function GourmetManager() {
                     private S3 이미지
                   </span>
                 )}
+                {(
+                  selected.status === "published"
+                    ? publicGourmetImage(image)
+                    : adminImageUrls[image.id]
+                ) ? (
+                  <GourmetShareButton
+                    entry={selected}
+                    imageUrl={
+                      selected.status === "published"
+                        ? publicGourmetImage(image)
+                        : adminImageUrls[image.id]!
+                    }
+                    locale="ko"
+                  />
+                ) : null}
               </div>
               <button
                 aria-label={`${image.altText} 사진 분리`}
