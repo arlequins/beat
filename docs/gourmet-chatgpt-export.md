@@ -7,8 +7,10 @@ Custom GPT Action은 식사 텍스트를 저장하지만 ChatGPT 대화의 원�
 
 확장 소스와 설치 절차는 [`tools/chatgpt-beat-export/`](../tools/chatgpt-beat-export/)
 에 있다. `beat-v*` 릴리즈에는 같은 확장의 ZIP과 SHA-256 체크섬도 함께
-첨부된다. 압축을 풀고 Chrome에서 해당 폴더를 **압축해제된 확장 프로그램**으로
-로드하면 된다. 이 경로는 다음 순서로 동작한다.
+첨부된다. 상세한 설치·체크섬 검증·사용 경계는
+[`gourmet-chatgpt-export-release.md`](./gourmet-chatgpt-export-release.md)에
+정리되어 있다. 압축을 풀고 Chrome에서 해당 폴더를 **압축해제된 확장
+프로그램**으로 로드하면 된다. 이 경로는 다음 순서로 동작한다.
 
 1. Beat `/admin/`에 Google SSO로 로그인한 탭을 열어 둔다.
 2. 사진이 있는 ChatGPT 대화에서 확장 버튼을 누른다.
