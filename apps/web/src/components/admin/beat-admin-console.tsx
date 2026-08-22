@@ -31,11 +31,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { AdminStudioOverview } from "~/components/admin/admin-studio-overview";
 import { GourmetManager } from "~/components/admin/gourmet-manager";
 import { MdxDiff } from "~/components/admin/mdx-diff";
 import { MdxPreview } from "~/components/admin/mdx-preview";
-
 import {
   authorizedBeatAdminRequest,
   BeatAdminSessionEvent,
@@ -44,6 +42,7 @@ import {
   logoutBeatAdmin,
   startBeatAdminGoogleLogin,
 } from "~/lib/beat-admin-session";
+import { AdminStudioOverview } from "~/widgets/admin-studio/ui/admin-studio-overview";
 
 type AuthStatus = "loading" | "authenticated" | "anonymous";
 type MessageTone = "error" | "info";

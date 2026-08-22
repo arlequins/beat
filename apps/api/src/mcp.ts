@@ -6,19 +6,8 @@ import type { Logger } from "@arlequins/logger";
 import { type OpenAPIHono, z } from "@hono/zod-openapi";
 
 import type { ApiBindings } from "./app";
-import {
-  attachGourmetImage,
-  createGourmetEntry,
-  deleteGourmetEntry,
-  type GourmetInput,
-  getGourmetEntry,
-  getGourmetImage,
-  gourmetContext,
-  listGourmetEntries,
-  removeGourmetImage,
-  updateGourmetEntry,
-} from "./gourmet";
-import type { GourmetPort } from "./gourmet-routes";
+import type { GourmetPort } from "./features/gourmet/application/ports";
+import type { GourmetInput } from "./features/gourmet/domain/models";
 
 const MCP_PROTOCOL_VERSIONS = [
   "2025-06-18",
@@ -303,7 +292,7 @@ function tools() {
 export function registerMcpRoutes(
   app: OpenAPIHono<ApiBindings>,
   options: {
-    gourmet?: GourmetPort;
+    gourmet: GourmetPort;
     issuer?: string;
     logger?: Logger;
     resource?: string;
@@ -316,17 +305,7 @@ export function registerMcpRoutes(
 ) {
   const resource = resourceFor(options);
   const issuer = issuerFor(options);
-  const gourmet: GourmetPort = options.gourmet ?? {
-    attachImage: attachGourmetImage,
-    context: gourmetContext,
-    create: createGourmetEntry,
-    delete: deleteGourmetEntry,
-    get: getGourmetEntry,
-    getImage: getGourmetImage,
-    list: listGourmetEntries,
-    removeImage: removeGourmetImage,
-    update: updateGourmetEntry,
-  };
+  const gourmet = options.gourmet;
   const log = options.logger;
 
   app.get("/.well-known/oauth-protected-resource", (context) => {

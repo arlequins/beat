@@ -16,14 +16,13 @@ import {
   useMemo,
   useState,
 } from "react";
-
-import { authorizedBeatAdminRequest } from "~/lib/beat-admin-session";
 import {
   type GourmetEntry,
   type GourmetImage,
   type GourmetList,
   publicGourmetImage,
-} from "~/lib/gourmet";
+} from "~/entities/gourmet";
+import { authorizedBeatAdminRequest } from "~/lib/beat-admin-session";
 
 type FormState = {
   area: string;

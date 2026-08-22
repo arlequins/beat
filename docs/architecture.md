@@ -8,6 +8,9 @@ This template keeps policy independent from delivery frameworks and providers.
 The example content slice is intentionally small, but it demonstrates the same
 dependency direction expected from production features.
 
+Beat-specific feature slices and the remaining migration map are documented in
+[Feature-sliced migration map](architecture-migration.md).
+
 ```text
 apps/web -> tRPC router -> application use case -> port <- adapter
 apps/api ------^                                      <- Drizzle / S3 / OIDC
@@ -116,3 +119,18 @@ layers.
 - Add Drizzle tables under `packages/db-backbone/src/schemas` and export them from `schema.ts`.
 - Centralize environment parsing in `@arlequins/env` and update examples plus `turbo.json`.
 - Commit a migration for every schema change and numbered seeds for data changes.
+
+### Web Feature-Sliced Design
+
+Keep Next App Router files as delivery-only modules. New browser code should be
+placed in one of these layers and may only depend inward:
+
+| Layer | Location | Examples |
+| --- | --- | --- |
+| Shared | `apps/web/src/shared` | transport helpers, UI primitives, formatters |
+| Entities | `apps/web/src/entities` | Gourmet and content models |
+| Features | `apps/web/src/features` | Beat handoff, editing, review actions |
+| Widgets | `apps/web/src/widgets` | Gourmet browser, admin studio panels |
+
+Legacy `components/` and `lib/` barrels remain as compatibility seams while
+imports are migrated. Run `pnpm architecture:check` after adding a slice.

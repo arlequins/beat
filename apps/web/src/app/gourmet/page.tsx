@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-
-import { GourmetBrowser } from "~/components/gourmet/gourmet-browser";
 import { localizedAlternates } from "~/lib/seo";
+import { GourmetBrowser } from "~/widgets/gourmet-browser/ui/gourmet-browser";
 
 export const metadata: Metadata = {
   alternates: localizedAlternates("en", "/gourmet/"),

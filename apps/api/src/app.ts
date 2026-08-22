@@ -32,17 +32,6 @@ import {
   verifyBeatIdTokenHint,
 } from "./beat-auth";
 import {
-  type BeatContentError,
-  confirmAndPublishBeatDraft,
-  getBeatContentDraft,
-  getBeatDraft,
-  getBeatDraftRevision,
-  listBeatContentRecords,
-  listBeatDraftRevisions,
-  restoreBeatDraftRevision,
-  saveBeatDraft,
-} from "./beat-content";
-import {
   createGoogleAuthorizationUrl,
   exchangeGoogleAuthorizationCode,
   isGoogleSsoConfigured,
@@ -58,7 +47,20 @@ import {
   validateAuthorizationRequest,
   validateLogoutRequest,
 } from "./beat-oidc";
-import { registerGourmetRoutes } from "./gourmet-routes";
+import type { BeatContentError } from "./features/content/application/errors";
+import {
+  confirmAndPublishBeatDraft,
+  getBeatContentDraft,
+  getBeatDraft,
+  getBeatDraftRevision,
+  listBeatContentRecords,
+  listBeatDraftRevisions,
+  restoreBeatDraftRevision,
+  saveBeatDraft,
+} from "./features/content/infrastructure/s3-content-repository";
+import type { GourmetPort } from "./features/gourmet/application/ports";
+import { createGourmetPort } from "./features/gourmet/composition";
+import { registerGourmetRoutes } from "./features/gourmet/interface/http/routes";
 import { registerMcpRoutes } from "./mcp";
 import { registerOpenApiRoutes } from "./openapi";
 
@@ -97,7 +99,7 @@ export type CreateApiAppOptions = {
     restoreRevision?: typeof restoreBeatDraftRevision;
     saveDraft: typeof saveBeatDraft;
   };
-  gourmet?: Parameters<typeof registerGourmetRoutes>[1]["gourmet"];
+  gourmet?: Partial<GourmetPort>;
   gourmetActionApiKey?: string;
   mcp?: {
     issuer?: string;
@@ -613,13 +615,14 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       return undefined;
     }
   };
+  const gourmet = createGourmetPort(options.gourmet);
   registerGourmetRoutes(app, {
     actionApiKey: options.gourmetActionApiKey,
-    gourmet: options.gourmet,
+    gourmet,
     verifyAccessToken: auth.verifyAccessToken,
   });
   registerMcpRoutes(app, {
-    gourmet: options.gourmet,
+    gourmet,
     issuer: options.mcp?.issuer,
     logger: rootLogger,
     resource: options.mcp?.resource,

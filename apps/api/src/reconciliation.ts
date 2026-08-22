@@ -7,7 +7,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 
-import { reconcileBeatPublicationJobs } from "./beat-content";
+import { reconcileBeatPublicationJobs } from "./features/content/infrastructure/s3-content-repository";
 
 type AuditConfig = {
   ledgerBucket: string;

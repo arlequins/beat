@@ -109,6 +109,8 @@ for the production request flow and
 for the shared token contract.
 The [Beat Gourmet guide](./docs/gourmet.md) covers Custom GPT text capture,
 S3-backed records, and repository-reviewed images.
+The [feature-sliced migration map](./docs/architecture-migration.md) explains
+where new API and web code belongs.
 
 ## Common Commands
 
