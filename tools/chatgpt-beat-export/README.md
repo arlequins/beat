@@ -10,6 +10,8 @@ Beat API key or a long-lived token.
 1. Open Beat Admin at `https://arlequins.github.io/beat/admin/` and sign in.
 2. In Chrome, open `chrome://extensions`, enable **Developer mode**, choose
    **Load unpacked**, and select this directory.
+   Beat releases also include a versioned ZIP and SHA-256 checksum; extract
+   the ZIP first and select the extracted folder.
 3. Keep the signed-in Beat Admin tab open. Open the ChatGPT conversation that
    contains the meal photos.
 4. Select the **Beat Gourmet export** extension, choose **현재 대화의 사진 찾기**,
