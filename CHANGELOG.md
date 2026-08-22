@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.21.1](https://github.com/arlequins/beat/compare/beat-v1.21.0...beat-v1.21.1) (2026-08-22)
+
+
+### Bug Fixes
+
+* **gourmet:** quote OpenAPI YAML enum strings ([#83](https://github.com/arlequins/beat/issues/83)) ([841dda8](https://github.com/arlequins/beat/commit/841dda83e55cf8025ec39cc533e1f9818fb73ff1))
+
 ## [1.21.0](https://github.com/arlequins/beat/compare/beat-v1.20.0...beat-v1.21.0) (2026-08-22)
 
 
