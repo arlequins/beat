@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.22.1](https://github.com/arlequins/beat/compare/beat-v1.22.0...beat-v1.22.1) (2026-08-22)
+
+
+### Bug Fixes
+
+* **web:** preserve Pages base path in Agent handoff ([#88](https://github.com/arlequins/beat/issues/88)) ([4cc3a3e](https://github.com/arlequins/beat/commit/4cc3a3e2b952fb1ff734105e49d704621639f073))
+
 ## [1.22.0](https://github.com/arlequins/beat/compare/beat-v1.21.1...beat-v1.22.0) (2026-08-22)
 
 
