@@ -3,6 +3,7 @@ import { createHash, randomBytes, scrypt as scryptCallback } from "node:crypto";
 import {
   GetObjectCommand,
   HeadBucketCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   type S3Client,
 } from "@aws-sdk/client-s3";
@@ -23,12 +24,24 @@ function s3Harness() {
         input: {
           Body?: string;
           Bucket: string;
+          ContinuationToken?: string;
           IfMatch?: string;
           IfNoneMatch?: string;
-          Key: string;
+          Key?: string;
+          Prefix?: string;
         };
       }
     ).input;
+    if (command instanceof ListObjectsV2Command) {
+      const prefix = `${input.Bucket}/${input.Prefix ?? ""}`;
+      return {
+        Contents: [...objects.keys()]
+          .filter((key) => key.startsWith(prefix))
+          .map((key) => ({ Key: key.slice(input.Bucket.length + 1) })),
+        IsTruncated: false,
+      };
+    }
+    if (!input.Key) throw new Error("S3 object key is required");
     const objectKey = `${input.Bucket}/${input.Key}`;
     if (command instanceof GetObjectCommand) {
       const stored = objects.get(objectKey);
@@ -296,6 +309,65 @@ describe("Beat S3 authentication", () => {
     await expect(
       auth.refreshBeatTokenPair(tokens.refresh_token, harness.client),
     ).rejects.toMatchObject({ code: "invalid_refresh_token" });
+  });
+
+  it("lists and revokes only the authenticated subject's persistent sessions", async () => {
+    const harness = s3Harness();
+    const { auth } = await loadAuth();
+    await auth.createBeatAdmin(
+      "admin@example.com",
+      "correct horse battery staple",
+      harness.client,
+    );
+    await auth.createBeatAdmin(
+      "other@example.com",
+      "another correct horse battery staple",
+      harness.client,
+    );
+    const administrator = await auth.authenticateBeatAdmin(
+      "admin@example.com",
+      "correct horse battery staple",
+      harness.client,
+    );
+    const otherAdministrator = await auth.authenticateBeatAdmin(
+      "other@example.com",
+      "another correct horse battery staple",
+      harness.client,
+    );
+    const first = await auth.issueBeatTokenPair(
+      administrator!,
+      "beat-agent",
+      harness.client,
+    );
+    const second = await auth.issueBeatTokenPair(
+      administrator!,
+      "beat-agent",
+      harness.client,
+    );
+    const other = await auth.issueBeatTokenPair(
+      otherAdministrator!,
+      "beat-agent",
+      harness.client,
+    );
+
+    await expect(
+      auth.listBeatPersistentSessions(administrator!.subject, harness.client),
+    ).resolves.toMatchObject({ activePersistentLogins: 2 });
+    await expect(
+      auth.revokeBeatPersistentSessions(administrator!.subject, harness.client),
+    ).resolves.toBe(2);
+    await expect(
+      auth.listBeatPersistentSessions(administrator!.subject, harness.client),
+    ).resolves.toEqual({ activePersistentLogins: 0, sessions: [] });
+    await expect(
+      auth.refreshBeatTokenPair(first.refresh_token, harness.client),
+    ).rejects.toMatchObject({ code: "invalid_refresh_token" });
+    await expect(
+      auth.refreshBeatTokenPair(second.refresh_token, harness.client),
+    ).rejects.toMatchObject({ code: "invalid_refresh_token" });
+    await expect(
+      auth.refreshBeatTokenPair(other.refresh_token, harness.client),
+    ).resolves.toMatchObject({ token_type: "Bearer" });
   });
 
   it("redeems a one-time authorization code with S256 PKCE and a nonce ID token", async () => {

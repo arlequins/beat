@@ -484,6 +484,61 @@ describe("API app", () => {
     expect(revokeRefreshToken).toHaveBeenCalledTimes(1);
   });
 
+  it("protects persistent session review and revocation by access token subject", async () => {
+    const listPersistentSessions = vi.fn(async () => ({
+      activePersistentLogins: 1,
+      sessions: [
+        {
+          createdAt: "2026-08-22T00:00:00.000Z",
+          expiresAt: "2026-09-21T00:00:00.000Z",
+        },
+      ],
+    }));
+    const revokePersistentSessions = vi.fn(async () => 1);
+    const verifyAccessToken = vi.fn(async (token: string) => {
+      if (token !== "valid-access-token") throw new Error("invalid token");
+      return { email: "admin@example.com", subject: "admin-1" };
+    });
+    const authApp = createApiApp({
+      beatAuth: {
+        authenticate: vi.fn(),
+        issueTokenPair: vi.fn(),
+        jwks: vi.fn(async () => ({ keys: [] })),
+        listPersistentSessions,
+        refreshTokenPair: vi.fn(),
+        revokePersistentSessions,
+        revokeRefreshToken: vi.fn(),
+        verifyAccessToken,
+      },
+      corsOrigins: ["https://agent.example.com"],
+      logger: createLogger({ service: "api", sink: () => {} }),
+      rateLimiter: false,
+    });
+
+    const unauthorized = await authApp.request("/auth/sessions");
+    expect(unauthorized.status).toBe(401);
+    expect(unauthorized.headers.get("cache-control")).toBe("no-store");
+
+    const sessions = await authApp.request("/auth/sessions", {
+      headers: { Authorization: "Bearer valid-access-token" },
+    });
+    expect(sessions.status).toBe(200);
+    expect(sessions.headers.get("cache-control")).toBe("no-store");
+    await expect(sessions.json()).resolves.toMatchObject({
+      activePersistentLogins: 1,
+    });
+    expect(listPersistentSessions).toHaveBeenCalledWith("admin-1");
+
+    const revoke = await authApp.request("/auth/sessions/revoke", {
+      headers: { Authorization: "Bearer valid-access-token" },
+      method: "POST",
+    });
+    expect(revoke.status).toBe(200);
+    expect(revoke.headers.get("cache-control")).toBe("no-store");
+    await expect(revoke.json()).resolves.toEqual({ revoked: true });
+    expect(revokePersistentSessions).toHaveBeenCalledWith("admin-1");
+  });
+
   it("runs the Authorization Code + PKCE contract and preserves state on errors", async () => {
     vi.stubEnv(
       "BEAT_AUTH_CLIENTS_JSON",
