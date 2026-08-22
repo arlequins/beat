@@ -24,8 +24,10 @@ import {
   checkBeatStorageReadiness,
   issueBeatAuthorizationCode,
   issueBeatTokenPair,
+  listBeatPersistentSessions,
   redeemBeatAuthorizationCode,
   refreshBeatTokenPair,
+  revokeBeatPersistentSessions,
   revokeBeatRefreshToken,
   verifyBeatAccessToken,
   verifyBeatAccessTokenForAudience,
@@ -78,8 +80,10 @@ export type CreateApiAppOptions = {
     issueAuthorizationCode?: typeof issueBeatAuthorizationCode;
     issueTokenPair: typeof issueBeatTokenPair;
     jwks: typeof beatJwks;
+    listPersistentSessions?: typeof listBeatPersistentSessions;
     refreshTokenPair: typeof refreshBeatTokenPair;
     redeemAuthorizationCode?: typeof redeemBeatAuthorizationCode;
+    revokePersistentSessions?: typeof revokeBeatPersistentSessions;
     verifyIdTokenHint?: typeof verifyBeatIdTokenHint;
     revokeRefreshToken: typeof revokeBeatRefreshToken;
     verifyAccessToken: typeof verifyBeatAccessToken;
@@ -179,9 +183,11 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     issueAuthorizationCode: issueBeatAuthorizationCode,
     issueTokenPair: issueBeatTokenPair,
     jwks: beatJwks,
+    listPersistentSessions: listBeatPersistentSessions,
     refreshTokenPair: refreshBeatTokenPair,
     redeemAuthorizationCode: redeemBeatAuthorizationCode,
     revokeRefreshToken: revokeBeatRefreshToken,
+    revokePersistentSessions: revokeBeatPersistentSessions,
     verifyAccessToken: verifyBeatAccessToken,
     verifyAccessTokenForAudience: verifyBeatAccessTokenForAudience,
     verifyIdTokenHint: verifyBeatIdTokenHint,
@@ -276,6 +282,8 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     "/auth/google/*",
     "/auth/token",
     "/auth/refresh",
+    "/auth/sessions",
+    "/auth/sessions/revoke",
     "/admin/content/*",
     "/admin/gourmet/*",
     "/api/gourmet/*",
@@ -616,6 +624,25 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       return undefined;
     }
   };
+  app.get("/auth/sessions", async (context) => {
+    context.header("Cache-Control", "no-store");
+    const administrator = await authenticatedAdministrator(context);
+    if (!administrator) return context.json({ error: "Unauthorized" }, 401);
+    return context.json(
+      await (auth.listPersistentSessions ?? listBeatPersistentSessions)(
+        administrator.subject,
+      ),
+    );
+  });
+  app.post("/auth/sessions/revoke", async (context) => {
+    context.header("Cache-Control", "no-store");
+    const administrator = await authenticatedAdministrator(context);
+    if (!administrator) return context.json({ error: "Unauthorized" }, 401);
+    await (auth.revokePersistentSessions ?? revokeBeatPersistentSessions)(
+      administrator.subject,
+    );
+    return context.json({ revoked: true as const });
+  });
   const gourmet = createGourmetPort(options.gourmet);
   registerGourmetRoutes(app, {
     actionApiKey: options.gourmetActionApiKey,

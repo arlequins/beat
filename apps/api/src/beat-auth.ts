@@ -11,6 +11,7 @@ import { serverEnv } from "@arlequins/env/server-env";
 import {
   GetObjectCommand,
   HeadBucketCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -98,6 +99,14 @@ export type BeatTokenPair = {
   refresh_expires_in: number;
   refresh_token: string;
   token_type: "Bearer";
+};
+
+export type BeatPersistentSessionSummary = {
+  activePersistentLogins: number;
+  sessions: Array<{
+    createdAt: string;
+    expiresAt: string;
+  }>;
 };
 
 export type BeatAuthorizationCodeRequest = {
@@ -376,6 +385,35 @@ async function readAdminByKey(
   if (!isAdminState(stored.value))
     throw new Error(`Invalid administrator state in ${key}`);
   return { ...stored, value: stored.value };
+}
+
+async function listRefreshSessionStates(
+  client: S3Client,
+  authConfig: BeatAuthConfig,
+) {
+  const sessions: Array<{ etag: string; value: RefreshSession }> = [];
+  let continuationToken: string | undefined;
+  do {
+    const response = await client.send(
+      new ListObjectsV2Command({
+        Bucket: authConfig.stateBucket,
+        ContinuationToken: continuationToken,
+        Prefix: `${authConfig.statePrefix}/oauth/sessions/`,
+      }),
+    );
+    for (const object of response.Contents ?? []) {
+      if (!object.Key) continue;
+      const stored = await getJson(client, authConfig.stateBucket, object.Key);
+      if (!stored) continue;
+      if (!isRefreshSession(stored.value))
+        throw new Error(`Invalid refresh session state in ${object.Key}`);
+      sessions.push({ etag: stored.etag, value: stored.value });
+    }
+    continuationToken = response.IsTruncated
+      ? response.NextContinuationToken
+      : undefined;
+  } while (continuationToken);
+  return sessions;
 }
 
 async function appendLedgerEvent(
@@ -1078,6 +1116,87 @@ export async function revokeBeatRefreshToken(
     client,
     authConfig,
   );
+}
+
+export async function listBeatPersistentSessions(
+  subject: string,
+  client = new S3Client({}),
+  now = new Date(),
+): Promise<BeatPersistentSessionSummary> {
+  const authConfig = config();
+  const sessions = (await listRefreshSessionStates(client, authConfig))
+    .map(({ value }) => value)
+    .filter(
+      (session) =>
+        session.subject === subject &&
+        session.status === "active" &&
+        Date.parse(session.expiresAt) > now.getTime(),
+    )
+    .map((session) => ({
+      createdAt: session.lastUsedAt,
+      expiresAt: session.expiresAt,
+    }))
+    .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+  return {
+    activePersistentLogins: sessions.length,
+    sessions,
+  };
+}
+
+export async function revokeBeatPersistentSessions(
+  subject: string,
+  client = new S3Client({}),
+) {
+  const authConfig = config();
+  const sessionIds = (await listRefreshSessionStates(client, authConfig))
+    .map(({ value }) => value)
+    .filter(
+      (session) => session.subject === subject && session.status === "active",
+    )
+    .map((session) => session.sessionId);
+  let revoked = 0;
+  for (const sessionId of sessionIds) {
+    const key = sessionKey(sessionId, authConfig);
+    let resolved = false;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const latest = await getJson(client, authConfig.stateBucket, key);
+      if (!latest || !isRefreshSession(latest.value)) {
+        resolved = true;
+        break;
+      }
+      if (
+        latest.value.subject !== subject ||
+        latest.value.status !== "active"
+      ) {
+        resolved = true;
+        break;
+      }
+      try {
+        await putJson(client, {
+          bucket: authConfig.stateBucket,
+          ifMatch: latest.etag,
+          key,
+          value: {
+            ...latest.value,
+            status: "revoked",
+          } satisfies RefreshSession,
+        });
+        revoked += 1;
+        resolved = true;
+        break;
+      } catch (error) {
+        if (!isPreconditionFailed(error)) throw error;
+      }
+    }
+    if (!resolved) throw new BeatAuthError("conflict");
+  }
+  await appendLedgerEvent(
+    "refresh-sessions-revoked",
+    { count: revoked, subject },
+    client,
+    authConfig,
+  );
+  return revoked;
 }
 
 export async function checkBeatStorageReadiness(client = new S3Client({})) {

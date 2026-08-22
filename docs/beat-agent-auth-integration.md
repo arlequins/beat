@@ -114,6 +114,25 @@ Content-Type: application/x-www-form-urlencoded
 token=SESSION.GENERATION.SECRET
 ```
 
+An authenticated Agent can review the current administrator's active refresh
+sessions without exposing refresh tokens:
+
+```http
+GET https://api.example.com/auth/sessions
+Authorization: Bearer ACCESS_TOKEN
+```
+
+The response contains `activePersistentLogins` and active session timestamps.
+Revoke every refresh session owned by the authenticated subject with:
+
+```http
+POST https://api.example.com/auth/sessions/revoke
+Authorization: Bearer ACCESS_TOKEN
+```
+
+Both management endpoints return `Cache-Control: no-store`, accept only a
+valid Beat access token, and never return session identifiers or token values.
+
 ## Browser boundary
 
 `localStorage` persistence is an explicit product requirement and exposes
