@@ -2,6 +2,18 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.22.0](https://github.com/arlequins/beat/compare/beat-v1.21.1...beat-v1.22.0) (2026-08-22)
+
+
+### Features
+
+* **web:** expand Beat product studio ([#85](https://github.com/arlequins/beat/issues/85)) ([4b65018](https://github.com/arlequins/beat/commit/4b650188cea6a8529a05bf15f587f495d542d846))
+
+
+### Bug Fixes
+
+* **gourmet:** make Action schema parser-compatible ([#86](https://github.com/arlequins/beat/issues/86)) ([ef4e107](https://github.com/arlequins/beat/commit/ef4e10723def1be138aa58cc9d3ee0bac60fe54b))
+
 ## [1.21.1](https://github.com/arlequins/beat/compare/beat-v1.21.0...beat-v1.21.1) (2026-08-22)
 
 
