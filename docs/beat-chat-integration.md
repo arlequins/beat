@@ -43,7 +43,13 @@ submits feedback.
 
 ## Beat application boundary
 
-The current safe integration is a link only:
+On a post detail page, the entry changes to **Ask Beat about this post**. It
+opens a review dialog first and shows the exact public title, canonical browser
+URL, and excerpt. Only after the signed-in administrator confirms does the site
+open Beat with those three bounded values in query parameters. Beat copies them
+into the question composer; it does not auto-send a message or write memory.
+
+The safe integration remains a new-window handoff:
 
 - Register OIDC redirect and logout callback URLs for the **Beat web origin**,
   not the portfolio origin.
@@ -52,6 +58,11 @@ The current safe integration is a link only:
 - Do not treat every public blog page as agent knowledge. Add portfolio content
   to Beat only through an explicit ingestion or public-document approval flow,
   with provenance preserved for citations.
+- Never add an access token, workspace ID, private draft body, or browser
+  storage value to the handoff URL. The current implementation reads only
+  elements marked `data-beat-context-title` and `data-beat-context-excerpt`.
+- Keep the confirmation step. A hover, page view, or button render must not send
+  context to Beat.
 
 If a later feature makes the browser call Beat's API directly, configure the
 Beat API's CORS allowlist with the exact portfolio origin (scheme and host, no

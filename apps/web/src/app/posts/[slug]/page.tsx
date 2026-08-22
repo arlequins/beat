@@ -51,10 +51,16 @@ export async function KoreanPostDetailPage(props: {
               </span>
             ))}
           </div>
-          <h1 className="display-serif mt-6 text-4xl leading-[1.04] tracking-[-0.055em] text-balance sm:text-6xl">
+          <h1
+            className="display-serif mt-6 text-4xl leading-[1.04] tracking-[-0.055em] text-balance sm:text-6xl"
+            data-beat-context-title
+          >
             {post.frontmatter.title}
           </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300 sm:text-xl">
+          <p
+            className="mt-6 max-w-3xl text-lg leading-8 text-slate-300 sm:text-xl"
+            data-beat-context-excerpt
+          >
             {post.frontmatter.excerpt}
           </p>
           <div className="mt-8 border-t border-white/15 pt-4 text-sm text-slate-400">
