@@ -27,6 +27,10 @@ user message against the restaurant, menu, summary, and rating of existing
 draft records. The user can change the target record before upload. It never
 publishes a record or creates a new record by itself.
 
+Each export request receives a random client request ID. Beat records only that
+ID, the target entry, and the resulting image count in the structured audit log;
+conversation text and image bytes are not written to logs.
+
 ## Scope and limitations
 
 - The extension only handles images that the active ChatGPT page exposes to the

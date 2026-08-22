@@ -1,3 +1,5 @@
+import { buildAssignments, rankEntries } from "./matcher.js";
+
 const state = {
   entries: [],
   groups: [],
@@ -19,37 +21,6 @@ function send(message) {
       resolve(response ?? { ok: false, error: "응답이 없습니다." });
     });
   });
-}
-
-function tokens(value) {
-  return String(value ?? "")
-    .toLocaleLowerCase("ko-KR")
-    .replace(/미상|unknown|none/g, " ")
-    .split(/[^\p{L}\p{N}]+/u)
-    .filter((token) => token.length >= 2);
-}
-
-function matchScore(entry, text) {
-  const haystack = String(text ?? "").toLocaleLowerCase("ko-KR");
-  const fields = [
-    entry.restaurantName,
-    entry.menuName,
-    entry.summary,
-    ...(entry.tasteNotes ?? []),
-  ];
-  let score = 0;
-  for (const field of fields) {
-    const normalized = String(field ?? "")
-      .toLocaleLowerCase("ko-KR")
-      .trim();
-    if (!normalized || normalized === "미상") continue;
-    if (haystack.includes(normalized)) score += 8;
-    for (const token of tokens(normalized))
-      if (haystack.includes(token)) score += 1;
-  }
-  const rating = String(entry.rating);
-  if (new RegExp(`(?:^|\\s)${rating}(?:점|\\s|$)`).test(text)) score += 3;
-  return score;
 }
 
 function escapeHtml(value) {
@@ -107,9 +78,7 @@ $("#extract").addEventListener("click", async () => {
     if (!response.ok) throw new Error(response.error);
     if (response.data?.error) throw new Error(response.data.error);
     state.groups = (response.data?.messages ?? []).map((message) => {
-      const ranked = state.entries
-        .map((entry) => ({ entry, score: matchScore(entry, message.text) }))
-        .sort((left, right) => right.score - left.score);
+      const ranked = rankEntries(state.entries, message.text);
       return {
         entryId: ranked[0]?.entry.id ?? state.entries[0].id,
         images: message.images,
@@ -134,18 +103,10 @@ $("#export").addEventListener("click", async () => {
   $("#export").disabled = true;
   status("Beat에 사진을 연결하는 중입니다…");
   try {
-    const grouped = new Map();
-    for (const group of state.groups) {
-      if (!group.entryId) continue;
-      const current = grouped.get(group.entryId) ?? [];
-      current.push(...group.images);
-      grouped.set(group.entryId, current);
-    }
-    const assignments = [...grouped].map(([entryId, images]) => ({
-      entryId,
-      images,
-    }));
-    const response = await send({ type: "EXPORT_ASSIGNMENTS", assignments });
+    const response = await send({
+      type: "EXPORT_ASSIGNMENTS",
+      assignments: buildAssignments(state.groups),
+    });
     if (!response.ok) throw new Error(response.error);
     status(`${response.result.uploaded}장의 사진을 Beat 초안에 연결했습니다.`);
     $("#export").disabled = true;

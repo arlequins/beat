@@ -228,6 +228,12 @@ export function registerGourmetRoutes(
     name: string,
     details: Record<string, unknown>,
   ) => context.get("logger").info(name, details);
+  const clientRequestId = (context: {
+    req: { header: (name: string) => string | undefined };
+  }) => {
+    const value = context.req.header("x-client-request-id")?.trim();
+    return value && /^[A-Za-z0-9._:-]{1,128}$/.test(value) ? value : undefined;
+  };
 
   app.get("/api/gourmet/entries", async (context) => {
     try {
@@ -545,13 +551,19 @@ export function registerGourmetRoutes(
         403,
       );
     try {
-      return context.json(
-        await gourmet.attachImage(
-          context.req.param("id"),
-          attachSchema.parse(await context.req.json()),
-          user.subject,
-        ),
+      const entry = await gourmet.attachImage(
+        context.req.param("id"),
+        attachSchema.parse(await context.req.json()),
+        user.subject,
       );
+      const importRequestId = clientRequestId(context);
+      log(context, "gourmet.image_attached", {
+        ...(importRequestId ? { clientRequestId: importRequestId } : {}),
+        entryId: entry.id,
+        imageCount: entry.images.length,
+        requestId: context.get("requestId"),
+      });
+      return context.json(entry);
     } catch (error) {
       return errorResponse(context, error) ?? invalid(context);
     }

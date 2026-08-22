@@ -255,6 +255,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
         "Authorization",
         "Content-Type",
         "Trpc-Accept",
+        "X-Client-Request-Id",
         "X-Request-Id",
       ],
       allowMethods: ["DELETE", "GET", "PATCH", "POST", "PUT", "OPTIONS"],
