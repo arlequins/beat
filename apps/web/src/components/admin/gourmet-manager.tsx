@@ -371,7 +371,10 @@ export function GourmetManager() {
     setForm((current) => ({ ...current, [key]: value }));
 
   return (
-    <section className="mt-16 grid gap-6 border-t border-[var(--line)] pt-12">
+    <section
+      className="mt-16 grid scroll-mt-8 gap-6 border-t border-[var(--line)] pt-12"
+      id="gourmet-workspace"
+    >
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-bold tracking-[0.16em] text-[var(--accent-foreground)] uppercase">
