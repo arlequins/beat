@@ -20,6 +20,7 @@ import {
   gourmetTimeline,
   publicGourmetImage,
 } from "~/entities/gourmet";
+import { GourmetShareButton } from "~/features/gourmet-share/ui/gourmet-share-button";
 import { type Locale, localePath } from "~/lib/i18n";
 
 const text = {
@@ -280,6 +281,15 @@ export function GourmetBrowser(props: { locale: Locale }) {
                 </span>
               ))}
             </div>
+            {selected.images[0] ? (
+              <div className="mt-8 border-y border-[var(--line)] py-5">
+                <GourmetShareButton
+                  entry={selected}
+                  imageUrl={publicGourmetImage(selected.images[0])}
+                  locale={props.locale}
+                />
+              </div>
+            ) : null}
             {selected.liked.length ? (
               <p className="mt-8 text-sm leading-7">
                 <strong>{labels.liked}</strong>
