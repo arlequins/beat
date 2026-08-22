@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.22.2](https://github.com/arlequins/beat/compare/beat-v1.22.1...beat-v1.22.2) (2026-08-22)
+
+
+### Bug Fixes
+
+* preserve architecture migration guidance ([#92](https://github.com/arlequins/beat/issues/92)) ([12144a2](https://github.com/arlequins/beat/commit/12144a24664a28070dbb561e8fb18d02a3c53115))
+
 ## [1.22.1](https://github.com/arlequins/beat/compare/beat-v1.22.0...beat-v1.22.1) (2026-08-22)
 
 
