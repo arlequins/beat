@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.20.0](https://github.com/arlequins/beat/compare/beat-v1.19.0...beat-v1.20.0) (2026-08-22)
+
+
+### Features
+
+* **admin:** add revision recovery operations ([#79](https://github.com/arlequins/beat/issues/79)) ([01fd99d](https://github.com/arlequins/beat/commit/01fd99df99e586561f67899cb00a62503ea79844))
+
 ## [1.19.0](https://github.com/arlequins/beat/compare/beat-v1.18.0...beat-v1.19.0) (2026-08-22)
 
 
