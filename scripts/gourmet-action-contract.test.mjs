@@ -16,6 +16,7 @@ test("Custom GPT Action targets the Beat production API", async () => {
 
   assert.ok(schema.includes(`  - url: ${productionOrigin}\n`));
   assert.match(schema, /bearerAuth:\n {6}type: http\n {6}scheme: bearer/);
+  assert.match(schema, /enum: \["yes", "no", unknown\]/);
 });
 
 test("Custom GPT Action marks reads and writes with explicit confirmation semantics", async () => {
