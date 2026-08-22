@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.27.2](https://github.com/arlequins/beat/compare/beat-v1.27.1...beat-v1.27.2) (2026-08-22)
+
+
+### Bug Fixes
+
+* **auth:** add persistent session management ([#107](https://github.com/arlequins/beat/issues/107)) ([7053adf](https://github.com/arlequins/beat/commit/7053adf713ceb9bc273c2b86c5f025a94303be77))
+
 ## [1.27.1](https://github.com/arlequins/beat/compare/beat-v1.27.0...beat-v1.27.1) (2026-08-22)
 
 
