@@ -6,8 +6,9 @@ GitHub Actions production Environment와 OIDC로 실행한다.
 
 ## 배포 후 확인
 
-1. **Production availability monitor**를 수동 실행해 GitHub Pages와 `/health/live`
-   응답이 모두 정상인지 확인한다.
+1. **Production availability monitor**를 수동 실행해 GitHub Pages,
+   `/health/live`, `/health/ready`, OIDC discovery/JWKS/CORS, 인증 없는 관리자
+   접근 거부, 공개 Gourmet 목록 계약이 모두 정상인지 확인한다.
 2. Custom GPT Preview 또는 모바일 ChatGPT에서 최근 맥락을 읽고, 사용자의 명시적
    확인 뒤 한 건을 저장한다. 응답의 `id`, `revision`, `detailUrl`만 기록한다.
 3. `https://arlequins.github.io/beat/admin/`에서 Google SSO로 로그인해 같은 기록을
@@ -27,7 +28,8 @@ GitHub Actions production Environment와 OIDC로 실행한다.
 ## 관찰과 장애 대응
 
 - 시간별 **Production availability monitor**가 웹과 API를 확인하고 실패 시
-  열린 GitHub Issue를 하나 만든다.
+  열린 GitHub Issue를 하나 만든다. 다음 성공 실행은 같은 열린 Issue에 복구
+  실행을 기록하고 닫는다.
 - 배포 직후 5xx가 발생하면 **Production API runtime diagnostics**를 실패한
   배포 run ID와 `production` 확인값으로 실행한다. 출력은 지정된 Lambda 로그
   그룹의 redacted 초기화 메시지만 포함하고, 원본 로그를 artifact로 저장하지

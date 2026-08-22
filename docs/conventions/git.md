@@ -4,21 +4,25 @@ This convention applies to this repository and its workspaces.
 
 ## Branch Strategy
 
-| Branch                        | Purpose                                                                                    |
-| ----------------------------- | ------------------------------------------------------------------------------------------ |
-| `main`                        | Production branch. Only tagged release versions should land here.                          |
-| `develop`                     | Integration branch for the next release candidate.                                         |
-| `feature/<short-description>` | New features and improvements. Branch from `develop`, then merge back through a PR.        |
-| `fix/<short-description>`     | Non-urgent bug fixes. Branch from `develop`, then merge back through a PR.                 |
-| `release/X.Y.Z`               | Release preparation, including version updates and final adjustments. Created by git-flow. |
-| `hotfix/X.Y.Z`                | Urgent production fixes. Branch from `main`, then merge into both `main` and `develop`.    |
+| Branch                                                        | Purpose                                                               |
+| ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `main`                                                        | The only production branch and source for protected deployments.      |
+| `feature/<short-description>`                                 | Product changes branched from current `main` and merged through a PR. |
+| `fix/<short-description>`                                     | Focused fixes branched from current `main` and merged through a PR.   |
+| `automation/<short-description>`                              | Bot-created content or maintenance changes reviewed through a PR.    |
+| `release-please--branches--main--components--beat`            | Release Please's managed version and changelog PR branch.             |
 
 Prefer stacked PRs for large changes so each review stays small and focused.
+The repository automatically deletes merged head branches. Never reuse a
+deleted feature branch for later work.
 
 ## Merge Strategy
 
-- Use squash merge for `feature/*` and `fix/*` into `develop`. The PR title becomes the commit message, so PR titles must follow [Conventional Commits](#commit-messages-conventional-commits-10).
-- Use merge commits for `release/X.Y.Z` into `main` and for `hotfix/X.Y.Z` into `main` and `develop`, so git-flow history remains traceable.
+- Use squash merge for `feature/*`, `fix/*`, and `automation/*` into `main`.
+  The PR title becomes the commit message, so it must follow
+  [Conventional Commits](#commit-messages-conventional-commits-10).
+- Merge the generated Release Please PR only after CI and Security pass. Do not
+  create version tags locally.
 
 ## Commit Messages: Conventional Commits 1.0
 
@@ -86,20 +90,12 @@ BREAKING CHANGE: ctx.session.token has been renamed to ctx.session.accessToken.
 | Layer                   | Mechanism                                                                   | Purpose                                     |
 | ----------------------- | --------------------------------------------------------------------------- | ------------------------------------------- |
 | Documentation           | This convention                                                             | Shared team understanding                   |
-| PR title validation     | `.github/workflows/pr-title.yml` with `amannn/action-semantic-pull-request` | Reject invalid squash-merge commit messages |
-| Local commit validation | `.husky/commit-msg` running `pnpm commitlint --edit $1`                     | Reject invalid local commits                |
+| Required PR checks      | GitHub branch protection with CI and Security                              | Prevent unverified production changes       |
+| Release automation      | Release Please                                                            | Derive versions from conventional commits   |
 
-Enable both PR title validation and commitlint so the convention is mechanically enforced.
-
-### commitlint Configuration
-
-The root `commitlint.config.mjs` should configure:
-
-- `type-enum`: enforce the allowed types listed above.
-- `subject-case: [0]`: disable subject case validation.
-- `subject-full-stop: [2, "never", "."]`: disallow a trailing period.
-- `header-max-length: [2, "always", 100]`: allow headers up to 100 characters.
-- `body-leading-blank` and `footer-leading-blank`: keep the default behavior.
+Keep PR titles conventional even when GitHub does not provide a dedicated title
+check, because Release Please calculates the next Beat version from the squash
+commit on `main`.
 
 ## Release Procedure
 
@@ -108,14 +104,14 @@ See [semantic versioning](../semantic-versioning.md) for version calculation.
 1. Merge Conventional Commits into `main`.
 2. Review the Release Please PR containing the version and changelog update.
 3. Merge the release PR after required checks and approvals pass.
-4. Confirm that Release Please created the `vX.Y.Z` tag and GitHub Release.
+4. Confirm that Release Please created the `beat-vX.Y.Z` tag and GitHub Release.
 
 See [dependency and release automation](../automation.md) for repository setup.
 
 ## Hotfix Procedure
 
-1. Run `git flow hotfix start X.Y.Z` to create `hotfix/X.Y.Z` from `main`.
-2. Commit the fix.
-3. Run `git flow hotfix finish X.Y.Z`.
-   - This merges into both `main` and `develop`, and adds the `vX.Y.Z` tag.
-4. Run `git push origin main develop --follow-tags`.
+1. Create `fix/<short-description>` from current `origin/main`.
+2. Add the smallest safe regression test and fix.
+3. Open a PR and wait for CI and Security.
+4. Squash merge, review the Release Please patch PR, and verify the protected
+   deployment path. Never push a hotfix or tag directly to `main`.

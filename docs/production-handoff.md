@@ -56,34 +56,28 @@ included in an origin value.
    `beat-vX.Y.Z` tag, while the Agent uses `vX.Y.Z`; the integration contract
    remains documented in `docs/beat-agent-auth-integration.md`.
 
-## Blockers requiring protected configuration
+## Current acceptance state
 
-The Agent production deployment run failed before SST could change resources
-because its protected `DEPLOYMENT_ENV_FILE` did not contain both approved Nova
-Lite identifiers:
+There is no known protected-configuration blocker in the Beat-to-Agent identity
+path. Beat Agent `v0.11.2` is the current release. Its Pages app, callback, and
+API returned HTTP 200 during the 2026-08-22 handoff review; the protected
+production deployment, Google SSO smoke, and recurring production contract
+smoke are green.
 
-```dotenv
-BEDROCK_MODEL_ID=amazon.nova-lite-v1:0
-BEDROCK_MODEL_ARN=arn:aws:bedrock:ap-northeast-1::foundation-model/amazon.nova-lite-v1:0
-```
-
-The Beat Agent Google SSO smoke also timed out because Beat's Google SSO runtime
-configuration is not currently available to the protected smoke path. Neither
-value belongs in Git, a static bundle, or this document. After the protected
-Environment is corrected, rerun the Agent production API deployment and then
-the Google SSO smoke from GitHub Actions.
-
-The local application does not require Bedrock or Google credentials. Local
-development uses the development OIDC mock and MinIO/PostgreSQL boundaries.
+Beat still treats model-provider readiness as an Agent-owned check. No Bedrock
+model identifier, AWS credential, Google secret, or test-account token belongs
+in this repository, a static bundle, or this document. Local development does
+not require those production values.
 
 ## Safe verification order
 
-1. Configure the Agent production `DEPLOYMENT_ENV_FILE` and Beat Google SSO
-   runtime secret through protected repository settings.
-2. Run the Agent production API deployment through GitHub Actions/OIDC.
-3. Run the Agent production contract smoke and Google SSO smoke.
-4. Run Beat's protected production diff, deploy, and availability monitor.
-5. Confirm the Pages build and the Beat new-window chat entry from the public
-   portfolio.
+1. Run the Agent production contract smoke and Google SSO smoke.
+2. Run Beat's protected production availability monitor. If application
+   infrastructure changed, review the exact main SHA diff before deploy.
+3. Confirm the Pages build, administrator Google login, and Beat new-window
+   chat entry from the public portfolio.
+4. Create one Gourmet draft through the confirmed ChatGPT/MCP flow, publish it
+   in the administrator workspace, and verify the public list.
+5. Preserve the workflow URLs and release tags as acceptance evidence.
 
 No local AWS, SST diff, SST deploy, or secret inspection is part of this flow.

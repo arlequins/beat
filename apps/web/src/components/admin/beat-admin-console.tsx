@@ -8,6 +8,8 @@ import {
   ExternalLink,
   Eye,
   FileText,
+  GitCompare,
+  History,
   List,
   LoaderCircle,
   LogOut,
@@ -16,6 +18,7 @@ import {
   Plus,
   Quote,
   RefreshCw,
+  RotateCcw,
   Save,
   Send,
   ShieldCheck,
@@ -29,6 +32,7 @@ import {
   useState,
 } from "react";
 import { GourmetManager } from "~/components/admin/gourmet-manager";
+import { MdxDiff } from "~/components/admin/mdx-diff";
 import { MdxPreview } from "~/components/admin/mdx-preview";
 
 import {
@@ -48,6 +52,25 @@ type Draft = {
   slug: string;
   source: string;
   status: "draft" | "confirmed";
+  title: string;
+  updatedAt?: string;
+  updatedBy?: string;
+};
+
+type RevisionRecord = {
+  revision: number;
+  slug: string;
+  sourceBytes: number;
+  status: "draft" | "confirmed";
+  title: string;
+  updatedAt: string;
+  updatedBy: string;
+};
+
+type LocalDraft = {
+  baseRevision: number;
+  savedAt: string;
+  source: string;
   title: string;
 };
 
@@ -73,6 +96,8 @@ export function BeatAdminConsole() {
   const [slug, setSlug] = useState("");
   const [title, setTitle] = useState("");
   const [source, setSource] = useState("---\n");
+  const [baselineSource, setBaselineSource] = useState("---\n");
+  const [baselineTitle, setBaselineTitle] = useState("");
   const [revision, setRevision] = useState(0);
   const [status, setStatus] = useState<Draft["status"]>("draft");
   const [message, setMessage] = useState("");
@@ -80,10 +105,17 @@ export function BeatAdminConsole() {
   const [busy, setBusy] = useState(false);
   const [prUrl, setPrUrl] = useState<string>();
   const [records, setRecords] = useState<ContentRecord[]>([]);
-  const [editorMode, setEditorMode] = useState<"preview" | "write">("write");
+  const [editorMode, setEditorMode] = useState<"diff" | "preview" | "write">(
+    "write",
+  );
+  const [revisions, setRevisions] = useState<RevisionRecord[]>([]);
+  const [comparisonRevision, setComparisonRevision] = useState<number>();
+  const [comparisonSource, setComparisonSource] = useState("---\n");
+  const [localSavedAt, setLocalSavedAt] = useState<string>();
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
   const authenticated = authStatus === "authenticated";
+  const dirty = source !== baselineSource || title !== baselineTitle;
 
   const showMessage = useCallback(
     (value: string, tone: MessageTone = "info") => {
@@ -97,6 +129,59 @@ export function BeatAdminConsole() {
     setMessage("");
     setMessageTone("info");
   }, []);
+
+  const localDraftKey = useCallback(
+    (value: string) => `beat-admin-local-draft:${value}`,
+    [],
+  );
+
+  const clearLocalDraft = useCallback(
+    (value: string) => {
+      if (value) window.localStorage.removeItem(localDraftKey(value));
+      setLocalSavedAt(undefined);
+    },
+    [localDraftKey],
+  );
+
+  useEffect(() => {
+    if (!authenticated || !slug || busy) return;
+    const timer = window.setTimeout(() => {
+      if (!dirty) {
+        clearLocalDraft(slug);
+        return;
+      }
+      const savedAt = new Date().toISOString();
+      const local: LocalDraft = {
+        baseRevision: revision,
+        savedAt,
+        source,
+        title,
+      };
+      window.localStorage.setItem(localDraftKey(slug), JSON.stringify(local));
+      setLocalSavedAt(savedAt);
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [
+    authenticated,
+    busy,
+    clearLocalDraft,
+    dirty,
+    localDraftKey,
+    revision,
+    slug,
+    source,
+    title,
+  ]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = true;
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   useEffect(() => {
     const sync = () => {
@@ -203,6 +288,115 @@ export function BeatAdminConsole() {
     editorInsert("  ");
   }
 
+  function readLocalDraft(value: string, baseRevision: number) {
+    try {
+      const raw = window.localStorage.getItem(localDraftKey(value));
+      if (!raw) return undefined;
+      const candidate = JSON.parse(raw) as Partial<LocalDraft>;
+      if (
+        candidate.baseRevision !== baseRevision ||
+        typeof candidate.savedAt !== "string" ||
+        typeof candidate.source !== "string" ||
+        typeof candidate.title !== "string"
+      )
+        return undefined;
+      return candidate as LocalDraft;
+    } catch {
+      window.localStorage.removeItem(localDraftKey(value));
+      return undefined;
+    }
+  }
+
+  async function loadRevisionHistory(selectedSlug: string) {
+    const response = await authorizedBeatAdminRequest(
+      `/admin/content/drafts/${encodeURIComponent(selectedSlug)}/revisions`,
+    );
+    if (response.status === 401) {
+      clearBeatAdminSession();
+      throw new Error("로그인이 만료되었습니다. 다시 로그인해 주세요.");
+    }
+    if (!response.ok) throw new Error("리비전 이력을 불러올 수 없습니다.");
+    const result = (await response.json()) as { revisions: RevisionRecord[] };
+    setRevisions(result.revisions);
+  }
+
+  async function compareRevision(selectedRevision: number) {
+    if (!slug) return;
+    setBusy(true);
+    clearMessage();
+    try {
+      const response = await authorizedBeatAdminRequest(
+        `/admin/content/drafts/${encodeURIComponent(slug)}/revisions/${selectedRevision}`,
+      );
+      if (response.status === 401) {
+        clearBeatAdminSession();
+        throw new Error("로그인이 만료되었습니다. 다시 로그인해 주세요.");
+      }
+      if (!response.ok) throw new Error("선택한 리비전을 불러올 수 없습니다.");
+      const draft = (await response.json()) as Draft;
+      setComparisonRevision(draft.revision);
+      setComparisonSource(draft.source);
+      setEditorMode("diff");
+      showMessage(`리비전 ${draft.revision}과 현재 편집본을 비교합니다.`);
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : "리비전 비교 실패",
+        "error",
+      );
+      if (!hasPersistentBeatAdminSession()) setAuthStatus("anonymous");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function restoreRevision(selectedRevision: number) {
+    if (!slug) return;
+    setBusy(true);
+    clearMessage();
+    try {
+      const response = await authorizedBeatAdminRequest(
+        `/admin/content/drafts/${encodeURIComponent(slug)}/restore`,
+        {
+          body: JSON.stringify({
+            expectedRevision: revision,
+            revision: selectedRevision,
+          }),
+          method: "POST",
+        },
+      );
+      if (response.status === 401) {
+        clearBeatAdminSession();
+        throw new Error("로그인이 만료되었습니다. 다시 로그인해 주세요.");
+      }
+      if (response.status === 409)
+        throw new Error("새 리비전이 생겼습니다. 다시 불러온 뒤 복원하세요.");
+      if (!response.ok) throw new Error("선택한 리비전을 복원할 수 없습니다.");
+      const draft = (await response.json()) as Draft;
+      setRevision(draft.revision);
+      setTitle(draft.title);
+      setSource(draft.source);
+      setBaselineTitle(draft.title);
+      setBaselineSource(draft.source);
+      setStatus(draft.status);
+      setComparisonRevision(draft.revision);
+      setComparisonSource(draft.source);
+      setEditorMode("write");
+      clearLocalDraft(slug);
+      await Promise.all([loadRevisionHistory(slug), loadRecords()]);
+      showMessage(
+        `리비전 ${selectedRevision}을 새 리비전 ${draft.revision}으로 복원했습니다.`,
+      );
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : "리비전 복원 실패",
+        "error",
+      );
+      if (!hasPersistentBeatAdminSession()) setAuthStatus("anonymous");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function loadDraft(selectedSlug = slug) {
     if (!selectedSlug) return;
     setSlug(selectedSlug);
@@ -214,12 +408,24 @@ export function BeatAdminConsole() {
         `/admin/content/drafts/${encodeURIComponent(selectedSlug)}`,
       );
       if (response.status === 404) {
+        const emptySource = "---\n";
         setRevision(0);
-        setTitle("");
-        setSource("---\n");
+        setBaselineTitle("");
+        setBaselineSource(emptySource);
+        const local = readLocalDraft(selectedSlug, 0);
+        setTitle(local?.title ?? "");
+        setSource(local?.source ?? emptySource);
+        setLocalSavedAt(local?.savedAt);
         setStatus("draft");
+        setRevisions([]);
+        setComparisonRevision(0);
+        setComparisonSource(emptySource);
         setEditorMode("write");
-        showMessage("새 초안을 시작합니다.");
+        showMessage(
+          local
+            ? "브라우저에 임시 저장된 새 초안을 복원했습니다."
+            : "새 초안을 시작합니다.",
+        );
         return;
       }
       if (response.status === 401) {
@@ -229,14 +435,23 @@ export function BeatAdminConsole() {
       if (!response.ok) throw new Error("초안을 불러올 수 없습니다.");
       const draft = (await response.json()) as Draft;
       setRevision(draft.revision);
-      setTitle(draft.title);
-      setSource(draft.source);
+      setBaselineTitle(draft.title);
+      setBaselineSource(draft.source);
+      const local = readLocalDraft(selectedSlug, draft.revision);
+      setTitle(local?.title ?? draft.title);
+      setSource(local?.source ?? draft.source);
+      setLocalSavedAt(local?.savedAt);
       setStatus(draft.status);
+      setComparisonRevision(draft.revision);
+      setComparisonSource(draft.source);
       setEditorMode("write");
+      await loadRevisionHistory(selectedSlug);
       showMessage(
-        draft.revision === 0
-          ? "저장소의 원문을 불러왔습니다. 저장하면 새 초안이 됩니다."
-          : `리비전 ${draft.revision}을 불러왔습니다.`,
+        local
+          ? "브라우저에 임시 저장된 편집 내용을 복원했습니다."
+          : draft.revision === 0
+            ? "저장소의 원문을 불러왔습니다. 저장하면 새 초안이 됩니다."
+            : `리비전 ${draft.revision}을 불러왔습니다.`,
       );
     } catch (error) {
       const nextMessage =
@@ -273,6 +488,12 @@ export function BeatAdminConsole() {
       const draft = (await response.json()) as Draft;
       setRevision(draft.revision);
       setStatus(draft.status);
+      setBaselineTitle(draft.title);
+      setBaselineSource(draft.source);
+      setComparisonRevision(draft.revision);
+      setComparisonSource(draft.source);
+      clearLocalDraft(slug);
+      await loadRevisionHistory(slug);
       showMessage(`리비전 ${draft.revision}을 S3에 저장했습니다.`);
       void loadRecords();
     } catch (error) {
@@ -307,6 +528,12 @@ export function BeatAdminConsole() {
       setStatus("confirmed");
       setPrUrl(publication.prUrl);
       setRevision((current) => current + 1);
+      setBaselineTitle(title);
+      setBaselineSource(source);
+      setComparisonRevision(revision + 1);
+      setComparisonSource(source);
+      clearLocalDraft(slug);
+      await loadRevisionHistory(slug);
       showMessage("확정본으로 기록하고 GitHub 검토 요청을 만들었습니다.");
       void loadRecords();
     } catch (error) {
@@ -322,8 +549,14 @@ export function BeatAdminConsole() {
     setSlug("");
     setTitle("");
     setSource("---\n");
+    setBaselineTitle("");
+    setBaselineSource("---\n");
     setRevision(0);
     setStatus("draft");
+    setRevisions([]);
+    setComparisonRevision(0);
+    setComparisonSource("---\n");
+    setLocalSavedAt(undefined);
     setEditorMode("write");
     setPrUrl(undefined);
     showMessage("새 글을 시작합니다. 슬러그와 제목을 입력하세요.");
@@ -551,9 +784,16 @@ export function BeatAdminConsole() {
                 </h2>
               </div>
             </div>
-            <span className="rounded-full border border-[var(--line)] px-3 py-1 text-[10px] font-bold tracking-[0.12em] text-[var(--muted-foreground)] uppercase">
-              Revision {revision} · {status}
-            </span>
+            <div className="flex items-center gap-2">
+              {dirty ? (
+                <span className="rounded-full bg-amber-400/15 px-2.5 py-1 text-[10px] font-bold tracking-[0.1em] text-amber-700 uppercase dark:text-amber-300">
+                  편집 중
+                </span>
+              ) : null}
+              <span className="rounded-full border border-[var(--line)] px-3 py-1 text-[10px] font-bold tracking-[0.12em] text-[var(--muted-foreground)] uppercase">
+                Revision {revision} · {status}
+              </span>
+            </div>
           </header>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-7">
@@ -621,6 +861,18 @@ export function BeatAdminConsole() {
                         <Eye className="size-3.5" />
                         미리보기
                       </button>
+                      <button
+                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${editorMode === "diff" ? "bg-[var(--surface)] text-[var(--foreground)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"}`}
+                        onClick={() => {
+                          setComparisonRevision(revision);
+                          setComparisonSource(baselineSource);
+                          setEditorMode("diff");
+                        }}
+                        type="button"
+                      >
+                        <GitCompare className="size-3.5" />
+                        변경
+                      </button>
                     </div>
                     <span className="text-[10px] font-bold tracking-[0.1em] text-[var(--muted-foreground)] uppercase">
                       MDX · {lineCount} lines · {source.length} chars
@@ -686,12 +938,83 @@ export function BeatAdminConsole() {
                         value={source}
                       />
                     </>
-                  ) : (
+                  ) : editorMode === "preview" ? (
                     <div className="min-h-[28rem] p-5 sm:p-7">
                       <MdxPreview source={source} />
                     </div>
+                  ) : (
+                    <div>
+                      <div className="border-b border-[var(--line)] px-4 py-2 text-xs text-[var(--muted-foreground)]">
+                        리비전 {comparisonRevision ?? revision} 기준 · 삭제는
+                        빨강, 추가는 초록으로 표시합니다.
+                      </div>
+                      <MdxDiff after={source} before={comparisonSource} />
+                    </div>
                   )}
                 </div>
+
+                <section className="mt-5 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)]">
+                  <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <History className="size-4 text-[var(--accent-foreground)]" />
+                      <div>
+                        <h3 className="text-sm font-bold">리비전 이력</h3>
+                        <p className="text-[11px] text-[var(--muted-foreground)]">
+                          S3 불변 원본과 변경자를 확인하고 새 리비전으로
+                          복원합니다.
+                        </p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-[var(--background)] px-2.5 py-1 text-[10px] font-bold text-[var(--muted-foreground)]">
+                      {revisions.length} revisions
+                    </span>
+                  </header>
+                  <div className="max-h-64 divide-y divide-[var(--line)] overflow-y-auto">
+                    {revisions.map((item) => (
+                      <article
+                        className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                        key={item.revision}
+                      >
+                        <div className="min-w-0">
+                          <p className="flex flex-wrap items-center gap-2 text-sm font-bold">
+                            Revision {item.revision}
+                            <span className="rounded-full border border-[var(--line)] px-2 py-0.5 text-[9px] tracking-[0.1em] text-[var(--muted-foreground)] uppercase">
+                              {item.status}
+                            </span>
+                          </p>
+                          <p className="mt-1 truncate text-xs text-[var(--muted-foreground)]">
+                            {item.updatedBy} ·{" "}
+                            {new Date(item.updatedAt).toLocaleString("ko-KR")} ·{" "}
+                            {Math.ceil(item.sourceBytes / 1024)} KB
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="flex items-center gap-1.5 rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-xs font-bold hover:bg-[var(--background)] disabled:opacity-50"
+                            disabled={busy}
+                            onClick={() => void compareRevision(item.revision)}
+                            type="button"
+                          >
+                            <GitCompare className="size-3.5" /> 비교
+                          </button>
+                          <button
+                            className="flex items-center gap-1.5 rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-xs font-bold hover:bg-[var(--background)] disabled:opacity-50"
+                            disabled={busy || item.revision === revision}
+                            onClick={() => void restoreRevision(item.revision)}
+                            type="button"
+                          >
+                            <RotateCcw className="size-3.5" /> 복원
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                    {!revisions.length ? (
+                      <p className="px-4 py-6 text-center text-sm text-[var(--muted-foreground)]">
+                        S3에 저장된 리비전이 없습니다.
+                      </p>
+                    ) : null}
+                  </div>
+                </section>
               </section>
             </div>
           </div>
@@ -713,7 +1036,9 @@ export function BeatAdminConsole() {
                   </p>
                 ) : (
                   <p className="text-xs text-[var(--muted-foreground)]">
-                    저장 전에는 변경사항이 S3에 반영되지 않습니다.
+                    {localSavedAt
+                      ? `브라우저 임시 저장 ${new Date(localSavedAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} · S3 저장 전에는 다른 기기와 공유되지 않습니다.`
+                      : "저장 전에는 변경사항이 S3에 반영되지 않습니다."}
                   </p>
                 )}
               </div>

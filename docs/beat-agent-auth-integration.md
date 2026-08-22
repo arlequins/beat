@@ -145,14 +145,14 @@ Its OIDC issuer is the API origin plus `/auth`. The portfolio's protected
 GitHub Pages build uses
 `NEXT_PUBLIC_BEAT_APP_URL=https://arlequins.github.io/beat-agent` and opens
 that app in a new window; it never forwards an access or refresh token. These
-URLs were verified by the Agent production contract smoke after the `v0.8.0`
-repository release on 2026-08-13. The latest protected Agent API deployment
-attempt is currently blocked by missing Nova Lite identifiers in its
-`DEPLOYMENT_ENV_FILE`; the public endpoint remains the previously deployed
-model-disabled API until that protected configuration is corrected.
+URLs and callbacks were rechecked after the `v0.11.2` release on 2026-08-18:
+the Pages app and callback both returned HTTP 200, the protected production
+deployment passed, and the Google SSO and daily production contract smoke
+workflows succeeded. Beat's hourly production monitor independently checks the
+issuer, S256 PKCE, `offline_access`, ES256 JWKS, exact Pages CORS origin, the
+unauthenticated administrator boundary, and the public Gourmet list.
 
-The Agent API is intentionally running without a production model provider
-until an approved Bedrock model ID and exact model ARN are selected. Complete
-the model configuration as a separate protected infrastructure change; never
-commit a placeholder model value or broaden the runtime role to discover
-models dynamically.
+Bedrock model configuration remains owned by the Agent repository. Beat does
+not duplicate model identifiers, model IAM, or runtime credentials. A passing
+Beat identity contract proves authentication interoperability; model-response
+quality and provider availability remain separate Agent acceptance checks.

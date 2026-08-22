@@ -24,6 +24,10 @@ export type BeatDraft = {
   updatedBy: string;
 };
 
+export type BeatDraftRevisionRecord = Omit<BeatDraft, "source"> & {
+  sourceBytes: number;
+};
+
 export type BeatContentRecord = {
   category?: string;
   origin: "draft" | "repository";
@@ -288,6 +292,65 @@ export async function getBeatDraft(slug: string, client = new S3Client({})) {
   return stored.value;
 }
 
+export async function getBeatDraftRevision(
+  slug: string,
+  revision: number,
+  client = new S3Client({}),
+) {
+  if (!Number.isSafeInteger(revision) || revision < 1)
+    throw new BeatContentError("invalid_draft");
+  const contentConfig = config();
+  const stored = await getJson<BeatDraft>(
+    client,
+    contentConfig.stateBucket,
+    revisionKey(validateSlug(slug), revision, contentConfig),
+  );
+  if (!stored) throw new BeatContentError("not_found");
+  if (!isDraft(stored.value)) throw new Error("Invalid S3 draft revision");
+  return stored.value;
+}
+
+export async function listBeatDraftRevisions(
+  slug: string,
+  client = new S3Client({}),
+) {
+  const contentConfig = config();
+  const safeSlug = validateSlug(slug);
+  const prefix = `${contentConfig.statePrefix}/drafts/${safeSlug}/revisions/`;
+  const revisions: BeatDraftRevisionRecord[] = [];
+  let continuationToken: string | undefined;
+  do {
+    const page = await client.send(
+      new ListObjectsV2Command({
+        Bucket: contentConfig.stateBucket,
+        ContinuationToken: continuationToken,
+        Prefix: prefix,
+      }),
+    );
+    for (const object of page.Contents ?? []) {
+      const key = object.Key;
+      if (!key?.startsWith(prefix) || !key.endsWith(".json")) continue;
+      const revisionText = key.slice(prefix.length, -".json".length);
+      if (!/^\d+$/.test(revisionText)) continue;
+      const stored = await getJson<BeatDraft>(
+        client,
+        contentConfig.stateBucket,
+        key,
+      );
+      if (!stored || !isDraft(stored.value)) continue;
+      const { source, ...record } = stored.value;
+      revisions.push({
+        ...record,
+        sourceBytes: Buffer.byteLength(source, "utf8"),
+      });
+    }
+    continuationToken = page.IsTruncated
+      ? page.NextContinuationToken
+      : undefined;
+  } while (continuationToken);
+  return revisions.sort((left, right) => right.revision - left.revision);
+}
+
 export async function saveBeatDraft(
   input: {
     expectedRevision: number;
@@ -347,6 +410,77 @@ export async function saveBeatDraft(
     contentConfig,
   );
   return draft;
+}
+
+export async function restoreBeatDraftRevision(
+  input: {
+    expectedRevision: number;
+    revision: number;
+    slug: string;
+    updatedBy: string;
+  },
+  client = new S3Client({}),
+) {
+  if (
+    !Number.isSafeInteger(input.expectedRevision) ||
+    input.expectedRevision < 1 ||
+    !Number.isSafeInteger(input.revision) ||
+    input.revision < 1
+  )
+    throw new BeatContentError("invalid_draft");
+  const contentConfig = config();
+  const slug = validateSlug(input.slug);
+  const key = headKey(slug, contentConfig);
+  const [current, target] = await Promise.all([
+    getJson<BeatDraft>(client, contentConfig.stateBucket, key),
+    getJson<BeatDraft>(
+      client,
+      contentConfig.stateBucket,
+      revisionKey(slug, input.revision, contentConfig),
+    ),
+  ]);
+  if (!current || !target) throw new BeatContentError("not_found");
+  if (!isDraft(current.value) || !isDraft(target.value))
+    throw new Error("Invalid S3 draft revision");
+  if (current.value.revision !== input.expectedRevision)
+    throw new BeatContentError("conflict");
+
+  const restored: BeatDraft = {
+    ...target.value,
+    revision: current.value.revision + 1,
+    status: "draft",
+    updatedAt: new Date().toISOString(),
+    updatedBy: input.updatedBy,
+  };
+  try {
+    await putJson(client, {
+      bucket: contentConfig.stateBucket,
+      ifNoneMatch: "*",
+      key: revisionKey(slug, restored.revision, contentConfig),
+      value: restored,
+    });
+    await putJson(client, {
+      bucket: contentConfig.stateBucket,
+      ifMatch: current.etag,
+      key,
+      value: restored,
+    });
+  } catch (error) {
+    if (isConflict(error)) throw new BeatContentError("conflict");
+    throw error;
+  }
+  await appendContentEvent(
+    "draft-restored",
+    {
+      restoredFromRevision: input.revision,
+      revision: restored.revision,
+      slug,
+      subject: input.updatedBy,
+    },
+    client,
+    contentConfig,
+  );
+  return restored;
 }
 
 async function confirmBeatDraft(
