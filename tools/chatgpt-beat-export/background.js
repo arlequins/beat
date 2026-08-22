@@ -1,5 +1,8 @@
+import { imageIdFor } from "./image-id.js";
+
 const DEFAULT_API_ORIGIN =
   "https://4kfwvp7y2qoprape5p2jr5qvra0ekgcl.lambda-url.ap-northeast-1.on.aws";
+const ADMIN_URL = "https://arlequins.github.io/beat/admin/";
 const ADMIN_TAB_PATTERNS = [
   "https://arlequins.github.io/beat/admin/*",
   "http://localhost:43100/admin/*",
@@ -9,15 +12,37 @@ function apiOrigin() {
   return DEFAULT_API_ORIGIN;
 }
 
-async function readAdminAccessToken() {
+function sessionMessage(state) {
+  switch (state) {
+    case "missing-tab":
+      return `Beat Admin 탭을 같은 Chrome 프로필에서 열어 주세요: ${ADMIN_URL}`;
+    case "bridge-unavailable":
+      return "Beat Admin 탭을 새로고침한 뒤 관리자 기록 목록이 보일 때 다시 시도해 주세요.";
+    case "signed-out":
+      return "Beat Admin에서 Google SSO를 완료하고 관리자 기록 목록이 보일 때 다시 시도해 주세요.";
+    case "expired":
+      return "Beat Admin 로그인 세션이 만료되었습니다. 관리자 탭을 새로고침하거나 다시 로그인해 주세요.";
+    default:
+      return "Beat 관리자 로그인 상태를 확인할 수 없습니다. 관리자 탭을 새로고침해 주세요.";
+  }
+}
+
+async function inspectAdminSession() {
   const tabs = await chrome.tabs.query({ url: ADMIN_TAB_PATTERNS });
+  if (tabs.length === 0)
+    return { state: "missing-tab", message: sessionMessage("missing-tab") };
+  let bridgeSeen = false;
+  let sessionSeen = false;
+  let expired = false;
   for (const tab of tabs) {
     if (!tab.id) continue;
     try {
       const result = await chrome.tabs.sendMessage(tab.id, {
         type: "READ_BEAT_ADMIN_SESSION",
       });
+      bridgeSeen = true;
       if (!result?.session) continue;
+      sessionSeen = true;
       const session = JSON.parse(result.session);
       if (
         typeof session.accessToken === "string" &&
@@ -25,12 +50,31 @@ async function readAdminAccessToken() {
         typeof session.accessExpiresAt === "number" &&
         session.accessExpiresAt > Date.now()
       )
-        return session.accessToken;
+        return {
+          state: "ready",
+          message: "Beat Admin 로그인 세션을 확인했습니다.",
+          token: session.accessToken,
+        };
+      if (typeof session.accessToken === "string") expired = true;
     } catch {
       // The tab may not have loaded the bridge yet. Try the next tab.
     }
   }
-  throw new Error("Beat 관리자 화면에서 먼저 로그인해 주세요.");
+  const state = expired
+    ? "expired"
+    : sessionSeen
+      ? "signed-out"
+      : bridgeSeen
+        ? "signed-out"
+        : "bridge-unavailable";
+  return { state, message: sessionMessage(state) };
+}
+
+async function readAdminAccessToken() {
+  const session = await inspectAdminSession();
+  if (session.state !== "ready" || !session.token)
+    throw new Error(session.message);
+  return session.token;
 }
 
 async function apiRequest(path, init = {}, clientRequestId) {
@@ -86,11 +130,27 @@ async function extractConversation() {
 async function exportAssignments(assignments) {
   if (!Array.isArray(assignments) || assignments.length === 0)
     throw new Error("연결할 사진을 선택해 주세요.");
+  const entries = await loadEntries();
+  const entriesById = new Map(entries.map((entry) => [entry.id, entry]));
   let uploaded = 0;
+  let skipped = 0;
   const clientRequestId = crypto.randomUUID();
   for (const assignment of assignments) {
     if (typeof assignment?.entryId !== "string") continue;
+    const entry = entriesById.get(assignment.entryId);
+    if (!entry)
+      throw new Error(
+        "선택한 Beat 초안을 찾을 수 없습니다. 목록을 다시 불러와 주세요.",
+      );
+    const existingImageIds = new Set(
+      (entry.images ?? []).map((image) => image.id),
+    );
     for (const image of assignment.images ?? []) {
+      const imageId = await imageIdFor(assignment.entryId, image.contentBase64);
+      if (existingImageIds.has(imageId)) {
+        skipped += 1;
+        continue;
+      }
       await apiRequest(
         `/admin/gourmet/entries/${encodeURIComponent(assignment.entryId)}/images`,
         {
@@ -99,10 +159,11 @@ async function exportAssignments(assignments) {
           method: "POST",
         },
       );
+      existingImageIds.add(imageId);
       uploaded += 1;
     }
   }
-  return { uploaded };
+  return { skipped, uploaded };
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -110,6 +171,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     try {
       if (message?.type === "LOAD_ENTRIES")
         return sendResponse({ ok: true, entries: await loadEntries() });
+      if (message?.type === "CHECK_ADMIN_SESSION") {
+        const session = await inspectAdminSession();
+        return sendResponse({
+          ok: true,
+          session: { state: session.state, message: session.message },
+        });
+      }
       if (message?.type === "EXTRACT_CONVERSATION")
         return sendResponse({ ok: true, data: await extractConversation() });
       if (message?.type === "EXPORT_ASSIGNMENTS")

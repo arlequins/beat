@@ -22,6 +22,7 @@ test("ChatGPT exporter is a private MV3 extension without embedded secrets", asy
       "content-chatgpt.js",
       "content-beat-admin.js",
       "matcher.js",
+      "image-id.js",
       "popup.js",
     ].map((name) => readFile(new URL(name, root), "utf8")),
   );
@@ -31,6 +32,10 @@ test("ChatGPT exporter is a private MV3 extension without embedded secrets", asy
   assert.match(source, /contentBase64/);
   assert.match(source, /X-Client-Request-Id/);
   assert.match(source, /crypto\.randomUUID/);
+  assert.match(source, /CHECK_ADMIN_SESSION/);
+  assert.match(source, /visibleImageCount/);
+  assert.match(source, /imageIdFor/);
+  assert.match(source, /already connected|이미 연결/);
 });
 
 test("matches Korean meal text deterministically and groups assignments", () => {
