@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.25.0](https://github.com/arlequins/beat/compare/beat-v1.24.0...beat-v1.25.0) (2026-08-22)
+
+
+### Features
+
+* **gourmet:** improve ChatGPT export workflow ([#98](https://github.com/arlequins/beat/issues/98)) ([2429ef4](https://github.com/arlequins/beat/commit/2429ef4d9705e1734e81bc455839827a78d94a53))
+
 ## [1.24.0](https://github.com/arlequins/beat/compare/beat-v1.23.0...beat-v1.24.0) (2026-08-22)
 
 
