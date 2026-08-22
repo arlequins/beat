@@ -243,7 +243,6 @@ export function BeatPostAssistantCard(props: {
   title: string;
 }) {
   const destination = process.env.NEXT_PUBLIC_BEAT_APP_URL?.trim();
-  const pathname = usePathname() ?? "/";
   const [href, setHref] = useState<string>();
   const copy = {
     en: {
@@ -270,10 +269,10 @@ export function BeatPostAssistantCard(props: {
       beatHandoffUrl(destination, {
         excerpt: props.excerpt,
         title: props.title,
-        url: new URL(pathname, window.location.origin).toString(),
+        url: window.location.href,
       }),
     );
-  }, [destination, pathname, props.excerpt, props.title]);
+  }, [destination, props.excerpt, props.title]);
 
   if (!destination || !href) return null;
   return (
