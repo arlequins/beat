@@ -14,7 +14,7 @@ const readSchema = () => readFile(schemaUrl, "utf8");
 test("Custom GPT Action targets the Beat production API", async () => {
   const schema = await readSchema();
 
-  assert.match(schema, new RegExp(`  - url: ${productionOrigin}`));
+  assert.ok(schema.includes(`  - url: ${productionOrigin}\n`));
   assert.doesNotMatch(schema, /api\.example\.com/);
   assert.match(schema, /bearerAuth:\n {6}type: http\n {6}scheme: bearer/);
 });
