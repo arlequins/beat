@@ -81,15 +81,18 @@ that forwards the original attachment bytes to an arbitrary API. The
 [File Uploads FAQ](https://help.openai.com/en/articles/8555545-uploading-images-and-files-in-chatgpt)
 describes ChatGPT uploads, not a binary handoff contract for this Action.
 
-Therefore the supported production flow is:
+Therefore the supported production flows are:
 
 1. ChatGPT can inspect the photo conversationally and save the confirmed text
    record through the Action.
-2. The returned detail link opens Beat Gourmet.
-3. An administrator logs in at `/admin/`, selects the record, and attaches the
-   phone image.
-4. The browser removes metadata and optimizes the image; the API stores the
-   WebP in the private S3 state bucket.
+2. For a single image, the returned detail link opens Beat Gourmet and an
+   administrator can attach the phone image at `/admin/`.
+3. For a conversation with multiple photos, the private Chrome exporter in
+   [`tools/chatgpt-beat-export/`](../tools/chatgpt-beat-export/) reads the current
+   ChatGPT page, proposes matches to existing Beat drafts, and attaches the
+   selected images in one reviewable action.
+4. In both flows the browser removes metadata and optimizes the image; the API
+   stores the WebP in the private S3 state bucket.
 
 This boundary avoids depending on an undocumented attachment representation and
 keeps image writes behind Beat administrator authentication and the private

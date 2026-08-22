@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Beat로 내보내기</title>
+    <style>
+      :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { margin: 0; width: 380px; color: #1f2937; background: #fffdf8; }
+      main { padding: 16px; }
+      h1 { font-size: 16px; margin: 0 0 4px; }
+      p { font-size: 12px; line-height: 1.5; margin: 6px 0; color: #6b7280; }
+      label { display: block; font-size: 12px; font-weight: 600; margin: 12px 0 4px; }
+      select, button { width: 100%; box-sizing: border-box; border: 1px solid #d6d3d1; border-radius: 8px; padding: 8px; font: inherit; }
+      button { cursor: pointer; background: #292524; color: white; margin-top: 10px; }
+      button:disabled { cursor: wait; opacity: .5; }
+      .secondary { background: #fff; color: #292524; }
+      #status { min-height: 18px; color: #92400e; }
+      .group { border-top: 1px solid #e7e5e4; padding: 10px 0; }
+      .group-title { font-size: 12px; font-weight: 600; }
+      .group-text { white-space: pre-wrap; max-height: 58px; overflow: hidden; font-size: 11px; color: #57534e; margin: 4px 0; }
+      .thumbs { display: flex; gap: 6px; flex-wrap: wrap; }
+      .thumbs img { width: 54px; height: 54px; object-fit: cover; border-radius: 6px; border: 1px solid #e7e5e4; }
+      .hidden { display: none; }
+      .muted { color: #78716c; font-size: 11px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Beat Gourmet로 내보내기</h1>
+      <p>현재 ChatGPT 대화의 사진을 기존 Beat 초안에 연결합니다. 원본은 저장하지 않고 WebP로 최적화합니다.</p>
+      <div id="status" role="status"></div>
+      <button id="extract" class="secondary" type="button">현재 대화의 사진 찾기</button>
+      <section id="results" class="hidden">
+        <p id="summary"></p>
+        <div id="groups"></div>
+        <button id="export" type="button">선택한 초안에 연결</button>
+      </section>
+      <p class="muted">Beat 관리자 화면을 같은 브라우저 탭에 열고 로그인한 상태여야 합니다.</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
