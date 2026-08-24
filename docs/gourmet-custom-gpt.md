@@ -95,12 +95,11 @@ Therefore the supported production flows are:
    record through the Action.
 2. For a single image, the returned detail link opens Beat Gourmet and an
    administrator can attach the phone image at `/admin/`.
-3. For a conversation with multiple photos, the private Chrome exporter in
-   [`tools/chatgpt-beat-export/`](../tools/chatgpt-beat-export/) reads the current
-   ChatGPT page, proposes matches to existing Beat drafts, and attaches the
-   selected images in one reviewable action.
-4. In both flows the browser removes metadata and optimizes the image; the API
-   stores the WebP in the private S3 state bucket.
+3. For a photo, save the reviewed attachment to the device and upload it from
+   the Beat Admin Gourmet workspace. The administrator sees a browser preview
+   before the optimized image is sent to the API.
+4. The browser removes metadata and optimizes the image; the API stores the
+   WebP in the private S3 state bucket.
 
 This boundary avoids depending on an undocumented attachment representation and
 keeps image writes behind Beat administrator authentication and the private
