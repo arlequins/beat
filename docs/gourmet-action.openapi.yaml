@@ -39,6 +39,10 @@ paths:
           name: revisit
           schema: { type: string, enum: ["yes", "no", unknown] }
         - in: query
+          name: status
+          description: Filter records by lifecycle status. Use draft when reviewing saved drafts.
+          schema: { type: string, enum: [draft, published, deleted] }
+        - in: query
           name: page
           schema: { type: integer, minimum: 1, default: 1 }
         - in: query
