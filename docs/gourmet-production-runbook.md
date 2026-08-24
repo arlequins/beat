@@ -38,8 +38,10 @@ GitHub Actions production Environment와 OIDC로 실행한다.
   `미상`이면 자동 수정하지 않고 `Gourmet data quality warning` Issue로 알려
   사람이 관리자에서 확인한다.
 - 매주 실행되는 **Production storage qualification**은 OIDC로만 S3의
-  조건부 쓰기·버전 경계와 Object Lock을 비파괴적으로 확인한다. 실패한 경우
-  해당 Actions 실행만 조사하며 운영 키를 발급하지 않는다.
+  도달성·버전닝·수명주기·Object Lock을 읽기 전용으로 확인한다. 조건부 쓰기
+  검증 로직은 별도 단위 테스트로 유지하며, 실제 운영 역할에는 객체 쓰기
+  권한을 자동으로 부여하지 않는다. 실패한 경우 해당 Actions 실행만
+  조사하며 운영 키를 발급하지 않는다.
 - 가용성 모니터는 Agent 공개 진입점과 Beat OIDC discovery의
   authorization/token/revocation/end-session, `offline_access`, ES256 계약도
   함께 확인한다. 로그인·갱신·로그아웃 브라우저 검증에서는 URL·로그에 토큰을

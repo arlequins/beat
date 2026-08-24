@@ -113,6 +113,10 @@ export const serverEnv = createEnv({
     BEAT_RECOVERY_VERSION_ID: z.string().min(1).optional(),
     /** Explicit operator acknowledgement for real production S3 qualification writes. */
     BEAT_PRODUCTION_QUALIFICATION_CONFIRM: z.literal("production").optional(),
+    /** Production storage qualification mode; read-only is the protected default. */
+    BEAT_PRODUCTION_QUALIFICATION_MODE: z
+      .enum(["read-only", "writes"])
+      .optional(),
     /** Comma-separated browser origins accepted by the Hono API. */
     API_CORS_ORIGINS: z.string().optional(),
     /** Local Hono server port. */
@@ -221,6 +225,8 @@ export const serverEnv = createEnv({
     BEAT_RECOVERY_VERSION_ID: process.env.BEAT_RECOVERY_VERSION_ID,
     BEAT_PRODUCTION_QUALIFICATION_CONFIRM:
       process.env.BEAT_PRODUCTION_QUALIFICATION_CONFIRM,
+    BEAT_PRODUCTION_QUALIFICATION_MODE:
+      process.env.BEAT_PRODUCTION_QUALIFICATION_MODE,
     API_CORS_ORIGINS: process.env.API_CORS_ORIGINS,
     API_PORT: process.env.API_PORT,
     API_DEPLOYMENT_PRESET: process.env.API_DEPLOYMENT_PRESET,

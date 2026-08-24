@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto";
 import { serverEnv } from "@arlequins/env/server-env";
 import {
   GetBucketLifecycleConfigurationCommand,
+  GetBucketVersioningCommand,
+  GetObjectLockConfigurationCommand,
   HeadBucketCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -28,8 +30,10 @@ function isPreconditionFailed(error: unknown) {
 }
 
 /**
- * Performs deliberate, non-destructive writes against real production S3.
- * Qualification objects remain as evidence; the ledger object is protected by
+ * Performs production S3 qualification. The protected workflow uses the
+ * read-only mode; the write mode remains available only to a separately
+ * reviewed operator role. Qualification objects remain as evidence when that
+ * mode is explicitly enabled, and the ledger object is protected by
  * Compliance Object Lock and must never be targeted by cleanup automation.
  */
 export async function qualifyBeatProductionStorage(
@@ -56,6 +60,38 @@ export async function qualifyBeatProductionStorage(
     client.send(new HeadBucketCommand({ Bucket: stateBucket })),
     client.send(new HeadBucketCommand({ Bucket: ledgerBucket })),
   ]);
+  const lifecycle = await client.send(
+    new GetBucketLifecycleConfigurationCommand({ Bucket: stateBucket }),
+  );
+  const qualificationMode =
+    serverEnv.BEAT_PRODUCTION_QUALIFICATION_MODE ??
+    process.env.BEAT_PRODUCTION_QUALIFICATION_MODE;
+  if (qualificationMode === "read-only") {
+    const [stateVersioning, ledgerVersioning, lock] = await Promise.all([
+      client.send(new GetBucketVersioningCommand({ Bucket: stateBucket })),
+      client.send(new GetBucketVersioningCommand({ Bucket: ledgerBucket })),
+      client.send(
+        new GetObjectLockConfigurationCommand({ Bucket: ledgerBucket }),
+      ),
+    ]);
+    if (stateVersioning.Status !== "Enabled")
+      throw new Error("State bucket versioning is not enabled");
+    if (ledgerVersioning.Status !== "Enabled")
+      throw new Error("Ledger bucket versioning is not enabled");
+    if (lock.ObjectLockConfiguration?.ObjectLockEnabled !== "Enabled")
+      throw new Error("Ledger Object Lock is not enabled");
+    const lifecycleRuleIds = (lifecycle.Rules ?? [])
+      .map((rule) => rule.ID)
+      .filter((value): value is string => Boolean(value));
+    return {
+      mode: "read-only" as const,
+      conditionalWrite: "not-run" as const,
+      ledgerRetentionUntil: null,
+      lifecycleRuleIds,
+      stateKey: null,
+      stateVersioning: "enabled" as const,
+    };
+  }
   await client.send(
     new PutObjectCommand({
       Body: firstBody,
@@ -125,13 +161,11 @@ export async function qualifyBeatProductionStorage(
   )
     throw new Error("Ledger Object Lock qualification failed");
 
-  const lifecycle = await client.send(
-    new GetBucketLifecycleConfigurationCommand({ Bucket: stateBucket }),
-  );
   const lifecycleRuleIds = (lifecycle.Rules ?? [])
     .map((rule) => rule.ID)
     .filter((value): value is string => Boolean(value));
   return {
+    mode: "writes" as const,
     conditionalWrite: "one-winner-one-conflict" as const,
     ledgerKey,
     ledgerRetentionUntil: ledgerHead.ObjectLockRetainUntilDate.toISOString(),

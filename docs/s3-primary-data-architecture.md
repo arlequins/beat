@@ -360,13 +360,15 @@ Implemented in Beat:
   evidence for every durable state-object version without reading its body;
 - reconciliation alarms and an isolated version-recovery command; account-wide
   CloudTrail and any S3 Inventory remain baseline-owned;
-- an explicit real-AWS qualification command for conditional writes,
-  versioning, lifecycle configuration, and Compliance Object Lock.
+- an explicit real-AWS read-only qualification command for versioning,
+  lifecycle configuration, and Compliance Object Lock. Conditional-write
+  behavior remains covered by the application contract tests; a write-capable
+  production qualification requires a separately reviewed operator role.
 
 Still required before live production traffic:
 
-1. Run the production qualification against the deployed buckets and retain
-   its output with the deployment evidence.
+1. Run the read-only production qualification against the deployed buckets and
+   retain its output with the deployment evidence.
 2. Exercise concurrent refresh, administrator disablement, state-version
    recovery, GitHub PR reconciliation, and mobile Gourmet publication against
    the live production API.
