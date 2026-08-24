@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.31.1](https://github.com/arlequins/beat/compare/beat-v1.31.0...beat-v1.31.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* **ops:** set production stage for storage qualification ([54fd11c](https://github.com/arlequins/beat/commit/54fd11ca7369c34701a047fcc206919f5cba5019))
+
 ## [1.31.0](https://github.com/arlequins/beat/compare/beat-v1.30.0...beat-v1.31.0) (2026-08-24)
 
 
