@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.31.2](https://github.com/arlequins/beat/compare/beat-v1.31.1...beat-v1.31.2) (2026-08-24)
+
+
+### Bug Fixes
+
+* **ops:** make storage qualification read-only ([0897b3b](https://github.com/arlequins/beat/commit/0897b3b9168dc9ce34c8fae565387c8c1e5027f1))
+
 ## [1.31.1](https://github.com/arlequins/beat/compare/beat-v1.31.0...beat-v1.31.1) (2026-08-24)
 
 
