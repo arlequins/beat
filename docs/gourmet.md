@@ -61,6 +61,8 @@ DELETE /api/gourmet/entries/{id-or-slug}
 POST   /admin/gourmet/entries/{id-or-slug}/images
 GET    /admin/gourmet/entries/{id-or-slug}/images/{image-id}
 DELETE /admin/gourmet/entries/{id-or-slug}/images/{image-id}
+GET    /admin/gourmet/entries/{id-or-slug}/image-history
+POST   /admin/gourmet/entries/{id-or-slug}/images/{image-id}/restore
 ```
 
 The administrator image GET route is authenticated and non-cacheable, so the
@@ -126,6 +128,13 @@ ledger buckets are reused after the production stack is deployed.
    use `사진 분리` if the metadata should no longer be shown. Confirm the
    record revision changes and the public image URL returns `404`; do not
    expect the retained S3 object to be deleted.
-6. Configure the Custom GPT Action using
+6. If the image was removed accidentally, open `분리된 사진` in the selected
+   record and use `사진 복원`. Beat restores metadata from an immutable
+   revision after verifying that the S3 object still exists.
+7. Use the administrator's `사진 없음` filter and the quality banner to find
+   records needing a photo. A published record must have an exact `visitedAt`
+   date; the save response is checked against the requested date so a stale
+   form cannot silently publish an undated record.
+8. Configure the Custom GPT Action using
    [`gourmet-action.openapi.yaml`](gourmet-action.openapi.yaml), then run the
    create and context operations in Preview.

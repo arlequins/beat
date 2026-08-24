@@ -572,6 +572,26 @@ export function registerGourmetRoutes(
     }
   });
 
+  app.get("/admin/gourmet/entries/:id/image-history", async (context) => {
+    const user = await principal(context);
+    if (user?.kind !== "admin")
+      return context.json(
+        {
+          error: {
+            code: "FORBIDDEN",
+            message: "Administrator authentication is required",
+            requestId: context.get("requestId"),
+          },
+        },
+        403,
+      );
+    try {
+      return context.json(await gourmet.imageHistory(context.req.param("id")));
+    } catch (error) {
+      return errorResponse(context, error) ?? invalid(context);
+    }
+  });
+
   app.post("/api/gourmet/entries/:id/restore", async (context) => {
     const user = await principal(context);
     if (user?.kind !== "admin")
@@ -716,4 +736,37 @@ export function registerGourmetRoutes(
       return errorResponse(context, error) ?? invalid(context);
     }
   });
+
+  app.post(
+    "/admin/gourmet/entries/:id/images/:imageId/restore",
+    async (context) => {
+      const user = await principal(context);
+      if (user?.kind !== "admin")
+        return context.json(
+          {
+            error: {
+              code: "FORBIDDEN",
+              message: "Administrator authentication is required",
+              requestId: context.get("requestId"),
+            },
+          },
+          403,
+        );
+      try {
+        const entry = await gourmet.restoreImage(
+          context.req.param("id"),
+          context.req.param("imageId"),
+          user.subject,
+        );
+        log(context, "gourmet.image_restored", {
+          entryId: entry.id,
+          imageId: context.req.param("imageId"),
+          requestId: context.get("requestId"),
+        });
+        return context.json(entry);
+      } catch (error) {
+        return errorResponse(context, error) ?? invalid(context);
+      }
+    },
+  );
 }

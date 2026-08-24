@@ -1063,6 +1063,8 @@ describe("API app", () => {
         visitedAt: baseEntry.visitedAt,
       },
     ]);
+    const imageHistory = vi.fn(async () => []);
+    const restoreImage = vi.fn(async () => baseEntry);
     const restore = vi.fn(async () => ({
       ...baseEntry,
       status: "draft" as const,
@@ -1131,8 +1133,10 @@ describe("API app", () => {
           lastModified: new Date("2026-08-05T00:00:00.000Z"),
         })),
         history,
+        imageHistory,
         list,
         removeImage: vi.fn(async () => baseEntry),
+        restoreImage,
         restore,
         update,
         updateImage: vi.fn(async () => baseEntry),
@@ -1219,6 +1223,22 @@ describe("API app", () => {
     expect(
       (
         await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/image-history",
+          { headers: adminHeaders },
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/image-history",
+          { headers: actionHeaders },
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await gourmetApp.request(
           "/api/gourmet/entries/published-entry/restore",
           { headers: adminHeaders, method: "POST" },
         )
@@ -1284,6 +1304,19 @@ describe("API app", () => {
         })
       ).status,
     ).toBe(200);
+    await gourmetApp.request("/api/gourmet/entries/published-entry", {
+      body: JSON.stringify({ expectedRevision: 1, visitedAt: "2026-08-03" }),
+      headers: adminHeaders,
+      method: "PATCH",
+    });
+    expect(update).toHaveBeenCalledWith(
+      "published-entry",
+      expect.objectContaining({
+        expectedRevision: 1,
+        visitedAt: "2026-08-03",
+      }),
+      "admin-1",
+    );
     expect(
       (
         await gourmetApp.request("/api/gourmet/entries/conflict", {
@@ -1452,6 +1485,27 @@ describe("API app", () => {
       { headers: adminHeaders, method: "DELETE" },
     );
     expect(removed.status).toBe(200);
+    expect(
+      (
+        await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/images/image-1/restore",
+          { headers: adminHeaders, method: "POST" },
+        )
+      ).status,
+    ).toBe(200);
+    expect(restoreImage).toHaveBeenCalledWith(
+      "published-entry",
+      "image-1",
+      "admin-1",
+    );
+    expect(
+      (
+        await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/images/image-1/restore",
+          { headers: actionHeaders, method: "POST" },
+        )
+      ).status,
+    ).toBe(403);
     list.mockRejectedValueOnce(new Error("quality storage failed"));
     expect(
       (

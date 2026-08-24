@@ -100,4 +100,15 @@ describe("auditGourmetEntries", () => {
     ]);
     expect(result.issues).toEqual([]);
   });
+
+  it("flags active draft and published duplicates for cleanup", () => {
+    const result = auditGourmetEntries([
+      entry({ id: "draft", status: "draft" }),
+      entry({ id: "published", status: "published" }),
+      entry({ id: "archived", status: "deleted" }),
+    ]);
+    expect(
+      result.issues.filter((issue) => issue.code === "duplicate-record"),
+    ).toHaveLength(2);
+  });
 });

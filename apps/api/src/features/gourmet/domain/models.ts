@@ -29,6 +29,11 @@ export type GourmetHistoryItem = Pick<
   | "visitedAt"
 >;
 
+export type GourmetImageHistoryItem = {
+  image: GourmetImage;
+  revision: number;
+};
+
 export type GourmetEntry = {
   area: string | null;
   cookingMethods: string[];

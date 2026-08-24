@@ -441,4 +441,123 @@ describe("Gourmet S3 records", () => {
       revision: archived.revision + 1,
     });
   });
+
+  it("persists exact visited dates and rejects publishing without one", async () => {
+    const harness = s3Harness();
+    const gourmet = await loadGourmet();
+    await expect(
+      gourmet.createGourmetEntry(
+        { ...input, visitedAt: null },
+        { subject: "admin-1", status: "published" },
+        harness.client,
+      ),
+    ).rejects.toMatchObject({ code: "invalid" });
+    const draft = await gourmet.createGourmetEntry(
+      { ...input, status: "draft", visitedAt: null },
+      { subject: "admin-1", status: "draft" },
+      harness.client,
+    );
+    const dated = await gourmet.updateGourmetEntry(
+      draft.id,
+      { expectedRevision: draft.revision, visitedAt: "2026-08-03" },
+      "admin-1",
+      harness.client,
+    );
+    expect(dated.visitedAt).toBe("2026-08-03");
+    await expect(
+      gourmet.updateGourmetEntry(
+        draft.id,
+        {
+          expectedRevision: dated.revision,
+          status: "published",
+          visitedAt: null,
+        },
+        "admin-1",
+        harness.client,
+      ),
+    ).rejects.toMatchObject({ code: "invalid" });
+    const published = await gourmet.updateGourmetEntry(
+      draft.id,
+      {
+        expectedRevision: dated.revision,
+        status: "published",
+        visitedAt: dated.visitedAt,
+      },
+      "admin-1",
+      harness.client,
+    );
+    expect(published).toMatchObject({
+      status: "published",
+      visitedAt: "2026-08-03",
+    });
+  });
+
+  it("lists detached images and restores them without deleting S3 objects", async () => {
+    const harness = s3Harness();
+    const gourmet = await loadGourmet();
+    const created = await gourmet.createGourmetEntry(
+      input,
+      { subject: "admin-1" },
+      harness.client,
+    );
+    const webp = Buffer.concat([
+      Buffer.from("RIFF"),
+      Buffer.alloc(4),
+      Buffer.from("WEBP"),
+      Buffer.alloc(24),
+    ]);
+    const attached = await gourmet.attachGourmetImage(
+      created.id,
+      {
+        altText: "복원할 사진",
+        contentBase64: webp.toString("base64"),
+        contentType: "image/webp",
+        originalFilename: "meal.webp",
+      },
+      "admin-1",
+      harness.client,
+    );
+    const image = attached.images[0];
+    if (!image) throw new Error("image was not attached");
+    const detached = await gourmet.removeGourmetImage(
+      created.id,
+      image.id,
+      "admin-1",
+      harness.client,
+    );
+    expect(detached.images).toHaveLength(0);
+    await expect(
+      gourmet.gourmetImageHistory(created.id, harness.client),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        image: expect.objectContaining({ id: image.id }),
+        revision: attached.revision,
+      }),
+    ]);
+    const restored = await gourmet.restoreGourmetImage(
+      created.id,
+      image.id,
+      "admin-1",
+      harness.client,
+    );
+    expect(restored.images).toEqual([
+      expect.objectContaining({ id: image.id, sortOrder: 0 }),
+    ]);
+    await expect(
+      gourmet.gourmetImageHistory(created.id, harness.client),
+    ).resolves.toEqual([]);
+    await expect(
+      gourmet.restoreGourmetImage(
+        created.id,
+        image.id,
+        "admin-1",
+        harness.client,
+      ),
+    ).resolves.toMatchObject({ revision: restored.revision });
+    expect(
+      [...harness.objects.keys()].some((key) =>
+        key.includes("/v1/gourmet/images/"),
+      ),
+    ).toBe(true);
+  });
 });

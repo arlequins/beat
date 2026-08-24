@@ -2,6 +2,7 @@ import type {
   GourmetEntry,
   GourmetHistoryItem,
   GourmetImage,
+  GourmetImageHistoryItem,
   GourmetInput,
   GourmetListFilter,
   GourmetStatus,
@@ -53,7 +54,13 @@ export type GourmetPort = {
     total: number;
   }>;
   history(id: string): Promise<GourmetHistoryItem[]>;
+  imageHistory(id: string): Promise<GourmetImageHistoryItem[]>;
   removeImage(
+    entryId: string,
+    imageId: string,
+    subject: string,
+  ): Promise<GourmetEntry>;
+  restoreImage(
     entryId: string,
     imageId: string,
     subject: string,

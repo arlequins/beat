@@ -73,6 +73,11 @@ type HistoryItem = {
   visitedAt: string | null;
 };
 
+type ImageHistoryItem = {
+  image: GourmetImage & { originalFilename?: string };
+  revision: number;
+};
+
 const emptyForm: FormState = {
   area: "",
   cookingMethods: "",
@@ -148,7 +153,9 @@ function payload(form: FormState) {
     source: "manual",
     status: form.status,
     summary: form.summary.trim(),
-    visitedAt: form.visitedAt || null,
+    visitedAt: /^\d{4}-\d{2}-\d{2}$/.test(form.visitedAt)
+      ? form.visitedAt
+      : null,
   };
   for (const field of commaFields) value[field] = textList(form[field]);
   return value;
@@ -194,8 +201,12 @@ export function GourmetManager() {
   const [entryStatus, setEntryStatus] = useState<
     "all" | "draft" | "published" | "deleted"
   >("all");
+  const [entryMedia, setEntryMedia] = useState<
+    "all" | "with-image" | "missing-image"
+  >("all");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [imageHistory, setImageHistory] = useState<ImageHistoryItem[]>([]);
   const [quality, setQuality] = useState<QualityReport>();
   const [imageDrafts, setImageDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
@@ -208,6 +219,11 @@ export function GourmetManager() {
     const normalizedQuery = entryQuery.trim().toLocaleLowerCase();
     return entries
       .filter((entry) => entryStatus === "all" || entry.status === entryStatus)
+      .filter((entry) => {
+        if (entryMedia === "with-image") return entry.images.length > 0;
+        if (entryMedia === "missing-image") return entry.images.length === 0;
+        return true;
+      })
       .filter((entry) => {
         if (!normalizedQuery) return true;
         return [
@@ -226,7 +242,7 @@ export function GourmetManager() {
         const rightDate = right.visitedAt ?? right.createdAt;
         return rightDate.localeCompare(leftDate);
       });
-  }, [entries, entryQuery, entryStatus]);
+  }, [entries, entryMedia, entryQuery, entryStatus]);
   const [adminImageUrls, setAdminImageUrls] = useState<Record<string, string>>(
     {},
   );
@@ -271,6 +287,7 @@ export function GourmetManager() {
     );
     if (!selected) {
       setHistory([]);
+      setImageHistory([]);
       return;
     }
     let disposed = false;
@@ -281,6 +298,15 @@ export function GourmetManager() {
         if (!response.ok) return;
         const value = (await response.json()) as HistoryItem[];
         if (!disposed) setHistory(value);
+      })
+      .catch(() => undefined);
+    void authorizedBeatAdminRequest(
+      `/admin/gourmet/entries/${selected.id}/image-history`,
+    )
+      .then(async (response) => {
+        if (!response.ok) return;
+        const value = (await response.json()) as ImageHistoryItem[];
+        if (!disposed) setImageHistory(value);
       })
       .catch(() => undefined);
     return () => {
@@ -334,6 +360,11 @@ export function GourmetManager() {
     setBusy(true);
     setMessage("");
     try {
+      if (form.visitedAt && !/^\d{4}-\d{2}-\d{2}$/.test(form.visitedAt))
+        throw new Error("방문일은 YYYY-MM-DD 형식으로 입력해 주세요.");
+      if (form.status === "published" && !form.visitedAt)
+        throw new Error("공개하려면 정확한 방문일을 먼저 입력해 주세요.");
+      const requestPayload = payload(form);
       const response = await authorizedBeatAdminRequest(
         selected
           ? `/api/gourmet/entries/${selected.id}`
@@ -341,8 +372,8 @@ export function GourmetManager() {
         {
           body: JSON.stringify(
             selected
-              ? { ...payload(form), expectedRevision: selected.revision }
-              : payload(form),
+              ? { ...requestPayload, expectedRevision: selected.revision }
+              : requestPayload,
           ),
           headers: selected
             ? undefined
@@ -359,6 +390,10 @@ export function GourmetManager() {
         | GourmetEntry
         | { entry: GourmetEntry };
       const saved = "entry" in result ? result.entry : result;
+      if (saved.visitedAt !== requestPayload.visitedAt)
+        throw new Error(
+          "방문일 저장 결과가 일치하지 않습니다. 새로고침 후 다시 시도해 주세요.",
+        );
       await loadEntries();
       setSelectedId(saved.id);
       setForm(formFor(saved));
@@ -473,6 +508,33 @@ export function GourmetManager() {
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "사진 처리 실패");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function restoreImage(item: ImageHistoryItem) {
+    if (!selected || archived) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await authorizedBeatAdminRequest(
+        `/admin/gourmet/entries/${selected.id}/images/${item.image.id}/restore`,
+        { method: "POST" },
+      );
+      if (response.status === 409)
+        throw new Error(
+          "다른 변경이 먼저 저장되었습니다. 목록을 새로고침해 주세요.",
+        );
+      if (!response.ok) throw new Error("분리된 사진을 복원하지 못했습니다.");
+      const updated = (await response.json()) as GourmetEntry;
+      setEntries((current) =>
+        current.map((entry) => (entry.id === updated.id ? updated : entry)),
+      );
+      setForm(formFor(updated));
+      setMessage("분리된 사진을 복원했습니다. S3 원본은 그대로 유지됩니다.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "사진 복원 실패");
     } finally {
       setBusy(false);
     }
@@ -620,6 +682,20 @@ export function GourmetManager() {
                 {entries.filter((entry) => entry.status === "deleted").length})
               </option>
             </select>
+            <select
+              aria-label="Gourmet 사진 상태 필터"
+              className="border border-[var(--line)] bg-[var(--background)] px-3 py-2 text-xs font-bold"
+              onChange={(event) =>
+                setEntryMedia(
+                  event.target.value as "all" | "with-image" | "missing-image",
+                )
+              }
+              value={entryMedia}
+            >
+              <option value="all">사진 전체</option>
+              <option value="with-image">사진 있음</option>
+              <option value="missing-image">사진 없음</option>
+            </select>
           </div>
           {visibleEntries.map((entry) => (
             <button
@@ -637,6 +713,7 @@ export function GourmetManager() {
                   : entry.status === "deleted"
                     ? "보관"
                     : "초안"}
+                {entry.images.length === 0 ? " · 사진 없음" : ""}
               </span>
             </button>
           ))}
@@ -941,6 +1018,44 @@ export function GourmetManager() {
                 </div>
               ))
             : null}
+          {selected && imageHistory.length ? (
+            <section className="grid gap-3 border-t border-[var(--line)] pt-4">
+              <h3 className="flex items-center gap-2 text-sm font-bold">
+                <History className="size-4" />
+                분리된 사진
+              </h3>
+              <p className="text-xs leading-5 text-[var(--muted-foreground)]">
+                S3 원본은 삭제하지 않고 기록에서만 분리했습니다. 필요한 사진은
+                다시 연결할 수 있습니다.
+              </p>
+              <ul className="grid gap-2">
+                {imageHistory.map((item) => (
+                  <li
+                    className="flex flex-wrap items-center justify-between gap-3 border border-[var(--line)] p-3 text-xs"
+                    key={`${item.image.id}-${item.revision}`}
+                  >
+                    <span>
+                      <strong className="block text-sm">
+                        {item.image.altText}
+                      </strong>
+                      <span className="text-[var(--muted-foreground)]">
+                        리비전 {item.revision} ·{" "}
+                        {item.image.originalFilename ?? "S3 이미지"}
+                      </span>
+                    </span>
+                    <button
+                      className="border border-[var(--accent-foreground)] px-3 py-2 font-bold text-[var(--accent-foreground)] disabled:opacity-50"
+                      disabled={busy || archived}
+                      onClick={() => void restoreImage(item)}
+                      type="button"
+                    >
+                      사진 복원
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
           {selected && history.length ? (
             <section className="grid gap-3 border-t border-[var(--line)] pt-4">
               <h3 className="flex items-center gap-2 text-sm font-bold">
