@@ -1053,6 +1053,20 @@ describe("API app", () => {
       page: 1,
       total: 1,
     }));
+    const history = vi.fn(async () => [
+      {
+        menuName: baseEntry.menuName,
+        restaurantName: baseEntry.restaurantName,
+        revision: baseEntry.revision,
+        status: baseEntry.status,
+        updatedAt: baseEntry.updatedAt,
+        visitedAt: baseEntry.visitedAt,
+      },
+    ]);
+    const restore = vi.fn(async () => ({
+      ...baseEntry,
+      status: "draft" as const,
+    }));
     const update = vi.fn(async (id: string) => {
       if (id === "conflict") throw new GourmetError("conflict", "stale");
       return baseEntry;
@@ -1116,9 +1130,12 @@ describe("API app", () => {
           etag: '"image-v1"',
           lastModified: new Date("2026-08-05T00:00:00.000Z"),
         })),
+        history,
         list,
         removeImage: vi.fn(async () => baseEntry),
+        restore,
         update,
+        updateImage: vi.fn(async () => baseEntry),
       } as never,
       gourmetActionApiKey: "gourmet-action-key-at-least-32-characters",
       logger: createLogger({
@@ -1169,6 +1186,52 @@ describe("API app", () => {
         })
       ).status,
     ).toBe(400);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/quality", {
+          headers: actionHeaders,
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/quality", {
+          headers: adminHeaders,
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await gourmetApp.request(
+          "/api/gourmet/entries/published-entry/history",
+          { headers: adminHeaders },
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await gourmetApp.request(
+          "/api/gourmet/entries/published-entry/history",
+          { headers: actionHeaders },
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await gourmetApp.request(
+          "/api/gourmet/entries/published-entry/restore",
+          { headers: adminHeaders, method: "POST" },
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await gourmetApp.request(
+          "/api/gourmet/entries/published-entry/restore",
+          { headers: actionHeaders, method: "POST" },
+        )
+      ).status,
+    ).toBe(403);
 
     expect(
       (await gourmetApp.request("/api/gourmet/entries/published-entry")).status,
@@ -1316,6 +1379,45 @@ describe("API app", () => {
     );
     expect(invalidClientRequest.status).toBe(200);
     expect(gourmetLogs.at(-1)).not.toHaveProperty("clientRequestId");
+    expect(
+      (
+        await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/images/image-1",
+          {
+            body: JSON.stringify({
+              altText: "정리한 사진",
+              expectedRevision: 1,
+            }),
+            headers: { ...adminHeaders, "Content-Type": "application/json" },
+            method: "PATCH",
+          },
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/images/image-1",
+          {
+            body: JSON.stringify({ altText: "작업" }),
+            headers: actionHeaders,
+            method: "PATCH",
+          },
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await gourmetApp.request(
+          "/admin/gourmet/entries/published-entry/images/image-1",
+          {
+            body: "{}",
+            headers: adminHeaders,
+            method: "PATCH",
+          },
+        )
+      ).status,
+    ).toBe(400);
     const missingClientRequest = await gourmetApp.request(
       "/admin/gourmet/entries/published-entry/images",
       {
@@ -1350,5 +1452,31 @@ describe("API app", () => {
       { headers: adminHeaders, method: "DELETE" },
     );
     expect(removed.status).toBe(200);
+    list.mockRejectedValueOnce(new Error("quality storage failed"));
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/quality", {
+          headers: adminHeaders,
+        })
+      ).status,
+    ).toBe(500);
+    history.mockRejectedValueOnce(new GourmetError("not_found"));
+    expect(
+      (
+        await gourmetApp.request(
+          "/api/gourmet/entries/published-entry/history",
+          { headers: adminHeaders },
+        )
+      ).status,
+    ).toBe(404);
+    restore.mockRejectedValueOnce(new GourmetError("conflict"));
+    expect(
+      (
+        await gourmetApp.request(
+          "/api/gourmet/entries/published-entry/restore",
+          { headers: adminHeaders, method: "POST" },
+        )
+      ).status,
+    ).toBe(409);
   });
 });

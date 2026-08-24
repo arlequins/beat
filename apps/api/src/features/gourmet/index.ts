@@ -1,6 +1,7 @@
 export { GourmetError } from "./application/errors";
 export type {
   GourmetEntry,
+  GourmetHistoryItem,
   GourmetImage,
   GourmetImageMimeType,
   GourmetInput,

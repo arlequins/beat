@@ -11,6 +11,7 @@ type ShareLabels = {
   download: string;
   failed: string;
   fallback: string;
+  preview: string;
   share: string;
   shared: string;
   sharing: string;
@@ -24,6 +25,7 @@ const labels = {
     failed:
       "Could not prepare the Instagram post. Try downloading the image instead.",
     fallback: "The image was downloaded and the caption was copied.",
+    preview: "Instagram caption preview",
     share: "Share to Instagram",
     shared: "Shared. Finish the post in Instagram.",
     sharing: "Preparing the post…",
@@ -35,6 +37,7 @@ const labels = {
     failed:
       "Instagram用の投稿を準備できませんでした。画像を保存してお試しください。",
     fallback: "画像を保存し、キャプションをコピーしました。",
+    preview: "Instagram用キャプションを表示",
     share: "Instagramで共有",
     shared: "共有しました。Instagramで投稿を仕上げてください。",
     sharing: "投稿を準備しています…",
@@ -46,6 +49,7 @@ const labels = {
     failed:
       "Instagram용 게시물을 준비하지 못했습니다. 이미지를 저장해 다시 시도해 주세요.",
     fallback: "이미지를 저장하고 캡션을 복사했습니다.",
+    preview: "Instagram용 짧은 캡션 보기",
     share: "Instagram으로 공유",
     shared: "공유했습니다. Instagram에서 게시를 마무리해 주세요.",
     sharing: "게시물을 준비하는 중…",
@@ -240,6 +244,23 @@ export function GourmetShareButton(props: {
         <Download className="size-4" />
         {copy.download}
       </button>
+      <details className="basis-full border border-[var(--line)] p-3 text-xs">
+        <summary className="cursor-pointer font-bold text-[var(--muted-foreground)]">
+          {copy.preview}
+        </summary>
+        <div className="mt-3 grid gap-2">
+          <textarea
+            aria-label={copy.preview}
+            className="min-h-24 w-full resize-y border border-[var(--line)] bg-[var(--background)] p-2 leading-5"
+            readOnly
+            value={caption}
+          />
+          <p className="text-[var(--muted-foreground)]">
+            Google Maps 링크와 태그를 포함한 짧은 문구입니다. 복사 후
+            Instagram에서 사진과 함께 게시하세요.
+          </p>
+        </div>
+      </details>
       <span
         aria-live="polite"
         className="text-xs text-[var(--muted-foreground)]"

@@ -1,0 +1,74 @@
+name: Gourmet data quality monitor
+
+on:
+  schedule:
+    - cron: "31 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+concurrency:
+  group: beat-gourmet-quality-monitor
+  cancel-in-progress: false
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SST_AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
+      BEAT_RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
+    outputs:
+      api_url: ${{ steps.urls.outputs.api_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./tooling/github/setup
+      - name: Build API SST workspace dependencies
+        run: pnpm turbo run build --filter=@arlequins/api...
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
+          aws-region: ${{ env.SST_AWS_REGION }}
+      - name: Resolve the API URL without exporting secrets
+        id: urls
+        run: |
+          state_file="$RUNNER_TEMP/beat-api-sst-state.json"
+          trap 'rm -f "$state_file"' EXIT
+          SST_TELEMETRY_DISABLED=1 pnpm --silent --filter @arlequins/api with-env sst state export --stage production > "$state_file"
+          api_url="$(node scripts/read-sst-output.mjs "$state_file" apiUrl)"
+          node -e 'const url = new URL(process.argv[1]); if (url.protocol !== "https:") throw new Error("Production endpoint must use HTTPS")' "$api_url"
+          echo "api_url=$api_url" >> "$GITHUB_OUTPUT"
+      - name: Audit public Gourmet data
+        run: node scripts/gourmet-quality.mjs "${{ steps.urls.outputs.api_url }}"
+
+  report-recovery:
+    needs: quality
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close a recovered Gourmet quality issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: "Gourmet data quality warning"
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')"
+          if test -n "$existing"; then gh issue close "$existing" --repo "$GITHUB_REPOSITORY" --comment "Gourmet quality recovered: $RUN_URL"; fi
+
+  report-failure:
+    needs: quality
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open one actionable Gourmet quality issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: "Gourmet data quality warning"
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')"
+          if test -z "$existing"; then gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "The protected Gourmet quality monitor found missing or unknown public metadata. Review the run without copying secrets: $RUN_URL"; fi

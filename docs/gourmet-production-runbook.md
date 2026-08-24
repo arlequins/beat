@@ -19,6 +19,9 @@ GitHub Actions production Environment와 OIDC로 실행한다.
    확인한다. 브라우저가 S3 자격 증명을 요청하지 않는지 확인한다.
 6. 잘못된 사진은 `사진 분리`로 현재 리비전에서 제거한다. 공개 이미지 URL이
    `404`가 되는지 확인하되, private S3 객체가 남는 것은 정상이다.
+7. 사진이 여러 장이면 관리자 화면에서 설명을 고치고 `위로`·`아래로`로 대표
+   사진 순서를 정한 뒤 저장한다. 보관한 기록은 `초안으로 복구`할 수 있으며,
+   `변경 이력`에서 리비전과 상태를 확인한다.
 
 사진 바이트는 브라우저에서 WebP로 정규화되고 EXIF가 제거된다. API의 Lambda
 역할은 state prefix에 `GetObject`와 `PutObject`만 가지며 `DeleteObject`는
@@ -30,6 +33,17 @@ GitHub Actions production Environment와 OIDC로 실행한다.
 - 시간별 **Production availability monitor**가 웹과 API를 확인하고 실패 시
   열린 GitHub Issue를 하나 만든다. 다음 성공 실행은 같은 열린 Issue에 복구
   실행을 기록하고 닫는다.
+- 매일 실행되는 **Gourmet data quality monitor**가 공개 기록의 날짜·가게명·
+  메뉴·사진 설명을 읽기 전용으로 검사한다. 사진이 없거나 메타데이터가
+  `미상`이면 자동 수정하지 않고 `Gourmet data quality warning` Issue로 알려
+  사람이 관리자에서 확인한다.
+- 매주 실행되는 **Production storage qualification**은 OIDC로만 S3의
+  조건부 쓰기·버전 경계와 Object Lock을 비파괴적으로 확인한다. 실패한 경우
+  해당 Actions 실행만 조사하며 운영 키를 발급하지 않는다.
+- 가용성 모니터는 Agent 공개 진입점과 Beat OIDC discovery의
+  authorization/token/revocation/end-session, `offline_access`, ES256 계약도
+  함께 확인한다. 로그인·갱신·로그아웃 브라우저 검증에서는 URL·로그에 토큰을
+  남기지 않는다.
 - 배포 직후 5xx가 발생하면 **Production API runtime diagnostics**를 실패한
   배포 run ID와 `production` 확인값으로 실행한다. 출력은 지정된 Lambda 로그
   그룹의 redacted 초기화 메시지만 포함하고, 원본 로그를 artifact로 저장하지
@@ -76,5 +90,6 @@ Actions 실행 URL을 incident 기록에 남기고, 복구가 끝난 뒤 공개 
 
 - [Gourmet 연계 흐름](gourmet-integration-flow.md)
 - [Gourmet API와 저장 설계](gourmet.md)
+- [Beat Agent OIDC 연동](beat-agent-auth-integration.md)
 - [Production AWS/SST handoff](production-aws-sst.md)
 - [Incident runbook](incident-runbook.md)

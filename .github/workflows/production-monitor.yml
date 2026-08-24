@@ -53,6 +53,8 @@ jobs:
         run: |
           node -e 'const url = new URL(process.env.BEAT_AGENT_WEB_URL); if (url.protocol !== "https:") throw new Error("Agent endpoint must use HTTPS")'
           curl --fail --silent --show-error --location --retry 2 "$BEAT_AGENT_WEB_URL"
+      - name: Check Beat Agent OIDC contract
+        run: node scripts/agent-oidc-contract.mjs "${{ steps.urls.outputs.api_url }}" "$BEAT_AGENT_WEB_URL"
       - name: Check API, OIDC, admin, and Gourmet contracts
         run: node scripts/smoke-api.mjs "${{ steps.urls.outputs.api_url }}"
 

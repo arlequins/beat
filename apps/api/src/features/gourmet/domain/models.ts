@@ -19,6 +19,16 @@ export type GourmetImage = {
   width: number | null;
 };
 
+export type GourmetHistoryItem = Pick<
+  GourmetEntry,
+  | "menuName"
+  | "restaurantName"
+  | "revision"
+  | "status"
+  | "updatedAt"
+  | "visitedAt"
+>;
+
 export type GourmetEntry = {
   area: string | null;
   cookingMethods: string[];

@@ -175,3 +175,18 @@ Bedrock model configuration remains owned by the Agent repository. Beat does
 not duplicate model identifiers, model IAM, or runtime credentials. A passing
 Beat identity contract proves authentication interoperability; model-response
 quality and provider availability remain separate Agent acceptance checks.
+
+## 운영 브라우저 확인
+
+1. Agent에서 Google SSO를 시작한다. callback URL에 `code`와 `state`가
+   잠시 보이는 것은 정상이나 access/refresh/id token을 URL에 복사하거나
+   캡처하지 않는다.
+2. Agent 화면에서 새 대화를 한 건 시작해 access token이 API 호출에만 쓰이는지
+   확인한다. 브라우저 콘솔과 Actions 로그에는 토큰을 출력하지 않는다.
+3. access token 만료 후 Agent의 silent refresh가 새 access token을 받는지
+   확인한다. 실패하면 저장된 세션을 지우고 다시 로그인한다.
+4. 로그아웃은 refresh token revoke 후 Beat의 end-session endpoint로 이동하고
+   `/auth/logout-callback/`으로 돌아와야 한다.
+
+Agent 공개 진입점과 OIDC discovery 계약은 `Production availability monitor`가
+보호된 GitHub Actions에서 확인한다.

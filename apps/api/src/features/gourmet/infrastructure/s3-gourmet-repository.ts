@@ -18,6 +18,7 @@ const MAX_IMAGE_BYTES = 768 * 1024;
 import { GourmetError } from "../application/errors";
 import type {
   GourmetEntry,
+  GourmetHistoryItem,
   GourmetImage,
   GourmetInput,
   GourmetListFilter,
@@ -63,6 +64,10 @@ function entriesPrefix(value: GourmetConfig) {
 
 function revisionKey(id: string, revision: number, value: GourmetConfig) {
   return `${value.statePrefix}/gourmet/entries/${id}/revisions/${revision}.json`;
+}
+
+function revisionsPrefix(id: string, value: GourmetConfig) {
+  return `${value.statePrefix}/gourmet/entries/${id}/revisions/`;
 }
 
 function imageKey(entryId: string, imageId: string, value: GourmetConfig) {
@@ -392,6 +397,46 @@ export async function listGourmetEntries(
   };
 }
 
+export async function gourmetHistory(
+  id: string,
+  client = new S3Client({}),
+): Promise<GourmetHistoryItem[]> {
+  const value = config();
+  const objects = await client.send(
+    new ListObjectsV2Command({
+      Bucket: value.stateBucket,
+      Prefix: revisionsPrefix(id, value),
+    }),
+  );
+  const rows = await Promise.all(
+    (objects.Contents ?? [])
+      .map((object) => object.Key)
+      .filter((key): key is string => Boolean(key))
+      .map((key) => getJson<GourmetEntry>(client, value.stateBucket, key)),
+  );
+  return rows
+    .map((row) => row?.value)
+    .filter((entry): entry is GourmetEntry => Boolean(entry && isEntry(entry)))
+    .map(
+      ({
+        menuName,
+        restaurantName,
+        revision,
+        status,
+        updatedAt,
+        visitedAt,
+      }) => ({
+        menuName,
+        restaurantName,
+        revision,
+        status,
+        updatedAt,
+        visitedAt,
+      }),
+    )
+    .sort((left, right) => right.revision - left.revision);
+}
+
 export async function updateGourmetEntry(
   id: string,
   patch: Partial<GourmetInput> & {
@@ -463,6 +508,43 @@ export async function deleteGourmetEntry(
     subject,
     client,
   );
+}
+
+export async function restoreGourmetEntry(
+  id: string,
+  subject: string,
+  client = new S3Client({}),
+) {
+  const value = config();
+  const stored = await getGourmetEntry(id, client);
+  if (stored?.entry.status !== "deleted")
+    throw new GourmetError("not_found", "Gourmet entry was not archived");
+  const { deletedAt: _, ...withoutDeletedAt } = stored.entry;
+  const next: GourmetEntry = {
+    ...withoutDeletedAt,
+    revision: stored.entry.revision + 1,
+    status: "draft",
+    updatedAt: new Date().toISOString(),
+  };
+  await putJson(client, {
+    bucket: value.stateBucket,
+    ifMatch: stored.etag,
+    key: entryKey(next.id, value),
+    value: next,
+  });
+  await putJson(client, {
+    bucket: value.stateBucket,
+    ifNoneMatch: "*",
+    key: revisionKey(next.id, next.revision, value),
+    value: next,
+  });
+  await appendEvent(client, value, "gourmet-restored", {
+    digest: recordDigest(next),
+    id,
+    revision: next.revision,
+    subject,
+  });
+  return summary(next);
 }
 
 function extensionFor(name: string) {
@@ -593,6 +675,44 @@ export async function removeGourmetImage(
     {
       expectedRevision: stored.entry.revision,
       images: stored.entry.images.filter((image) => image.id !== imageId),
+    },
+    subject,
+    client,
+  );
+}
+
+export async function updateGourmetImage(
+  entryId: string,
+  imageId: string,
+  input: { altText?: string; expectedRevision?: number; sortOrder?: number },
+  subject: string,
+  client = new S3Client({}),
+) {
+  const stored = await getGourmetEntry(entryId, client);
+  if (!stored || stored.entry.status === "deleted")
+    throw new GourmetError("not_found", "Gourmet entry was not found");
+  if (!stored.entry.images.some((image) => image.id === imageId))
+    throw new GourmetError("image_not_found", "Gourmet image was not found");
+  const ordered = [...stored.entry.images].sort(
+    (left, right) => left.sortOrder - right.sortOrder,
+  );
+  const currentIndex = ordered.findIndex((image) => image.id === imageId);
+  const targetIndex = Math.min(
+    ordered.length - 1,
+    Math.max(0, input.sortOrder ?? currentIndex),
+  );
+  const [current] = ordered.splice(currentIndex, 1);
+  if (!current)
+    throw new GourmetError("image_not_found", "Gourmet image was not found");
+  ordered.splice(targetIndex, 0, {
+    ...current,
+    ...(input.altText?.trim() ? { altText: input.altText.trim() } : {}),
+  });
+  return updateGourmetEntry(
+    entryId,
+    {
+      expectedRevision: input.expectedRevision ?? stored.entry.revision,
+      images: ordered.map((image, sortOrder) => ({ ...image, sortOrder })),
     },
     subject,
     client,
