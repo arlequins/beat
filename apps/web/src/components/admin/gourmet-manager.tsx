@@ -78,6 +78,11 @@ type ImageHistoryItem = {
   revision: number;
 };
 
+type PendingUpload = {
+  file: File;
+  previewUrl: string;
+};
+
 const emptyForm: FormState = {
   area: "",
   cookingMethods: "",
@@ -250,7 +255,15 @@ export function GourmetManager() {
     Record<string, string>
   >({});
   const [previewAttempt, setPreviewAttempt] = useState(0);
+  const [pendingUpload, setPendingUpload] = useState<PendingUpload>();
   const archived = selected?.status === "deleted";
+
+  useEffect(
+    () => () => {
+      if (pendingUpload) URL.revokeObjectURL(pendingUpload.previewUrl);
+    },
+    [pendingUpload],
+  );
 
   useEffect(() => {
     let disposed = false;
@@ -358,6 +371,7 @@ export function GourmetManager() {
   }, [loadEntries]);
 
   function select(entry?: GourmetEntry) {
+    setPendingUpload(undefined);
     setSelectedId(entry?.id);
     setForm(
       entry
@@ -465,10 +479,29 @@ export function GourmetManager() {
     }
   }
 
-  async function upload(event: ChangeEvent<HTMLInputElement>) {
+  function queueUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || !selected) return;
+    if (!file.type.startsWith("image/")) {
+      setMessage("이미지 파일만 선택할 수 있습니다.");
+      return;
+    }
+    setPendingUpload((current) => {
+      if (current) URL.revokeObjectURL(current.previewUrl);
+      return { file, previewUrl: URL.createObjectURL(file) };
+    });
+    setMessage("사진을 확인한 뒤 업로드를 확정해 주세요.");
+  }
+
+  function cancelUpload() {
+    setPendingUpload(undefined);
+    setMessage("사진 업로드를 취소했습니다.");
+  }
+
+  async function confirmUpload() {
+    if (!pendingUpload || !selected) return;
+    const { file } = pendingUpload;
     setBusy(true);
     setMessage("사진을 축소하고 위치 정보를 제거하는 중입니다…");
     try {
@@ -493,6 +526,7 @@ export function GourmetManager() {
       setMessage(
         "사진을 S3에 저장했습니다. 공개 기록의 이미지는 API를 통해 전달됩니다.",
       );
+      setPendingUpload(undefined);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "사진 처리 실패");
     } finally {
@@ -876,12 +910,12 @@ export function GourmetManager() {
               <>
                 <label className="flex cursor-pointer items-center gap-2 border border-[var(--line)] px-5 py-3 font-bold">
                   <ImagePlus className="size-4" />
-                  S3에 사진 저장
+                  사진 선택
                   <input
                     accept="image/jpeg,image/png,image/webp"
                     className="sr-only"
                     disabled={busy}
-                    onChange={(event) => void upload(event)}
+                    onChange={queueUpload}
                     type="file"
                   />
                 </label>
@@ -897,6 +931,53 @@ export function GourmetManager() {
               </>
             ) : null}
           </div>
+          {pendingUpload && selected ? (
+            <div className="grid gap-4 border border-[var(--accent-foreground)] bg-[var(--surface)] p-4 sm:grid-cols-[12rem_1fr]">
+              <div className="relative aspect-[4/3] overflow-hidden bg-[var(--background)]">
+                <Image
+                  alt={`${selected.restaurantName} ${selected.menuName} 업로드 미리보기`}
+                  className="object-contain"
+                  fill
+                  priority
+                  sizes="192px"
+                  src={pendingUpload.previewUrl}
+                  unoptimized
+                />
+              </div>
+              <div className="grid content-center gap-3">
+                <div>
+                  <p className="text-sm font-bold">업로드 전 사진 확인</p>
+                  <p className="mt-1 break-all text-xs text-[var(--muted-foreground)]">
+                    {pendingUpload.file.name} ·{" "}
+                    {pendingUpload.file.type || "image"} ·{" "}
+                    {pendingUpload.file.size.toLocaleString()} bytes
+                  </p>
+                  <p className="mt-2 text-xs leading-5 text-[var(--muted-foreground)]">
+                    확인하면 위치 정보가 제거되고 WebP로 최적화된 사본만 private
+                    S3에 저장됩니다.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className="border border-[var(--line)] px-4 py-2 text-sm font-bold"
+                    disabled={busy}
+                    onClick={cancelUpload}
+                    type="button"
+                  >
+                    취소
+                  </button>
+                  <button
+                    className="bg-[var(--foreground)] px-4 py-2 text-sm font-bold text-[var(--background)] disabled:opacity-50"
+                    disabled={busy}
+                    onClick={() => void confirmUpload()}
+                    type="button"
+                  >
+                    {busy ? "처리 중…" : "확인하고 S3에 저장"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {currentEntry
             ? orderedImages.map((image, imageIndex) => (
                 <div
