@@ -53,18 +53,29 @@ const labels = {
 } satisfies Record<Locale, ShareLabels>;
 
 function captionFor(entry: GourmetEntry, locale: Locale) {
-  const date = entry.visitedAt ?? entry.createdAt.slice(0, 10);
   const restaurant = [entry.restaurantName, entry.restaurantBranch]
     .filter(Boolean)
     .join(" · ");
-  const lines = [
-    `${date} / ${restaurant}`,
-    `${entry.menuName} · ${entry.rating.toFixed(1)}/10`,
-    entry.summary,
-  ];
-  if (entry.liked.length) lines.push(`#${entry.liked.join(" #")}`);
-  lines.push(locale === "ko" ? "#구루메 #Beat" : "#Gourmet #Beat");
-  return lines.filter(Boolean).join("\n");
+  const mapQuery = encodeURIComponent(
+    [entry.restaurantName, entry.restaurantBranch].filter(Boolean).join(" "),
+  );
+  const tags = [...entry.cuisineTags, ...entry.liked]
+    .map((tag) =>
+      tag
+        .trim()
+        .replace(/\s+/g, "")
+        .replace(/[^\p{L}\p{N}_-]/gu, ""),
+    )
+    .filter(Boolean)
+    .filter((tag, index, values) => values.indexOf(tag) === index)
+    .slice(0, 2)
+    .map((tag) => `#${tag}`);
+  tags.push(locale === "ko" ? "#구루메 #Beat" : "#Gourmet #Beat");
+  return [
+    `${restaurant} · ${entry.menuName} · ${entry.rating.toFixed(1)}/10`,
+    `https://www.google.com/maps/search/?api=1&query=${mapQuery}`,
+    tags.join(" "),
+  ].join("\n");
 }
 
 async function copyText(value: string) {
