@@ -1,0 +1,45 @@
+name: Production storage qualification
+
+on:
+  schedule:
+    - cron: "13 3 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: beat-production-storage-qualification
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SST_AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
+      BEAT_RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
+      BEAT_PRODUCTION_QUALIFICATION_CONFIRM: production
+      BEAT_AUTH_STATE_PREFIX: v1
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./tooling/github/setup
+      - name: Build API SST workspace dependencies
+        run: pnpm turbo run build --filter=@arlequins/api...
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
+          aws-region: ${{ env.SST_AWS_REGION }}
+      - name: Resolve state buckets from protected SST state
+        run: |
+          state_file="$RUNNER_TEMP/beat-api-sst-state.json"
+          trap 'rm -f "$state_file"' EXIT
+          SST_TELEMETRY_DISABLED=1 pnpm --silent --filter @arlequins/api with-env sst state export --stage production > "$state_file"
+          {
+            echo "BEAT_AUTH_STATE_BUCKET=$(node scripts/read-sst-output.mjs "$state_file" authStateBucket)"
+            echo "BEAT_AUTH_LEDGER_BUCKET=$(node scripts/read-sst-output.mjs "$state_file" authLedgerBucket)"
+          } >> "$GITHUB_ENV"
+      - name: Run the non-destructive storage qualification
+        run: pnpm --filter @arlequins/api auth:production:qualify

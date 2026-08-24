@@ -372,4 +372,73 @@ describe("Gourmet S3 records", () => {
       ),
     ).rejects.toMatchObject({ code: "image_not_found" });
   });
+
+  it("keeps revision history, restores archives, and reorders image metadata", async () => {
+    const harness = s3Harness();
+    const gourmet = await loadGourmet();
+    const created = await gourmet.createGourmetEntry(
+      input,
+      { subject: "admin-1" },
+      harness.client,
+    );
+    const webp = Buffer.concat([
+      Buffer.from("RIFF"),
+      Buffer.alloc(4),
+      Buffer.from("WEBP"),
+      Buffer.alloc(24),
+    ]);
+    const withImage = await gourmet.attachGourmetImage(
+      created.id,
+      {
+        altText: "첫 사진",
+        contentBase64: webp.toString("base64"),
+        contentType: "image/webp",
+        originalFilename: "first.webp",
+      },
+      "admin-1",
+      harness.client,
+    );
+    const image = withImage.images[0];
+    if (!image) throw new Error("image was not attached");
+    const updatedImage = await gourmet.updateGourmetImage(
+      created.id,
+      image.id,
+      {
+        altText: "정리한 사진",
+        expectedRevision: withImage.revision,
+        sortOrder: 0,
+      },
+      "admin-1",
+      harness.client,
+    );
+    expect(updatedImage.images[0]).toMatchObject({
+      altText: "정리한 사진",
+      sortOrder: 0,
+    });
+    const archived = await gourmet.deleteGourmetEntry(
+      created.id,
+      "admin-1",
+      harness.client,
+    );
+    expect(archived.status).toBe("deleted");
+    await expect(
+      gourmet.gourmetHistory(created.id, harness.client),
+    ).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          revision: archived.revision,
+          status: "deleted",
+        }),
+      ]),
+    );
+    const restored = await gourmet.restoreGourmetEntry(
+      created.id,
+      "admin-1",
+      harness.client,
+    );
+    expect(restored).toMatchObject({
+      status: "draft",
+      revision: archived.revision + 1,
+    });
+  });
 });

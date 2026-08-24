@@ -7,6 +7,7 @@ export type GourmetImage = {
   mimeType?: string;
   prUrl?: string;
   publicPath: string;
+  sortOrder: number;
 };
 
 export type GourmetEntry = {

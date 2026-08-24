@@ -1,5 +1,6 @@
 import type {
   GourmetEntry,
+  GourmetHistoryItem,
   GourmetImage,
   GourmetInput,
   GourmetListFilter,
@@ -51,6 +52,7 @@ export type GourmetPort = {
     page: number;
     total: number;
   }>;
+  history(id: string): Promise<GourmetHistoryItem[]>;
   removeImage(
     entryId: string,
     imageId: string,
@@ -65,4 +67,11 @@ export type GourmetPort = {
     },
     subject: string,
   ): Promise<GourmetEntry>;
+  updateImage(
+    entryId: string,
+    imageId: string,
+    input: { altText?: string; expectedRevision?: number; sortOrder?: number },
+    subject: string,
+  ): Promise<GourmetEntry>;
+  restore(id: string, subject: string): Promise<GourmetEntry>;
 };

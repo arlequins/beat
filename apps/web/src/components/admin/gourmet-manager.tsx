@@ -1,9 +1,15 @@
 "use client";
 
 import {
+  AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  Check,
   ExternalLink,
+  History,
   ImagePlus,
   RefreshCw,
+  RotateCcw,
   Save,
   Search,
   Trash2,
@@ -45,6 +51,26 @@ type FormState = {
   summary: string;
   tasteNotes: string;
   visitedAt: string;
+};
+
+type QualityReport = {
+  errorCount: number;
+  issues: Array<{
+    code: string;
+    entryId: string;
+    message: string;
+    severity: "error" | "warning";
+  }>;
+  warningCount: number;
+};
+
+type HistoryItem = {
+  menuName: string;
+  restaurantName: string;
+  revision: number;
+  status: "draft" | "published" | "deleted";
+  updatedAt: string;
+  visitedAt: string | null;
 };
 
 const emptyForm: FormState = {
@@ -165,10 +191,13 @@ export function GourmetManager() {
   const [entries, setEntries] = useState<GourmetEntry[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
   const [entryQuery, setEntryQuery] = useState("");
-  const [entryStatus, setEntryStatus] = useState<"all" | "draft" | "published">(
-    "all",
-  );
+  const [entryStatus, setEntryStatus] = useState<
+    "all" | "draft" | "published" | "deleted"
+  >("all");
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [quality, setQuality] = useState<QualityReport>();
+  const [imageDrafts, setImageDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const selected = useMemo(
@@ -201,6 +230,7 @@ export function GourmetManager() {
   const [adminImageUrls, setAdminImageUrls] = useState<Record<string, string>>(
     {},
   );
+  const archived = selected?.status === "deleted";
 
   useEffect(() => {
     let disposed = false;
@@ -233,6 +263,31 @@ export function GourmetManager() {
     };
   }, [selected]);
 
+  useEffect(() => {
+    setImageDrafts(
+      Object.fromEntries(
+        (selected?.images ?? []).map((image) => [image.id, image.altText]),
+      ),
+    );
+    if (!selected) {
+      setHistory([]);
+      return;
+    }
+    let disposed = false;
+    void authorizedBeatAdminRequest(
+      `/api/gourmet/entries/${selected.id}/history`,
+    )
+      .then(async (response) => {
+        if (!response.ok) return;
+        const value = (await response.json()) as HistoryItem[];
+        if (!disposed) setHistory(value);
+      })
+      .catch(() => undefined);
+    return () => {
+      disposed = true;
+    };
+  }, [selected]);
+
   const loadEntries = useCallback(async () => {
     setBusy(true);
     setMessage("");
@@ -242,7 +297,12 @@ export function GourmetManager() {
       );
       if (!response.ok) throw new Error("Gourmet 기록을 불러오지 못했습니다.");
       const result = (await response.json()) as GourmetList;
-      setEntries(result.entries.filter((entry) => entry.status !== "deleted"));
+      setEntries(result.entries);
+      const qualityResponse = await authorizedBeatAdminRequest(
+        "/api/gourmet/quality",
+      );
+      if (qualityResponse.ok)
+        setQuality((await qualityResponse.json()) as QualityReport);
       setMessage(`${result.total}개의 기록을 불러왔습니다.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "기록 조회 실패");
@@ -270,6 +330,7 @@ export function GourmetManager() {
   }
 
   async function save() {
+    if (archived) return;
     setBusy(true);
     setMessage("");
     try {
@@ -304,6 +365,28 @@ export function GourmetManager() {
       setMessage(`리비전 ${saved.revision}을 저장했습니다.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "저장 실패");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function restore() {
+    if (!selected || !archived) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await authorizedBeatAdminRequest(
+        `/api/gourmet/entries/${selected.id}/restore`,
+        { method: "POST" },
+      );
+      if (!response.ok) throw new Error("기록을 복구하지 못했습니다.");
+      const restored = (await response.json()) as GourmetEntry;
+      await loadEntries();
+      setSelectedId(restored.id);
+      setForm(formFor(restored));
+      setMessage(`기록을 초안으로 복구했습니다. 리비전 ${restored.revision}`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "복구 실패");
     } finally {
       setBusy(false);
     }
@@ -395,8 +478,54 @@ export function GourmetManager() {
     }
   }
 
+  async function updateImage(
+    image: GourmetImage,
+    changes: { altText?: string; sortOrder?: number },
+  ) {
+    if (!selected || archived) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await authorizedBeatAdminRequest(
+        `/admin/gourmet/entries/${selected.id}/images/${image.id}`,
+        {
+          body: JSON.stringify({
+            ...changes,
+            expectedRevision: selected.revision,
+          }),
+          method: "PATCH",
+        },
+      );
+      if (response.status === 409)
+        throw new Error(
+          "다른 변경이 먼저 저장되었습니다. 목록을 새로고침해 주세요.",
+        );
+      if (!response.ok) throw new Error("사진 정보를 저장하지 못했습니다.");
+      const updated = (await response.json()) as GourmetEntry;
+      setEntries((current) =>
+        current.map((entry) => (entry.id === updated.id ? updated : entry)),
+      );
+      setForm(formFor(updated));
+      setMessage("사진 설명과 순서를 저장했습니다.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "사진 정보 저장 실패",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
+  const orderedImages = useMemo(
+    () =>
+      [...(selected?.images ?? [])].sort(
+        (left, right) => left.sortOrder - right.sortOrder,
+      ),
+    [selected?.images],
+  );
+  const currentEntry = selected;
 
   return (
     <section
@@ -434,6 +563,20 @@ export function GourmetManager() {
           </button>
         </div>
       </header>
+      {quality && (quality.errorCount > 0 || quality.warningCount > 0) ? (
+        <div className="grid gap-3 border border-amber-500/40 bg-amber-500/5 p-4 text-sm">
+          <div className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-300">
+            <AlertTriangle className="size-4" />
+            데이터 확인 필요 · 오류 {quality.errorCount} · 경고{" "}
+            {quality.warningCount}
+          </div>
+          <ul className="grid gap-1 text-xs text-[var(--muted-foreground)]">
+            {quality.issues.slice(0, 5).map((issue) => (
+              <li key={`${issue.entryId}-${issue.code}`}>{issue.message}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-[17rem_1fr]">
         <aside className="max-h-[44rem] overflow-auto border border-[var(--line)] bg-[var(--surface)]">
           <div className="sticky top-0 z-10 grid gap-2 border-b border-[var(--line)] bg-[var(--surface)] p-3">
@@ -453,7 +596,11 @@ export function GourmetManager() {
               className="border border-[var(--line)] bg-[var(--background)] px-3 py-2 text-xs font-bold"
               onChange={(event) =>
                 setEntryStatus(
-                  event.target.value as "all" | "draft" | "published",
+                  event.target.value as
+                    | "all"
+                    | "draft"
+                    | "published"
+                    | "deleted",
                 )
               }
               value={entryStatus}
@@ -468,6 +615,10 @@ export function GourmetManager() {
                 {entries.filter((entry) => entry.status === "published").length}
                 )
               </option>
+              <option value="deleted">
+                보관 (
+                {entries.filter((entry) => entry.status === "deleted").length})
+              </option>
             </select>
           </div>
           {visibleEntries.map((entry) => (
@@ -481,7 +632,11 @@ export function GourmetManager() {
               <span className="mt-1 block text-xs text-[var(--muted-foreground)]">
                 {entry.visitedAt ?? "날짜 미상"} · {entry.menuName} ·{" "}
                 {entry.rating.toFixed(1)} ·{" "}
-                {entry.status === "published" ? "공개" : "초안"}
+                {entry.status === "published"
+                  ? "공개"
+                  : entry.status === "deleted"
+                    ? "보관"
+                    : "초안"}
               </span>
             </button>
           ))}
@@ -496,32 +651,38 @@ export function GourmetManager() {
         <div className="grid gap-4 border border-[var(--line)] bg-[var(--surface)] p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
+              disabled={archived}
               label="식당"
               value={form.restaurantName}
               onChange={(value) => set("restaurantName", value)}
             />
             <Field
+              disabled={archived}
               label="지점"
               value={form.restaurantBranch}
               onChange={(value) => set("restaurantBranch", value)}
             />
             <Field
+              disabled={archived}
               label="메뉴"
               value={form.menuName}
               onChange={(value) => set("menuName", value)}
             />
             <Field
+              disabled={archived}
               label="지역"
               value={form.area}
               onChange={(value) => set("area", value)}
             />
             <Field
+              disabled={archived}
               label="방문일"
               type="date"
               value={form.visitedAt}
               onChange={(value) => set("visitedAt", value)}
             />
             <Field
+              disabled={archived}
               label="평점 (0–10, 0.5 단위)"
               max="10"
               min="0"
@@ -537,12 +698,14 @@ export function GourmetManager() {
               className="min-h-24 border border-[var(--line)] bg-[var(--background)] p-3 font-normal"
               maxLength={500}
               onChange={(event) => set("summary", event.target.value)}
+              disabled={archived}
               value={form.summary}
             />
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             {commaFields.map((field) => (
               <Field
+                disabled={archived}
                 key={field}
                 label={`${field} (쉼표 구분)`}
                 value={form[field]}
@@ -555,6 +718,7 @@ export function GourmetManager() {
             <textarea
               className="min-h-28 border border-[var(--line)] bg-[var(--background)] p-3 font-normal"
               onChange={(event) => set("freeTextNote", event.target.value)}
+              disabled={archived}
               value={form.freeTextNote}
             />
           </label>
@@ -563,6 +727,7 @@ export function GourmetManager() {
               재방문
               <select
                 className="border border-[var(--line)] bg-[var(--background)] p-3"
+                disabled={archived}
                 onChange={(event) =>
                   set("revisit", event.target.value as FormState["revisit"])
                 }
@@ -577,6 +742,7 @@ export function GourmetManager() {
               공개 상태
               <select
                 className="border border-[var(--line)] bg-[var(--background)] p-3"
+                disabled={archived}
                 onChange={(event) =>
                   set("status", event.target.value as FormState["status"])
                 }
@@ -591,7 +757,11 @@ export function GourmetManager() {
             <button
               className="flex items-center gap-2 bg-[var(--foreground)] px-5 py-3 font-bold text-[var(--background)] disabled:opacity-50"
               disabled={
-                busy || !form.restaurantName || !form.menuName || !form.summary
+                busy ||
+                archived ||
+                !form.restaurantName ||
+                !form.menuName ||
+                !form.summary
               }
               onClick={() => void save()}
               type="button"
@@ -599,7 +769,17 @@ export function GourmetManager() {
               <Save className="size-4" />
               저장
             </button>
-            {selected ? (
+            {selected && archived ? (
+              <button
+                className="flex items-center gap-2 border border-[var(--accent-foreground)] px-5 py-3 font-bold text-[var(--accent-foreground)]"
+                disabled={busy}
+                onClick={() => void restore()}
+                type="button"
+              >
+                <RotateCcw className="size-4" />
+                초안으로 복구
+              </button>
+            ) : selected ? (
               <>
                 <label className="flex cursor-pointer items-center gap-2 border border-[var(--line)] px-5 py-3 font-bold">
                   <ImagePlus className="size-4" />
@@ -624,84 +804,173 @@ export function GourmetManager() {
               </>
             ) : null}
           </div>
-          {selected?.images.map((image) => (
-            <div
-              className="grid gap-3 border border-[var(--line)] bg-[var(--background)] p-3 sm:grid-cols-[8rem_1fr_auto] sm:items-center"
-              key={image.id}
-            >
-              <div className="relative aspect-[4/3] overflow-hidden bg-[var(--surface)]">
-                {(
-                  selected.status === "published"
-                    ? publicGourmetImage(image)
-                    : adminImageUrls[image.id]
-                ) ? (
-                  <Image
-                    alt={image.altText}
-                    className="object-cover"
-                    fill
-                    loading="lazy"
-                    sizes="128px"
-                    src={
-                      selected.status === "published"
+          {currentEntry
+            ? orderedImages.map((image, imageIndex) => (
+                <div
+                  className="grid gap-3 border border-[var(--line)] bg-[var(--background)] p-3 sm:grid-cols-[8rem_1fr_auto] sm:items-start"
+                  key={image.id}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[var(--surface)]">
+                    {(
+                      currentEntry.status === "published"
                         ? publicGourmetImage(image)
-                        : adminImageUrls[image.id]!
-                    }
-                  />
-                ) : (
-                  <span className="absolute inset-0 grid place-items-center p-3 text-center text-xs font-bold text-[var(--muted-foreground)]">
-                    미리보기를 불러오는 중
-                  </span>
-                )}
-              </div>
-              <div className="grid gap-1 text-sm">
-                <p className="font-bold">{image.altText}</p>
-                <p className="text-xs text-[var(--muted-foreground)]">
-                  {image.mimeType ?? "image/webp"} ·{" "}
-                  {image.byteSize.toLocaleString()} bytes
-                </p>
-                {image.prUrl ? (
-                  <a
-                    className="inline-flex items-center gap-2 text-xs font-bold text-[var(--accent-foreground)] underline"
-                    href={image.prUrl}
-                    rel="noopener noreferrer"
-                    target="_blank"
+                        : adminImageUrls[image.id]
+                    ) ? (
+                      <Image
+                        alt={image.altText}
+                        className="object-cover"
+                        fill
+                        loading="lazy"
+                        sizes="128px"
+                        src={
+                          currentEntry.status === "published"
+                            ? publicGourmetImage(image)
+                            : adminImageUrls[image.id]!
+                        }
+                      />
+                    ) : (
+                      <span className="absolute inset-0 grid place-items-center p-3 text-center text-xs font-bold text-[var(--muted-foreground)]">
+                        미리보기를 불러오는 중
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid gap-2 text-sm">
+                    <label className="grid gap-1 text-xs font-bold">
+                      사진 설명
+                      <input
+                        className="border border-[var(--line)] bg-[var(--surface)] p-2 font-normal"
+                        disabled={busy || archived}
+                        onChange={(event) =>
+                          setImageDrafts((current) => ({
+                            ...current,
+                            [image.id]: event.target.value,
+                          }))
+                        }
+                        value={imageDrafts[image.id] ?? image.altText}
+                      />
+                    </label>
+                    <p className="text-xs text-[var(--muted-foreground)]">
+                      {image.mimeType ?? "image/webp"} ·{" "}
+                      {image.byteSize.toLocaleString()} bytes
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        aria-label={`${image.altText} 사진 위로 이동`}
+                        className="inline-flex items-center gap-1 border border-[var(--line)] px-2 py-1 text-xs font-bold disabled:opacity-50"
+                        disabled={busy || archived || imageIndex === 0}
+                        onClick={() =>
+                          void updateImage(image, { sortOrder: imageIndex - 1 })
+                        }
+                        type="button"
+                      >
+                        <ArrowUp className="size-3.5" />
+                        위로
+                      </button>
+                      <button
+                        aria-label={`${image.altText} 사진 아래로 이동`}
+                        className="inline-flex items-center gap-1 border border-[var(--line)] px-2 py-1 text-xs font-bold disabled:opacity-50"
+                        disabled={
+                          busy ||
+                          archived ||
+                          imageIndex === orderedImages.length - 1
+                        }
+                        onClick={() =>
+                          void updateImage(image, { sortOrder: imageIndex + 1 })
+                        }
+                        type="button"
+                      >
+                        <ArrowDown className="size-3.5" />
+                        아래로
+                      </button>
+                      <button
+                        className="inline-flex items-center gap-1 border border-[var(--accent-foreground)] px-2 py-1 text-xs font-bold text-[var(--accent-foreground)] disabled:opacity-50"
+                        disabled={busy || archived}
+                        onClick={() =>
+                          void updateImage(image, {
+                            altText: imageDrafts[image.id] ?? image.altText,
+                          })
+                        }
+                        type="button"
+                      >
+                        <Check className="size-3.5" />
+                        설명 저장
+                      </button>
+                    </div>
+                    {image.prUrl ? (
+                      <a
+                        className="inline-flex items-center gap-2 text-xs font-bold text-[var(--accent-foreground)] underline"
+                        href={image.prUrl}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <Utensils className="size-3.5" />
+                        기존 GitHub 검토 링크{" "}
+                        <ExternalLink className="size-3" />
+                      </a>
+                    ) : (
+                      <span className="text-xs text-[var(--muted-foreground)]">
+                        private S3 이미지
+                      </span>
+                    )}
+                    {(
+                      currentEntry.status === "published"
+                        ? publicGourmetImage(image)
+                        : adminImageUrls[image.id]
+                    ) ? (
+                      <GourmetShareButton
+                        entry={currentEntry}
+                        imageUrl={
+                          currentEntry.status === "published"
+                            ? publicGourmetImage(image)
+                            : adminImageUrls[image.id]!
+                        }
+                        locale="ko"
+                      />
+                    ) : null}
+                  </div>
+                  <button
+                    aria-label={`${image.altText} 사진 분리`}
+                    className="inline-flex items-center justify-center gap-2 border border-red-500/40 px-3 py-2 text-xs font-bold text-red-600"
+                    disabled={busy || archived}
+                    onClick={() => void removeImage(image)}
+                    type="button"
                   >
-                    <Utensils className="size-3.5" />
-                    기존 GitHub 검토 링크 <ExternalLink className="size-3" />
-                  </a>
-                ) : (
-                  <span className="text-xs text-[var(--muted-foreground)]">
-                    private S3 이미지
-                  </span>
-                )}
-                {(
-                  selected.status === "published"
-                    ? publicGourmetImage(image)
-                    : adminImageUrls[image.id]
-                ) ? (
-                  <GourmetShareButton
-                    entry={selected}
-                    imageUrl={
-                      selected.status === "published"
-                        ? publicGourmetImage(image)
-                        : adminImageUrls[image.id]!
-                    }
-                    locale="ko"
-                  />
-                ) : null}
-              </div>
-              <button
-                aria-label={`${image.altText} 사진 분리`}
-                className="inline-flex items-center justify-center gap-2 border border-red-500/40 px-3 py-2 text-xs font-bold text-red-600"
-                disabled={busy}
-                onClick={() => void removeImage(image)}
-                type="button"
-              >
-                <Trash2 className="size-3.5" />
-                사진 분리
-              </button>
-            </div>
-          ))}
+                    <Trash2 className="size-3.5" />
+                    사진 분리
+                  </button>
+                </div>
+              ))
+            : null}
+          {selected && history.length ? (
+            <section className="grid gap-3 border-t border-[var(--line)] pt-4">
+              <h3 className="flex items-center gap-2 text-sm font-bold">
+                <History className="size-4" />
+                변경 이력
+              </h3>
+              <ol className="grid gap-2 text-xs text-[var(--muted-foreground)]">
+                {history.map((item) => (
+                  <li
+                    className="flex flex-wrap items-center gap-x-2 gap-y-1"
+                    key={`${item.revision}-${item.updatedAt}`}
+                  >
+                    <span className="font-bold text-[var(--foreground)]">
+                      리비전 {item.revision}
+                    </span>
+                    <span>
+                      {item.status === "published"
+                        ? "공개"
+                        : item.status === "deleted"
+                          ? "보관"
+                          : "초안"}
+                    </span>
+                    <time dateTime={item.updatedAt}>
+                      {item.updatedAt.slice(0, 16).replace("T", " ")}
+                    </time>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
           {message ? (
             <p
               aria-live="polite"
@@ -724,12 +993,14 @@ function Field(props: {
   step?: string;
   type?: string;
   value: string;
+  disabled?: boolean;
 }) {
   return (
     <label className="grid gap-2 text-sm font-bold">
       {props.label}
       <input
         className="border border-[var(--line)] bg-[var(--background)] p-3 font-normal"
+        disabled={props.disabled}
         max={props.max}
         min={props.min}
         onChange={(event) => props.onChange(event.target.value)}
