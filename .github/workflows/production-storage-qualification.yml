@@ -22,6 +22,7 @@ jobs:
       BEAT_RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
       BEAT_PRODUCTION_QUALIFICATION_CONFIRM: production
       BEAT_AUTH_STATE_PREFIX: v1
+      SST_STAGE: production
     steps:
       - uses: actions/checkout@v5
       - uses: ./tooling/github/setup
