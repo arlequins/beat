@@ -63,21 +63,43 @@ function render() {
         )
         .join("");
       const thumbs = group.images
-        .map(
-          (image) =>
-            `<img src="data:${image.contentType};base64,${image.contentBase64}" alt="" />`,
-        )
+        .map((image, imageIndex) => {
+          const checked = image.selected !== false ? " checked" : "";
+          const alt = escapeHtml(image.altText || `사진 ${imageIndex + 1}`);
+          return `<label class="image-card"><input type="checkbox" data-group="${index}" data-image="${imageIndex}"${checked} aria-label="${alt} 업로드"><img src="data:${image.contentType};base64,${image.contentBase64}" alt="${alt}" /><span>업로드 ${imageIndex + 1}</span></label>`;
+        })
         .join("");
       return `<div class="group"><div class="group-title">${index + 1}번째 사진 묶음 · ${group.images.length}장</div><div class="group-text">${escapeHtml(group.text || "텍스트 없음")}</div><div class="thumbs">${thumbs}</div><label for="entry-${index}">연결할 Beat 초안</label><select id="entry-${index}" data-group="${index}">${options}</select></div>`;
     })
     .join("");
   $("#results").classList.toggle("hidden", state.groups.length === 0);
-  $("#summary").textContent =
-    `${state.groups.reduce((sum, group) => sum + group.images.length, 0)}장의 사진을 찾았습니다. 연결 대상을 확인한 뒤 저장하세요.`;
+  for (const checkbox of groups.querySelectorAll("input[data-image]"))
+    checkbox.addEventListener("change", () => {
+      state.groups[Number(checkbox.dataset.group)].images[
+        Number(checkbox.dataset.image)
+      ].selected = checkbox.checked;
+      updateSelectionSummary();
+    });
   for (const select of groups.querySelectorAll("select[data-group]"))
     select.addEventListener("change", () => {
       state.groups[Number(select.dataset.group)].entryId = select.value;
     });
+  updateSelectionSummary();
+}
+
+function updateSelectionSummary() {
+  const total = state.groups.reduce(
+    (sum, group) => sum + group.images.length,
+    0,
+  );
+  const selected = state.groups.reduce(
+    (sum, group) =>
+      sum + group.images.filter((image) => image.selected !== false).length,
+    0,
+  );
+  $("#summary").textContent =
+    `${total}장의 사진을 찾았습니다. ${selected}장만 업로드 대상으로 선택되어 있습니다. 사진과 연결 대상을 확인한 뒤 업로드하세요.`;
+  $("#export").disabled = selected === 0;
 }
 
 async function loadEntries() {
@@ -109,7 +131,7 @@ $("#extract").addEventListener("click", async () => {
       const ranked = rankEntries(state.entries, message.text);
       return {
         entryId: ranked[0]?.entry.id ?? state.entries[0].id,
-        images: message.images,
+        images: message.images.map((image) => ({ ...image, selected: true })),
         text: message.text,
       };
     });

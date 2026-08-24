@@ -26,6 +26,7 @@ test("ChatGPT exporter is a private MV3 extension without embedded secrets", asy
       "popup.js",
     ].map((name) => readFile(new URL(name, root), "utf8")),
   );
+  const popup = await readFile(new URL("popup.html", root), "utf8");
   const source = sources.join("\n");
   assert.doesNotMatch(source, /BEAT_GOURMET_ACTION_API_KEY|refreshToken/);
   assert.match(source, /beat-admin-session/);
@@ -36,6 +37,8 @@ test("ChatGPT exporter is a private MV3 extension without embedded secrets", asy
   assert.match(source, /visibleImageCount/);
   assert.match(source, /imageIdFor/);
   assert.match(source, /already connected|이미 연결/);
+  assert.match(source, /data-image/);
+  assert.match(popup, /확인한 사진을 초안에 연결/);
 });
 
 test("matches Korean meal text deterministically and groups assignments", () => {
@@ -64,13 +67,19 @@ test("matches Korean meal text deterministically and groups assignments", () => 
   assert.equal(ranked[0].entry.id, "b");
   assert.deepEqual(
     matcher.buildAssignments([
-      { entryId: "b", images: [{ id: "1" }] },
+      { entryId: "b", images: [{ id: "1", selected: false }] },
       { entryId: "b", images: [{ id: "2" }] },
       { entryId: "a", images: [{ id: "3" }] },
     ]),
     [
-      { entryId: "b", images: [{ id: "1" }, { id: "2" }] },
+      { entryId: "b", images: [{ id: "2" }] },
       { entryId: "a", images: [{ id: "3" }] },
     ],
+  );
+  assert.deepEqual(
+    matcher.buildAssignments([
+      { entryId: "b", images: [{ id: "skip", selected: false }] },
+    ]),
+    [],
   );
 });
