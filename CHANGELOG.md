@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.33.0](https://github.com/arlequins/beat/compare/beat-v1.32.0...beat-v1.33.0) (2026-08-24)
+
+
+### Features
+
+* review Gourmet photos before upload ([#125](https://github.com/arlequins/beat/issues/125)) ([0783861](https://github.com/arlequins/beat/commit/0783861ae00ea0636c673128a84444db7c0a4301))
+
 ## [1.32.0](https://github.com/arlequins/beat/compare/beat-v1.31.2...beat-v1.32.0) (2026-08-24)
 
 
