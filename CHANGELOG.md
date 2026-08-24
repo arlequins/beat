@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.30.0](https://github.com/arlequins/beat/compare/beat-v1.29.0...beat-v1.30.0) (2026-08-24)
+
+
+### Features
+
+* **gourmet:** require draft lookup in Custom GPT Action ([2eaf89f](https://github.com/arlequins/beat/commit/2eaf89f7c7b8b02e38011755802a10e3ac4c3802))
+
 ## [1.29.0](https://github.com/arlequins/beat/compare/beat-v1.28.0...beat-v1.29.0) (2026-08-24)
 
 
