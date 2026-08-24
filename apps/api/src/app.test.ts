@@ -39,7 +39,7 @@ describe("API app", () => {
     const allowed = await app.request("/api/echo", {
       headers: {
         "Access-Control-Request-Headers":
-          "authorization,content-type,x-client-request-id",
+          "authorization,content-type,idempotency-key,x-client-request-id",
         "Access-Control-Request-Method": "POST",
         Origin: "http://localhost:3000",
       },
@@ -222,6 +222,9 @@ describe("API app", () => {
     );
     expect(response.headers.get("access-control-allow-headers")).toContain(
       "Content-Type",
+    );
+    expect(response.headers.get("access-control-allow-headers")).toContain(
+      "Idempotency-Key",
     );
     expect(response.headers.get("access-control-allow-headers")).toContain(
       "X-Client-Request-Id",

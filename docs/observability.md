@@ -34,6 +34,15 @@ OTEL_SERVICE_NAME=api
 ```
 
 Unset the endpoint to return to the dependency-free local mode.
+
+## GitHub Actions failure issues
+
+The `CI failure issue` workflow listens for failures in CI, Security, GitHub
+Pages, and the production availability monitor. It keeps one open issue per
+workflow and adds later failed run links as comments, so mobile GitHub
+notifications remain useful without creating an issue for every retry. Issues
+contain only the workflow, commit SHA, and public Actions URL; runtime secrets
+and AWS credentials are never included.
 # Production availability monitor
 
 The `Production availability monitor` workflow runs hourly and can also be

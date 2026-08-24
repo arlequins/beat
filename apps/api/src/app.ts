@@ -260,6 +260,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       allowHeaders: [
         "Authorization",
         "Content-Type",
+        "Idempotency-Key",
         "Trpc-Accept",
         "X-Client-Request-Id",
         "X-Request-Id",

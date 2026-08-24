@@ -24,6 +24,7 @@ jobs:
       # default. The ARN is a resource identifier, not a secret value.
       SST_AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
       BEAT_RUNTIME_SECRET_ARN: ${{ vars.BEAT_RUNTIME_SECRET_ARN }}
+      BEAT_AGENT_WEB_URL: ${{ vars.BEAT_AGENT_WEB_URL || 'https://arlequins.github.io/beat-agent/' }}
     outputs:
       api_url: ${{ steps.urls.outputs.api_url }}
     steps:
@@ -48,6 +49,10 @@ jobs:
           echo "api_url=$API_URL" >> "$GITHUB_OUTPUT"
       - name: Check public website
         run: curl --fail --silent --show-error --location --retry 2 https://arlequins.github.io/beat/
+      - name: Check Beat Agent public entry
+        run: |
+          node -e 'const url = new URL(process.env.BEAT_AGENT_WEB_URL); if (url.protocol !== "https:") throw new Error("Agent endpoint must use HTTPS")'
+          curl --fail --silent --show-error --location --retry 2 "$BEAT_AGENT_WEB_URL"
       - name: Check API, OIDC, admin, and Gourmet contracts
         run: node scripts/smoke-api.mjs "${{ steps.urls.outputs.api_url }}"
 

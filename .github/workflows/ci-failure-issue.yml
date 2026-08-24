@@ -1,0 +1,35 @@
+name: CI failure issue
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - Security
+      - Deploy GitHub Pages
+      - Production availability monitor
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open one actionable issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          WORKFLOW: ${{ github.event.workflow_run.name }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          TITLE_PREFIX: "Automated workflow failure"
+        run: |
+          title="$TITLE_PREFIX: $WORKFLOW"
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$title\"" --json number --jq '.[0].number')"
+          if test -n "$existing"; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "Another failure was detected for commit $SHA: $RUN_URL"
+            exit 0
+          fi
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "The protected workflow **$WORKFLOW** failed for commit $SHA. Review the run before retrying: $RUN_URL"
