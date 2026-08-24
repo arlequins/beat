@@ -30,8 +30,6 @@ local application; the pages below explain design decisions and ongoing work.
     exact ChatGPT, Beat API, S3, administrator, GitHub PR, and public-site flow.
 11. [ChatGPT MCP import for Gourmet](gourmet-chatgpt-mcp.md) documents the
     OAuth-protected, preview-first bridge from ChatGPT context to S3 drafts.
-12. [ChatGPT Gourmet exporter](gourmet-chatgpt-export.md) documents the private
-    one-click browser export for attaching conversation photos to Beat drafts.
 
 ## Development
 

@@ -246,21 +246,33 @@ export function GourmetManager() {
   const [adminImageUrls, setAdminImageUrls] = useState<Record<string, string>>(
     {},
   );
+  const [imagePreviewErrors, setImagePreviewErrors] = useState<
+    Record<string, string>
+  >({});
+  const [previewAttempt, setPreviewAttempt] = useState(0);
   const archived = selected?.status === "deleted";
 
   useEffect(() => {
     let disposed = false;
     const objectUrls: string[] = [];
     setAdminImageUrls({});
+    setImagePreviewErrors({});
     if (!selected || selected.status === "published") return () => undefined;
 
     void Promise.all(
       selected.images.map(async (image) => {
         try {
           const response = await authorizedBeatAdminRequest(
-            `/admin/gourmet/entries/${selected.id}/images/${image.id}`,
+            `/admin/gourmet/entries/${selected.id}/images/${image.id}${previewAttempt > 0 ? `?preview=${previewAttempt}` : ""}`,
           );
-          if (!response.ok) return;
+          if (!response.ok) {
+            if (!disposed)
+              setImagePreviewErrors((current) => ({
+                ...current,
+                [image.id]: "미리보기를 불러오지 못했습니다.",
+              }));
+            return;
+          }
           const objectUrl = URL.createObjectURL(await response.blob());
           objectUrls.push(objectUrl);
           if (!disposed)
@@ -269,7 +281,11 @@ export function GourmetManager() {
               [image.id]: objectUrl,
             }));
         } catch {
-          // Keep the file metadata visible when a preview cannot be fetched.
+          if (!disposed)
+            setImagePreviewErrors((current) => ({
+              ...current,
+              [image.id]: "미리보기를 불러오지 못했습니다.",
+            }));
         }
       }),
     );
@@ -277,7 +293,7 @@ export function GourmetManager() {
       disposed = true;
       for (const objectUrl of objectUrls) URL.revokeObjectURL(objectUrl);
     };
-  }, [selected]);
+  }, [previewAttempt, selected]);
 
   useEffect(() => {
     setImageDrafts(
@@ -888,21 +904,48 @@ export function GourmetManager() {
                   key={image.id}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-[var(--surface)]">
-                    {(
-                      currentEntry.status === "published"
-                        ? publicGourmetImage(image)
-                        : adminImageUrls[image.id]
-                    ) ? (
+                    {imagePreviewErrors[image.id] ? (
+                      <div className="absolute inset-0 grid place-items-center gap-2 p-3 text-center text-xs font-bold text-red-600">
+                        <span>{imagePreviewErrors[image.id]}</span>
+                        <button
+                          className="border border-red-500/50 px-2 py-1 text-[0.7rem] underline underline-offset-2"
+                          onClick={() => {
+                            setImagePreviewErrors((current) => {
+                              const next = { ...current };
+                              delete next[image.id];
+                              return next;
+                            });
+                            setPreviewAttempt((current) => current + 1);
+                          }}
+                          type="button"
+                        >
+                          다시 시도
+                        </button>
+                      </div>
+                    ) : (
+                        currentEntry.status === "published"
+                          ? publicGourmetImage(image)
+                          : adminImageUrls[image.id]
+                      ) ? (
                       <Image
                         alt={image.altText}
                         className="object-cover"
                         fill
                         loading="lazy"
+                        onError={() =>
+                          setImagePreviewErrors((current) => ({
+                            ...current,
+                            [image.id]: "미리보기를 불러오지 못했습니다.",
+                          }))
+                        }
                         sizes="128px"
                         src={
-                          currentEntry.status === "published"
-                            ? publicGourmetImage(image)
-                            : adminImageUrls[image.id]!
+                          currentEntry.status === "published" &&
+                          previewAttempt > 0
+                            ? `${publicGourmetImage(image)}${publicGourmetImage(image).includes("?") ? "&" : "?"}preview=${previewAttempt}`
+                            : currentEntry.status === "published"
+                              ? publicGourmetImage(image)
+                              : adminImageUrls[image.id]!
                         }
                       />
                     ) : (

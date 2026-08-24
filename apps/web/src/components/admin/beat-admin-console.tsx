@@ -45,7 +45,6 @@ import {
   startBeatAdminGoogleLogin,
 } from "~/lib/beat-admin-session";
 import { AdminStudioOverview } from "~/widgets/admin-studio/ui/admin-studio-overview";
-import { ChatGPTExportCard } from "~/widgets/chatgpt-export/ui/chatgpt-export-card";
 
 type AuthStatus = "loading" | "authenticated" | "anonymous";
 type MessageTone = "error" | "info";
@@ -708,8 +707,6 @@ export function BeatAdminConsole() {
         onSelectRecord={(selectedSlug) => void loadDraft(selectedSlug)}
         records={records}
       />
-
-      <ChatGPTExportCard />
 
       <div className="grid min-h-[42rem] gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <aside className="flex min-h-0 flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)]">
