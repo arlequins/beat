@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.34.0](https://github.com/arlequins/beat/compare/beat-v1.33.0...beat-v1.34.0) (2026-08-24)
+
+
+### Features
+
+* **admin:** retire ChatGPT photo exporter ([#127](https://github.com/arlequins/beat/issues/127)) ([f36773e](https://github.com/arlequins/beat/commit/f36773eedfc0cd1ee5d5bfdff95d910bc7c9d8d2))
+
 ## [1.33.0](https://github.com/arlequins/beat/compare/beat-v1.32.0...beat-v1.33.0) (2026-08-24)
 
 
