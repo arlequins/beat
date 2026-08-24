@@ -20,6 +20,7 @@ import {
   RefreshCw,
   RotateCcw,
   Save,
+  Search,
   Send,
   ShieldCheck,
   Sparkles,
@@ -28,6 +29,7 @@ import {
   type KeyboardEvent,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -106,6 +108,10 @@ export function BeatAdminConsole() {
   const [busy, setBusy] = useState(false);
   const [prUrl, setPrUrl] = useState<string>();
   const [records, setRecords] = useState<ContentRecord[]>([]);
+  const [recordQuery, setRecordQuery] = useState("");
+  const [recordFilter, setRecordFilter] = useState<
+    "all" | "draft" | "confirmed" | "published" | "unreviewed"
+  >("all");
   const [editorMode, setEditorMode] = useState<"diff" | "preview" | "write">(
     "write",
   );
@@ -117,6 +123,25 @@ export function BeatAdminConsole() {
 
   const authenticated = authStatus === "authenticated";
   const dirty = source !== baselineSource || title !== baselineTitle;
+  const visibleRecords = useMemo(() => {
+    const normalizedQuery = recordQuery.trim().toLocaleLowerCase();
+    return records.filter((record) => {
+      const matchesFilter =
+        recordFilter === "all"
+          ? true
+          : recordFilter === "unreviewed"
+            ? record.reviewStatus === "unreviewed"
+            : record.status === recordFilter;
+      const matchesQuery = !normalizedQuery
+        ? true
+        : [record.title, record.slug, record.category]
+            .filter(Boolean)
+            .some((value) =>
+              value?.toLocaleLowerCase().includes(normalizedQuery),
+            );
+      return matchesFilter && matchesQuery;
+    });
+  }, [recordFilter, recordQuery, records]);
 
   const showMessage = useCallback(
     (value: string, tone: MessageTone = "info") => {
@@ -723,11 +748,59 @@ export function BeatAdminConsole() {
               </div>
             ))}
           </div>
+          <div className="grid gap-2 border-b border-[var(--line)] p-3">
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
+              <span className="sr-only">기사 검색</span>
+              <input
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-[var(--accent-foreground)]"
+                onChange={(event) => setRecordQuery(event.target.value)}
+                placeholder="제목·슬러그·카테고리 검색"
+                type="search"
+                value={recordQuery}
+              />
+            </label>
+            <select
+              aria-label="기사 상태 필터"
+              className="rounded-xl border border-[var(--line)] bg-[var(--background)] px-3 py-2 text-xs font-bold"
+              onChange={(event) =>
+                setRecordFilter(
+                  event.target.value as
+                    | "all"
+                    | "draft"
+                    | "confirmed"
+                    | "published"
+                    | "unreviewed",
+                )
+              }
+              value={recordFilter}
+            >
+              <option value="all">전체 상태 ({records.length})</option>
+              <option value="draft">초안 ({draftCount})</option>
+              <option value="confirmed">
+                확정 (
+                {
+                  records.filter((record) => record.status === "confirmed")
+                    .length
+                }
+                )
+              </option>
+              <option value="published">
+                발행 (
+                {
+                  records.filter((record) => record.status === "published")
+                    .length
+                }
+                )
+              </option>
+              <option value="unreviewed">검토 필요 ({reviewCount})</option>
+            </select>
+          </div>
           <nav
             aria-label="기사 목록"
             className="min-h-0 flex-1 overflow-y-auto"
           >
-            {records.map((record) => {
+            {visibleRecords.map((record) => {
               const selected = record.slug === slug;
               return (
                 <button
@@ -769,10 +842,11 @@ export function BeatAdminConsole() {
                 </button>
               );
             })}
-            {!records.length ? (
+            {!visibleRecords.length ? (
               <p className="p-5 text-sm leading-6 text-[var(--muted-foreground)]">
-                아직 기사가 없습니다. 새 글을 시작하거나 GitHub 원문을
-                불러오세요.
+                {records.length
+                  ? "현재 검색·필터 조건에 맞는 기사가 없습니다."
+                  : "아직 기사가 없습니다. 새 글을 시작하거나 GitHub 원문을 불러오세요."}
               </p>
             ) : null}
           </nav>

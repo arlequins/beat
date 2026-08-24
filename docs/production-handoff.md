@@ -38,6 +38,11 @@ The API CORS allowlist contains the browser origin
 `https://arlequins.github.io`; paths such as `/beat/` and `/beat-agent/` are not
 included in an origin value.
 
+The hourly protected monitor also checks the public Agent entry. Set the
+production Environment variable `BEAT_AGENT_WEB_URL` only when the Agent moves
+to another public URL; otherwise it defaults to
+`https://arlequins.github.io/beat-agent/`. This is a public URL, not a secret.
+
 ## Five-step completion state
 
 1. **Agent OIDC and chat:** Beat discovery, Authorization Code + PKCE S256,

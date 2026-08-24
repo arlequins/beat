@@ -5,6 +5,7 @@ import {
   ImagePlus,
   RefreshCw,
   Save,
+  Search,
   Trash2,
   Utensils,
 } from "lucide-react";
@@ -163,6 +164,10 @@ async function optimizeImage(file: File) {
 export function GourmetManager() {
   const [entries, setEntries] = useState<GourmetEntry[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
+  const [entryQuery, setEntryQuery] = useState("");
+  const [entryStatus, setEntryStatus] = useState<"all" | "draft" | "published">(
+    "all",
+  );
   const [form, setForm] = useState<FormState>(emptyForm);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -170,6 +175,29 @@ export function GourmetManager() {
     () => entries.find((entry) => entry.id === selectedId),
     [entries, selectedId],
   );
+  const visibleEntries = useMemo(() => {
+    const normalizedQuery = entryQuery.trim().toLocaleLowerCase();
+    return entries
+      .filter((entry) => entryStatus === "all" || entry.status === entryStatus)
+      .filter((entry) => {
+        if (!normalizedQuery) return true;
+        return [
+          entry.restaurantName,
+          entry.restaurantBranch,
+          entry.menuName,
+          entry.area,
+        ]
+          .filter(Boolean)
+          .some((value) =>
+            value?.toLocaleLowerCase().includes(normalizedQuery),
+          );
+      })
+      .sort((left, right) => {
+        const leftDate = left.visitedAt ?? left.createdAt;
+        const rightDate = right.visitedAt ?? right.createdAt;
+        return rightDate.localeCompare(leftDate);
+      });
+  }, [entries, entryQuery, entryStatus]);
   const [adminImageUrls, setAdminImageUrls] = useState<Record<string, string>>(
     {},
   );
@@ -408,7 +436,41 @@ export function GourmetManager() {
       </header>
       <div className="grid gap-6 lg:grid-cols-[17rem_1fr]">
         <aside className="max-h-[44rem] overflow-auto border border-[var(--line)] bg-[var(--surface)]">
-          {entries.map((entry) => (
+          <div className="sticky top-0 z-10 grid gap-2 border-b border-[var(--line)] bg-[var(--surface)] p-3">
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
+              <span className="sr-only">Gourmet 기록 검색</span>
+              <input
+                className="w-full border border-[var(--line)] bg-[var(--background)] py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-[var(--accent-foreground)]"
+                onChange={(event) => setEntryQuery(event.target.value)}
+                placeholder="식당·메뉴·지역 검색"
+                type="search"
+                value={entryQuery}
+              />
+            </label>
+            <select
+              aria-label="Gourmet 공개 상태 필터"
+              className="border border-[var(--line)] bg-[var(--background)] px-3 py-2 text-xs font-bold"
+              onChange={(event) =>
+                setEntryStatus(
+                  event.target.value as "all" | "draft" | "published",
+                )
+              }
+              value={entryStatus}
+            >
+              <option value="all">전체 상태 ({entries.length})</option>
+              <option value="draft">
+                초안 (
+                {entries.filter((entry) => entry.status === "draft").length})
+              </option>
+              <option value="published">
+                공개 (
+                {entries.filter((entry) => entry.status === "published").length}
+                )
+              </option>
+            </select>
+          </div>
+          {visibleEntries.map((entry) => (
             <button
               className={`block w-full border-b border-[var(--line)] p-4 text-left ${entry.id === selectedId ? "bg-[var(--background)]" : ""}`}
               key={entry.id}
@@ -417,14 +479,17 @@ export function GourmetManager() {
             >
               <span className="block font-bold">{entry.restaurantName}</span>
               <span className="mt-1 block text-xs text-[var(--muted-foreground)]">
-                {entry.menuName} · {entry.rating.toFixed(1)} · {entry.status}
+                {entry.visitedAt ?? "날짜 미상"} · {entry.menuName} ·{" "}
+                {entry.rating.toFixed(1)} ·{" "}
+                {entry.status === "published" ? "공개" : "초안"}
               </span>
             </button>
           ))}
-          {!entries.length ? (
+          {!visibleEntries.length ? (
             <p className="p-5 text-sm leading-6 text-[var(--muted-foreground)]">
-              아직 기록이 없습니다. 오른쪽의 <strong>새 기록</strong>으로 직접
-              추가하거나 모바일 Beat에서 식사 내용을 보내 주세요.
+              {entries.length
+                ? "현재 검색·필터 조건에 맞는 기록이 없습니다."
+                : "아직 기록이 없습니다. 오른쪽의 새 기록으로 직접 추가하거나 모바일 Beat에서 식사 내용을 보내 주세요."}
             </p>
           ) : null}
         </aside>

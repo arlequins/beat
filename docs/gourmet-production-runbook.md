@@ -55,6 +55,23 @@ GitHub Actions production Environment와 OIDC로 실행한다.
 5. liveness, 대표적인 관리자 조회, 공개 Gourmet 목록·이미지, 모니터 복구를
    확인하고 incident 기록에 영향·원인·배포 SHA·S3 version ID를 남긴다.
 
+## S3 백업과 복구 경계
+
+Gourmet 데이터의 백업은 별도 데이터베이스 덤프가 아니라 production state
+bucket의 Versioning과 immutable ledger에 의해 유지된다. 같은 key의 이전
+버전은 보존되며, 애플리케이션과 브라우저에는 S3 자격 증명이 전달되지 않는다.
+
+1. 장애가 발생하면 보호된 **Production operations**에서
+   `recover-state-version`을 선택하고, 확인한 `state key`와 `version ID`를 입력한다.
+2. Action은 선택한 버전을 `v1/recovery/` 격리 prefix로 복사한다. live head를
+   덮어쓰지 않으므로 이 단계는 읽기·검토용 복구다.
+3. 복구 JSON의 `schemaVersion`, `revision`, digest와 ledger 이벤트를 확인한 뒤,
+   별도 revision-checked 저장으로만 운영 상태에 반영한다.
+
+새로운 S3 삭제 권한이나 자동 고아 정리 작업을 추가하지 않는다. Version ID와
+Actions 실행 URL을 incident 기록에 남기고, 복구가 끝난 뒤 공개 목록과 이미지를
+다시 확인한다.
+
 ## 관련 문서
 
 - [Gourmet 연계 흐름](gourmet-integration-flow.md)

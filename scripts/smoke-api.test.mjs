@@ -14,7 +14,7 @@ function json(body, status = 200, cors = origin) {
 }
 
 function validRequest(overrides = {}) {
-  return async (input) => {
+  return async (input, init) => {
     const url = String(input);
     if (url.endsWith("/health/live") || url.endsWith("/health/ready"))
       return json({ status: "ok" }, 200, undefined);
@@ -35,7 +35,17 @@ function validRequest(overrides = {}) {
     if (url.endsWith("/auth/jwks"))
       return json({ keys: [{ alg: "ES256", kty: "EC" }] });
     if (url.endsWith("/admin/content")) return json({}, 401);
-    if (url.includes("/api/gourmet/entries")) return json({ entries: [] });
+    if (url.includes("/api/gourmet/entries") && init?.method === "OPTIONS")
+      return new Response(null, {
+        headers: {
+          "Access-Control-Allow-Headers":
+            "Authorization,Content-Type,Idempotency-Key",
+          "Access-Control-Allow-Origin": origin,
+        },
+        status: 204,
+      });
+    if (url.includes("/api/gourmet/entries"))
+      return json(overrides.gourmet ?? { entries: [] });
     throw new Error(`Unexpected request ${url}`);
   };
 }
@@ -71,5 +81,22 @@ test("rejects duplicate CORS origins and missing refresh scope", async () => {
       origin,
     ),
     /offline_access/,
+  );
+});
+
+test("rejects published Gourmet records without useful metadata", async () => {
+  await assert.rejects(
+    runApiSmokeChecks(
+      baseUrl,
+      validRequest({
+        gourmet: {
+          entries: [
+            { restaurantName: "미상", menuName: "고기 요리", rating: 7 },
+          ],
+        },
+      }),
+      origin,
+    ),
+    /missing a restaurant or menu name/,
   );
 });

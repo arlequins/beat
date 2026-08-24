@@ -112,7 +112,7 @@ export async function runApiSmokeChecks(
   );
   requireCors(adminResponse, "/admin/content", webOrigin);
 
-  const gourmetPath = "/api/gourmet/entries?page=1&pageSize=1";
+  const gourmetPath = "/api/gourmet/entries?page=1&pageSize=100";
   const gourmetResponse = await request(`${baseUrl}${gourmetPath}`, {
     headers: { Origin: webOrigin },
     signal: AbortSignal.timeout(10_000),
@@ -126,6 +126,47 @@ export async function runApiSmokeChecks(
   requireValue(
     Array.isArray(gourmet.entries),
     "/api/gourmet/entries did not return an entries array",
+  );
+  for (const entry of gourmet.entries) {
+    requireValue(
+      typeof entry?.restaurantName === "string" &&
+        entry.restaurantName.trim().length > 0 &&
+        entry.restaurantName.trim() !== "미상" &&
+        typeof entry?.menuName === "string" &&
+        entry.menuName.trim().length > 0 &&
+        entry.menuName.trim() !== "미상",
+      "Published Gourmet entry is missing a restaurant or menu name",
+    );
+    requireValue(
+      typeof entry?.rating === "number" &&
+        Number.isFinite(entry.rating) &&
+        entry.rating >= 0 &&
+        entry.rating <= 10,
+      "Published Gourmet entry has an invalid rating",
+    );
+  }
+
+  const gourmetPreflight = await request(`${baseUrl}/api/gourmet/entries`, {
+    headers: {
+      "Access-Control-Request-Headers":
+        "authorization,content-type,idempotency-key",
+      "Access-Control-Request-Method": "POST",
+      Origin: webOrigin,
+    },
+    method: "OPTIONS",
+    signal: AbortSignal.timeout(10_000),
+  });
+  requireValue(
+    gourmetPreflight.status === 204,
+    `Gourmet POST preflight returned ${gourmetPreflight.status}`,
+  );
+  requireCors(gourmetPreflight, "/api/gourmet/entries preflight", webOrigin);
+  requireValue(
+    gourmetPreflight.headers
+      .get("access-control-allow-headers")
+      ?.toLowerCase()
+      .includes("idempotency-key"),
+    "Gourmet POST preflight does not allow Idempotency-Key",
   );
 
   return { baseUrl, issuer, webOrigin };
