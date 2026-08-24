@@ -133,12 +133,16 @@ expire within ten minutes.
 
 After the first API deployment, dispatch `Production operations` with
 `qualify-storage`, the emitted bucket names, and the `production`
-confirmation. It is deliberately not available through a local command.
+confirmation. The scheduled qualification workflow runs in read-only mode so
+the protected GitHub role does not receive S3 object-write permissions. It
+checks bucket reachability, versioning, lifecycle visibility, and Compliance
+Object Lock. It is deliberately not available through a local command.
 
-The command verifies bucket reachability, state versioning, one-winner
-conditional updates, lifecycle visibility, and Compliance Object Lock. It
-creates retained qualification objects and therefore requires the explicit
-confirmation value. Preserve the JSON result as deployment evidence.
+The write-capable implementation remains available for a separately reviewed
+operator role, and verifies one-winner conditional updates plus retained
+qualification objects. Do not grant that role to the normal GitHub deployment
+identity without a new least-privilege review. Preserve the read-only JSON
+result as deployment evidence.
 
 To recover a historical state object, dispatch `Production operations` with
 `recover-state-version`, the selected state key and S3 version ID. The action

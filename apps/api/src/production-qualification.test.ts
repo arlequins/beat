@@ -74,4 +74,43 @@ describe("production S3 qualification", () => {
       stateVersioning: "enabled",
     });
   });
+
+  it("keeps the protected production qualification read-only", async () => {
+    vi.stubEnv("BEAT_AUTH_STATE_BUCKET", "state");
+    vi.stubEnv("BEAT_AUTH_LEDGER_BUCKET", "ledger");
+    vi.stubEnv("BEAT_AUTH_STATE_PREFIX", "v1");
+    vi.stubEnv("BEAT_PRODUCTION_QUALIFICATION_CONFIRM", "production");
+    vi.stubEnv("BEAT_PRODUCTION_QUALIFICATION_MODE", "read-only");
+    vi.resetModules();
+    const send = vi.fn(async (command: unknown) => {
+      const name = (command as { constructor?: { name?: string } }).constructor
+        ?.name;
+      if (name === "HeadBucketCommand") return {};
+      if (name === "GetBucketLifecycleConfigurationCommand")
+        return { Rules: [{ ID: "expire-refresh-sessions" }] };
+      if (name === "GetBucketVersioningCommand") return { Status: "Enabled" };
+      if (name === "GetObjectLockConfigurationCommand")
+        return { ObjectLockConfiguration: { ObjectLockEnabled: "Enabled" } };
+      throw new Error(`unexpected command ${name}`);
+    });
+    const { qualifyBeatProductionStorage } = await import(
+      "./production-qualification"
+    );
+    await expect(
+      qualifyBeatProductionStorage({ send } as unknown as S3Client),
+    ).resolves.toMatchObject({
+      conditionalWrite: "not-run",
+      lifecycleRuleIds: ["expire-refresh-sessions"],
+      mode: "read-only",
+      stateKey: null,
+      stateVersioning: "enabled",
+    });
+    expect(
+      send.mock.calls.some(
+        ([command]) =>
+          (command as { constructor?: { name?: string } }).constructor?.name ===
+          "PutObjectCommand",
+      ),
+    ).toBe(false);
+  });
 });
