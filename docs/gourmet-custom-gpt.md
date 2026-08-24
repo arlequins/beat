@@ -59,8 +59,9 @@ calling createGourmetEntry. Use a stable unique Idempotency-Key for that one
 confirmed message. Never reuse a key for changed content.
 
 After saving, report the returned Beat detailUrl. If the user asks to change a
-record, load it, include its expectedRevision, show the proposed changes, and
-confirm before calling updateGourmetEntry.
+record, load it, include its expectedRevision (the Action rejects updates
+without it), show the proposed changes, and confirm before calling
+updateGourmetEntry.
 
 Photos are not transferred through this Action. Explain that the text record is
 saved now and that a Beat administrator can attach the photo at /admin/. Do not
