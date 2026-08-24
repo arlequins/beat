@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.32.0](https://github.com/arlequins/beat/compare/beat-v1.31.2...beat-v1.32.0) (2026-08-24)
+
+
+### Features
+
+* **gourmet:** harden data quality and restore detached photos ([582fc0d](https://github.com/arlequins/beat/commit/582fc0d7ed127b5923279198baff7a49689cdea1))
+
 ## [1.31.2](https://github.com/arlequins/beat/compare/beat-v1.31.1...beat-v1.31.2) (2026-08-24)
 
 
