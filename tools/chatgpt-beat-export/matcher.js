@@ -44,8 +44,14 @@ export function buildAssignments(groups) {
   for (const group of groups ?? []) {
     if (typeof group?.entryId !== "string") continue;
     const current = grouped.get(group.entryId) ?? [];
-    current.push(...(Array.isArray(group.images) ? group.images : []));
+    current.push(
+      ...(Array.isArray(group.images)
+        ? group.images.filter((image) => image?.selected !== false)
+        : []),
+    );
     grouped.set(group.entryId, current);
   }
-  return [...grouped].map(([entryId, images]) => ({ entryId, images }));
+  return [...grouped]
+    .filter(([, images]) => images.length > 0)
+    .map(([entryId, images]) => ({ entryId, images }));
 }
