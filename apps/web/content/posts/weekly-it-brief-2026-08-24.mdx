@@ -1,0 +1,46 @@
+---
+title: "주간 IT 브리핑 — 2026년 8월 넷째 주: 경계에서 먼저 검증하는 개발"
+excerpt: 데이터 보존 약속, 앱 배포 조건, 모바일 메모리 한도 변화가 팀의 계약과 회귀 테스트에 요구하는 일을 정리합니다.
+category: weekly
+reviewStatus: unreviewed
+publishedAt: "2026-08-24"
+readTime: 6 min read
+tags:
+  - AI Platform
+  - App Distribution
+  - Android Performance
+---
+
+> Lumen이 이번 주의 공식 자료 리서치와 초안을 도왔습니다. 이 글은 Arlequin의 최종 검토 전인 공개 미확정본이며, 최종 판단과 책임은 Arlequin에게 있습니다.
+
+이번 주의 공통된 신호는 기능 목록보다 **제품 경계에서 무엇을 증명할 수 있는가**입니다. AI 요청의 데이터 경로, 앱스토어의 결제 조건, 모바일 프로세스의 메모리 예산은 모두 문서만 읽고 끝낼 일이 아니라 계약·계측·회귀 테스트로 옮겨야 하는 운영 조건입니다.
+
+## 1. Zero Data Retention은 설정값이 아니라 데이터 경로의 계약이다
+
+OpenAI는 8월 19일 적격 API 고객을 대상으로 요청 처리 뒤 프롬프트와 모델 응답을 보존하지 않는 Zero Data Retention(ZDR) 약속을 발표했고, 9월부터 Private Safety Processing을 단계적으로 제공할 계획이라고 밝혔습니다. 이는 데이터가 학습에 쓰이지 않는다는 설명과 별개로, 운영 로그·도구 호출·사고 대응 경로까지 어떤 데이터가 어디에 얼마나 남는지를 다시 확인해야 한다는 신호입니다.
+
+다음 행동은 모델 호출별로 입력 데이터 분류, 보존 주체, 로그 마스킹, 도구 호출의 감사 범위를 한 장의 계약으로 만드는 것입니다. ZDR 대상 요청과 일반 요청을 같은 관측 파이프라인에 섞는다면, 요청 ID만으로도 보존·열람 정책을 추적할 수 있는지 테스트해야 합니다. Lumen은 점검 항목을 제안할 수 있지만, 어떤 데이터를 보내고 어떤 위험을 수용할지는 Arlequin이 최종 결정해야 합니다.
+
+출처: [OpenAI: Offering Zero Data Retention for frontier models](https://openai.com/index/offering-zero-data-retention-for-frontier-models/)
+
+## 2. Apple의 EU 조건 변경은 결제 화면뿐 아니라 배포 계약을 바꾼다
+
+Apple은 8월 18일 EU 배포 개발자를 단일 사업 조건으로 옮기고, 대규모 설치당 과금인 Core Technology Fee를 앱스토어 외부 디지털 거래의 5% Core Technology Commission으로 대체한다고 안내했습니다. 새 조건 일부는 10월 1일부터 적용되며, 대체 결제를 앱 내 결제와 함께 제공할 수 있는 범위도 넓어집니다.
+
+다음 행동은 EU 판매 여부와 무관하게 결제 공급자·가격 표시·환불·자녀 보호·분석 이벤트가 어느 배포 경로에서 동작하는지 표로 비교하는 것입니다. 법률 판단을 코드가 대신할 수는 없지만, 테스트 환경에서 `storefront × payment path × entitlement` 조합을 재현해 두면 조건 변경을 UI 수정으로 축소하지 않을 수 있습니다.
+
+출처: [Apple Developer News: EU business terms changes](https://developer.apple.com/news/)
+
+## 3. Android의 더 넓은 메모리 한도는 예산을 없애지 않는다
+
+Android 개발자 블로그는 8월 19일 더 넓은 메모리 한도 준비를 공지하며 Android 17, Android Vitals, 멀티프로세스 구조를 함께 언급했습니다. 허용 범위가 넓어져도 저사양 기기·백그라운드 복귀·이미지와 모델 캐시가 겹치는 경로에서의 체감 성능은 별도로 관측해야 합니다.
+
+다음 행동은 메모리 예산을 단일 숫자 대신 시작·탐색·백그라운드 복귀·장시간 사용 시나리오로 나누고, 실제 기기와 저메모리 에뮬레이터에서 크래시·ANR·프레임 지표를 함께 수집하는 것입니다. 한도 확대는 캐시를 늘릴 근거가 아니라, 사용자가 느끼는 지연을 줄일 기회를 검증하는 출발점입니다.
+
+출처: [Android Developers Blog: Preparing your app for broader memory limits](https://developer.android.com/blog)
+
+## 이번 주의 한 줄
+
+좋은 변경 관리는 새 조건을 받아 적는 일이 아니라, **데이터·결제·성능의 경계에서 약속이 실제로 지켜지는지 측정하는 일**입니다.
+
+Lumen은 다음 주에도 원문을 추적하고 초안을 제안합니다. 다만 공개할 주장과 우선순위, 그리고 이 글을 확정할지는 Arlequin이 최종 검토합니다.

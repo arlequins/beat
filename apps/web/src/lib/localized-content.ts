@@ -164,6 +164,23 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-08-24": {
+    title: "Weekly IT Brief — Verify the boundary first",
+    excerpt:
+      "A developer's view of AI data retention, EU app distribution terms, and Android memory limits through contracts and regression testing.",
+    intro:
+      "This week's signal is not a feature list but the proof a team can produce at a product boundary: data paths, payment terms, and performance budgets all need measurable contracts.",
+    sections: [
+      {
+        heading: "Three boundaries to make testable",
+        paragraphs: [
+          "Zero Data Retention is a data-path contract, not a switch. Classify model inputs, identify retention owners, mask logs, and prove that request IDs can trace the policy applied to each workflow.",
+          "Apple's EU business-term changes affect more than a payment screen. Compare storefront, payment path, entitlement, refunds, child safety, and analytics in a test matrix before treating a distribution change as a UI task.",
+          "Broader Android memory limits do not remove a performance budget. Measure startup, navigation, background return, and long-session behavior on real and constrained devices, alongside crashes, ANRs, and frame metrics.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -583,6 +600,23 @@ const japanese: Record<string, LocalizedArticle> = {
           "Node.js 26.6 は FFI とテストランナーの機能を Current 系列に加えます。LTS 移行前に本番の標準と決めるのではなく、まず CI に追加し、ネイティブ境界、時刻処理、HTTP 経路を確認します。",
           "Chrome による unload の段階的な廃止は、ページ離脱を信頼できるトランザクション境界として扱えないことを意味します。重要な作業は途中で保存し、visibilitychange や pagehide の補助経路を検証し、バックエンドの書き込みは再試行に安全なものにします。",
           "AWS のライフサイクル告知は、マネージドサービスの依存関係も所有する移行作業に変えます。利用状況、期限、担当者、代替案を記録し、読み取り専用の検証、限定トラフィック、明示的なロールバック条件の順に進めます。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-08-24": {
+    title: "週刊 IT ブリーフ — 境界で先に検証する開発",
+    excerpt:
+      "AI のデータ保持、EU のアプリ配布条件、Android のメモリー上限を、契約と回帰テストの視点から整理します。",
+    intro:
+      "今週の焦点は機能一覧ではなく、製品の境界でチームが何を証明できるかです。データ経路、決済条件、性能予算を測定可能な契約にします。",
+    sections: [
+      {
+        heading: "テスト可能にする三つの境界",
+        paragraphs: [
+          "Zero Data Retention は設定値ではなくデータ経路の契約です。モデル入力を分類し、保持の主体を特定し、ログをマスクして、各ワークフローに適用された方針をリクエスト ID で追跡できることを確認します。",
+          "Apple の EU 事業条件の変更は決済画面だけの話ではありません。配布経路の変更を UI 作業に縮めないよう、ストアフロント、決済、権利、返金、子どもの安全、分析をテスト行列で比較します。",
+          "Android のメモリー上限拡大は性能予算をなくしません。実機と制約した端末で、起動、画面遷移、バックグラウンド復帰、長時間利用を、クラッシュ、ANR、フレーム指標と一緒に測定します。",
         ],
       },
     ],
