@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.28.0](https://github.com/arlequins/beat/compare/beat-v1.27.2...beat-v1.28.0) (2026-08-24)
+
+
+### Features
+
+* **gourmet:** shorten Instagram captions ([7307913](https://github.com/arlequins/beat/commit/7307913658174bc065c6b513b7a8e43d673de62f))
+
 ## [1.27.2](https://github.com/arlequins/beat/compare/beat-v1.27.1...beat-v1.27.2) (2026-08-22)
 
 
