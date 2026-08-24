@@ -17,16 +17,17 @@ test("Custom GPT Action targets the Beat production API", async () => {
   assert.ok(schema.includes(`  - url: ${productionOrigin}\n`));
   assert.match(schema, /bearerAuth:\n {6}type: http\n {6}scheme: bearer/);
   assert.match(schema, /enum: \["yes", "no", unknown\]/);
-  assert.match(
-    schema,
-    /name: status[\s\S]{0,180}enum: \[draft, published, deleted\]/,
-  );
+  assert.match(schema, /name: status[\s\S]{0,220}enum: \[draft, published\]/);
   assert.match(schema, /parameters:\n {8}- in: path\n {10}name: id/);
   assert.match(
     schema,
     /schema: \{ \$ref: "#\/components\/schemas\/GourmetPatch" \}/,
   );
   assert.match(schema, /averageRating: \{ type: number \}/);
+  assert.match(
+    schema,
+    /GourmetPatch:[\s\S]{0,180}required: \[expectedRevision\]/,
+  );
 });
 
 test("Custom GPT Action marks reads and writes with explicit confirmation semantics", async () => {

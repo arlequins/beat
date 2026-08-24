@@ -40,8 +40,8 @@ paths:
           schema: { type: string, enum: ["yes", "no", unknown] }
         - in: query
           name: status
-          description: Filter records by lifecycle status. Use draft when reviewing saved drafts.
-          schema: { type: string, enum: [draft, published, deleted] }
+          description: Filter records by lifecycle status. Use draft when reviewing saved drafts. Deleted records are administrator-only.
+          schema: { type: string, enum: [draft, published] }
         - in: query
           name: page
           schema: { type: integer, minimum: 1, default: 1 }
@@ -213,6 +213,7 @@ components:
     GourmetPatch:
       type: object
       additionalProperties: false
+      required: [expectedRevision]
       properties:
         expectedRevision: { type: integer, minimum: 1 }
         restaurantName: { type: string, minLength: 1, maxLength: 200 }

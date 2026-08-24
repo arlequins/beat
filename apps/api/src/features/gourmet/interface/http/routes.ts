@@ -76,7 +76,7 @@ const inputSchema = z
 
 const patchSchema = inputSchema
   .partial()
-  .extend({ expectedRevision: z.number().int().positive().optional() })
+  .extend({ expectedRevision: z.number().int().positive() })
   .strict();
 const attachSchema = z
   .object({
@@ -246,11 +246,45 @@ export function registerGourmetRoutes(
     const value = context.req.header("x-client-request-id")?.trim();
     return value && /^[A-Za-z0-9._:-]{1,128}$/.test(value) ? value : undefined;
   };
+  const auditActionRead = (
+    context: {
+      get: (key: "requestId") => string;
+      req: { header: (name: string) => string | undefined };
+    },
+    logger: Logger,
+    user: { kind: "action" | "admin"; subject: string } | undefined,
+    operation: string,
+    details: Record<string, unknown> = {},
+  ) => {
+    if (user?.kind !== "action") return;
+    const requestId = context.get("requestId");
+    const requestClientId = clientRequestId(context);
+    logger.info("gourmet.action.read", {
+      ...(requestClientId ? { clientRequestId: requestClientId } : {}),
+      operation,
+      requestId,
+      ...details,
+    });
+  };
 
   app.get("/api/gourmet/entries", async (context) => {
     try {
       const filter = filters(new URL(context.req.url));
       const user = await principal(context);
+      auditActionRead(context, context.get("logger"), user, "list", {
+        status: filter.status ?? "published",
+      });
+      if (filter.status === "deleted" && user?.kind !== "admin")
+        return context.json(
+          {
+            error: {
+              code: "FORBIDDEN",
+              message: "Administrator authentication is required",
+              requestId: context.get("requestId"),
+            },
+          },
+          403,
+        );
       if (filter.status && filter.status !== "published" && !user)
         return context.json(
           {
@@ -343,6 +377,7 @@ export function registerGourmetRoutes(
         401,
       );
     try {
+      auditActionRead(context, context.get("logger"), user, "context");
       const { days, limit } = contextSchema.parse(
         Object.fromEntries(new URL(context.req.url).searchParams),
       );
@@ -403,10 +438,16 @@ export function registerGourmetRoutes(
 
   app.get("/api/gourmet/entries/:id", async (context) => {
     try {
+      const user = await principal(context);
       const result = await gourmet.get(context.req.param("id"));
+      auditActionRead(context, context.get("logger"), user, "get", {
+        found: Boolean(result),
+      });
       if (
         !result ||
-        (result.entry.status !== "published" && !(await principal(context)))
+        (result.entry.status === "deleted"
+          ? user?.kind !== "admin"
+          : result.entry.status !== "published" && !user)
       )
         return context.json(
           {

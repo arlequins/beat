@@ -1048,8 +1048,13 @@ describe("API app", () => {
       slug: "deleted-entry",
       status: "deleted" as const,
     };
-    const list = vi.fn(async () => ({
-      entries: [baseEntry],
+    const list = vi.fn(async (filter?: { status?: string }) => ({
+      entries:
+        filter?.status === "draft"
+          ? [draftEntry]
+          : filter?.status === "deleted"
+            ? [deletedEntry]
+            : [baseEntry],
       page: 1,
       total: 1,
     }));
@@ -1113,6 +1118,8 @@ describe("API app", () => {
         delete: vi.fn(async () => deletedEntry),
         get: vi.fn(async (id: string) => {
           if (id === "missing") return undefined;
+          if (id === "deleted-entry")
+            return { entry: deletedEntry, etag: '"v1"' };
           return {
             entry: id === "draft-entry" ? draftEntry : baseEntry,
             etag: '"v1"',
@@ -1151,6 +1158,7 @@ describe("API app", () => {
     const actionHeaders = {
       Authorization: "Bearer gourmet-action-key-at-least-32-characters",
       "Content-Type": "application/json",
+      "X-Client-Request-Id": "gpt-session-1",
     };
     const adminHeaders = {
       Authorization: "Bearer admin-token",
@@ -1174,6 +1182,30 @@ describe("API app", () => {
     expect(
       (await gourmetApp.request("/api/gourmet/entries?status=draft")).status,
     ).toBe(403);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries?status=draft", {
+          headers: actionHeaders,
+        })
+      ).status,
+    ).toBe(200);
+    expect(list).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "draft" }),
+    );
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries?status=deleted", {
+          headers: actionHeaders,
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries?status=deleted", {
+          headers: adminHeaders,
+        })
+      ).status,
+    ).toBe(200);
 
     expect((await gourmetApp.request("/api/gourmet/context")).status).toBe(401);
     expect(
@@ -1183,6 +1215,13 @@ describe("API app", () => {
         })
       ).status,
     ).toBe(200);
+    expect(gourmetLogs).toContainEqual(
+      expect.objectContaining({
+        clientRequestId: "gpt-session-1",
+        message: "gourmet.action.read",
+        operation: "context",
+      }),
+    );
     expect(
       (
         await gourmetApp.request("/api/gourmet/context?days=invalid", {
@@ -1283,6 +1322,20 @@ describe("API app", () => {
       ).status,
     ).toBe(200);
     expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/deleted-entry", {
+          headers: actionHeaders,
+        })
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/deleted-entry", {
+          headers: adminHeaders,
+        })
+      ).status,
+    ).toBe(200);
+    expect(
       (await gourmetApp.request("/api/gourmet/entries/missing")).status,
     ).toBe(404);
 
@@ -1295,6 +1348,15 @@ describe("API app", () => {
         })
       ).status,
     ).toBe(401);
+    expect(
+      (
+        await gourmetApp.request("/api/gourmet/entries/published-entry", {
+          body: JSON.stringify({ rating: 9 }),
+          headers: actionHeaders,
+          method: "PATCH",
+        })
+      ).status,
+    ).toBe(400);
     expect(
       (
         await gourmetApp.request("/api/gourmet/entries/published-entry", {
@@ -1320,7 +1382,7 @@ describe("API app", () => {
     expect(
       (
         await gourmetApp.request("/api/gourmet/entries/conflict", {
-          body: JSON.stringify({ rating: 9 }),
+          body: JSON.stringify({ expectedRevision: 1, rating: 9 }),
           headers: actionHeaders,
           method: "PATCH",
         })
@@ -1329,7 +1391,7 @@ describe("API app", () => {
     expect(
       (
         await gourmetApp.request("/api/gourmet/entries/published-entry", {
-          body: JSON.stringify({ rating: 11 }),
+          body: JSON.stringify({ expectedRevision: 1, rating: 11 }),
           headers: actionHeaders,
           method: "PATCH",
         })
