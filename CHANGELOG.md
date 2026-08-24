@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.29.0](https://github.com/arlequins/beat/compare/beat-v1.28.0...beat-v1.29.0) (2026-08-24)
+
+
+### Features
+
+* **admin:** improve gourmet operations and monitoring ([5390825](https://github.com/arlequins/beat/commit/5390825a7afc65076d5cd016a910619b91c434ea))
+
 ## [1.28.0](https://github.com/arlequins/beat/compare/beat-v1.27.2...beat-v1.28.0) (2026-08-24)
 
 
