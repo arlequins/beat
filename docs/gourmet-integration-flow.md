@@ -234,6 +234,17 @@ DELETE /admin/gourmet/entries/{id-or-slug}/images/{image-id} HTTP/1.1
 Authorization: Bearer <BEAT_ADMIN_ACCESS_JWT>
 ```
 
+분리된 사진의 메타데이터는 불변 리비전에서 확인하고 다음 요청으로 복원할 수
+있다. 서버는 복원 전에 S3 객체가 실제로 남아 있는지도 확인한다.
+
+```http
+GET /admin/gourmet/entries/{id-or-slug}/image-history HTTP/1.1
+Authorization: Bearer <BEAT_ADMIN_ACCESS_JWT>
+
+POST /admin/gourmet/entries/{id-or-slug}/images/{image-id}/restore HTTP/1.1
+Authorization: Bearer <BEAT_ADMIN_ACCESS_JWT>
+```
+
 첫 번째 요청은 `private, no-store` 응답으로 초안 사진을 관리자 브라우저에서만
 미리보게 한다. 두 번째 작업은 조건부 리비전 갱신으로 이미지 메타데이터만 제거한다. API 역할에는
 `s3:DeleteObject`가 없으므로 private S3 객체와 버전은 복구를 위해 보존된다.

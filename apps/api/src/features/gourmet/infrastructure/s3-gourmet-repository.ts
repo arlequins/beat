@@ -20,6 +20,7 @@ import type {
   GourmetEntry,
   GourmetHistoryItem,
   GourmetImage,
+  GourmetImageHistoryItem,
   GourmetInput,
   GourmetListFilter,
   GourmetStatus,
@@ -291,6 +292,11 @@ export async function createGourmetEntry(
   client = new S3Client({}),
 ) {
   const value = config();
+  if ((options.status ?? input.status) === "published" && !input.visitedAt)
+    throw new GourmetError(
+      "invalid",
+      "Published Gourmet entries require an exact visitedAt date",
+    );
   const requestFingerprint = fingerprint(input);
   const id = idForKey(options.idempotencyKey);
   const existing = await getJson<GourmetEntry>(
@@ -437,6 +443,48 @@ export async function gourmetHistory(
     .sort((left, right) => right.revision - left.revision);
 }
 
+/**
+ * Return image metadata that existed in an immutable revision but is no
+ * longer attached to the current head. The underlying S3 object is never
+ * deleted by image removal, so an administrator can safely restore it.
+ */
+export async function gourmetImageHistory(
+  id: string,
+  client = new S3Client({}),
+): Promise<GourmetImageHistoryItem[]> {
+  const value = config();
+  const stored = await getGourmetEntry(id, client);
+  if (!stored || stored.entry.status === "deleted")
+    throw new GourmetError("not_found", "Gourmet entry was not found");
+  const currentIds = new Set(stored.entry.images.map((image) => image.id));
+  const objects = await client.send(
+    new ListObjectsV2Command({
+      Bucket: value.stateBucket,
+      Prefix: revisionsPrefix(id, value),
+    }),
+  );
+  const rows = await Promise.all(
+    (objects.Contents ?? [])
+      .map((object) => object.Key)
+      .filter((key): key is string => Boolean(key))
+      .map((key) => getJson<GourmetEntry>(client, value.stateBucket, key)),
+  );
+  const previous = new Map<string, GourmetImageHistoryItem>();
+  for (const row of rows) {
+    const entry = row?.value;
+    if (!entry || !isEntry(entry)) continue;
+    for (const image of entry.images) {
+      if (currentIds.has(image.id)) continue;
+      const existing = previous.get(image.id);
+      if (!existing || existing.revision < entry.revision)
+        previous.set(image.id, { image, revision: entry.revision });
+    }
+  }
+  return [...previous.values()].sort((left, right) =>
+    right.image.createdAt.localeCompare(left.image.createdAt),
+  );
+}
+
 export async function updateGourmetEntry(
   id: string,
   patch: Partial<GourmetInput> & {
@@ -463,6 +511,11 @@ export async function updateGourmetEntry(
     revision: stored.entry.revision + 1,
     updatedAt: new Date().toISOString(),
   };
+  if (next.status === "published" && !next.visitedAt)
+    throw new GourmetError(
+      "invalid",
+      "Published Gourmet entries require an exact visitedAt date",
+    );
   try {
     await putJson(client, {
       bucket: value.stateBucket,
@@ -675,6 +728,51 @@ export async function removeGourmetImage(
     {
       expectedRevision: stored.entry.revision,
       images: stored.entry.images.filter((image) => image.id !== imageId),
+    },
+    subject,
+    client,
+  );
+}
+
+export async function restoreGourmetImage(
+  entryId: string,
+  imageId: string,
+  subject: string,
+  client = new S3Client({}),
+) {
+  const stored = await getGourmetEntry(entryId, client);
+  if (!stored || stored.entry.status === "deleted")
+    throw new GourmetError("not_found", "Gourmet entry was not found");
+  if (stored.entry.images.some((image) => image.id === imageId))
+    return summary(stored.entry);
+  const previous = await gourmetImageHistory(entryId, client);
+  const candidate = previous.find((item) => item.image.id === imageId)?.image;
+  if (!candidate)
+    throw new GourmetError("image_not_found", "Gourmet image was not found");
+  const value = config();
+  try {
+    const object = await client.send(
+      new GetObjectCommand({
+        Bucket: value.stateBucket,
+        Key: candidate.storageKey,
+      }),
+    );
+    if (!object.Body)
+      throw new GourmetError("image_not_found", "Gourmet image was not found");
+  } catch (error) {
+    if (error instanceof GourmetError) throw error;
+    if (isMissing(error))
+      throw new GourmetError("image_not_found", "Gourmet image was not found");
+    throw error;
+  }
+  return updateGourmetEntry(
+    entryId,
+    {
+      expectedRevision: stored.entry.revision,
+      images: [
+        ...stored.entry.images,
+        { ...candidate, sortOrder: stored.entry.images.length },
+      ],
     },
     subject,
     client,
