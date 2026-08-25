@@ -2,6 +2,18 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.36.0](https://github.com/arlequins/beat/compare/beat-v1.35.0...beat-v1.36.0) (2026-08-25)
+
+
+### Features
+
+* **gourmet:** add posting preview ([#132](https://github.com/arlequins/beat/issues/132)) ([bb5838c](https://github.com/arlequins/beat/commit/bb5838c1e431cc6aa4c5f58f8a967b980a2b0db4))
+
+
+### Bug Fixes
+
+* **gourmet:** tighten Custom GPT Action session boundaries ([ed65041](https://github.com/arlequins/beat/commit/ed65041be0c8f19e1a556b70343e0c50a5edcd77))
+
 ## [1.35.0](https://github.com/arlequins/beat/compare/beat-v1.34.0...beat-v1.35.0) (2026-08-24)
 
 
