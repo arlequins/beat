@@ -638,6 +638,14 @@ export function GourmetManager() {
     [selected?.images],
   );
   const currentEntry = selected;
+  const firstImage = orderedImages[0];
+  const previewImageUrl =
+    pendingUpload?.previewUrl ??
+    (firstImage
+      ? currentEntry?.status === "published"
+        ? publicGourmetImage(firstImage)
+        : adminImageUrls[firstImage.id]
+      : undefined);
 
   return (
     <section
@@ -776,6 +784,57 @@ export function GourmetManager() {
           ) : null}
         </aside>
         <div className="grid gap-4 border border-[var(--line)] bg-[var(--surface)] p-5">
+          <section
+            aria-label="Gourmet 포스팅 프리뷰"
+            className="grid gap-4 border border-[var(--accent-foreground)] bg-[var(--background)] p-4"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-bold tracking-[0.14em] text-[var(--accent-foreground)] uppercase">
+                  Posting preview
+                </p>
+                <h3 className="mt-1 text-lg font-black">공개될 모습</h3>
+              </div>
+              <span className="border border-[var(--line)] px-2 py-1 text-xs font-bold">
+                {form.status === "published" ? "공개" : "초안"}
+              </span>
+            </div>
+            <article className="grid gap-4 sm:grid-cols-[10rem_1fr]">
+              <div className="relative aspect-[4/3] overflow-hidden bg-[var(--surface)]">
+                {previewImageUrl ? (
+                  <Image
+                    alt={`${form.restaurantName || "Gourmet"} ${form.menuName || "사진"}`}
+                    className="object-cover"
+                    fill
+                    sizes="160px"
+                    src={previewImageUrl}
+                    unoptimized={Boolean(pendingUpload)}
+                  />
+                ) : (
+                  <span className="absolute inset-0 grid place-items-center p-3 text-center text-xs font-bold text-[var(--muted-foreground)]">
+                    사진을 선택하면 이곳에 표시됩니다.
+                  </span>
+                )}
+              </div>
+              <div className="grid content-center gap-2">
+                <p className="text-xs font-bold text-[var(--muted-foreground)]">
+                  {form.visitedAt || "방문일 미정"} · {form.area || "지역 미정"}
+                </p>
+                <h4 className="text-xl font-black">
+                  {form.restaurantName || "식당 이름"}
+                  {form.restaurantBranch ? ` · ${form.restaurantBranch}` : ""}
+                </h4>
+                <p className="font-bold text-[var(--accent-foreground)]">
+                  {form.menuName || "메뉴를 입력하세요"} · {form.rating || "0"}
+                  /10
+                </p>
+                <p className="text-sm leading-6 text-[var(--muted-foreground)]">
+                  {form.summary ||
+                    "한 줄 요약을 입력하면 포스팅 프리뷰에 표시됩니다."}
+                </p>
+              </div>
+            </article>
+          </section>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
               disabled={archived}
