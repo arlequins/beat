@@ -164,6 +164,23 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-08-31": {
+    title: "Weekly IT Brief — Make boundaries contractual before deployment",
+    excerpt:
+      "A developer's view of agent security, Apple Private Relay addresses, and Chrome's faster release cadence through explicit contracts and verification.",
+    intro:
+      "This week's common thread is not connecting features faster, but fixing contracts and checks before an operational boundary changes.",
+    sections: [
+      {
+        heading: "Three boundaries to verify now",
+        paragraphs: [
+          "Treat agent evaluations and automation as environments with production-grade boundaries: isolated accounts or projects, short-lived least-privilege credentials, explicit egress rules, audit trails, and human approval for externally consequential actions.",
+          "Apple's new private.icloud.com Sign in with Apple relay addresses make email-domain assumptions visible. Test both relay domains, and prefer verified identity state, OAuth subjects, and reauthentication over treating an email domain as proof of trust.",
+          "Chrome's two-week stable cadence and expanding DevTools agent capabilities make browser checks a repeatable release practice. Define supported browsers, exercise critical flows on pre-release channels, and give diagnostic agents reproducible test data rather than production sessions.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -583,6 +600,23 @@ const japanese: Record<string, LocalizedArticle> = {
           "Node.js 26.6 は FFI とテストランナーの機能を Current 系列に加えます。LTS 移行前に本番の標準と決めるのではなく、まず CI に追加し、ネイティブ境界、時刻処理、HTTP 経路を確認します。",
           "Chrome による unload の段階的な廃止は、ページ離脱を信頼できるトランザクション境界として扱えないことを意味します。重要な作業は途中で保存し、visibilitychange や pagehide の補助経路を検証し、バックエンドの書き込みは再試行に安全なものにします。",
           "AWS のライフサイクル告知は、マネージドサービスの依存関係も所有する移行作業に変えます。利用状況、期限、担当者、代替案を記録し、読み取り専用の検証、限定トラフィック、明示的なロールバック条件の順に進めます。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-08-31": {
+    title: "週刊 IT ブリーフ — 配布前に境界を契約にする",
+    excerpt:
+      "エージェントのセキュリティ、Apple Private Relay アドレス、Chrome の高速なリリース周期を、明示的な契約と検証の観点から整理します。",
+    intro:
+      "今週の共通点は、機能を早くつなぐことではなく、運用上の境界が変わる前に契約と確認を固定することです。",
+    sections: [
+      {
+        heading: "今確認したい三つの境界",
+        paragraphs: [
+          "エージェントの評価と自動化は、本番水準の境界を持つ環境として扱います。分離したアカウントまたはプロジェクト、短命で最小権限の認証情報、明示的な egress 規則、監査記録、外部に影響する操作への人の承認を組み合わせます。",
+          "Apple の private.icloud.com による Sign in with Apple の新しい Relay アドレスは、メールドメインへの仮定を可視化します。両方の Relay ドメインをテストし、信頼の証明をメールドメインではなく、検証済みの ID 状態、OAuth subject、再認証に置きます。",
+          "Chrome の 2 週間の安定版周期と DevTools のエージェント機能拡張により、ブラウザー確認は繰り返せるリリース作業になります。対応ブラウザーを定義し、プレリリースで重要な導線を試し、診断エージェントには本番セッションではなく再現可能なテストデータを渡します。",
         ],
       },
     ],
