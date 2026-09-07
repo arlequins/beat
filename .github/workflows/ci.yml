@@ -66,3 +66,14 @@ jobs:
         run: pnpm turbo run build --filter=@arlequins/api...
       - name: Enforce API coverage
         run: pnpm --filter @arlequins/api test:coverage
+
+  browser-journeys:
+    name: Browser journeys
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./tooling/github/setup
+      - name: Install Chromium for Playwright
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Exercise the public Gourmet browser and accessibility routes
+        run: pnpm test:e2e tests/e2e/accessibility.test.ts tests/e2e/beat-admin-login.test.ts tests/e2e/gourmet-browser.test.ts

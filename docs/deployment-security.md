@@ -152,6 +152,21 @@ This command never overwrites a live head. Inspect the recovered JSON under
 `v1/recovery/` and perform any later promotion as a separate revision-checked
 operation.
 
+### Monthly recovery readiness
+
+**Production recovery readiness** runs on the first day of each month through
+the protected `production` Environment and GitHub OIDC. It reads only S3
+version metadata under the Beat state prefix: it does not retrieve object
+bodies, publish keys or version IDs in logs, write a recovery object, or modify
+live state. A visible immutable version is the minimum evidence that the
+quarantined recovery procedure remains selectable.
+
+The job needs only `s3:ListBucketVersions` for the exact state bucket in
+addition to the existing protected-state lookup. A failure opens one deduped
+GitHub issue; a later successful run closes it. Use the manual
+`recover-state-version` operation only after selecting an entry and version in
+the AWS console or a separately reviewed incident procedure.
+
 ## Release automation credential
 
 Release Please exchanges the protected `production` Environment secrets

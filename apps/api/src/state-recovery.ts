@@ -1,6 +1,7 @@
 import { serverEnv } from "@arlequins/env/server-env";
 import {
   GetObjectCommand,
+  ListObjectVersionsCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -75,4 +76,39 @@ export async function recoverBeatStateVersion(
     }),
   );
   return { bucket, destinationKey, sourceKey, versionId: input.versionId };
+}
+
+/**
+ * Checks that recovery has an immutable S3 version to select without reading
+ * object bodies or changing a live or recovery prefix.
+ *
+ * This is deliberately weaker than `recoverBeatStateVersion`: a scheduled
+ * check only proves that version history is visible. An operator must still
+ * provide an explicit key and version for a quarantined recovery.
+ */
+export async function inspectBeatStateRecoveryReadiness(
+  client = new S3Client({}),
+) {
+  const bucket = required(
+    serverEnv.BEAT_AUTH_STATE_BUCKET,
+    "BEAT_AUTH_STATE_BUCKET",
+  );
+  const prefix = serverEnv.BEAT_AUTH_STATE_PREFIX.replace(/^\/|\/$/g, "");
+  const response = await client.send(
+    new ListObjectVersionsCommand({
+      Bucket: bucket,
+      MaxKeys: 25,
+      Prefix: `${prefix}/`,
+    }),
+  );
+  const candidate = (response.Versions ?? []).find(
+    (version) =>
+      Boolean(version.Key && version.VersionId) &&
+      !version.Key?.startsWith(`${prefix}/recovery/`),
+  );
+
+  return {
+    immutableVersion: candidate ? "available" : "no-state-objects",
+    mode: "read-only" as const,
+  };
 }

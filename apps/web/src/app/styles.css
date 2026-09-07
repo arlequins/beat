@@ -521,6 +521,10 @@
 }
 
 @layer utilities {
+  .text-slate-500 {
+    color: #536173;
+  }
+
   .dark .text-slate-950,
   .dark .text-slate-900,
   .dark .text-slate-800,
