@@ -102,7 +102,7 @@ export function AppShell(props: { children: React.ReactNode }) {
             {siteConfig.email}
           </a>
         </div>
-        <div className="mx-auto mt-10 max-w-6xl border-t border-white/10 pt-5 text-xs text-slate-500">
+        <div className="mx-auto mt-10 max-w-6xl border-t border-white/10 pt-5 text-xs text-[#b9c2d5]">
           © {new Date().getFullYear()} {siteConfig.legalName} · Arlequin × Lumen
         </div>
       </footer>
