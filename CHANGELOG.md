@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.37.0](https://github.com/arlequins/beat/compare/beat-v1.36.0...beat-v1.37.0) (2026-09-07)
+
+
+### Features
+
+* **operations:** harden Gourmet quality workflows ([28bcf5c](https://github.com/arlequins/beat/commit/28bcf5cbcda70d84d3c20f0a1a6accd557673f83))
+
 ## [1.36.0](https://github.com/arlequins/beat/compare/beat-v1.35.0...beat-v1.36.0) (2026-08-25)
 
 
