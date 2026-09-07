@@ -109,7 +109,7 @@ const input = {
   status: "published" as const,
   summary: "숯향과 산초가 선명한 장어 덮밥",
   tasteNotes: ["고소함", "짭짤함"],
-  visitedAt: "2026-08-05",
+  visitedAt: new Date().toISOString().slice(0, 10),
 };
 
 afterEach(() => {

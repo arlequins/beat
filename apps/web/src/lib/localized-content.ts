@@ -164,6 +164,23 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-09-07": {
+    title: "Weekly IT Brief — Productizing boundaries for stronger tools",
+    excerpt:
+      "A developer's view of agent authority, the Apple silicon transition, and safer cloud operations through explicit boundaries.",
+    intro:
+      "This week's signal is not a feature list. As tools become more capable, teams need to turn authority, compatibility, and operational limits into visible product contracts.",
+    sections: [
+      {
+        heading: "Three boundaries to make explicit",
+        paragraphs: [
+          "A model change that adds capable tool use is also an authorization change. Separate read, write, and external-send tools, and retain human confirmation for irreversible actions such as deletion, deployment, and payments.",
+          "Apple's Rosetta timeline makes shipped architecture a release concern. Test installation, launch, and update on Apple silicon, then inventory Intel-only frameworks, plugins, and helper executables with an owner and replacement date.",
+          "S3 PowerShell Drive makes object operations feel like file operations, but it inherits the active AWS credentials. Use scoped profiles, validate bucket and prefix targets in a non-production environment, and keep an audit trail for writes and deletes.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -583,6 +600,23 @@ const japanese: Record<string, LocalizedArticle> = {
           "Node.js 26.6 は FFI とテストランナーの機能を Current 系列に加えます。LTS 移行前に本番の標準と決めるのではなく、まず CI に追加し、ネイティブ境界、時刻処理、HTTP 経路を確認します。",
           "Chrome による unload の段階的な廃止は、ページ離脱を信頼できるトランザクション境界として扱えないことを意味します。重要な作業は途中で保存し、visibilitychange や pagehide の補助経路を検証し、バックエンドの書き込みは再試行に安全なものにします。",
           "AWS のライフサイクル告知は、マネージドサービスの依存関係も所有する移行作業に変えます。利用状況、期限、担当者、代替案を記録し、読み取り専用の検証、限定トラフィック、明示的なロールバック条件の順に進めます。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-09-07": {
+    title: "週刊 IT ブリーフ — より強い道具の境界を製品にする",
+    excerpt:
+      "エージェントの権限、Apple silicon への移行、より安全なクラウド運用を、明示的な境界から整理します。",
+    intro:
+      "今週の焦点は機能の一覧ではありません。道具が強くなるほど、権限、互換性、運用上の制限を見える製品契約にする必要があります。",
+    sections: [
+      {
+        heading: "明示すべき三つの境界",
+        paragraphs: [
+          "強力なツール利用を含むモデル変更は、権限変更でもあります。読み取り、書き込み、外部送信を分け、削除、配布、支払いのように戻しにくい操作には人の確認を残します。",
+          "Apple の Rosetta の予定により、出荷するアーキテクチャはリリース上の課題になります。Apple silicon でインストール、起動、更新を確認し、Intel 専用のフレームワーク、プラグイン、補助実行ファイルには担当者と交換日を付けます。",
+          "S3 PowerShell Drive はオブジェクト操作をファイル操作のように扱えますが、有効な AWS 認証情報を引き継ぎます。範囲を絞ったプロファイルを使い、非本番環境でバケットとプレフィックスを確認し、書き込みと削除の監査証跡を残します。",
         ],
       },
     ],
