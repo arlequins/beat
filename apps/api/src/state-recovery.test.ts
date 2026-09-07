@@ -1,5 +1,6 @@
 import {
   GetObjectCommand,
+  ListObjectVersionsCommand,
   PutObjectCommand,
   type S3Client,
 } from "@aws-sdk/client-s3";
@@ -10,6 +11,32 @@ afterEach(() => {
 });
 
 describe("Beat state recovery", () => {
+  it("checks recoverability through version metadata without object I/O", async () => {
+    vi.stubEnv("BEAT_AUTH_STATE_BUCKET", "beat-state");
+    vi.stubEnv("BEAT_AUTH_STATE_PREFIX", "v1");
+    vi.resetModules();
+    const send = vi.fn(async (command: unknown) => {
+      if (command instanceof ListObjectVersionsCommand)
+        return {
+          Versions: [
+            {
+              Key: "v1/gourmet/entries/meal.json",
+              VersionId: "version-1",
+            },
+          ],
+        };
+      throw new Error("unexpected command");
+    });
+    const { inspectBeatStateRecoveryReadiness } = await import(
+      "./state-recovery"
+    );
+    await expect(
+      inspectBeatStateRecoveryReadiness({ send } as unknown as S3Client),
+    ).resolves.toEqual({ immutableVersion: "available", mode: "read-only" });
+    expect(send.mock.calls).toHaveLength(1);
+    expect(send.mock.calls[0]?.[0]).toBeInstanceOf(ListObjectVersionsCommand);
+  });
+
   it("copies a selected version into a non-live recovery prefix", async () => {
     vi.stubEnv("BEAT_AUTH_STATE_BUCKET", "beat-state");
     vi.stubEnv("BEAT_AUTH_STATE_PREFIX", "v1");

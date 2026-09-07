@@ -4,7 +4,7 @@ import {
   PutObjectCommand,
   type S3Client,
 } from "@aws-sdk/client-s3";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type StoredObject = { body: string | Uint8Array; etag: string };
 
@@ -109,11 +109,19 @@ const input = {
   status: "published" as const,
   summary: "숯향과 산초가 선명한 장어 덮밥",
   tasteNotes: ["고소함", "짭짤함"],
-  visitedAt: new Date().toISOString().slice(0, 10),
+  // Keep aggregate windows deterministic. A wall-clock value can cross a UTC
+  // day boundary while this suite is running, silently excluding the fixture
+  // from Gourmet's recent-record window.
+  visitedAt: "2026-09-07",
 };
+
+beforeEach(() => {
+  vi.useFakeTimers({ now: new Date("2026-09-07T12:00:00.000Z") });
+});
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.useRealTimers();
 });
 
 describe("Gourmet S3 records", () => {

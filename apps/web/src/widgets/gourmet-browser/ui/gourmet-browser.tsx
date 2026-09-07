@@ -26,6 +26,7 @@ import { type Locale, localePath } from "~/lib/i18n";
 const text = {
   en: {
     allAreas: "All areas",
+    allCuisines: "All cuisines",
     adminLink: "Open the editor",
     emptyBody:
       "Save a meal from mobile Beat or add the first record in the admin editor.",
@@ -40,10 +41,13 @@ const text = {
     liked: "What stood out",
     loading: "Setting the table…",
     average: "Average rating",
+    map: "Open in Google Maps",
+    minimumRating: "Any rating",
     photoPending: "Photo under review",
     records: "records",
     recommended: "Recommended to revisit",
     revisit: "Revisit",
+    revisitFilter: "Any revisit plan",
     revisitNo: "Not now",
     revisitUnknown: "Undecided",
     revisitYes: "Recommended",
@@ -52,6 +56,7 @@ const text = {
   },
   ja: {
     allAreas: "すべてのエリア",
+    allCuisines: "すべてのジャンル",
     adminLink: "管理画面を開く",
     emptyBody:
       "モバイルBeatから食事を記録するか、管理画面で最初のノートを追加してください。",
@@ -66,10 +71,13 @@ const text = {
     liked: "良かった点",
     loading: "テーブルを準備しています…",
     average: "平均評価",
+    map: "Google マップで開く",
+    minimumRating: "すべての評価",
     photoPending: "写真を読み込めません",
     records: "件の記録",
     recommended: "再訪したい店",
     revisit: "再訪",
+    revisitFilter: "再訪予定すべて",
     revisitNo: "保留",
     revisitUnknown: "未定",
     revisitYes: "おすすめ",
@@ -78,6 +86,7 @@ const text = {
   },
   ko: {
     allAreas: "모든 지역",
+    allCuisines: "모든 장르",
     adminLink: "관리 화면 열기",
     emptyBody:
       "모바일 Beat에서 식사를 기록하거나 관리자 화면에서 첫 기록을 추가해 주세요.",
@@ -92,10 +101,13 @@ const text = {
     liked: "좋았던 점",
     loading: "식탁을 준비하고 있습니다…",
     average: "평균 평점",
+    map: "Google 지도에서 보기",
+    minimumRating: "모든 평점",
     photoPending: "사진을 불러오지 못했습니다",
     records: "개 기록",
     recommended: "재방문 추천",
     revisit: "재방문",
+    revisitFilter: "모든 재방문 계획",
     revisitNo: "보류",
     revisitUnknown: "미정",
     revisitYes: "추천",
@@ -103,6 +115,13 @@ const text = {
     title: "Gourmet 기록",
   },
 } satisfies Record<Locale, Record<string, string>>;
+
+function gourmetMapUrl(entry: GourmetEntry) {
+  const query = [entry.restaurantName, entry.restaurantBranch, entry.area]
+    .filter((value): value is string => Boolean(value))
+    .join(" ");
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
 
 function Rating(props: { value: number }) {
   return (
@@ -147,6 +166,9 @@ export function GourmetBrowser(props: { locale: Locale }) {
   const selectedSlug = searchParams.get("entry");
   const [query, setQuery] = useState("");
   const [area, setArea] = useState("");
+  const [cuisineTag, setCuisineTag] = useState("");
+  const [minimumRating, setMinimumRating] = useState("");
+  const [revisit, setRevisit] = useState<"" | GourmetEntry["revisit"]>("");
   const [list, setList] = useState<GourmetList>();
   const [selected, setSelected] = useState<GourmetEntry>();
   const [message, setMessage] = useState(labels.loading);
@@ -156,6 +178,9 @@ export function GourmetBrowser(props: { locale: Locale }) {
     const params = new URLSearchParams({ pageSize: "48" });
     if (query.trim()) params.set("restaurantName", query.trim());
     if (area.trim()) params.set("area", area.trim());
+    if (cuisineTag.trim()) params.set("cuisineTag", cuisineTag.trim());
+    if (minimumRating) params.set("minRating", minimumRating);
+    if (revisit) params.set("revisit", revisit);
     fetch(`${gourmetApiUrl()}/api/gourmet/entries?${params}`, {
       signal: controller.signal,
     })
@@ -172,7 +197,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
           setMessage(error instanceof Error ? error.message : labels.failed);
       });
     return () => controller.abort();
-  }, [area, labels.failed, query]);
+  }, [area, cuisineTag, labels.failed, minimumRating, query, revisit]);
 
   useEffect(() => {
     if (!selectedSlug) {
@@ -204,6 +229,13 @@ export function GourmetBrowser(props: { locale: Locale }) {
         ...new Set(
           list?.entries.map((entry) => entry.area).filter(Boolean) as string[],
         ),
+      ].sort(),
+    [list],
+  );
+  const cuisines = useMemo(
+    () =>
+      [
+        ...new Set(list?.entries.flatMap((entry) => entry.cuisineTags) ?? []),
       ].sort(),
     [list],
   );
@@ -270,6 +302,14 @@ export function GourmetBrowser(props: { locale: Locale }) {
                     : labels.revisitUnknown}
               </span>
             </div>
+            <a
+              className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[var(--accent-foreground)] hover:underline"
+              href={gourmetMapUrl(selected)}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <MapPin className="size-4" /> {labels.map}
+            </a>
             <p className="mt-8 text-lg leading-8">{selected.summary}</p>
             <div className="mt-8 flex flex-wrap gap-2">
               {[...selected.cuisineTags, ...selected.tasteNotes].map((tag) => (
@@ -323,7 +363,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
         </div>
       </section>
       <section className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-20">
-        <div className="grid gap-3 border-y border-[var(--line)] py-5 sm:grid-cols-[1fr_14rem]">
+        <div className="grid gap-3 border-y border-[var(--line)] py-5 sm:grid-cols-2 lg:grid-cols-4">
           <label className="flex items-center gap-3 border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
             <Search className="size-4 text-[var(--muted-foreground)]" />
             <input
@@ -335,7 +375,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
             />
           </label>
           <select
-            aria-label="지역"
+            aria-label={labels.allAreas}
             className="border border-[var(--line)] bg-[var(--surface)] px-4"
             onChange={(event) => setArea(event.target.value)}
             value={area}
@@ -344,6 +384,44 @@ export function GourmetBrowser(props: { locale: Locale }) {
             {areas.map((value) => (
               <option key={value}>{value}</option>
             ))}
+          </select>
+          <select
+            aria-label={labels.allCuisines}
+            className="border border-[var(--line)] bg-[var(--surface)] px-4"
+            onChange={(event) => setCuisineTag(event.target.value)}
+            value={cuisineTag}
+          >
+            <option value="">{labels.allCuisines}</option>
+            {cuisineTag && !cuisines.includes(cuisineTag) ? (
+              <option value={cuisineTag}>{cuisineTag}</option>
+            ) : null}
+            {cuisines.map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+          <select
+            aria-label={labels.minimumRating}
+            className="border border-[var(--line)] bg-[var(--surface)] px-4"
+            onChange={(event) => setMinimumRating(event.target.value)}
+            value={minimumRating}
+          >
+            <option value="">{labels.minimumRating}</option>
+            <option value="9">9.0+</option>
+            <option value="8">8.0+</option>
+            <option value="7">7.0+</option>
+          </select>
+          <select
+            aria-label={labels.revisitFilter}
+            className="border border-[var(--line)] bg-[var(--surface)] px-4"
+            onChange={(event) =>
+              setRevisit(event.target.value as "" | GourmetEntry["revisit"])
+            }
+            value={revisit}
+          >
+            <option value="">{labels.revisitFilter}</option>
+            <option value="yes">{labels.revisitYes}</option>
+            <option value="no">{labels.revisitNo}</option>
+            <option value="unknown">{labels.revisitUnknown}</option>
           </select>
         </div>
         {!message && list ? (
@@ -441,6 +519,14 @@ export function GourmetBrowser(props: { locale: Locale }) {
                         <Rating value={entry.rating} />
                       </div>
                     </Link>
+                    <a
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[var(--muted-foreground)] hover:text-[var(--accent-foreground)]"
+                      href={gourmetMapUrl(entry)}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <MapPin className="size-3" /> {labels.map}
+                    </a>
                   </article>
                 ))}
               </div>
