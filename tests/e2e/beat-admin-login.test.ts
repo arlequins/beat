@@ -19,7 +19,9 @@ test("resolves the admin session before showing a visible Google login error", a
   await expect(login).toBeVisible();
   await login.click();
 
-  const alert = page.getByRole("alert");
+  const alert = page
+    .getByRole("alert")
+    .filter({ hasText: "Google 로그인 설정을 불러올 수 없습니다." });
   await expect(alert).toContainText("Google 로그인 설정을 불러올 수 없습니다.");
   await expect(alert).toHaveClass(/text-red-700/);
 });
