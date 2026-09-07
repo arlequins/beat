@@ -43,6 +43,6 @@ jobs:
           API_URL: ${{ inputs.api_url }}
           EXPECTED_RESOURCE: ${{ inputs.expected_resource }}
         run: |
-          node -e 'for (const value of process.argv.slice(1)) { const url = new URL(value); if (url.protocol !== "https:") throw new Error(`Production URL must use HTTPS: ${value}`); }' "$API_URL" "$EXPECTED_RESOURCE"
+          node -e 'for (const value of process.argv.slice(1)) { const url = new URL(value); if (url.protocol !== "https:") throw new Error("Production URL must use HTTPS: " + value); }' "$API_URL" "$EXPECTED_RESOURCE"
       - name: Check MCP OAuth boundary
         run: node scripts/smoke-mcp.mjs "${{ inputs.api_url }}" "${{ inputs.expected_resource }}"
