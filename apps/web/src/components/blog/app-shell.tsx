@@ -1,6 +1,6 @@
 "use client";
 
-import { GitBranch, Mail, Utensils } from "lucide-react";
+import { BookOpen, GitBranch, Mail, Utensils } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -21,14 +21,37 @@ export function AppShell(props: { children: React.ReactNode }) {
     document.documentElement.lang = locale;
   }, [locale]);
 
+  if (pathname.includes("/fiction")) {
+    if (pathname.split("/fiction/")[1]) return <main>{props.children}</main>;
+    return (
+      <div className="ebook-shell">
+        <header className="ebook-toolbar">
+          <nav aria-label="Primary">
+            <Link href={localePath(locale)}>Beat</Link>
+            <Link href={localePath(locale, "/posts/")}>{text.writing}</Link>
+            <Link href={localePath(locale, "/gourmet/")}>{text.gourmet}</Link>
+            <Link href={localePath(locale, "/fiction/")} aria-current="page">
+              {text.fiction}
+            </Link>
+          </nav>
+          <ThemeToggle />
+        </header>
+        <main>{props.children}</main>
+      </div>
+    );
+  }
+
   return (
     <div className="brand-shell">
       <header className="brand-header">
         <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center justify-between px-5 sm:px-8">
-          <Link className="flex items-center gap-3" href={localePath(locale)}>
+          <Link
+            className="flex shrink-0 items-center gap-2 sm:gap-3"
+            href={localePath(locale)}
+          >
             <BrandMark />
             <span>
-              <span className="display-serif block text-lg font-bold leading-none tracking-[-0.04em]">
+              <span className="display-serif block text-sm sm:text-lg font-bold leading-none tracking-[-0.04em]">
                 Arlequin <i className="font-normal text-[#d94f38]">×</i> Lumen
               </span>
               <span className="mt-1 block text-[0.6rem] font-semibold tracking-[0.18em] text-slate-500 uppercase">
@@ -38,10 +61,10 @@ export function AppShell(props: { children: React.ReactNode }) {
           </Link>
           <nav
             aria-label="Primary"
-            className="flex items-center gap-3 text-xs font-semibold tracking-[0.08em] uppercase sm:gap-6"
+            className="flex shrink-0 items-center gap-2 whitespace-nowrap text-xs font-semibold tracking-[0.08em] uppercase sm:gap-4"
           >
             <Link
-              className="hidden text-slate-600 transition hover:text-[#d94f38] sm:block"
+              className="hidden text-slate-600 transition hover:text-[#d94f38] lg:block"
               href={`${localePath(locale)}#work`}
             >
               {text.work}
@@ -60,11 +83,20 @@ export function AppShell(props: { children: React.ReactNode }) {
               <Utensils aria-hidden="true" className="size-5 md:hidden" />
               <span className="hidden md:inline">{text.gourmet}</span>
             </Link>
+            <Link
+              aria-label={text.fiction}
+              aria-current={pathname.includes("/fiction") ? "page" : undefined}
+              className="text-slate-600 transition hover:text-[#d94f38]"
+              href={localePath(locale, "/fiction/")}
+            >
+              <BookOpen aria-hidden="true" className="size-5 md:hidden" />
+              <span className="hidden md:inline">{text.fiction}</span>
+            </Link>
             <LanguageSwitcher />
             <ThemeToggle />
             <a
               aria-label="GitHub"
-              className="hidden text-slate-600 transition hover:text-[#d94f38] sm:block"
+              className="hidden text-slate-600 transition hover:text-[#d94f38] lg:block"
               href={siteConfig.links.github}
               rel="noreferrer"
               target="_blank"
@@ -73,7 +105,7 @@ export function AppShell(props: { children: React.ReactNode }) {
             </a>
             <a
               aria-label="Email"
-              className="hidden text-slate-600 transition hover:text-[#d94f38] sm:block"
+              className="hidden text-slate-600 transition hover:text-[#d94f38] lg:block"
               href={`mailto:${siteConfig.email}`}
             >
               <Mail aria-hidden="true" className="size-5" />

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { siteUrl } from "~/config/site";
+import { getStories } from "~/lib/fiction";
 import { getProjects } from "~/lib/github";
 import { localePath, locales } from "~/lib/i18n";
 import { getPosts } from "~/lib/posts";
@@ -12,11 +13,17 @@ function absoluteUrl(path: string) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [posts, projects] = await Promise.all([getPosts(), getProjects()]);
+  const [posts, projects, stories] = await Promise.all([
+    getPosts(),
+    getProjects(),
+    getStories(),
+  ]);
   const staticPages = locales.flatMap((locale) => [
     localePath(locale),
     localePath(locale, "/posts/"),
     localePath(locale, "/gourmet/"),
+    localePath(locale, "/fiction/"),
+    ...stories.map((story) => localePath(locale, `/fiction/${story.slug}/`)),
   ]);
   const workPages = locales.flatMap((locale) =>
     projects.map((project) => localePath(locale, `/work/${project.slug}/`)),
