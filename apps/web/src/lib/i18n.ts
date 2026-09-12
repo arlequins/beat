@@ -22,7 +22,8 @@ export const copy: Record<Locale, Record<string, string>> = {
     gourmet: "Gourmet",
     language: "언어",
     work: "작업",
-    writing: "글",
+    writing: "IT 이슈",
+    fiction: "소설",
   },
   en: {
     backstage: "Backstage · The making of it",
@@ -34,6 +35,7 @@ export const copy: Record<Locale, Record<string, string>> = {
     language: "Language",
     work: "Work",
     writing: "Writing",
+    fiction: "Fiction",
   },
   ja: {
     backstage: "Backstage · 制作の記録",
@@ -45,6 +47,7 @@ export const copy: Record<Locale, Record<string, string>> = {
     language: "言語",
     work: "作品",
     writing: "ノート",
+    fiction: "小説",
   },
 };
 
