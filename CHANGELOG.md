@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.38.0](https://github.com/arlequins/beat/compare/beat-v1.37.0...beat-v1.38.0) (2026-09-12)
+
+
+### Features
+
+* **web:** add fantasy omnibus and paginated fiction reader ([#141](https://github.com/arlequins/beat/issues/141)) ([d3bdd35](https://github.com/arlequins/beat/commit/d3bdd3527427c46445f3f36128eec1fb9c0719d5))
+
 ## [1.37.0](https://github.com/arlequins/beat/compare/beat-v1.36.0...beat-v1.37.0) (2026-09-07)
 
 
