@@ -5,7 +5,9 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  Moon,
   Settings2,
+  Sun,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -75,7 +77,6 @@ export function FictionLibrary({
         </p>
         <div className="novel-facts">
           <span>총 {stories.length}화</span>
-          <span>무료</span>
           <span>한국어</span>
         </div>
         <div className="novel-actions">
@@ -148,7 +149,6 @@ export function FictionLibrary({
                         {last === story.slug && <span>최근 읽음</span>}
                       </p>
                     </div>
-                    <span className="novel-free">무료</span>
                     <ChevronRight size={16} />
                   </Link>
                 </li>
@@ -195,7 +195,12 @@ export function FictionViewer({
   const position = useRef(0);
   const ready = useRef(false);
   useEffect(() => {
-    const stored = read<Preferences>("preferences", defaults);
+    const stored = read<Preferences>("preferences", {
+      ...defaults,
+      theme: document.documentElement.classList.contains("dark")
+        ? "night"
+        : "paper",
+    });
     setPreferences({
       size: Math.max(14, Math.min(28, Number(stored.size) || 18)),
       line: Math.max(1.5, Math.min(2.5, Number(stored.line) || 1.9)),
@@ -221,6 +226,7 @@ export function FictionViewer({
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const w = el.clientWidth;
+        if (!w || !el.clientHeight) return;
         text.style.width = `${w - 48}px`;
         const pages = Math.max(1, Math.ceil((text.scrollWidth + 48) / w));
         const target = Math.min(
@@ -238,11 +244,14 @@ export function FictionViewer({
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     measure();
+    document.fonts.ready.then(() => {
+      if (el.isConnected) measure();
+    });
     return () => {
       observer.disconnect();
       cancelAnimationFrame(frame);
     };
-  }, [preferences]);
+  }, [preferences.size, preferences.line, preferences.font]);
   const change = (next: Partial<Preferences>) => {
     const value = { ...preferences, ...next };
     setPreferences(value);
@@ -252,13 +261,16 @@ export function FictionViewer({
     setPanel(next);
     dialog.current?.showModal();
   };
-  const turn = (delta: number) =>
-    viewport.current?.scrollTo({
-      left: Math.max(0, Math.min(count - 1, page + delta)) * width,
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
-    });
+  const turn = (delta: number) => {
+    const el = viewport.current;
+    if (!el || !width) return;
+    const target = Math.max(0, Math.min(count - 1, page + delta));
+    // Immediate scrolling avoids interrupted smooth scroll/snap on mobile Safari.
+    el.scrollLeft = target * width;
+    setPage(target);
+    position.current = count > 1 ? target / (count - 1) : 0;
+    save(`book-position-${story.slug}`, position.current);
+  };
   const next =
     stories[stories.findIndex((item) => item.slug === story.slug) + 1];
   return (
@@ -363,6 +375,23 @@ export function FictionViewer({
           onClick={() => turn(1)}
         >
           <ChevronRight size={18} />
+        </button>
+        <button
+          type="button"
+          aria-label={
+            preferences.theme === "night"
+              ? "밝은 배경으로 전환"
+              : "어두운 배경으로 전환"
+          }
+          onClick={() =>
+            change({ theme: preferences.theme === "night" ? "paper" : "night" })
+          }
+        >
+          {preferences.theme === "night" ? (
+            <Sun size={18} />
+          ) : (
+            <Moon size={18} />
+          )}
         </button>
         <button
           type="button"

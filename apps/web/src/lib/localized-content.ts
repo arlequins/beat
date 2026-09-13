@@ -2,6 +2,7 @@ import type { Locale } from "~/lib/i18n";
 import type { PostSummary } from "~/lib/posts";
 
 type LocalizedArticle = {
+  sources?: Array<{ label: string; url: string }>;
   excerpt: string;
   intro: string;
   links?: Array<{ label: string; slug: string }>;
@@ -27,6 +28,295 @@ function editorialArticle(
 }
 
 const english: Record<string, LocalizedArticle> = {
+  "special-it-2026-09-13-agent-permissions": {
+    title: "Before handing an agent the keys",
+    excerpt:
+      "Design permission, approval, and retry boundaries before connecting more tools.",
+    intro:
+      "Special issue, September 13, 2026. An agent that can summarize a document and one that can publish it need different execution boundaries. This article proposes a practical way to make those boundaries visible.",
+    sections: [
+      {
+        heading: "A connection is not an approval",
+        paragraphs: [
+          "MCP security guidance prohibits token passthrough, and its HTTP authorization specification separates client and resource-server roles. Do not merge credential boundaries merely to simplify integration.",
+          "Our design recommendation is to distinguish reading, drafting, and external changes. A successful connection should not silently turn permission to search into permission to modify.",
+        ],
+      },
+      {
+        heading: "Bind consent to an actual change",
+        paragraphs: [
+          "Consider an assistant extracting tasks from meeting notes. Suggesting an owner differs from creating a task in a shared project. Show the project, proposed tasks, assignees, and disclosed content before execution. Materially changed proposals require a fresh decision.",
+          "A missing response does not prove that execution failed. Record an operation identifier and make repeated requests safe against duplication. The service exposing the tool must supply this behavior; protocol adoption alone does not.",
+        ],
+      },
+      {
+        heading: "Test the boundary, not just the happy path",
+        paragraphs: [
+          "Try a write with a read-only account, change the destination after approval, and repeat a request whose response was lost. Expect a refusal, renewed confirmation, and one resulting operation respectively. Log the actor and outcome rather than secret tokens.",
+          "Useful autonomy pauses where the consequence changes. Within an approved scope it should proceed predictably. Define those stopping points before increasing the number of connected tools.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "MCP Security Best Practices",
+        url: "https://modelcontextprotocol.io/docs/2025-11-25/tutorials/security/security_best_practices",
+      },
+      {
+        label: "MCP Authorization",
+        url: "https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization",
+      },
+    ],
+    links: [
+      {
+        label: "Browser AI starts with the download screen",
+        slug: "special-it-2026-09-13-browser-ai",
+      },
+      {
+        label: "Passkeys need a life after sign-in",
+        slug: "special-it-2026-09-13-passkey-recovery",
+      },
+      {
+        label: "How durable is an offline record?",
+        slug: "special-it-2026-09-13-local-first-data",
+      },
+      {
+        label: "Build interfaces that answer a tap",
+        slug: "special-it-2026-09-13-inp-interaction",
+      },
+    ],
+  },
+  "special-it-2026-09-13-browser-ai": {
+    title: "Browser AI starts with the download screen",
+    excerpt:
+      "Treat readiness, device support, and cloud fallback as product states.",
+    intro:
+      "Special issue, September 13, 2026. Before evaluating a local model’s answer, users need to know whether the feature works on their device and what they are waiting for.",
+    sections: [
+      {
+        heading: "Present readiness explicitly",
+        paragraphs: [
+          "Chrome documents model, language, and device requirements as well as availability checks. An API being present does not establish that a session is ready. Some environments require a download; others are unsupported.",
+          "Design separate ready, preparing, and unavailable states. A single spinner hides whether waiting can succeed. Verify current support in the relevant API documentation before release.",
+        ],
+      },
+      {
+        heading: "Preserve the user’s choice",
+        paragraphs: [
+          "In a personal notes app, explain a required download when summarization is requested. Keep ordinary reading and editing available while the model is preparing.",
+          "Our recommendation is not to send a note to a cloud service automatically when local processing fails. Explain the destination and content, and offer a separate choice. Local processing and remote transmission create different expectations.",
+        ],
+      },
+      {
+        heading: "Measure more than inference time",
+        paragraphs: [
+          "Compare first use, a prepared model, and insufficient storage. Measure time to a useful result and confirm that cancellation preserves the original document. One powerful development machine is not a representative sample.",
+          "The product should remain usable without AI. If a failed summary prevents access to the original note, an optional feature has become a dependency of the entire experience.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Chrome: Built-in AI",
+        url: "https://developer.chrome.com/docs/ai/built-in",
+      },
+      {
+        label: "Chrome: Get started with built-in AI",
+        url: "https://developer.chrome.com/docs/ai/get-started",
+      },
+    ],
+    links: [
+      {
+        label: "Before handing an agent the keys",
+        slug: "special-it-2026-09-13-agent-permissions",
+      },
+      {
+        label: "Passkeys need a life after sign-in",
+        slug: "special-it-2026-09-13-passkey-recovery",
+      },
+      {
+        label: "How durable is an offline record?",
+        slug: "special-it-2026-09-13-local-first-data",
+      },
+      {
+        label: "Build interfaces that answer a tap",
+        slug: "special-it-2026-09-13-inp-interaction",
+      },
+    ],
+  },
+  "special-it-2026-09-13-passkey-recovery": {
+    title: "Passkeys need a life after sign-in",
+    excerpt:
+      "Device changes and recovery reveal the gaps that registration metrics miss.",
+    intro:
+      "Special issue, September 13, 2026. Passwordless sign-in is brief, but accounts outlive phones, browsers, and work computers. Design for that longer relationship.",
+    sections: [
+      {
+        heading: "Registration includes server verification",
+        paragraphs: [
+          "The web.dev guides connect credential creation to server verification and storage, and describe passkey sign-in through form autofill. Adding a button is only part of establishing an account credential.",
+          "Write down who may register a credential, how cancellation behaves, and where the user can inspect the result. These product recommendations complement the protocol implementation.",
+        ],
+      },
+      {
+        heading: "Treat device changes as normal",
+        paragraphs: [
+          "A new phone may offer a different set of usable authentication options. Provide another sign-in or recovery route instead of repeatedly presenting an unavailable option.",
+          "Do not promise identical behavior everywhere based only on synced passkeys. Users may not remember the provider or storage choice. Recognizable credential names and creation dates can make account management clearer.",
+        ],
+      },
+      {
+        heading: "Recovery sets the practical boundary",
+        paragraphs: [
+          "A weak recovery path can undermine a strong sign-in mechanism; no recovery can lock legitimate users out. Review adding, losing, and removing credentials as separate journeys.",
+          "Test cancellation during registration, sign-in on another device, removal of the last method, and cleanup after recovery. A successful first login is useful evidence, but continued access is the product’s longer-term promise.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "web.dev: Create a passkey",
+        url: "https://web.dev/articles/passkey-registration",
+      },
+      {
+        label: "web.dev: Passkey form autofill",
+        url: "https://web.dev/articles/passkey-form-autofill",
+      },
+    ],
+    links: [
+      {
+        label: "Before handing an agent the keys",
+        slug: "special-it-2026-09-13-agent-permissions",
+      },
+      {
+        label: "Browser AI starts with the download screen",
+        slug: "special-it-2026-09-13-browser-ai",
+      },
+      {
+        label: "How durable is an offline record?",
+        slug: "special-it-2026-09-13-local-first-data",
+      },
+      {
+        label: "Build interfaces that answer a tap",
+        slug: "special-it-2026-09-13-inp-interaction",
+      },
+    ],
+  },
+  "special-it-2026-09-13-local-first-data": {
+    title: "How durable is an offline record?",
+    excerpt:
+      "Separate local persistence, synchronization, and recovery when storing data in the browser.",
+    intro:
+      "Special issue, September 13, 2026. Saving without a connection is reassuring. That reassurance needs a precise meaning when someone clears site data or replaces a device.",
+    sections: [
+      {
+        heading: "Storage has a defined boundary",
+        paragraphs: [
+          "SQLite’s WebAssembly documentation offers several OPFS persistence options with different concurrency trade-offs. WebKit describes OPFS as storage associated with an origin, rather than an ordinary user-visible folder.",
+          "Our recommendation is to distinguish a completed local transaction from completed synchronization. One check mark should not imply that another device already has a recoverable copy.",
+        ],
+      },
+      {
+        heading: "Synchronization is a separate design",
+        paragraphs: [
+          "Imagine a meal record whose rating changes on a phone while its note changes on a laptop. SQL alone does not decide the merge. Define update units, conflicts, and deletion semantics explicitly.",
+          "A small application can begin with a conflict screen rather than automatic merging. Show both versions and let the user decide. Silent last-response-wins behavior should not become an accidental product rule.",
+        ],
+      },
+      {
+        heading: "Test recovery through export",
+        paragraphs: [
+          "Build export and import alongside storage. Confirm that a fresh browser can restore contents, dates, and attachment relationships. Downloading a file is not proof that it can be recovered.",
+          "Test offline creation, competing tabs, failed writes, and restoration after site-data removal. Local-first value lies in continued work and an understandable data boundary, not simply in having fewer servers.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "SQLite WASM: Persistent Storage",
+        url: "https://sqlite.org/wasm/doc/trunk/persistence.md",
+      },
+      {
+        label: "WebKit: Origin Private File System",
+        url: "https://webkit.org/blog/12257/the-file-system-access-api-with-origin-private-file-system/",
+      },
+    ],
+    links: [
+      {
+        label: "Before handing an agent the keys",
+        slug: "special-it-2026-09-13-agent-permissions",
+      },
+      {
+        label: "Browser AI starts with the download screen",
+        slug: "special-it-2026-09-13-browser-ai",
+      },
+      {
+        label: "Passkeys need a life after sign-in",
+        slug: "special-it-2026-09-13-passkey-recovery",
+      },
+      {
+        label: "Build interfaces that answer a tap",
+        slug: "special-it-2026-09-13-inp-interaction",
+      },
+    ],
+  },
+  "special-it-2026-09-13-inp-interaction": {
+    title: "Build interfaces that answer a tap",
+    excerpt: "Use INP to separate visible feedback from completion time.",
+    intro:
+      "Special issue, September 13, 2026. A fast initial load can still lead to an unresponsive application. Feedback after input and eventual task completion deserve separate attention.",
+    sections: [
+      {
+        heading: "Understand the measurement boundary",
+        paragraphs: [
+          "INP evaluates responsiveness for clicks, taps, and keyboard interactions up to the next paint. It includes input delay, event processing, and presentation delay; it is not the complete duration of a server operation.",
+          "A responsive purchase button does not prove that checkout finishes quickly. Measure acknowledgement and completion separately so each has a clear owner and diagnosis.",
+        ],
+      },
+      {
+        heading: "Break down the slow action",
+        paragraphs: [
+          "A filter can block feedback by combining a large calculation with a large DOM update. The optimization guide discusses long tasks and competition for the main thread. Moving every operation into a worker is not automatically the right solution.",
+          "Reproduce one slow action and separate selection feedback, calculation, and rendering. Keep cancellation usable, and prevent an older response from replacing a newer result. These are product-level choices alongside performance optimization.",
+        ],
+      },
+      {
+        heading: "Validate against real use",
+        paragraphs: [
+          "Attach performance budgets to repeatable interactions such as typing, expanding results, and pagination. Include slower devices. Use field measurements to choose a laboratory reproduction, then observe the result after shipping.",
+          "A useful completion criterion is visible acknowledgement, no invitation to submit duplicates while waiting, and understandable cancellation or failure. Responsiveness supports confidence as well as better numbers.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "web.dev: Interaction to Next Paint",
+        url: "https://web.dev/articles/inp",
+      },
+      {
+        label: "web.dev: Optimize INP",
+        url: "https://web.dev/articles/optimize-inp",
+      },
+    ],
+    links: [
+      {
+        label: "Before handing an agent the keys",
+        slug: "special-it-2026-09-13-agent-permissions",
+      },
+      {
+        label: "Browser AI starts with the download screen",
+        slug: "special-it-2026-09-13-browser-ai",
+      },
+      {
+        label: "Passkeys need a life after sign-in",
+        slug: "special-it-2026-09-13-passkey-recovery",
+      },
+      {
+        label: "How durable is an offline record?",
+        slug: "special-it-2026-09-13-local-first-data",
+      },
+    ],
+  },
   "frontend-typescript-issues-2025-2026-index": editorialArticle(
     "A reading map for frontend and TypeScript issues in 2025–2026",
     "An editorial map for the events that changed frontend and TypeScript defaults across 2025 and 2026.",
@@ -467,6 +757,292 @@ const english: Record<string, LocalizedArticle> = {
 };
 
 const japanese: Record<string, LocalizedArticle> = {
+  "special-it-2026-09-13-agent-permissions": {
+    title: "エージェントに鍵を渡す前に",
+    excerpt: "ツールの接続より先に、実行権限、承認、再試行の境界を設計する。",
+    intro:
+      "2026年9月13日特別企画。文書の要約と外部公開では、必要な実行権限が違う。本稿は、その違いを利用者に伝わる機能として設計するための提案である。",
+    sections: [
+      {
+        heading: "接続の成功と実行の許可を分ける",
+        paragraphs: [
+          "MCPの公式セキュリティ文書はtoken passthroughを禁止し、HTTP認可仕様はクライアントとリソースサーバーの役割を区別する。便利さのために認証情報の境界をまとめてはいけない。",
+          "製品では、閲覧、下書き、外部への反映を分けたい。検索を許可した利用者が、同時に編集も許可したと解釈される構成は説明しにくい。",
+        ],
+      },
+      {
+        heading: "承認を具体的な変更に結び付ける",
+        paragraphs: [
+          "議事録から担当者を提案することと、共有プロジェクトに作業を登録することは別である。対象、内容、担当者、公開される情報を示してから実行する。内容が大きく変わったら判断も取り直す。",
+          "応答が消えても、処理が失敗したとは限らない。操作IDを保存し、再送で二重登録されない仕組みをツール提供側が持つ必要がある。プロトコルの採用だけでは解決しない。",
+        ],
+      },
+      {
+        heading: "失敗を説明できるかを確かめる",
+        paragraphs: [
+          "読み取り専用での更新、承認後の対象変更、応答を失った要求の再送を試す。拒否、再確認、重複のない結果を期待値にする。ログには秘密情報ではなく実行者と結果を残す。",
+          "自律性は、結果の重さが変わる地点で停止することで扱いやすくなる。許可済みの範囲では予測可能に進む。その基準をツールの数より先に決めたい。",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "MCP Security Best Practices",
+        url: "https://modelcontextprotocol.io/docs/2025-11-25/tutorials/security/security_best_practices",
+      },
+      {
+        label: "MCP Authorization",
+        url: "https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization",
+      },
+    ],
+    links: [
+      {
+        label: "ブラウザーAIはダウンロード画面から始まる",
+        slug: "special-it-2026-09-13-browser-ai",
+      },
+      {
+        label: "パスキーはログインの後まで設計する",
+        slug: "special-it-2026-09-13-passkey-recovery",
+      },
+      {
+        label: "オフラインの記録はどこまで残るか",
+        slug: "special-it-2026-09-13-local-first-data",
+      },
+      {
+        label: "タップに応える画面をつくる",
+        slug: "special-it-2026-09-13-inp-interaction",
+      },
+    ],
+  },
+  "special-it-2026-09-13-browser-ai": {
+    title: "ブラウザーAIはダウンロード画面から始まる",
+    excerpt:
+      "準備状態、端末の対応、クラウドへの切り替えを利用体験として設計する。",
+    intro:
+      "2026年9月13日特別企画。ローカルモデルの回答より先に、利用者は自分の端末で使えるか、何を待つのかを知る必要がある。",
+    sections: [
+      {
+        heading: "準備状態を明示する",
+        paragraphs: [
+          "Chromeの文書はモデル、言語、端末の条件と利用可能性の確認を案内している。APIが存在しても即座に使えるとは限らず、ダウンロードが必要な場合や未対応の環境がある。",
+          "準備完了、準備中、利用不可を分けたい。一つのスピナーでは待つ意味があるのか伝わらない。公開前に対象APIの最新対応状況を確認する。",
+        ],
+      },
+      {
+        heading: "利用者の選択を保つ",
+        paragraphs: [
+          "個人メモの要約でモデルが必要なら、その場でダウンロードを説明する。準備中も通常の閲覧と編集は続けられる構成がよい。",
+          "ローカル処理の失敗を理由に、メモを自動的にサーバーへ送らない設計を提案する。送信先と内容を説明し、別の選択として提示する。",
+        ],
+      },
+      {
+        heading: "推論時間以外も測る",
+        paragraphs: [
+          "初回、準備済み、容量不足を分けて試す。有用な結果までの時間と、取り消しても原文が残ることを確認する。高性能な開発機一台の結果を一般化しない。",
+          "AIがなくても製品を使えることが重要だ。要約できないだけで原文も開けなくなるなら、補助機能が製品全体の可用性を左右してしまう。",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Chrome: Built-in AI",
+        url: "https://developer.chrome.com/docs/ai/built-in",
+      },
+      {
+        label: "Chrome: Get started with built-in AI",
+        url: "https://developer.chrome.com/docs/ai/get-started",
+      },
+    ],
+    links: [
+      {
+        label: "エージェントに鍵を渡す前に",
+        slug: "special-it-2026-09-13-agent-permissions",
+      },
+      {
+        label: "パスキーはログインの後まで設計する",
+        slug: "special-it-2026-09-13-passkey-recovery",
+      },
+      {
+        label: "オフラインの記録はどこまで残るか",
+        slug: "special-it-2026-09-13-local-first-data",
+      },
+      {
+        label: "タップに応える画面をつくる",
+        slug: "special-it-2026-09-13-inp-interaction",
+      },
+    ],
+  },
+  "special-it-2026-09-13-passkey-recovery": {
+    title: "パスキーはログインの後まで設計する",
+    excerpt: "登録成功率だけでは見えない、機種変更とアカウント復旧の課題。",
+    intro:
+      "2026年9月13日特別企画。パスワードなしのログインは短いが、アカウントは端末やブラウザーより長く使われる。",
+    sections: [
+      {
+        heading: "登録にはサーバー検証も含まれる",
+        paragraphs: [
+          "web.devは認証情報の生成からサーバー検証と保存までを説明し、フォームの自動入力とパスキーを組み合わせるログイン方法も紹介している。ボタンの追加だけでは完結しない。",
+          "誰が登録できるか、中断時にどう戻るか、登録した情報をどこで確認するかを決めたい。これはプロトコル実装を補う製品設計の提案である。",
+        ],
+      },
+      {
+        heading: "機種変更を通常の利用として扱う",
+        paragraphs: [
+          "新しい端末では使える認証手段が変わる場合がある。利用できない選択肢を繰り返し表示せず、別のログイン方法や復旧へ進めるようにする。",
+          "同期型パスキーだけを前提に、全端末で同じ体験を約束しない。利用者が保存先を覚えていなくても、認証手段の名前や登録日時を確認できると管理しやすい。",
+        ],
+      },
+      {
+        heading: "復旧も含めて品質を判断する",
+        paragraphs: [
+          "弱い復旧経路は強いログインを損ない、復旧不能は正規利用者を締め出す。認証手段の追加、紛失、削除を別々の利用経路として検討する。",
+          "登録中断、別端末でのログイン、最後の認証手段の削除、復旧後の整理を試す。一度の成功より、使い続けられることが長期的な信頼につながる。",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "web.dev: Create a passkey",
+        url: "https://web.dev/articles/passkey-registration",
+      },
+      {
+        label: "web.dev: Passkey form autofill",
+        url: "https://web.dev/articles/passkey-form-autofill",
+      },
+    ],
+    links: [
+      {
+        label: "エージェントに鍵を渡す前に",
+        slug: "special-it-2026-09-13-agent-permissions",
+      },
+      {
+        label: "ブラウザーAIはダウンロード画面から始まる",
+        slug: "special-it-2026-09-13-browser-ai",
+      },
+      {
+        label: "オフラインの記録はどこまで残るか",
+        slug: "special-it-2026-09-13-local-first-data",
+      },
+      {
+        label: "タップに応える画面をつくる",
+        slug: "special-it-2026-09-13-inp-interaction",
+      },
+    ],
+  },
+  "special-it-2026-09-13-local-first-data": {
+    title: "オフラインの記録はどこまで残るか",
+    excerpt: "ブラウザー保存では、永続化、同期、復旧を分けて考える。",
+    intro:
+      "2026年9月13日特別企画。接続がなくても保存できる安心を、サイトデータの削除や端末交換の後までどう説明するか。",
+    sections: [
+      {
+        heading: "保存場所には境界がある",
+        paragraphs: [
+          "SQLiteのWebAssembly文書は、同時利用などの条件が異なるOPFS保存方式を案内している。WebKitはOPFSをオリジンに属する保存領域として説明しており、通常の利用者向けフォルダーとは違う。",
+          "ローカル保存の完了と同期の完了は分けて表示したい。一つのチェック印で、別端末にも復元可能なコピーがあると誤解させない。",
+        ],
+      },
+      {
+        heading: "同期には独立した設計が必要だ",
+        paragraphs: [
+          "食事記録の評価を携帯で、メモをノートパソコンで変更したとする。どちらを残すかはSQLだけでは決まらない。変更単位、競合、削除の意味を定義する必要がある。",
+          "小さな製品なら、自動統合より両方の版を見せて選ぶ方法から始めてもよい。最後の応答で黙って上書きする挙動を隠れた仕様にしない。",
+        ],
+      },
+      {
+        heading: "書き出しから復旧を試す",
+        paragraphs: [
+          "保存と一緒に書き出しと読み込みを作る。新しいブラウザーで本文、日付、添付関係が戻ることまで確認したい。ファイルを取得できただけでは復旧の証明にならない。",
+          "オフライン作成、複数タブ、書き込み失敗、データ削除後の復元を試す。接続に左右されず作業でき、データの所在を説明できることに価値がある。",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "SQLite WASM: Persistent Storage",
+        url: "https://sqlite.org/wasm/doc/trunk/persistence.md",
+      },
+      {
+        label: "WebKit: Origin Private File System",
+        url: "https://webkit.org/blog/12257/the-file-system-access-api-with-origin-private-file-system/",
+      },
+    ],
+    links: [
+      {
+        label: "エージェントに鍵を渡す前に",
+        slug: "special-it-2026-09-13-agent-permissions",
+      },
+      {
+        label: "ブラウザーAIはダウンロード画面から始まる",
+        slug: "special-it-2026-09-13-browser-ai",
+      },
+      {
+        label: "パスキーはログインの後まで設計する",
+        slug: "special-it-2026-09-13-passkey-recovery",
+      },
+      {
+        label: "タップに応える画面をつくる",
+        slug: "special-it-2026-09-13-inp-interaction",
+      },
+    ],
+  },
+  "special-it-2026-09-13-inp-interaction": {
+    title: "タップに応える画面をつくる",
+    excerpt: "INPを手掛かりに、反応の表示と処理完了までの時間を分ける。",
+    intro:
+      "2026年9月13日特別企画。初期表示が速くても、操作後に反応しなければ使いにくい。入力への応答と最終的な完了を別々に考えたい。",
+    sections: [
+      {
+        heading: "指標の測定範囲を知る",
+        paragraphs: [
+          "INPはクリック、タップ、キー操作から次の描画までの反応性を扱い、入力遅延、イベント処理、描画待ちを含む。サーバー処理全体の完了時間ではない。",
+          "購入ボタンの反応が良くても、決済完了が速いとは限らない。受付を示す時点と完了時点を分けて測れば、改善対象が明確になる。",
+        ],
+      },
+      {
+        heading: "遅い操作を分解する",
+        paragraphs: [
+          "大量の計算とDOM更新をまとめると、フィルター操作の表示が遅れる。公式ガイドは長いタスクやメインスレッドの競合を減らす方法を説明するが、何でもWorkerに移せばよいわけではない。",
+          "まず一つの遅い操作を再現し、選択表示、計算、描画を分けて調べる。待機中も取り消せるようにし、古い応答が新しい結果を上書きしないか確かめる。",
+        ],
+      },
+      {
+        heading: "実際の利用で確かめる",
+        paragraphs: [
+          "検索入力、結果の展開、ページ移動のような再現可能な操作に性能目標を置く。低性能端末も含め、実測値から再現条件を選び、公開後に再度観察する。",
+          "入力の受付が見え、二重実行を誘わず、取り消しや失敗が理解できることを完了条件にしたい。反応性は数値だけでなく、安心して操作できる体験につながる。",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "web.dev: Interaction to Next Paint",
+        url: "https://web.dev/articles/inp",
+      },
+      {
+        label: "web.dev: Optimize INP",
+        url: "https://web.dev/articles/optimize-inp",
+      },
+    ],
+    links: [
+      {
+        label: "エージェントに鍵を渡す前に",
+        slug: "special-it-2026-09-13-agent-permissions",
+      },
+      {
+        label: "ブラウザーAIはダウンロード画面から始まる",
+        slug: "special-it-2026-09-13-browser-ai",
+      },
+      {
+        label: "パスキーはログインの後まで設計する",
+        slug: "special-it-2026-09-13-passkey-recovery",
+      },
+      {
+        label: "オフラインの記録はどこまで残るか",
+        slug: "special-it-2026-09-13-local-first-data",
+      },
+    ],
+  },
   "frontend-typescript-issues-2025-2026-index": editorialArticle(
     "2025–2026年フロントエンド・TypeScript issue 読書マップ",
     "2025年と2026年にフロントエンドと TypeScript の前提を変えた出来事を探す編集マップです。",

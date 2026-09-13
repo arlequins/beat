@@ -44,6 +44,8 @@ test("filters Gourmet records and offers a safe Maps handoff", async ({
   await expect(
     page.getByRole("heading", { name: "Gourmet notes" }),
   ).toBeVisible();
+  await expect(page.getByLabel("All cuisines")).toBeHidden();
+  await page.getByText("Filters", { exact: true }).click();
   await page.getByLabel("All cuisines").selectOption("Japanese");
   await page.getByLabel("Any rating").selectOption("8");
   await page.getByLabel("Any revisit plan").selectOption("yes");

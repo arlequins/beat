@@ -194,7 +194,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
       })
       .catch((error: unknown) => {
         if ((error as { name?: string }).name !== "AbortError")
-          setMessage(error instanceof Error ? error.message : labels.failed);
+          setMessage(labels.failed);
       });
     return () => controller.abort();
   }, [area, cuisineTag, labels.failed, minimumRating, query, revisit]);
@@ -218,7 +218,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
       .then(setSelected)
       .catch((error: unknown) => {
         if ((error as { name?: string }).name !== "AbortError")
-          setMessage(error instanceof Error ? error.message : labels.failed);
+          setMessage(labels.failed);
       });
     return () => controller.abort();
   }, [labels.failed, selectedSlug]);
@@ -252,13 +252,6 @@ export function GourmetBrowser(props: { locale: Locale }) {
       ),
     [entries, props.locale],
   );
-  const averageRating = entries.length
-    ? entries.reduce((total, entry) => total + entry.rating, 0) / entries.length
-    : 0;
-  const recommendedCount = entries.filter(
-    (entry) => entry.revisit === "yes",
-  ).length;
-
   if (selectedSlug && selected)
     return (
       <article className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-20">
@@ -351,19 +344,13 @@ export function GourmetBrowser(props: { locale: Locale }) {
 
   return (
     <div>
-      <section className="brand-hero px-5 py-16 text-white sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-6xl">
-          <p className="brand-eyebrow text-[#79e6e0]">{labels.eyebrow}</p>
-          <h1 className="display-serif mt-5 max-w-4xl text-6xl tracking-[-0.055em] sm:text-7xl">
-            {labels.title}
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-            {labels.intro}
-          </p>
+      <header className="page-heading">
+        <div className="page-width">
+          <h1>{labels.title}</h1>
         </div>
-      </section>
-      <section className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-20">
-        <div className="grid gap-3 border-y border-[var(--line)] py-5 sm:grid-cols-2 lg:grid-cols-4">
+      </header>
+      <section className="page-width gourmet-content">
+        <div className="gourmet-filters">
           <label className="flex items-center gap-3 border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
             <Search className="size-4 text-[var(--muted-foreground)]" />
             <input
@@ -374,83 +361,75 @@ export function GourmetBrowser(props: { locale: Locale }) {
               value={query}
             />
           </label>
-          <select
-            aria-label={labels.allAreas}
-            className="border border-[var(--line)] bg-[var(--surface)] px-4"
-            onChange={(event) => setArea(event.target.value)}
-            value={area}
-          >
-            <option value="">{labels.allAreas}</option>
-            {areas.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-          <select
-            aria-label={labels.allCuisines}
-            className="border border-[var(--line)] bg-[var(--surface)] px-4"
-            onChange={(event) => setCuisineTag(event.target.value)}
-            value={cuisineTag}
-          >
-            <option value="">{labels.allCuisines}</option>
-            {cuisineTag && !cuisines.includes(cuisineTag) ? (
-              <option value={cuisineTag}>{cuisineTag}</option>
-            ) : null}
-            {cuisines.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-          <select
-            aria-label={labels.minimumRating}
-            className="border border-[var(--line)] bg-[var(--surface)] px-4"
-            onChange={(event) => setMinimumRating(event.target.value)}
-            value={minimumRating}
-          >
-            <option value="">{labels.minimumRating}</option>
-            <option value="9">9.0+</option>
-            <option value="8">8.0+</option>
-            <option value="7">7.0+</option>
-          </select>
-          <select
-            aria-label={labels.revisitFilter}
-            className="border border-[var(--line)] bg-[var(--surface)] px-4"
-            onChange={(event) =>
-              setRevisit(event.target.value as "" | GourmetEntry["revisit"])
-            }
-            value={revisit}
-          >
-            <option value="">{labels.revisitFilter}</option>
-            <option value="yes">{labels.revisitYes}</option>
-            <option value="no">{labels.revisitNo}</option>
-            <option value="unknown">{labels.revisitUnknown}</option>
-          </select>
+          <details className="gourmet-filter-details">
+            <summary>
+              {props.locale === "ko"
+                ? "필터"
+                : props.locale === "ja"
+                  ? "絞り込み"
+                  : "Filters"}
+              {[area, cuisineTag, minimumRating, revisit].filter(Boolean)
+                .length > 0
+                ? ` · ${[area, cuisineTag, minimumRating, revisit].filter(Boolean).length}`
+                : ""}
+            </summary>
+            <div className="gourmet-filter-options">
+              <select
+                aria-label={labels.allAreas}
+                className="border border-[var(--line)] bg-[var(--surface)] px-4"
+                onChange={(event) => setArea(event.target.value)}
+                value={area}
+              >
+                <option value="">{labels.allAreas}</option>
+                {areas.map((value) => (
+                  <option key={value}>{value}</option>
+                ))}
+              </select>
+              <select
+                aria-label={labels.allCuisines}
+                className="border border-[var(--line)] bg-[var(--surface)] px-4"
+                onChange={(event) => setCuisineTag(event.target.value)}
+                value={cuisineTag}
+              >
+                <option value="">{labels.allCuisines}</option>
+                {cuisineTag && !cuisines.includes(cuisineTag) ? (
+                  <option value={cuisineTag}>{cuisineTag}</option>
+                ) : null}
+                {cuisines.map((value) => (
+                  <option key={value}>{value}</option>
+                ))}
+              </select>
+              <select
+                aria-label={labels.minimumRating}
+                className="border border-[var(--line)] bg-[var(--surface)] px-4"
+                onChange={(event) => setMinimumRating(event.target.value)}
+                value={minimumRating}
+              >
+                <option value="">{labels.minimumRating}</option>
+                <option value="9">9.0+</option>
+                <option value="8">8.0+</option>
+                <option value="7">7.0+</option>
+              </select>
+              <select
+                aria-label={labels.revisitFilter}
+                className="border border-[var(--line)] bg-[var(--surface)] px-4"
+                onChange={(event) =>
+                  setRevisit(event.target.value as "" | GourmetEntry["revisit"])
+                }
+                value={revisit}
+              >
+                <option value="">{labels.revisitFilter}</option>
+                <option value="yes">{labels.revisitYes}</option>
+                <option value="no">{labels.revisitNo}</option>
+                <option value="unknown">{labels.revisitUnknown}</option>
+              </select>
+            </div>
+          </details>
         </div>
         {!message && list ? (
-          <div className="grid grid-cols-3 gap-3 border-b border-[var(--line)] py-5">
-            <div>
-              <p className="display-serif text-3xl tracking-[-0.04em]">
-                {list.total}
-              </p>
-              <p className="mt-1 text-xs font-bold tracking-[0.1em] text-[var(--muted-foreground)] uppercase">
-                {labels.records}
-              </p>
-            </div>
-            <div>
-              <p className="display-serif text-3xl tracking-[-0.04em]">
-                {averageRating.toFixed(1)}
-              </p>
-              <p className="mt-1 text-xs font-bold tracking-[0.1em] text-[var(--muted-foreground)] uppercase">
-                {labels.average}
-              </p>
-            </div>
-            <div>
-              <p className="display-serif text-3xl tracking-[-0.04em]">
-                {recommendedCount}
-              </p>
-              <p className="mt-1 text-xs font-bold tracking-[0.1em] text-[var(--muted-foreground)] uppercase">
-                {labels.recommended}
-              </p>
-            </div>
-          </div>
+          <p className="py-4 text-sm text-[var(--muted-foreground)]">
+            {list.total} {labels.records}
+          </p>
         ) : null}
         {message ? (
           <p className="py-16 text-center text-[var(--muted-foreground)]">

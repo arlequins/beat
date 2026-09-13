@@ -17,20 +17,11 @@ export async function KoreanPostsPage() {
   const categories: PostCategory[] = ["weekly", "deep-dive", "studio-log"];
   return (
     <>
-      <section className="brand-hero px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl">
-          <p className="brand-eyebrow text-[#79e6e0]">Lumen / Field notes</p>
-          <h1 className="display-serif mt-5 max-w-4xl text-5xl leading-[1.02] tracking-[-0.055em] sm:text-7xl">
-            변화의 흐름과
-            <br />
-            기술의 깊이를 함께 봅니다.
-          </h1>
-          <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
-            매주 지나가는 신호는 넓게 비추고, 오래 남길 기술은 한곳에 빛을 모아
-            살펴봅니다. Lumen이 초안을 돕고 Arlequin이 판단합니다.
-          </p>
+      <header className="page-heading">
+        <div className="page-width">
+          <h1>IT 이슈</h1>
         </div>
-      </section>
+      </header>
       <section className="px-5 py-16 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-5xl">
           <div className="grid gap-16">
@@ -52,14 +43,14 @@ export async function KoreanPostsPage() {
                         {meta.label}
                       </h2>
                     </div>
-                    <p className="max-w-sm text-sm leading-6 text-slate-500">
+                    <p className="hidden max-w-sm text-sm leading-6 text-slate-500 sm:block">
                       {meta.description}
                     </p>
                   </div>
                   <div className="grid gap-px bg-slate-900/15 sm:grid-cols-2">
                     {categoryPosts.map((post) => (
                       <article
-                        className="group flex min-h-72 flex-col bg-[#f5f0e6] p-7 sm:p-8"
+                        className="note-card group flex flex-col bg-[#f5f0e6] p-6"
                         key={post.slug}
                       >
                         <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
@@ -68,7 +59,7 @@ export async function KoreanPostsPage() {
                               ◇ 미확정본
                             </span>
                           ) : null}
-                          {post.tags.map((tag) => (
+                          {post.tags.slice(0, 2).map((tag) => (
                             <span
                               className="border border-slate-900/10 px-2.5 py-1"
                               key={tag}
@@ -80,12 +71,12 @@ export async function KoreanPostsPage() {
                         <h3 className="display-serif mt-6 text-2xl leading-tight tracking-[-0.035em] sm:text-3xl">
                           <Link
                             className="group-hover:text-[#b63f2d]"
-                            href={`/posts/${post.slug}/`}
+                            href={`/ko/posts/${post.slug}/`}
                           >
                             {post.title}
                           </Link>
                         </h3>
-                        <p className="mt-4 leading-7 text-slate-600">
+                        <p className="hidden sm:line-clamp-2 mt-4 leading-7 text-slate-600">
                           {post.excerpt}
                         </p>
                         <div className="mt-auto flex items-center justify-between pt-7 text-sm text-slate-500">
@@ -95,7 +86,7 @@ export async function KoreanPostsPage() {
                           <Link
                             aria-label={`${post.title} 읽기`}
                             className="border border-slate-900/20 p-2 text-slate-950 group-hover:bg-[#111326] group-hover:text-white"
-                            href={`/posts/${post.slug}/`}
+                            href={`/ko/posts/${post.slug}/`}
                           >
                             <ArrowUpRight
                               aria-hidden="true"
