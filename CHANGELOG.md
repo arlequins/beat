@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.40.0](https://github.com/arlequins/beat/compare/beat-v1.39.0...beat-v1.40.0) (2026-09-13)
+
+
+### Features
+
+* **web:** add quiet 3D home and mobile gesture menu ([#146](https://github.com/arlequins/beat/issues/146)) ([490f388](https://github.com/arlequins/beat/commit/490f3884ca11a5ff18d3cf805a9f8916431137fe))
+
 ## [1.39.0](https://github.com/arlequins/beat/compare/beat-v1.38.0...beat-v1.39.0) (2026-09-13)
 
 
