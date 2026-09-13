@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HomeObject } from "~/components/blog/home-object";
 import { projects } from "~/lib/blog-data";
 import { getStories } from "~/lib/fiction";
 import { copy, type Locale, localePath } from "~/lib/i18n";
@@ -43,6 +44,7 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
       <h1 className="index-signature">
         Arlequin <span>×</span> Lumen
       </h1>
+      <HomeObject locale={locale} />
       <section className="index-latest" aria-labelledby="index-latest">
         <div className="index-section-heading">
           <h2 id="index-latest">{text.latest}</h2>

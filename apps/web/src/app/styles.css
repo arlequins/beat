@@ -1578,3 +1578,141 @@
     font-size: 13px;
   }
 }
+
+/* Quiet object: CSS perspective keeps the home free of a WebGL runtime. */
+.home-object-wrap {
+  position: relative;
+  margin: -12px auto 16px;
+  width: 200px;
+  text-align: center;
+}
+.home-object {
+  height: 132px;
+  position: relative;
+  perspective: 600px;
+}
+.object-cube {
+  position: absolute;
+  left: calc(50% - 25px);
+  top: 38px;
+  width: 50px;
+  height: 50px;
+  transform-style: preserve-3d;
+  transform: rotateX(-24deg) rotateY(35deg);
+  animation: object-turn 24s linear infinite;
+  pointer-events: none;
+}
+.object-face {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #b06a55;
+  background: linear-gradient(135deg, #e8b59b99, #a8c5c999);
+  backface-visibility: visible;
+}
+.object-front {
+  transform: translateZ(25px);
+}
+.object-back {
+  transform: rotateY(180deg) translateZ(25px);
+}
+.object-left {
+  transform: rotateY(-90deg) translateZ(25px);
+}
+.object-right {
+  transform: rotateY(90deg) translateZ(25px);
+}
+.object-top {
+  transform: rotateX(90deg) translateZ(25px);
+}
+.object-bottom {
+  transform: rotateX(-90deg) translateZ(25px);
+}
+.object-shadow {
+  position: absolute;
+  top: 110px;
+  left: 65px;
+  width: 70px;
+  height: 9px;
+  border-radius: 50%;
+  background: #6a554c25;
+  filter: blur(5px);
+}
+.object-trail {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.object-trail polyline {
+  fill: none;
+  stroke: #ac604b;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.object-hint {
+  display: none;
+  font-size: 10px;
+  color: var(--muted);
+}
+@keyframes object-turn {
+  to {
+    transform: rotateX(-24deg) rotateY(395deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .object-cube {
+    animation: none;
+  }
+}
+@media (max-width: 767px) {
+  .home-object {
+    touch-action: none;
+  }
+  .object-hint {
+    display: block;
+  }
+}
+.site-menu-settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 12px 8px;
+}
+.site-menu-settings > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.site-menu-settings > div + div {
+  border-left: 1px solid var(--line);
+  padding-left: 20px;
+}
+.site-menu-settings > div > span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.compact-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px max(24px, calc((100% - 1152px) / 2));
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+}
+.compact-footer a {
+  padding-block: 12px;
+}
+.object-hint,
+.site-menu-settings > div > span,
+.compact-footer {
+  color: #536173;
+}
+.dark .object-hint,
+.dark .site-menu-settings > div > span,
+.dark .compact-footer {
+  color: #b9c2d5;
+}
