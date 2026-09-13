@@ -222,12 +222,18 @@ export function FictionViewer({
     const text = flow.current;
     if (!el || !text) return;
     let frame = 0;
+    let restoreFrame = 0;
+    let active = true;
     const measure = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const w = el.clientWidth;
         if (!w || !el.clientHeight) return;
+        // Safari can leave percentage heights unresolved inside the flex viewport.
+        // Give the column container a definite height before measuring overflow.
+        text.style.height = `${el.clientHeight}px`;
         text.style.width = `${w - 48}px`;
+        text.style.columnWidth = `${w - 48}px`;
         const pages = Math.max(1, Math.ceil((text.scrollWidth + 48) / w));
         const target = Math.min(
           pages - 1,
@@ -236,20 +242,36 @@ export function FictionViewer({
         setWidth(w);
         setCount(pages);
         setPage(target);
-        requestAnimationFrame(() => {
+        cancelAnimationFrame(restoreFrame);
+        restoreFrame = requestAnimationFrame(() => {
           el.scrollLeft = target * w;
         });
       });
     };
     const observer = new ResizeObserver(measure);
     observer.observe(el);
+    const contentObserver = new MutationObserver(measure);
+    contentObserver.observe(text, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    window.addEventListener("pageshow", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    document.fonts.addEventListener("loadingdone", measure);
     measure();
     document.fonts.ready.then(() => {
-      if (el.isConnected) measure();
+      if (active && el.isConnected) measure();
     });
     return () => {
+      active = false;
       observer.disconnect();
+      contentObserver.disconnect();
+      window.removeEventListener("pageshow", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+      document.fonts.removeEventListener("loadingdone", measure);
       cancelAnimationFrame(frame);
+      cancelAnimationFrame(restoreFrame);
     };
   }, [preferences.size, preferences.line, preferences.font]);
   const change = (next: Partial<Preferences>) => {
