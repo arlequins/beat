@@ -47,3 +47,32 @@ test("library omits free labels", async ({ page }) => {
   await page.goto("/ko/fiction/");
   await expect(page.getByText("무료", { exact: true })).toHaveCount(0);
 });
+
+test("book repaginates when body content arrives after initial layout", async ({
+  page,
+}) => {
+  await page.goto("/ko/fiction/the-last-window/");
+  await expect(
+    page.getByRole("button", { name: "다음 페이지", exact: true }),
+  ).toBeEnabled();
+  await page.evaluate(() => {
+    const flow = document.querySelector(".book-flow")!;
+    const extra = document.createElement("div");
+    extra.id = "late-reader-content";
+    for (let i = 0; i < 100; i++) {
+      const paragraph = document.createElement("p");
+      paragraph.textContent =
+        "뒤늦게 표시된 본문도 다음 페이지로 이어져야 한다. ".repeat(8);
+      extra.append(paragraph);
+    }
+    flow.append(extra);
+  });
+  await expect
+    .poll(async () => {
+      const label = await page.locator(".book-page-number").textContent();
+      return Number(label?.split("/")[1]);
+    })
+    .toBeGreaterThan(30);
+  await page.getByRole("button", { name: "다음 페이지", exact: true }).tap();
+  await expect(page.locator(".book-page-number")).toHaveText(/^2 \/ /);
+});
