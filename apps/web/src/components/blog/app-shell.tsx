@@ -1,9 +1,9 @@
 "use client";
 
-import { BookOpen, GitBranch, Mail, Utensils } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { BrandMark } from "~/components/blog/brand-mark";
 import { LanguageSwitcher } from "~/components/blog/language-switcher";
 import { ThemeToggle } from "~/components/blog/theme-toggle";
@@ -16,12 +16,21 @@ export function AppShell(props: { children: React.ReactNode }) {
   const segment = pathname.split("/")[1] ?? "";
   const locale: Locale = isLocale(segment) ? segment : "en";
   const text = copy[locale];
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuLabel =
+    locale === "ko"
+      ? "메뉴 및 설정"
+      : locale === "ja"
+        ? "メニューと設定"
+        : "Menu and settings";
+  const route =
+    (isLocale(segment) ? pathname.slice(segment.length + 1) : pathname) || "/";
 
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
 
-  if (pathname.includes("/fiction")) {
+  if (route === "/fiction" || route.startsWith("/fiction/")) {
     if (pathname.split("/fiction/")[1]) return <main>{props.children}</main>;
     return (
       <div className="ebook-shell">
@@ -42,79 +51,71 @@ export function AppShell(props: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="brand-shell">
-      <header className="brand-header">
-        <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center justify-between px-5 sm:px-8">
+    <div className={`brand-shell ${route === "/" ? "index-shell" : ""}`}>
+      <button
+        type="button"
+        className="site-menu-trigger"
+        popoverTarget="site-menu"
+        aria-label={menuLabel}
+        title={menuLabel}
+      >
+        <Ellipsis aria-hidden="true" size={18} />
+      </button>
+      <div
+        className="site-menu-panel"
+        id="site-menu"
+        key={pathname}
+        popover="auto"
+        ref={menuRef}
+      >
+        <nav aria-label={menuLabel}>
           <Link
-            className="flex shrink-0 items-center gap-2 sm:gap-3"
+            onClick={() => menuRef.current?.hidePopover()}
             href={localePath(locale)}
+            aria-current={route === "/" ? "page" : undefined}
           >
-            <BrandMark />
-            <span>
-              <span className="display-serif block text-sm sm:text-lg font-bold leading-none tracking-[-0.04em]">
-                Arlequin <i className="font-normal text-[#d94f38]">×</i> Lumen
-              </span>
-              <span className="mt-1 block text-[0.6rem] font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                {text.brandTagline}
-              </span>
-            </span>
+            {locale === "ko" ? "홈" : locale === "ja" ? "ホーム" : "Home"}
           </Link>
-          <nav
-            aria-label="Primary"
-            className="flex shrink-0 items-center gap-2 whitespace-nowrap text-xs font-semibold tracking-[0.08em] uppercase sm:gap-4"
+          <Link
+            onClick={() => menuRef.current?.hidePopover()}
+            href={`${localePath(locale)}#work`}
           >
-            <Link
-              className="hidden text-slate-600 transition hover:text-[#d94f38] lg:block"
-              href={`${localePath(locale)}#work`}
-            >
-              {text.work}
-            </Link>
-            <Link
-              className="text-slate-600 transition hover:text-[#d94f38]"
-              href={localePath(locale, "/posts/")}
-            >
-              {text.writing}
-            </Link>
-            <Link
-              aria-label={text.gourmet}
-              className="text-slate-600 transition hover:text-[#d94f38]"
-              href={localePath(locale, "/gourmet/")}
-            >
-              <Utensils aria-hidden="true" className="size-5 md:hidden" />
-              <span className="hidden md:inline">{text.gourmet}</span>
-            </Link>
-            <Link
-              aria-label={text.fiction}
-              aria-current={pathname.includes("/fiction") ? "page" : undefined}
-              className="text-slate-600 transition hover:text-[#d94f38]"
-              href={localePath(locale, "/fiction/")}
-            >
-              <BookOpen aria-hidden="true" className="size-5 md:hidden" />
-              <span className="hidden md:inline">{text.fiction}</span>
-            </Link>
-            <LanguageSwitcher />
-            <ThemeToggle />
-            <a
-              aria-label="GitHub"
-              className="hidden text-slate-600 transition hover:text-[#d94f38] lg:block"
-              href={siteConfig.links.github}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <GitBranch aria-hidden="true" className="size-5" />
-            </a>
-            <a
-              aria-label="Email"
-              className="hidden text-slate-600 transition hover:text-[#d94f38] lg:block"
-              href={`mailto:${siteConfig.email}`}
-            >
-              <Mail aria-hidden="true" className="size-5" />
-            </a>
-          </nav>
+            {text.work}
+          </Link>
+          <Link
+            onClick={() => menuRef.current?.hidePopover()}
+            href={localePath(locale, "/posts/")}
+            aria-current={route.startsWith("/posts/") ? "page" : undefined}
+          >
+            {text.writing}
+          </Link>
+          <Link
+            onClick={() => menuRef.current?.hidePopover()}
+            href={localePath(locale, "/gourmet/")}
+            aria-current={route.startsWith("/gourmet/") ? "page" : undefined}
+          >
+            {text.gourmet}
+          </Link>
+          <Link
+            onClick={() => menuRef.current?.hidePopover()}
+            href={localePath(locale, "/fiction/")}
+          >
+            {text.fiction}
+          </Link>
+        </nav>
+        <div className="site-menu-settings">
+          <LanguageSwitcher />
+          <ThemeToggle />
         </div>
-      </header>
-      <main>{props.children}</main>
-      <footer className="bg-[#111326] px-5 py-12 text-slate-300 sm:px-8">
+        <div className="site-menu-contact">
+          <a href={siteConfig.links.github} target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+          <a href={`mailto:${siteConfig.email}`}>{text.email}</a>
+        </div>
+      </div>
+      <main className="site-main">{props.children}</main>
+      <footer className="site-footer bg-[#111326] px-5 py-8 text-slate-300 sm:px-8">
         <div className="mx-auto flex max-w-6xl flex-col justify-between gap-8 sm:flex-row sm:items-end">
           <div>
             <div className="flex items-center gap-3">
@@ -123,9 +124,6 @@ export function AppShell(props: { children: React.ReactNode }) {
                 Arlequin × Lumen
               </p>
             </div>
-            <p className="mt-4 max-w-md text-sm leading-6 text-slate-400">
-              {text.footer}
-            </p>
           </div>
           <a
             className="text-sm font-semibold text-[#79e6e0] hover:text-white"
@@ -138,7 +136,9 @@ export function AppShell(props: { children: React.ReactNode }) {
           © {new Date().getFullYear()} {siteConfig.legalName} · Arlequin × Lumen
         </div>
       </footer>
-      <BeatChatEntry />
+      <div className="shell-handoff">
+        <BeatChatEntry />
+      </div>
     </div>
   );
 }
