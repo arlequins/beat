@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.41.0](https://github.com/arlequins/beat/compare/beat-v1.40.0...beat-v1.41.0) (2026-09-13)
+
+
+### Features
+
+* **web:** connect home content with layered spatial design ([#148](https://github.com/arlequins/beat/issues/148)) ([30c0f46](https://github.com/arlequins/beat/commit/30c0f468beb53fec11425b8bba86bbbfdd92fafe))
+
 ## [1.40.0](https://github.com/arlequins/beat/compare/beat-v1.39.0...beat-v1.40.0) (2026-09-13)
 
 
