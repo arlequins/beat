@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.41.1](https://github.com/arlequins/beat/compare/beat-v1.41.0...beat-v1.41.1) (2026-09-13)
+
+
+### Bug Fixes
+
+* **web:** restore iPhone reading and refine touch navigation ([#150](https://github.com/arlequins/beat/issues/150)) ([72dbdc0](https://github.com/arlequins/beat/commit/72dbdc076dee153f7cba154354bc93239cd1c059))
+
 ## [1.41.0](https://github.com/arlequins/beat/compare/beat-v1.40.0...beat-v1.41.0) (2026-09-13)
 
 
