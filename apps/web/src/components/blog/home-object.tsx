@@ -102,11 +102,10 @@ export function HomeObject({ locale }: { locale: Locale }) {
           setTrail("");
         }}
       >
-        <div className="object-shadow" />
-        <div className="object-cube">
-          {["front", "back", "left", "right", "top", "bottom"].map((face) => (
-            <i key={face} className={`object-face object-${face}`} />
-          ))}
+        <div className="object-folios">
+          <i />
+          <i />
+          <i />
         </div>
         <svg className="object-trail" width="100%" height="100%">
           <title>Gesture</title>
