@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.39.0](https://github.com/arlequins/beat/compare/beat-v1.38.0...beat-v1.39.0) (2026-09-13)
+
+
+### Features
+
+* **web:** publish September IT special and refine mobile reading ([#143](https://github.com/arlequins/beat/issues/143)) ([f66239f](https://github.com/arlequins/beat/commit/f66239f7b664b2dd1fa9498b3c91f1bc2515530a))
+
 ## [1.38.0](https://github.com/arlequins/beat/compare/beat-v1.37.0...beat-v1.38.0) (2026-09-12)
 
 
