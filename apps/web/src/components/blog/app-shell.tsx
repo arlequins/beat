@@ -4,7 +4,6 @@ import { Ellipsis } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { BrandMark } from "~/components/blog/brand-mark";
 import { LanguageSwitcher } from "~/components/blog/language-switcher";
 import { ThemeToggle } from "~/components/blog/theme-toggle";
 import { siteConfig } from "~/config/site";
@@ -104,8 +103,22 @@ export function AppShell(props: { children: React.ReactNode }) {
           </Link>
         </nav>
         <div className="site-menu-settings">
-          <LanguageSwitcher />
-          <ThemeToggle />
+          <div>
+            <span>
+              {locale === "ko" ? "언어" : locale === "ja" ? "言語" : "Language"}
+            </span>
+            <LanguageSwitcher />
+          </div>
+          <div>
+            <span>
+              {locale === "ko"
+                ? "화면"
+                : locale === "ja"
+                  ? "表示"
+                  : "Appearance"}
+            </span>
+            <ThemeToggle />
+          </div>
         </div>
         <div className="site-menu-contact">
           <a href={siteConfig.links.github} target="_blank" rel="noreferrer">
@@ -115,26 +128,11 @@ export function AppShell(props: { children: React.ReactNode }) {
         </div>
       </div>
       <main className="site-main">{props.children}</main>
-      <footer className="site-footer bg-[#111326] px-5 py-8 text-slate-300 sm:px-8">
-        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-8 sm:flex-row sm:items-end">
-          <div>
-            <div className="flex items-center gap-3">
-              <BrandMark className="brightness-110" />
-              <p className="display-serif text-xl text-white">
-                Arlequin × Lumen
-              </p>
-            </div>
-          </div>
-          <a
-            className="text-sm font-semibold text-[#79e6e0] hover:text-white"
-            href={`mailto:${siteConfig.email}`}
-          >
-            {siteConfig.email}
-          </a>
-        </div>
-        <div className="mx-auto mt-10 max-w-6xl border-t border-white/10 pt-5 text-xs text-[#b9c2d5]">
-          © {new Date().getFullYear()} {siteConfig.legalName} · Arlequin × Lumen
-        </div>
+      <footer className="site-footer compact-footer">
+        <span>
+          © {new Date().getFullYear()} {siteConfig.legalName}
+        </span>
+        <a href={`mailto:${siteConfig.email}`}>{text.email}</a>
       </footer>
       <div className="shell-handoff">
         <BeatChatEntry />
