@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.43.0](https://github.com/arlequins/beat/compare/beat-v1.42.0...beat-v1.43.0) (2026-09-14)
+
+
+### Features
+
+* **fiction:** publish draft world guide for review ([#156](https://github.com/arlequins/beat/issues/156)) ([222862c](https://github.com/arlequins/beat/commit/222862ce31b56426173d821e0391f49bdf4ac97b))
+
 ## [1.42.0](https://github.com/arlequins/beat/compare/beat-v1.41.1...beat-v1.42.0) (2026-09-14)
 
 
