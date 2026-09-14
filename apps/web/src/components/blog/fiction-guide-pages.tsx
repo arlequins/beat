@@ -32,11 +32,12 @@ export async function FictionGuide({
         <h1>{entry ? entry.title : "세계부터, 하나씩"}</h1>
         <p className="guide-status">
           {entry?.status ?? "검토 전 초안"} ·{" "}
-          {entry?.revision ?? "0.1 · 2026-09-14"}
+          {entry?.revision ?? "0.2 · 2026-09-14"}
         </p>
         <p>
-          승인된 창작 설정은 아직 없습니다. 기존 다섯 편도 검토할 초안이며, 아래
-          제안은 원고에 적용하지 않았습니다.
+          사용자의 요청에 따라 이 초안을 집필 기준으로 사용했습니다. 개별 설정을
+          모두 확정한 것은 아닙니다. 원고 반영 내역과 미결 사항은 마지막 문서에
+          기록했습니다.
         </p>
       </header>
       {entry ? (
@@ -66,7 +67,7 @@ export async function FictionGuide({
         <>
           <p>
             위에서부터 읽고 각 문서 끝의 검토 쟁점을 확인해 주세요. 한국어
-            초안이며, 기존 다섯 편의 내용이 포함됩니다. 의견은 문서명과 항목을
+            초안이며, 소설 열 편의 내용이 포함됩니다. 의견은 문서명과 항목을
             지정해 이 대화에 남기면 됩니다.
           </p>
           <ol className="guide-contents">
