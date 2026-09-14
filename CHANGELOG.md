@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.42.0](https://github.com/arlequins/beat/compare/beat-v1.41.1...beat-v1.42.0) (2026-09-14)
+
+
+### Features
+
+* **web:** reveal reader navigation on demand ([#154](https://github.com/arlequins/beat/issues/154)) ([4e4f2f3](https://github.com/arlequins/beat/commit/4e4f2f32f06c70ed8211ec88f4018bd0f956c057))
+
 ## [1.41.1](https://github.com/arlequins/beat/compare/beat-v1.41.0...beat-v1.41.1) (2026-09-13)
 
 
