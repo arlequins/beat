@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.44.0](https://github.com/arlequins/beat/compare/beat-v1.43.0...beat-v1.44.0) (2026-09-14)
+
+
+### Features
+
+* **fiction:** add five omnibus stories and polish Korean prose ([#158](https://github.com/arlequins/beat/issues/158)) ([0210ca9](https://github.com/arlequins/beat/commit/0210ca9208bbfc9e184aa3883501569f87d8fc36))
+
 ## [1.43.0](https://github.com/arlequins/beat/compare/beat-v1.42.0...beat-v1.43.0) (2026-09-14)
 
 
