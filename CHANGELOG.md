@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.45.0](https://github.com/arlequins/beat/compare/beat-v1.44.0...beat-v1.45.0) (2026-09-14)
+
+
+### Features
+
+* **web:** replace decorative menu with direct home navigation ([#160](https://github.com/arlequins/beat/issues/160)) ([4baeb2a](https://github.com/arlequins/beat/commit/4baeb2af8f5edd7f234bfe21736378b1c7f01c30))
+
 ## [1.44.0](https://github.com/arlequins/beat/compare/beat-v1.43.0...beat-v1.44.0) (2026-09-14)
 
 
