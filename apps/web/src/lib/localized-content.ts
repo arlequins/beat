@@ -471,6 +471,23 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-09-14": {
+    title: "Weekly IT Brief — Matching operations to a shorter release rhythm",
+    excerpt:
+      "A developer's view of Chrome's two-week cadence, clearer GitHub Actions controls, and always-on agents in AWS Quick.",
+    intro:
+      "This week's signal is not simply that more features are available. The interval for discovering and governing change is getting shorter, from browsers and CI to background agents.",
+    sections: [
+      {
+        heading: "Three operating rhythms to tighten",
+        paragraphs: [
+          "Chrome 153 begins a two-week Stable cadence, while Chrome 154 Beta is already available before its next Stable release. Run critical journeys against Stable and Beta after each transition, and keep Extended Stable milestones distinct for managed customers.",
+          "GitHub Actions now exposes runner-version deprecation dates, a read-only vulnerability-alerts permission, and reusable-workflow source identity. Inventory runner versions, grant the smallest needed token scope, and retain workflow SHA and file path in deployment records.",
+          "Amazon Quick's scheduled and monitoring agents can keep working after a laptop closes, with enterprise controls around permissions, devices, and data loss prevention. Define an owner, data scope, audience, retention, and failure notification for every persistent task before broadening access.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -1193,6 +1210,23 @@ const japanese: Record<string, LocalizedArticle> = {
           "強力なツール利用を含むモデル変更は、権限変更でもあります。読み取り、書き込み、外部送信を分け、削除、配布、支払いのように戻しにくい操作には人の確認を残します。",
           "Apple の Rosetta の予定により、出荷するアーキテクチャはリリース上の課題になります。Apple silicon でインストール、起動、更新を確認し、Intel 専用のフレームワーク、プラグイン、補助実行ファイルには担当者と交換日を付けます。",
           "S3 PowerShell Drive はオブジェクト操作をファイル操作のように扱えますが、有効な AWS 認証情報を引き継ぎます。範囲を絞ったプロファイルを使い、非本番環境でバケットとプレフィックスを確認し、書き込みと削除の監査証跡を残します。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-09-14": {
+    title: "週刊 IT ブリーフ — 短くなったリリース周期に運用を合わせる",
+    excerpt:
+      "Chrome の2週間リリース、GitHub Actions の明確な統制、AWS Quick の常時稼働エージェントを開発者の視点で整理します。",
+    intro:
+      "今週の要点は、機能が増えることだけではありません。ブラウザー、CI、バックグラウンドのエージェントまで、変更を見つけて統制する間隔が短くなっています。",
+    sections: [
+      {
+        heading: "引き締めるべき三つの運用リズム",
+        paragraphs: [
+          "Chrome 153 から Stable は2週間周期になり、次の Stable 前に Chrome 154 Beta を試せます。各移行後に重要な導線を Stable と Beta で実行し、管理対象顧客の Extended Stable の節目は別に扱います。",
+          "GitHub Actions は runner バージョンの終了予定、読み取り専用の vulnerability-alerts 権限、再利用ワークフローの定義元を示す情報を追加しました。runner を棚卸しし、最小のトークン権限を与え、配布記録には workflow SHA とファイルパスを残します。",
+          "Amazon Quick の予約・監視エージェントは、ノート PC を閉じても動き続けます。恒常的なタスクごとに所有者、読むデータの範囲、受信者、保存期間、失敗通知を定め、権限を広げる前に運用できる状態にします。",
         ],
       },
     ],
