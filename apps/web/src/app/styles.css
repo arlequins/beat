@@ -1989,3 +1989,78 @@
   outline: 2px solid var(--coral);
   outline-offset: -2px;
 }
+
+.fiction-guide {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px 22px 80px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+.fiction-guide nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.fiction-guide a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.fiction-guide header {
+  margin: 36px 0;
+}
+.fiction-guide h1 {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.35;
+}
+.fiction-guide h2 {
+  font-size: 1.3rem;
+  margin: 40px 0 16px;
+  line-height: 1.5;
+}
+.fiction-guide p {
+  margin: 16px 0;
+}
+.fiction-guide .guide-status {
+  font-weight: 700;
+}
+.guide-contents {
+  padding-left: 24px;
+}
+.fiction-guide .guide-contents li {
+  padding: 20px 0;
+  border-bottom: 1px solid currentColor;
+}
+.guide-contents a {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.guide-contents p {
+  margin: 8px 0;
+}
+.guide-prose {
+  margin-bottom: 40px;
+}
+.guide-prose ul {
+  padding-left: 24px;
+}
+.fiction-guide .guide-prose li {
+  margin: 14px 0;
+}
+.guide-prose pre {
+  overflow-x: auto;
+  padding: 16px;
+  border: 1px solid currentColor;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre;
+  word-break: normal;
+}
+.guide-pagination {
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid currentColor;
+  justify-content: space-between;
+}

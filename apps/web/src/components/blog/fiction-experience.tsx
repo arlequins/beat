@@ -75,6 +75,11 @@ export function FictionLibrary({
         <p className="novel-description">
           하나의 세계에서 만나는 서로 다른 사람들의 이야기.
         </p>
+        <p>
+          <Link href={localePath(locale, "/fiction/guide/")}>
+            세계관·설정집 검토 전 초안 읽기 →
+          </Link>
+        </p>
         <div className="novel-facts">
           <span>총 {stories.length}화</span>
           <span>한국어</span>
