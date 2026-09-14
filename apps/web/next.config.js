@@ -8,6 +8,7 @@ await jiti.import("./src/env");
 /** @type {import("next").NextConfig} */
 const config = {
   devIndicators: false,
+  allowedDevOrigins: ["127.0.0.1"],
   /** Static HTML export for GitHub Pages (no Node server for this app). */
   output: "export",
 

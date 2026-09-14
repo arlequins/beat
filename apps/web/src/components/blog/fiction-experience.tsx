@@ -187,6 +187,10 @@ export function FictionViewer({
   const [preferences, setPreferences] = useState(defaults);
   const [page, setPage] = useState(0);
   const [count, setCount] = useState(1);
+  const [controlsVisible, setControlsVisible] = useState(false);
+  const lastTouch = useRef(0);
+  const lastTap = useRef({ time: 0, x: 0, y: 0 });
+  const touchStart = useRef({ x: 0, y: 0 });
   const [width, setWidth] = useState(0);
   const [panel, setPanel] = useState<"settings" | "episodes">("settings");
   const dialog = useRef<HTMLDialogElement>(null);
@@ -314,8 +318,52 @@ export function FictionViewer({
         className="book-viewport"
         ref={viewport}
         role="region"
-        aria-label="좌우로 넘기는 소설 본문"
+        aria-label="좌우로 넘기는 소설 본문. 두 번 탭하거나 Enter 키로 내비게이션 열기"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard-accessible scroll and paging region.
+        tabIndex={0}
+        onDoubleClick={(event) => {
+          if (performance.now() - lastTouch.current < 600) return;
+          if ((event.target as Element).closest("a, button")) return;
+          setControlsVisible((value) => !value);
+        }}
+        onPointerDown={(event) => {
+          if (event.pointerType === "touch")
+            touchStart.current = { x: event.clientX, y: event.clientY };
+        }}
+        onPointerUp={(event) => {
+          if (
+            event.pointerType !== "touch" ||
+            !event.isPrimary ||
+            (event.target as Element).closest("a, button")
+          )
+            return;
+          lastTouch.current = performance.now();
+          const x = event.clientX;
+          const y = event.clientY;
+          if (
+            Math.hypot(x - touchStart.current.x, y - touchStart.current.y) > 12
+          ) {
+            lastTap.current.time = 0;
+            return;
+          }
+          const now = performance.now();
+          const previous = lastTap.current;
+          if (
+            now - previous.time < 350 &&
+            Math.hypot(x - previous.x, y - previous.y) < 30
+          ) {
+            event.preventDefault();
+            setControlsVisible((value) => !value);
+            lastTap.current = { time: 0, x, y };
+          } else lastTap.current = { time: now, x, y };
+        }}
         onKeyDown={(event) => {
+          if (event.target !== event.currentTarget) return;
+          if (event.key === "Enter") {
+            event.preventDefault();
+            setControlsVisible((value) => !value);
+          }
+          if (event.key === "Escape") setControlsVisible(false);
           if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
             event.preventDefault();
             turn(event.key === "ArrowRight" ? 1 : -1);
@@ -370,7 +418,28 @@ export function FictionViewer({
           </div>
         </div>
       </div>
-      <footer className="book-controls">
+      <nav
+        className="book-controls"
+        aria-label="책보기 내비게이션"
+        data-visible={controlsVisible}
+        inert={!controlsVisible}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setControlsVisible(false);
+            viewport.current?.focus();
+          }
+        }}
+      >
+        <button
+          type="button"
+          aria-label="내비게이션 숨기기"
+          onClick={() => {
+            setControlsVisible(false);
+            viewport.current?.focus();
+          }}
+        >
+          <X size={18} />
+        </button>
         <Link href={localePath(locale, "/fiction/")} aria-label="작품 목록">
           <ArrowLeft size={18} />
         </Link>
@@ -422,7 +491,7 @@ export function FictionViewer({
         >
           <Settings2 size={18} />
         </button>
-      </footer>
+      </nav>
       <dialog ref={dialog} className="viewer-dialog">
         <header>
           <h2>{panel === "settings" ? "뷰어 설정" : "회차 목록"}</h2>
