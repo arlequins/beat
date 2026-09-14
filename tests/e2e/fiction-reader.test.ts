@@ -113,3 +113,39 @@ test("reader double tap reveals tools without changing page geometry", async ({
     page.getByRole("navigation", { name: "책보기 내비게이션" }),
   ).toBeHidden();
 });
+
+test("setting guide reads all draft documents without entering the story viewer", async ({
+  page,
+}) => {
+  await page.goto("/ko/fiction/");
+  await page
+    .getByRole("link", { name: "세계관·설정집 검토 전 초안 읽기 →" })
+    .click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "세계부터, 하나씩",
+  );
+  const links = await page
+    .locator(".guide-contents a")
+    .evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("href")),
+    );
+  expect(links).toHaveLength(7);
+  for (const href of links) {
+    await page.goto(href!);
+    await expect(page.locator(".guide-status")).toContainText("검토 전 초안");
+    await expect(
+      page.getByRole("heading", { name: "검토 쟁점" }),
+    ).toBeVisible();
+    await expect(page.locator(".book-viewer")).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "이 문서의 마크다운 원본" }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+  }
+  await page.getByRole("link", { name: "설정집 목차", exact: true }).click();
+  await expect(page.locator(".guide-contents li")).toHaveCount(7);
+});
