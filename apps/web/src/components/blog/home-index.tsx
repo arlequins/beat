@@ -1,5 +1,5 @@
+import { ArrowUpRight, BookOpen, NotebookPen, Utensils } from "lucide-react";
 import Link from "next/link";
-import { HomeObject } from "~/components/blog/home-object";
 import { HomeScene } from "~/components/blog/home-scene";
 import { projects } from "~/lib/blog-data";
 import { getStories } from "~/lib/fiction";
@@ -46,7 +46,46 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
         <h1 className="index-signature">
           Arlequin <span>×</span> Lumen
         </h1>
-        <HomeObject locale={locale} />
+        <nav
+          className="index-destinations"
+          aria-label={locale === "ko" ? "콘텐츠" : "Content"}
+        >
+          <Link
+            href={localePath(locale, "/posts/")}
+            className="index-route index-route-writing"
+          >
+            <div className="index-route-top">
+              <NotebookPen size={22} aria-hidden="true" />
+              <ArrowUpRight size={18} aria-hidden="true" />
+            </div>
+            <span>{copy[locale].writing}</span>
+            <span className="index-route-detail">{posts.length}</span>
+          </Link>
+          <Link
+            href={localePath(locale, "/gourmet/")}
+            className="index-route index-route-gourmet"
+          >
+            <div className="index-route-top">
+              <Utensils size={22} aria-hidden="true" />
+              <ArrowUpRight size={18} aria-hidden="true" />
+            </div>
+            <span>Gourmet</span>
+            <span className="index-route-detail">{text.meals}</span>
+          </Link>
+          <Link
+            href={localePath(locale, "/fiction/")}
+            className="index-route index-route-fiction"
+          >
+            <div className="index-route-top">
+              <BookOpen size={22} aria-hidden="true" />
+              <ArrowUpRight size={18} aria-hidden="true" />
+            </div>
+            <span>{copy[locale].fiction}</span>
+            <span className="index-route-detail">
+              {stories.length} {text.episodes}
+            </span>
+          </Link>
+        </nav>
         <section className="index-latest" aria-labelledby="index-latest">
           <div className="index-section-heading">
             <h2 id="index-latest">{text.latest}</h2>
@@ -86,7 +125,8 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
         </section>
         <div className="index-reading">
           {stories[0] ? (
-            <section
+            <Link
+              href={localePath(locale, "/fiction/")}
               className="index-fiction"
               aria-labelledby="index-fiction-title"
             >
@@ -94,44 +134,16 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
                 <h2 id="index-fiction-title">{copy[locale].fiction}</h2>
                 <span>{text.korean}</span>
               </div>
-              <Link
-                className="index-story-link"
-                href={localePath(locale, `/fiction/${stories[0].slug}/`)}
-              >
+              <div className="index-story-link">
                 <span className="index-story-series">{text.stories}</span>
-                <span>{stories[0].title}</span>
-              </Link>
-            </section>
+                <span>
+                  {stories.length} {text.episodes}{" "}
+                  <ArrowUpRight size={18} aria-hidden="true" />
+                </span>
+              </div>
+            </Link>
           ) : null}
         </div>
-        <nav
-          className="index-destinations"
-          aria-label={locale === "ko" ? "콘텐츠" : "Content"}
-        >
-          <Link
-            href={localePath(locale, "/posts/")}
-            className="index-route index-route-writing"
-          >
-            <span>{copy[locale].writing}</span>
-            <span className="index-route-detail">{posts.length}</span>
-          </Link>
-          <Link
-            href={localePath(locale, "/gourmet/")}
-            className="index-route index-route-gourmet"
-          >
-            <span>Gourmet</span>
-            <span className="index-route-detail">{text.meals}</span>
-          </Link>
-          <Link
-            href={localePath(locale, "/fiction/")}
-            className="index-route index-route-fiction"
-          >
-            <span>{copy[locale].fiction}</span>
-            <span className="index-route-detail">
-              {stories.length} {text.episodes}
-            </span>
-          </Link>
-        </nav>
         <details className="index-projects" id="work">
           <summary>
             {text.projects}
