@@ -2,6 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
 import { compileMDX } from "next-mdx-remote/rsc";
+import type { ComponentPropsWithoutRef } from "react";
 
 const directory = join(process.cwd(), "content/fiction-guide");
 export async function getGuideEntries() {
@@ -29,5 +30,23 @@ export async function getGuideEntry(slug: string) {
   const { content } = matter(
     await readFile(join(directory, `${entry.slug}.md`), "utf8"),
   );
-  return { ...entry, content: (await compileMDX({ source: content })).content };
+  return {
+    ...entry,
+    content: (
+      await compileMDX({
+        source: content,
+        components: {
+          pre: (props: ComponentPropsWithoutRef<"pre">) => (
+            <pre
+              role="region"
+              {...props}
+              // biome-ignore lint/a11y/noNoninteractiveTabindex: The scrollable map needs keyboard access.
+              tabIndex={0}
+              aria-label="개략 지도, 좌우 방향키로 이동"
+            />
+          ),
+        },
+      })
+    ).content,
+  };
 }
