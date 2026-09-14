@@ -1085,7 +1085,7 @@
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding-top: max(24px, env(safe-area-inset-top));
+  padding-top: 0;
   overflow: hidden;
 }
 .book-viewport {
@@ -1159,6 +1159,7 @@
 }
 .book-controls {
   position: relative;
+  order: -1;
   z-index: 2;
   background: var(--viewer-bg);
   touch-action: manipulation;
@@ -1168,7 +1169,9 @@
   justify-content: space-between;
   width: min(100%, 760px);
   margin: 0 auto;
-  padding: 8px 16px max(8px, env(safe-area-inset-bottom));
+  padding: max(8px, env(safe-area-inset-top)) 16px 8px;
+  border-bottom: 1px solid currentColor;
+  border-bottom-color: color-mix(in srgb, currentColor 12%, transparent);
 }
 .book-controls button,
 .book-controls a {
@@ -1958,4 +1961,31 @@
   .home-object:is(:hover, :focus-visible) .object-folios i:last-child {
     transform: translateZ(-12px);
   }
+}
+
+.book-viewport {
+  margin-top: 16px;
+  margin-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+/* Reader tools overlay the page without changing pagination. */
+.book-controls {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  visibility: hidden;
+  pointer-events: none;
+  box-shadow: 0 8px 24px #00000012;
+}
+.book-controls[data-visible="true"] {
+  visibility: visible;
+  pointer-events: auto;
+}
+.book-controls .book-page-number {
+  min-width: 50px;
+}
+.book-viewport:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: -2px;
 }

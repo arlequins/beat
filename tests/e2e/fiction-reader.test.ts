@@ -6,6 +6,14 @@ test("book controls stay visible, turn pages, and apply reading theme", async ({
   page,
 }) => {
   await page.goto("/ko/fiction/the-last-window/");
+  await expect(
+    page.locator('.book-controls button[aria-label="다음 페이지"]'),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("navigation", { name: "책보기 내비게이션" }),
+  ).toBeHidden();
+  await page.locator(".book-viewport").focus();
+  await page.keyboard.press("Enter");
   const next = page.getByRole("button", { name: "다음 페이지", exact: true });
   await expect(next).toBeEnabled();
   const bounds = await next.boundingBox();
@@ -53,6 +61,14 @@ test("book repaginates when body content arrives after initial layout", async ({
 }) => {
   await page.goto("/ko/fiction/the-last-window/");
   await expect(
+    page.locator('.book-controls button[aria-label="다음 페이지"]'),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("navigation", { name: "책보기 내비게이션" }),
+  ).toBeHidden();
+  await page.locator(".book-viewport").focus();
+  await page.keyboard.press("Enter");
+  await expect(
     page.getByRole("button", { name: "다음 페이지", exact: true }),
   ).toBeEnabled();
   await page.evaluate(() => {
@@ -75,4 +91,25 @@ test("book repaginates when body content arrives after initial layout", async ({
     .toBeGreaterThan(30);
   await page.getByRole("button", { name: "다음 페이지", exact: true }).tap();
   await expect(page.locator(".book-page-number")).toHaveText(/^2 \/ /);
+});
+
+test("reader double tap reveals tools without changing page geometry", async ({
+  page,
+}) => {
+  await page.goto("/ko/fiction/the-last-window/");
+  await expect(
+    page.locator('.book-controls button[aria-label="다음 페이지"]'),
+  ).toBeEnabled();
+  const body = page.locator(".book-viewport");
+  const before = await body.boundingBox();
+  await body.tap({ position: { x: 100, y: 180 } });
+  await body.tap({ position: { x: 100, y: 180 } });
+  await expect(
+    page.getByRole("navigation", { name: "책보기 내비게이션" }),
+  ).toBeVisible();
+  expect(await body.boundingBox()).toEqual(before);
+  await page.getByRole("button", { name: "내비게이션 숨기기" }).tap();
+  await expect(
+    page.getByRole("navigation", { name: "책보기 내비게이션" }),
+  ).toBeHidden();
 });
