@@ -14,6 +14,15 @@ for (const locale of ["ko", "en", "ja"]) {
         destinations.locator(`a[href="${prefix}/${path}/"]`),
       ).toBeVisible();
     }
+    await expect(page.locator(".home-object")).toHaveCount(0);
+    await expect(page.locator(".index-fiction")).toHaveAttribute(
+      "href",
+      `${prefix}/fiction/`,
+    );
+    await page.locator(".index-fiction").click();
+    await expect(page).toHaveURL(new RegExp(`${prefix}/fiction/$`));
+    await expect(page.locator(".novel-episode").first()).toBeVisible();
+    await page.goto(`${prefix}/`);
     const menu = page.locator("#site-menu");
     await expect(menu).toBeHidden();
     await page.locator(".site-menu-trigger").click();
