@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.50.0](https://github.com/arlequins/beat/compare/beat-v1.49.0...beat-v1.50.0) (2026-09-15)
+
+
+### Features
+
+* **fiction:** lead the omnibus to the river's end ([48de700](https://github.com/arlequins/beat/commit/48de7004f2dde4258cf3581774eb4438b3a96ddf))
+
 ## [1.49.0](https://github.com/arlequins/beat/compare/beat-v1.48.0...beat-v1.49.0) (2026-09-15)
 
 
