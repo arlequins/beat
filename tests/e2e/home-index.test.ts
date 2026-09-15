@@ -47,3 +47,39 @@ for (const locale of ["ko", "en", "ja"]) {
     ).toEqual([]);
   });
 }
+
+test("home menu opens after a touch long press", async ({ page }) => {
+  await page.goto("/ko/");
+  const menu = page.locator("#site-menu");
+  const trigger = page.locator(".site-menu-trigger");
+  await expect(menu).toBeHidden();
+
+  await trigger.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    element.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2,
+        pointerId: 1,
+        pointerType: "touch",
+        isPrimary: true,
+      }),
+    );
+  });
+  await page.waitForTimeout(700);
+  await expect(menu).toBeVisible();
+
+  await trigger.evaluate((element) => {
+    element.dispatchEvent(
+      new PointerEvent("pointerup", {
+        bubbles: true,
+        pointerId: 1,
+        pointerType: "touch",
+        isPrimary: true,
+      }),
+    );
+    element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+  await expect(menu).toBeVisible();
+});
