@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.1](https://github.com/arlequins/beat/compare/beat-v1.53.0...beat-v1.53.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* compact article metadata on mobile ([#182](https://github.com/arlequins/beat/issues/182)) ([4bb40d0](https://github.com/arlequins/beat/commit/4bb40d0e555000b4a1b52e35adfb0a195e7b29e4))
+
 ## [1.53.0](https://github.com/arlequins/beat/compare/beat-v1.52.0...beat-v1.53.0) (2026-09-15)
 
 
