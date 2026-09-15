@@ -37,11 +37,16 @@ export async function KoreanPostDetailPage(props: {
         <div className="mx-auto max-w-4xl">
           <Link
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-[#79e6e0]"
-            href="/posts/"
+            href="/ko/posts/"
           >
             <ArrowLeft aria-hidden="true" className="size-4" /> 모든 글
           </Link>
           <div className="mt-12 flex flex-wrap gap-2 text-xs font-medium text-slate-400">
+            {post.frontmatter.reviewStatus === "unreviewed" ? (
+              <span className="border border-[#f06449]/40 bg-[#f06449]/10 px-2.5 py-1 text-[#f7a08f]">
+                ◇ 미확정본
+              </span>
+            ) : null}
             <span className="border border-[#79e6e0]/40 bg-[#79e6e0]/10 px-2.5 py-1 text-[#79e6e0]">
               {postCategoryMeta[post.frontmatter.category].label}
             </span>
@@ -70,16 +75,13 @@ export async function KoreanPostDetailPage(props: {
       </header>
       <div className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-3xl">
-          {post.frontmatter.reviewStatus === "unreviewed" ? (
-            <p className="brand-eyebrow mb-8 text-slate-500">◇ 미확정본</p>
-          ) : null}
           <div className="prose-content text-[1.05rem] leading-8 text-slate-700">
             {post.content}
           </div>
           <div className="lumen-rule mt-16" />
           <p className="mt-6 text-sm leading-6 text-slate-500">
-            Lumen은 자료를 좇고 초안을 세우며, Arlequin은 독자에게 건넬 문장을
-            고릅니다.
+            Lumen이 자료를 모으고 그 사이의 연결을 찾습니다. Arlequin과 함께
+            묻고 다듬어 한 편의 글로 엮습니다.
           </p>
           <BeatPostAssistantCard
             excerpt={post.frontmatter.excerpt}

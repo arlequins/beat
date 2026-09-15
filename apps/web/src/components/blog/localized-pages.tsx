@@ -96,9 +96,16 @@ export async function LocalizedPostsPage(props: {
                           className="note-card group flex flex-col bg-[#f5f0e6] p-6"
                           key={post.slug}
                         >
-                          <p className="text-xs text-slate-500">
-                            {post.publishedAt} · {post.readTime}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                            {post.reviewStatus === "unreviewed" ? (
+                              <span className="border border-[#f06449]/40 bg-[#f06449]/10 px-2.5 py-1 text-[#9f3524]">
+                                {locale === "en" ? "◇ Unreviewed" : "◇ 未確認"}
+                              </span>
+                            ) : null}
+                            <span>
+                              {post.publishedAt} · {post.readTime}
+                            </span>
+                          </div>
                           <h2 className="display-serif mt-5 text-3xl">
                             <Link
                               className="group-hover:text-[#b63f2d]"
@@ -145,9 +152,16 @@ export async function LocalizedPostDetail(props: {
             <ArrowLeft aria-hidden="true" className="size-4" />{" "}
             {props.locale === "en" ? "All notes" : "すべてのノート"}
           </Link>
-          <p className="brand-eyebrow mt-12 text-[#79e6e0]">
-            {labels(props.locale, post.frontmatter.category)}
-          </p>
+          <div className="mt-12 flex flex-wrap items-center gap-2">
+            {post.frontmatter.reviewStatus === "unreviewed" ? (
+              <span className="border border-[#f06449]/40 bg-[#f06449]/10 px-2.5 py-1 text-xs font-medium text-[#f7a08f]">
+                {props.locale === "en" ? "◇ Unreviewed" : "◇ 未確認"}
+              </span>
+            ) : null}
+            <p className="brand-eyebrow text-[#79e6e0]">
+              {labels(props.locale, post.frontmatter.category)}
+            </p>
+          </div>
           <h1
             className="display-serif mt-5 text-4xl leading-[1.04] sm:text-6xl"
             data-beat-context-title
@@ -167,11 +181,6 @@ export async function LocalizedPostDetail(props: {
       </header>
       <div className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-3xl">
-          {post.frontmatter.reviewStatus === "unreviewed" ? (
-            <p className="brand-eyebrow mb-8 text-slate-500">
-              {props.locale === "en" ? "◇ Unreviewed" : "◇ 未確認"}
-            </p>
-          ) : null}
           <div className="prose-content text-[1.05rem] leading-8 text-slate-700">
             <p>{translation.intro}</p>
             {translation.sections.map((section) => (
