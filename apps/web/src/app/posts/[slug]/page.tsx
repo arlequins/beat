@@ -71,25 +71,15 @@ export async function KoreanPostDetailPage(props: {
       <div className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-3xl">
           {post.frontmatter.reviewStatus === "unreviewed" ? (
-            <aside className="paper-panel relative mb-12 overflow-hidden border-[#f06449]/40 p-6 text-sm leading-6 text-slate-700">
-              <div className="absolute top-0 left-0 h-full w-1.5 bg-[#f06449]" />
-              <p className="brand-eyebrow text-[#a33a28]">
-                ◇ 미확정본 · 공개 검토 중
-              </p>
-              <p className="mt-3">
-                Lumen이 리서치와 초안을 도왔으며, 아직 Arlequin의 최종 검토를
-                거치지 않았습니다. 공개된 글이지만 내용과 판단은 변경될 수
-                있습니다.
-              </p>
-            </aside>
+            <p className="brand-eyebrow mb-8 text-slate-500">◇ 미확정본</p>
           ) : null}
           <div className="prose-content text-[1.05rem] leading-8 text-slate-700">
             {post.content}
           </div>
           <div className="lumen-rule mt-16" />
           <p className="mt-6 text-sm leading-6 text-slate-500">
-            Written in dialogue: Lumen assists with research and drafting.
-            Arlequin owns the final judgment.
+            Lumen은 자료를 좇고 초안을 세우며, Arlequin은 독자에게 건넬 문장을
+            고릅니다.
           </p>
           <BeatPostAssistantCard
             excerpt={post.frontmatter.excerpt}
