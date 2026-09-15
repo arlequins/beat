@@ -780,6 +780,7 @@
     line-height: 1.78;
   }
 }
+
 @media (max-width: 390px) {
   .brand-header .brand-mark {
     display: none;
@@ -2537,5 +2538,163 @@ body {
   .brand-hero > div > .border-t {
     margin-top: 1.35rem;
     padding-top: 0.7rem;
+  }
+}
+
+/* Final home composition pass: bring back the layered editorial surface. */
+.home-scene {
+  background:
+    radial-gradient(
+      ellipse at 82% 8%,
+      color-mix(in srgb, var(--coral) 9%, transparent),
+      transparent 34rem
+    ),
+    radial-gradient(
+      ellipse at 8% 72%,
+      color-mix(in srgb, var(--cyan) 8%, transparent),
+      transparent 38rem
+    ),
+    var(--paper);
+}
+.home-scene .scene-thread {
+  opacity: 0.2;
+}
+.home-scene .home-index {
+  width: min(100% - 3rem, 960px);
+  padding-top: clamp(2.5rem, 6vw, 4rem);
+  padding-bottom: 4rem;
+}
+.home-intro {
+  position: relative;
+  margin-bottom: clamp(2.25rem, 5vw, 4rem);
+}
+.home-intro::after {
+  content: "";
+  position: absolute;
+  top: 0.15rem;
+  right: 1rem;
+  width: 3.8rem;
+  height: 3.8rem;
+  border: 1px solid color-mix(in srgb, var(--coral) 58%, var(--line));
+  background: color-mix(in srgb, var(--coral) 14%, transparent);
+  transform: rotate(13deg) skewY(-8deg);
+  box-shadow:
+    0.55rem 0.6rem 0 color-mix(in srgb, var(--cyan) 22%, transparent),
+    1.05rem 1.1rem 0 color-mix(in srgb, var(--gold) 17%, transparent);
+  pointer-events: none;
+}
+.home-scene .index-latest,
+.home-scene .index-reading {
+  position: relative;
+  padding: 1.35rem 1.7rem 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid color-mix(in srgb, var(--ink) 16%, var(--line));
+  border-radius: 0.25rem 1.15rem 0.25rem 0.25rem;
+  background: var(--paper-deep);
+  box-shadow: 0 1.2rem 2.2rem -1.7rem
+    color-mix(in srgb, var(--ink) 34%, transparent);
+}
+.home-scene .index-latest::before,
+.home-scene .index-reading::before {
+  content: "";
+  position: absolute;
+  inset: 0.4rem -0.05rem -0.55rem 0.5rem;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 84%, var(--paper-deep));
+  transform: skewY(-1.1deg);
+  z-index: -1;
+}
+.home-scene .index-latest {
+  width: 87%;
+}
+.home-scene .index-reading {
+  width: 77%;
+  margin-left: auto;
+  border-radius: 1.15rem 0.25rem 0.25rem 0.25rem;
+}
+.home-scene .index-reading::before {
+  transform: skewY(1.1deg);
+}
+.home-scene .index-routes {
+  margin-bottom: 2.4rem;
+}
+.home-scene .index-destinations {
+  gap: 1rem;
+  padding: 0 0 0.5rem;
+  border: 0;
+}
+.home-scene .index-route {
+  position: relative;
+  min-height: 6.6rem;
+  padding: 1.15rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--ink) 16%, var(--line));
+  border-top: 2px solid var(--route-color);
+  border-radius: 0.2rem;
+  background: var(--paper-deep);
+  box-shadow: 0 1rem 1.8rem -1.6rem
+    color-mix(in srgb, var(--ink) 35%, transparent);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+.home-scene .index-route:nth-child(2) {
+  margin-top: 0.9rem;
+}
+.home-scene .index-route:nth-child(3) {
+  margin-top: 1.8rem;
+}
+.home-scene .index-route:hover,
+.home-scene .index-route:focus-visible {
+  transform: translateY(-0.25rem);
+  box-shadow: 0 1.1rem 1.9rem -1.25rem
+    color-mix(in srgb, var(--ink) 42%, transparent);
+}
+.home-scene .index-projects {
+  border-top: 1px solid var(--line);
+  padding-top: 0.5rem;
+}
+@media (max-width: 639px) {
+  .home-scene .home-index {
+    width: min(100% - 2rem, 40rem);
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+  }
+  .home-intro {
+    margin-bottom: 2.5rem;
+  }
+  .home-intro::after {
+    right: 0.25rem;
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+  .home-scene .index-latest,
+  .home-scene .index-reading {
+    width: calc(100% - 0.35rem);
+    padding: 1rem 1rem 1.1rem;
+  }
+  .home-scene .index-reading {
+    width: calc(100% - 0.9rem);
+  }
+  .home-scene .index-destinations {
+    gap: 0.55rem;
+    grid-template-columns: 1fr;
+  }
+  .home-scene .index-route,
+  .home-scene .index-route:nth-child(2),
+  .home-scene .index-route:nth-child(3) {
+    min-height: 4.8rem;
+    margin-top: 0;
+    padding: 0.8rem 0.75rem;
+  }
+  .home-scene .index-route-name {
+    font-size: 0.9rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-scene .index-route {
+    transition: none;
+  }
+  .home-scene .index-route:hover {
+    transform: none;
   }
 }
