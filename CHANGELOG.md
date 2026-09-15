@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.0](https://github.com/arlequins/beat/compare/beat-v1.52.0...beat-v1.53.0) (2026-09-15)
+
+
+### Features
+
+* complete the twenty-story river arc ([#178](https://github.com/arlequins/beat/issues/178)) ([4b342e8](https://github.com/arlequins/beat/commit/4b342e8b0527546f05acc150f0a879a817ca1552))
+
 ## [1.52.0](https://github.com/arlequins/beat/compare/beat-v1.51.0...beat-v1.52.0) (2026-09-15)
 
 
