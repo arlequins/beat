@@ -119,7 +119,7 @@ test("setting guide reads all draft documents without entering the story viewer"
 }) => {
   await page.goto("/ko/fiction/");
   await page
-    .getByRole("link", { name: "세계관·설정집 검토 전 초안 읽기 →" })
+    .getByRole("link", { name: "세계관·설정집 구조화 초안 읽기 →" })
     .click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "세계부터, 하나씩",
@@ -129,10 +129,10 @@ test("setting guide reads all draft documents without entering the story viewer"
     .evaluateAll((elements) =>
       elements.map((element) => element.getAttribute("href")),
     );
-  expect(links).toHaveLength(7);
+  expect(links).toHaveLength(16);
   for (const href of links) {
     await page.goto(href!);
-    await expect(page.locator(".guide-status")).toContainText("검토 전 초안");
+    await expect(page.locator(".guide-status")).toContainText("구조화 초안");
     await expect(
       page.getByRole("heading", { name: "검토 쟁점" }),
     ).toBeVisible();
@@ -147,5 +147,5 @@ test("setting guide reads all draft documents without entering the story viewer"
     ).toBe(true);
   }
   await page.getByRole("link", { name: "설정집 목차", exact: true }).click();
-  await expect(page.locator(".guide-contents li")).toHaveCount(7);
+  await expect(page.locator(".guide-contents li")).toHaveCount(16);
 });
