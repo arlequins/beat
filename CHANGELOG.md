@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.48.0](https://github.com/arlequins/beat/compare/beat-v1.47.0...beat-v1.48.0) (2026-09-15)
+
+
+### Features
+
+* **web:** refine fiction world flow and touch menu ([#166](https://github.com/arlequins/beat/issues/166)) ([b82bde1](https://github.com/arlequins/beat/commit/b82bde1ee5f8a1603424b222da2f11894582aa95))
+
 ## [1.47.0](https://github.com/arlequins/beat/compare/beat-v1.46.0...beat-v1.47.0) (2026-09-15)
 
 
