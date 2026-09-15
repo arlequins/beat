@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.52.0](https://github.com/arlequins/beat/compare/beat-v1.51.0...beat-v1.52.0) (2026-09-15)
+
+
+### Features
+
+* sharpen Lumen's editorial voice ([eb04e7f](https://github.com/arlequins/beat/commit/eb04e7f84879a23169c8948cda16ceb71cce43bf))
+
 ## [1.51.0](https://github.com/arlequins/beat/compare/beat-v1.50.0...beat-v1.51.0) (2026-09-15)
 
 
