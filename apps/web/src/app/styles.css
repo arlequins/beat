@@ -721,6 +721,63 @@
     font-size: 17px;
   }
 }
+
+/* Long-form reading measure, inspired by Medium-style editorial pages. */
+.brand-hero [data-beat-context-title] {
+  margin-top: 1.45rem;
+  font-size: clamp(1.65rem, 5.4vw, 3.1rem);
+  line-height: 1.22;
+}
+.brand-hero [data-beat-context-excerpt] {
+  margin-top: 1.2rem;
+  max-width: 54ch;
+}
+.brand-hero + div {
+  padding-block: 3.25rem 4.5rem;
+}
+.brand-hero + div > div {
+  max-width: 44rem;
+}
+.prose-content {
+  max-width: 42rem;
+  margin-inline: auto;
+  font-size: 1rem;
+  line-height: 1.74;
+  letter-spacing: 0.004em;
+}
+.prose-content p,
+.prose-content ul,
+.prose-content ol,
+.prose-content blockquote {
+  margin-top: 1rem;
+}
+.prose-content h2 {
+  margin-top: 2.5rem;
+}
+.prose-content h3 {
+  margin-top: 2rem;
+}
+.prose-content p + p {
+  margin-top: 0.85rem;
+}
+
+@media (max-width: 639px) {
+  .brand-hero [data-beat-context-title] {
+    margin-top: 1.2rem;
+    font-size: clamp(1.62rem, 6.7vw, 2.1rem);
+    line-height: 1.24;
+  }
+  .brand-hero + div {
+    padding-block: 2.6rem 3.75rem;
+  }
+  .brand-hero + div > div {
+    max-width: none;
+  }
+  .prose-content {
+    max-width: none;
+    line-height: 1.78;
+  }
+}
 @media (max-width: 390px) {
   .brand-header .brand-mark {
     display: none;
