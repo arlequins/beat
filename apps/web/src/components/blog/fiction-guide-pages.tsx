@@ -31,8 +31,7 @@ export async function FictionGuide({
         <p>여백의 사람들 · 설정집</p>
         <h1>{entry ? entry.title : "세계부터, 하나씩"}</h1>
         <p className="guide-status">
-          {entry?.status ?? "구조화 초안"} ·{" "}
-          {entry?.revision ?? "0.2 · 2026-09-14"}
+          {entry?.status ?? "설정집"} · {entry?.revision ?? "0.2 · 2026-09-14"}
         </p>
         <p>
           이 문서는 소설을 읽기 위한 세계의 안내입니다. 아직 이름이 없는 곳과
@@ -65,7 +64,7 @@ export async function FictionGuide({
       ) : (
         <>
           <p>
-            위에서부터 읽으면 강 하류의 생활과 소설 열다섯 편을 관통하는 길이
+            위에서부터 읽으면 강 하류의 생활과 소설 스무 편을 관통하는 길이
             이어집니다.
           </p>
           <ol className="guide-contents">
@@ -79,8 +78,8 @@ export async function FictionGuide({
             ))}
           </ol>
           <p>
-            읽기 순서와 상태는 이 목차를 따릅니다. 승인 범위와 변경 기록은
-            마지막 문서에서 관리합니다. 웹 본문은 마크다운 원본에서 생성됩니다.
+            문서는 위 순서로 이어지며, 각 페이지의 라벨은 설정의 결을
+            보여줍니다. 웹 본문은 마크다운 원본에서 생성됩니다.
           </p>
         </>
       )}

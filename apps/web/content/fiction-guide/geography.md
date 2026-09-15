@@ -2,7 +2,7 @@
 title: "지리"
 order: 3
 summary: "강 하류와 서쪽 산지, 다섯 거점의 지형과 역할."
-status: "구조화 초안 · 검토 중"
+status: "설정집 · 지리"
 revision: "0.4 · 2026-09-15"
 ---
 
