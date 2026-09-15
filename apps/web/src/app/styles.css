@@ -2042,7 +2042,7 @@
   --paper: #f4f1ea;
   --paper-deep: #e9e4da;
   --ink: #18212a;
-  --muted: #69737b;
+  --muted: #5b6670;
   --line: color-mix(in srgb, var(--ink) 15%, transparent);
   --coral: #c85f4b;
   --cyan: #3d8580;
