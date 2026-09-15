@@ -31,13 +31,12 @@ export async function FictionGuide({
         <p>여백의 사람들 · 설정집</p>
         <h1>{entry ? entry.title : "세계부터, 하나씩"}</h1>
         <p className="guide-status">
-          {entry?.status ?? "검토 전 초안"} ·{" "}
+          {entry?.status ?? "구조화 초안"} ·{" "}
           {entry?.revision ?? "0.2 · 2026-09-14"}
         </p>
         <p>
-          사용자의 요청에 따라 이 초안을 집필 기준으로 사용했습니다. 개별 설정을
-          모두 확정한 것은 아닙니다. 원고 반영 내역과 미결 사항은 마지막 문서에
-          기록했습니다.
+          이 문서는 소설을 읽기 위한 세계의 안내입니다. 아직 이름이 없는 곳과
+          여러 갈래로 전해지는 약속은 이야기 속에서 드러납니다.
         </p>
       </header>
       {entry ? (
@@ -66,9 +65,8 @@ export async function FictionGuide({
       ) : (
         <>
           <p>
-            위에서부터 읽고 각 문서 끝의 검토 쟁점을 확인해 주세요. 한국어
-            초안이며, 소설 열다섯 편의 내용이 포함됩니다. 의견은 문서명과 항목을
-            지정해 이 대화에 남기면 됩니다.
+            위에서부터 읽으면 강 하류의 생활과 소설 열다섯 편을 관통하는 길이
+            이어집니다.
           </p>
           <ol className="guide-contents">
             {entries.map((item) => (
@@ -77,7 +75,6 @@ export async function FictionGuide({
                   {item.title}
                 </Link>
                 <p>{item.summary}</p>
-                <small>{item.status}</small>
               </li>
             ))}
           </ol>
