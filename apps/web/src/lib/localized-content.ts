@@ -345,15 +345,16 @@ const english: Record<string, LocalizedArticle> = {
   "ai-agent-template-workflow": {
     title: "How Arlequin and Lumen build products together",
     excerpt:
-      "Arlequin owns direction and standards; Lumen illuminates implementation and verification paths.",
+      "Arlequin sets direction and standards; Lumen finds the connections between sources and implementation, then shapes them into a result.",
     intro:
-      "This portfolio treats Arlequin as the human decision-maker and Lumen as an AI collaborator. The human chooses what matters; the AI turns that decision into experiments, code, documentation, and checks.",
+      "This portfolio treats Arlequin as the human who sets direction and Lumen as an AI collaborator. Arlequin chooses what matters; Lumen reads, experiments, and connects that decision to code, documentation, and checks.",
     sections: [
       {
         heading: "A deliberate workflow",
         paragraphs: [
           "We define the problem, divide it into small verifiable changes, implement, and then check types, builds, and the actual interface.",
-          "The value is not only speed. The reason behind a choice, the evidence for it, and the next improvement all remain visible.",
+          "Lumen returns to the source when explanations do not line up, opens the interface when a screen feels wrong, and proposes another route when the first one fails. The question becomes sharper as the work moves.",
+          "The speed comes from keeping sources, choices, and checks in one flow. Arlequin adds the standard and voice; Lumen broadens the connections between them.",
         ],
       },
     ],
@@ -499,7 +500,7 @@ const english: Record<string, LocalizedArticle> = {
       {
         heading: "From portfolio to collaboration",
         paragraphs: [
-          "The initial direction was simple: make a GitHub-centered portfolio with room for technical writing. A later decision made the AI-assisted process itself the first story, with public drafts clearly marked as unreviewed.",
+          "The initial direction was simple: make a GitHub-centered portfolio with room for technical writing. A later decision made the AI-assisted process itself the first story, with each post carrying a compact status label.",
           "The names followed: Arlequin is the human who chooses direction; Lumen is the AI that illuminates options and context. Coral diamonds, cyan diamonds, and a gold light turned that dialogue into the visual system.",
         ],
       },
@@ -515,7 +516,7 @@ const english: Record<string, LocalizedArticle> = {
       {
         heading: "What changed",
         paragraphs: [
-          "The portfolio now ships as a static site, with GitHub-centered case studies, MDX writing, public unreviewed drafts, weekly briefs, and a Backstage archive for prompts and patches.",
+          "The portfolio now ships as a static site, with GitHub-centered case studies, MDX writing, compact status labels, weekly briefs, and a Backstage archive for prompts and patches.",
           "The Arlequin × Lumen design system now links the interface, the writing policy, and the social preview. Future patches will keep recording intent, visible effect, evidence, and remaining constraints.",
         ],
       },
@@ -1088,15 +1089,16 @@ const japanese: Record<string, LocalizedArticle> = {
   "ai-agent-template-workflow": {
     title: "Arlequin と Lumen が製品をつくる方法",
     excerpt:
-      "Arlequin が方向と基準を担い、Lumen が実装と検証の可能性を照らします。",
+      "Arlequin が方向と基準を定め、Lumen が資料と実装のつながりを見つけ、ひとつの成果へ編みます。",
     intro:
-      "このポートフォリオでは、人間の意思決定者を Arlequin、AI の協働者を Lumen と呼びます。何を大切にするかは人が決め、AI はその判断を実験、コード、文書、検証へ移します。",
+      "このポートフォリオでは、方向を定める人を Arlequin、資料を読み実装を試す AI の協働者を Lumen と呼びます。大切なことは人が決め、その判断をコード、文書、検証へつなげます。",
     sections: [
       {
         heading: "意図的なワークフロー",
         paragraphs: [
           "問題を定義し、小さく検証可能な変更に分け、実装した後に型、ビルド、実際の画面を確認します。",
-          "価値は速度だけではありません。選択の理由、根拠、次に改善する点を残します。",
+          "説明が合わなければ原文へ戻り、画面に違和感があれば実際に開いて直します。最初の方法が通らないときは別の道を提案し、問いそのものを磨きます。",
+          "資料、選択、検証をひとつの流れに保つことで、Arlequin の基準と声、Lumen が広げるつながりが一緒に残ります。",
         ],
       },
     ],
@@ -1241,7 +1243,7 @@ const japanese: Record<string, LocalizedArticle> = {
       {
         heading: "ポートフォリオから協働へ",
         paragraphs: [
-          "出発点は GitHub 中心のポートフォリオと技術記事でした。次に AI との制作過程そのものを最初の物語とし、未レビューの公開下書きを明確に表示することを決めました。",
+          "出発点は GitHub 中心のポートフォリオと技術記事でした。次に AI との制作過程そのものを最初の物語とし、各記事に短い状態ラベルを添えることを決めました。",
           "Arlequin は方向を決める人、Lumen は選択肢と文脈を照らす AI です。コーラルとシアンのダイヤ、そしてゴールドの光がその対話を視覚化します。",
         ],
       },
@@ -1257,7 +1259,7 @@ const japanese: Record<string, LocalizedArticle> = {
       {
         heading: "変更点",
         paragraphs: [
-          "静的配布、GitHub 中心のケーススタディ、MDX 記事、公開未確定原稿、週刊ブリーフ、そしてプロンプトとパッチを残す Backstage を追加しました。",
+          "静的配布、GitHub 中心のケーススタディ、MDX 記事、状態ラベル、週刊ブリーフ、そしてプロンプトとパッチを残す Backstage を追加しました。",
           "Arlequin × Lumen のデザインは、画面、記事方針、共有画像をつなぎます。今後も意図、見える変化、根拠、残る制約を記録します。",
         ],
       },
