@@ -54,6 +54,10 @@ test("book controls stay visible, turn pages, and apply reading theme", async ({
 test("library omits free labels", async ({ page }) => {
   await page.goto("/ko/fiction/");
   await expect(page.getByText("무료", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("총 15화", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "15화. 돌아오는 배의 이름" }),
+  ).toBeVisible();
 });
 
 test("book repaginates when body content arrives after initial layout", async ({
