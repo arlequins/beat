@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.51.0](https://github.com/arlequins/beat/compare/beat-v1.50.0...beat-v1.51.0) (2026-09-15)
+
+
+### Features
+
+* make document review status label-only ([ba1cbd3](https://github.com/arlequins/beat/commit/ba1cbd34d3199804b5b9c9508ba8ca41930f2436))
+
 ## [1.50.0](https://github.com/arlequins/beat/compare/beat-v1.49.0...beat-v1.50.0) (2026-09-15)
 
 
