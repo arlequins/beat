@@ -54,9 +54,9 @@ test("book controls stay visible, turn pages, and apply reading theme", async ({
 test("library omits free labels", async ({ page }) => {
   await page.goto("/ko/fiction/");
   await expect(page.getByText("무료", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("총 15화", { exact: true })).toBeVisible();
+  await expect(page.getByText("총 20화", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "15화. 돌아오는 배의 이름" }),
+    page.getByRole("heading", { name: "20화. 물빛만 남은 길" }),
   ).toBeVisible();
 });
 
@@ -118,7 +118,7 @@ test("reader double tap reveals tools without changing page geometry", async ({
   ).toBeHidden();
 });
 
-test("setting guide reads all draft documents without entering the story viewer", async ({
+test("setting guide reads all world documents without entering the story viewer", async ({
   page,
 }) => {
   await page.goto("/ko/fiction/");
@@ -134,7 +134,7 @@ test("setting guide reads all draft documents without entering the story viewer"
   expect(links).toHaveLength(17);
   for (const href of links) {
     await page.goto(href!);
-    await expect(page.locator(".guide-status")).toContainText("구조화 초안");
+    await expect(page.locator(".guide-status")).toContainText("설정집");
     await expect(page.locator(".book-viewer")).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "이 문서의 마크다운 원본" }),

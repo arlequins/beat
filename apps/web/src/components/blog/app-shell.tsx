@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis } from "lucide-react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -133,7 +133,7 @@ export function AppShell(props: { children: React.ReactNode }) {
           event.preventDefault();
         }}
       >
-        <Ellipsis aria-hidden="true" size={18} />
+        <Menu aria-hidden="true" size={18} />
       </button>
       <div
         className="site-menu-panel"
