@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.46.0](https://github.com/arlequins/beat/compare/beat-v1.45.0...beat-v1.46.0) (2026-09-15)
+
+
+### Features
+
+* **fiction:** split world guide into standalone categories ([#162](https://github.com/arlequins/beat/issues/162)) ([e09c082](https://github.com/arlequins/beat/commit/e09c082f8739ea30cad18eb79e7aaba091aef719))
+
 ## [1.45.0](https://github.com/arlequins/beat/compare/beat-v1.44.0...beat-v1.45.0) (2026-09-14)
 
 
