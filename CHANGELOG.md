@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.47.0](https://github.com/arlequins/beat/compare/beat-v1.46.0...beat-v1.47.0) (2026-09-15)
+
+
+### Features
+
+* **fiction:** extend omnibus with five new episodes ([8e3b42b](https://github.com/arlequins/beat/commit/8e3b42b60c1ae978739c63a108b15861ba29692e))
+
 ## [1.46.0](https://github.com/arlequins/beat/compare/beat-v1.45.0...beat-v1.46.0) (2026-09-15)
 
 
