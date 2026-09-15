@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.49.0](https://github.com/arlequins/beat/compare/beat-v1.48.0...beat-v1.49.0) (2026-09-15)
+
+
+### Features
+
+* **fiction:** unify omnibus around the seven promises ([8f8ea2e](https://github.com/arlequins/beat/commit/8f8ea2e3eaec293c76563f1800023b55c3017873))
+
 ## [1.48.0](https://github.com/arlequins/beat/compare/beat-v1.47.0...beat-v1.48.0) (2026-09-15)
 
 
