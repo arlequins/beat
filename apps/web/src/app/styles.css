@@ -1299,6 +1299,10 @@
   color: var(--ink);
   background: var(--paper);
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .site-menu-panel {
   position: fixed;

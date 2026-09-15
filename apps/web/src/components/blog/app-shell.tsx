@@ -16,6 +16,10 @@ export function AppShell(props: { children: React.ReactNode }) {
   const locale: Locale = isLocale(segment) ? segment : "en";
   const text = copy[locale];
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressStart = useRef<{ x: number; y: number } | null>(null);
+  const longPressTriggered = useRef(false);
   const menuLabel =
     locale === "ko"
       ? "메뉴 및 설정"
@@ -28,6 +32,13 @@ export function AppShell(props: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
+
+  useEffect(
+    () => () => {
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    },
+    [],
+  );
 
   if (route === "/fiction" || route.startsWith("/fiction/")) {
     if (pathname.split("/fiction/")[1]) return <main>{props.children}</main>;
@@ -54,9 +65,73 @@ export function AppShell(props: { children: React.ReactNode }) {
       <button
         type="button"
         className="site-menu-trigger"
-        popoverTarget="site-menu"
+        ref={menuTriggerRef}
+        aria-controls="site-menu"
         aria-label={menuLabel}
         title={menuLabel}
+        onPointerDown={(event) => {
+          if (event.pointerType !== "touch" || !event.isPrimary) return;
+          longPressStart.current = { x: event.clientX, y: event.clientY };
+          longPressTimer.current = setTimeout(() => {
+            longPressTriggered.current = true;
+            menuRef.current?.showPopover();
+            menuTriggerRef.current?.focus({ preventScroll: true });
+          }, 600);
+          try {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            // Pointer capture is not available in every browser context.
+          }
+        }}
+        onPointerMove={(event) => {
+          if (event.pointerType !== "touch" || !longPressStart.current) {
+            return;
+          }
+          const distance = Math.hypot(
+            event.clientX - longPressStart.current.x,
+            event.clientY - longPressStart.current.y,
+          );
+          if (distance > 12) {
+            if (longPressTimer.current) clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+            longPressStart.current = null;
+          }
+        }}
+        onPointerUp={(event) => {
+          if (event.pointerType !== "touch") return;
+          if (longPressTimer.current) clearTimeout(longPressTimer.current);
+          longPressTimer.current = null;
+          longPressStart.current = null;
+          try {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          } catch {
+            // The pointer may already have been released by the browser.
+          }
+        }}
+        onPointerCancel={() => {
+          if (longPressTimer.current) clearTimeout(longPressTimer.current);
+          longPressTimer.current = null;
+          longPressStart.current = null;
+          longPressTriggered.current = false;
+        }}
+        onClick={(event) => {
+          if (longPressTriggered.current) {
+            event.preventDefault();
+            event.stopPropagation();
+            longPressTriggered.current = false;
+            return;
+          }
+          const menu = menuRef.current;
+          if (!menu) return;
+          if (menu.matches(":popover-open")) {
+            menu.hidePopover();
+          } else {
+            menu.showPopover();
+          }
+        }}
+        onContextMenu={(event) => {
+          event.preventDefault();
+        }}
       >
         <Ellipsis aria-hidden="true" size={18} />
       </button>
