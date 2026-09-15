@@ -77,7 +77,7 @@ export function FictionLibrary({
         </p>
         <p>
           <Link href={localePath(locale, "/fiction/guide/")}>
-            세계관·설정집 구조화 초안 읽기 →
+            세계관·설정집 읽기 →
           </Link>
         </p>
         <div className="novel-facts">

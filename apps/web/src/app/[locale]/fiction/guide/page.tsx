@@ -3,7 +3,7 @@ import { FictionGuide } from "~/components/blog/fiction-guide-pages";
 import { isLocale, locales } from "~/lib/i18n";
 export const metadata = {
   title: "설정집 · 여백의 사람들",
-  description: "검토 전 초안: 세계관, 지도, 국가, 인물과 한국어 문체 기준",
+  description: "세계관, 지도, 국가, 인물과 한국어 문체를 정리한 안내",
 };
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));

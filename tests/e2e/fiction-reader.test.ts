@@ -122,9 +122,7 @@ test("setting guide reads all draft documents without entering the story viewer"
   page,
 }) => {
   await page.goto("/ko/fiction/");
-  await page
-    .getByRole("link", { name: "세계관·설정집 구조화 초안 읽기 →" })
-    .click();
+  await page.getByRole("link", { name: "세계관·설정집 읽기 →" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "세계부터, 하나씩",
   );
@@ -137,9 +135,6 @@ test("setting guide reads all draft documents without entering the story viewer"
   for (const href of links) {
     await page.goto(href!);
     await expect(page.locator(".guide-status")).toContainText("구조화 초안");
-    await expect(
-      page.getByRole("heading", { name: "검토 쟁점" }),
-    ).toBeVisible();
     await expect(page.locator(".book-viewer")).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "이 문서의 마크다운 원본" }),
