@@ -764,8 +764,10 @@
 @media (max-width: 639px) {
   .brand-hero [data-beat-context-title] {
     margin-top: 1.2rem;
-    font-size: clamp(1.62rem, 6.7vw, 2.1rem);
-    line-height: 1.24;
+    max-width: 28ch;
+    font-size: clamp(1.3rem, 5.3vw, 1.65rem);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
   }
   .brand-hero + div {
     padding-block: 2.6rem 3.75rem;
@@ -2516,5 +2518,15 @@ body {
   }
   .home-scene .index-signature {
     font-size: clamp(1.85rem, 8vw, 2.45rem);
+  }
+}
+
+/* Keep the compact reading title as the final mobile cascade rule. */
+@media (max-width: 639px) {
+  .brand-hero [data-beat-context-title] {
+    max-width: 28ch;
+    font-size: clamp(1.3rem, 5.3vw, 1.65rem);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
   }
 }
