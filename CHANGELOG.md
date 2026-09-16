@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.2](https://github.com/arlequins/beat/compare/beat-v1.53.1...beat-v1.53.2) (2026-09-16)
+
+
+### Bug Fixes
+
+* restore layered home visual hierarchy ([#184](https://github.com/arlequins/beat/issues/184)) ([43d5191](https://github.com/arlequins/beat/commit/43d5191fa7a2f86dd7a2e852fe068ff03531d4b1))
+
 ## [1.53.1](https://github.com/arlequins/beat/compare/beat-v1.53.0...beat-v1.53.1) (2026-09-15)
 
 
