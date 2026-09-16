@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.5](https://github.com/arlequins/beat/compare/beat-v1.53.4...beat-v1.53.5) (2026-09-16)
+
+
+### Bug Fixes
+
+* refine Astra home mobile density ([#190](https://github.com/arlequins/beat/issues/190)) ([da360cf](https://github.com/arlequins/beat/commit/da360cf499ff4ac19d992247c0c7b0e1291b3aaf))
+
 ## [1.53.4](https://github.com/arlequins/beat/compare/beat-v1.53.3...beat-v1.53.4) (2026-09-16)
 
 
