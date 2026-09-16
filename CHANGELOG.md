@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.10](https://github.com/arlequins/beat/compare/beat-v1.53.9...beat-v1.53.10) (2026-09-16)
+
+
+### Bug Fixes
+
+* tighten home scene spacing ([#200](https://github.com/arlequins/beat/issues/200)) ([0032281](https://github.com/arlequins/beat/commit/003228164c279726b57b8e91d5a1b04608283c52))
+
 ## [1.53.9](https://github.com/arlequins/beat/compare/beat-v1.53.8...beat-v1.53.9) (2026-09-16)
 
 
