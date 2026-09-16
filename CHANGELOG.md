@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.8](https://github.com/arlequins/beat/compare/beat-v1.53.7...beat-v1.53.8) (2026-09-16)
+
+
+### Bug Fixes
+
+* loosen Astra home layout ([#196](https://github.com/arlequins/beat/issues/196)) ([ee4fe11](https://github.com/arlequins/beat/commit/ee4fe112a0d9483c472320bcbde0d14e84423b89))
+
 ## [1.53.7](https://github.com/arlequins/beat/compare/beat-v1.53.6...beat-v1.53.7) (2026-09-16)
 
 
