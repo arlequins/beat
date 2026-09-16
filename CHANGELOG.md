@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.6](https://github.com/arlequins/beat/compare/beat-v1.53.5...beat-v1.53.6) (2026-09-16)
+
+
+### Bug Fixes
+
+* move site navigation to top right ([#192](https://github.com/arlequins/beat/issues/192)) ([4dcd0cb](https://github.com/arlequins/beat/commit/4dcd0cbe952d67486c43120583833eea7b3966c8))
+
 ## [1.53.5](https://github.com/arlequins/beat/compare/beat-v1.53.4...beat-v1.53.5) (2026-09-16)
 
 
