@@ -1,6 +1,6 @@
 {
   "name": "beat",
-  "version": "1.53.8",
+  "version": "1.53.9",
   "private": true,
   "engines": {
     "node": "^24.14.0",
