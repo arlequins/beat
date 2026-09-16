@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.3](https://github.com/arlequins/beat/compare/beat-v1.53.2...beat-v1.53.3) (2026-09-16)
+
+
+### Bug Fixes
+
+* quiet the home page visual treatment ([#186](https://github.com/arlequins/beat/issues/186)) ([6f6a4c5](https://github.com/arlequins/beat/commit/6f6a4c5e1af9b796949449ff909fd08162acefb8))
+
 ## [1.53.2](https://github.com/arlequins/beat/compare/beat-v1.53.1...beat-v1.53.2) (2026-09-16)
 
 
