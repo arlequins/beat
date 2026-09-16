@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.9](https://github.com/arlequins/beat/compare/beat-v1.53.8...beat-v1.53.9) (2026-09-16)
+
+
+### Bug Fixes
+
+* add mobile home card hierarchy ([#198](https://github.com/arlequins/beat/issues/198)) ([b0e8381](https://github.com/arlequins/beat/commit/b0e83816abbabd66f619ba3d73ec264f1dfe962e))
+
 ## [1.53.8](https://github.com/arlequins/beat/compare/beat-v1.53.7...beat-v1.53.8) (2026-09-16)
 
 
