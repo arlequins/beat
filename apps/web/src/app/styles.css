@@ -1847,6 +1847,86 @@
   }
 }
 
+/* Home stays quiet: content leads, decoration recedes. */
+.home-scene {
+  background: var(--paper);
+}
+.home-scene .scene-thread,
+.home-intro::after {
+  display: none;
+}
+.home-scene .home-index {
+  width: min(100% - 3rem, 720px);
+  padding-top: 2.5rem;
+  padding-bottom: 3rem;
+}
+.home-intro {
+  margin-bottom: 2.25rem;
+}
+.home-scene .index-latest,
+.home-scene .index-reading {
+  width: 100%;
+  padding: 0 0 1.35rem;
+  margin-bottom: 1.8rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.home-scene .index-latest::before,
+.home-scene .index-reading::before {
+  display: none;
+}
+.home-scene .index-section-heading {
+  min-height: 2.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.home-scene .index-routes {
+  margin-bottom: 2rem;
+}
+.home-scene .index-destinations {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.home-scene .index-route,
+.home-scene .index-route:nth-child(2),
+.home-scene .index-route:nth-child(3) {
+  min-height: 4.2rem;
+  margin-top: 0;
+  padding: 0.7rem 0.15rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+.home-scene .index-route:hover,
+.home-scene .index-route:focus-visible {
+  background: color-mix(in srgb, var(--route-color) 5%, transparent);
+  box-shadow: none;
+  transform: none;
+}
+.home-scene .index-reading {
+  margin-left: 0;
+}
+.home-scene .index-projects {
+  border-top: 0;
+}
+@media (max-width: 639px) {
+  .home-scene .home-index {
+    width: min(100% - 2rem, 40rem);
+    padding-top: 2rem;
+  }
+  .home-scene .index-latest,
+  .home-scene .index-reading {
+    padding-bottom: 1rem;
+  }
+}
+
 /* A restrained light response follows the reading surfaces. */
 .home-scene :is(.index-latest, .index-reading, .index-route) {
   transform: perspective(1000px) rotateX(var(--tilt-x, 0deg))
@@ -2696,5 +2776,85 @@ body {
   }
   .home-scene .index-route:hover {
     transform: none;
+  }
+}
+
+/* Final quiet home override. */
+.home-scene {
+  background: var(--paper);
+}
+.home-scene .scene-thread,
+.home-intro::after {
+  display: none;
+}
+.home-scene .home-index {
+  width: min(100% - 3rem, 720px);
+  padding-top: 2.5rem;
+  padding-bottom: 3rem;
+}
+.home-intro {
+  margin-bottom: 2.25rem;
+}
+.home-scene .index-latest,
+.home-scene .index-reading {
+  width: 100%;
+  padding: 0 0 1.35rem;
+  margin-bottom: 1.8rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.home-scene .index-latest::before,
+.home-scene .index-reading::before {
+  display: none;
+}
+.home-scene .index-section-heading {
+  min-height: 2.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.home-scene .index-routes {
+  margin-bottom: 2rem;
+}
+.home-scene .index-destinations {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.home-scene .index-route,
+.home-scene .index-route:nth-child(2),
+.home-scene .index-route:nth-child(3) {
+  min-height: 4.2rem;
+  margin-top: 0;
+  padding: 0.7rem 0.15rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+.home-scene .index-route:hover,
+.home-scene .index-route:focus-visible {
+  background: color-mix(in srgb, var(--route-color) 5%, transparent);
+  box-shadow: none;
+  transform: none;
+}
+.home-scene .index-reading {
+  margin-left: 0;
+}
+.home-scene .index-projects {
+  border-top: 0;
+}
+@media (max-width: 639px) {
+  .home-scene .home-index {
+    width: min(100% - 2rem, 40rem);
+    padding-top: 2rem;
+  }
+  .home-scene .index-latest,
+  .home-scene .index-reading {
+    padding-bottom: 1rem;
   }
 }
