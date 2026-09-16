@@ -1546,6 +1546,7 @@
   background: transparent;
   color: var(--ink);
   padding-block: 20px;
+  padding-inline: max(24px, calc((100% - 960px) / 2));
   border-top: 1px solid var(--line);
 }
 .index-shell .site-footer > div:first-child > div {
@@ -1566,7 +1567,6 @@
 }
 .brand-shell .site-footer {
   padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
-  padding-left: 76px;
 }
 @media (max-width: 639px) {
   .index-notes li:nth-child(3) {
@@ -1643,7 +1643,19 @@
   padding-bottom: 64px;
 }
 .home-scene .index-signature {
-  margin-bottom: 32px;
+  position: relative;
+  padding-bottom: 12px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+.home-scene .index-signature::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 34px;
+  height: 2px;
+  background: var(--coral);
 }
 .scene-thread {
   position: absolute;
@@ -1748,7 +1760,7 @@
     padding-top: 24px;
   }
   .home-scene .index-signature {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
   }
   .home-scene .index-latest {
     width: calc(100% - 8px);
@@ -1765,6 +1777,9 @@
     padding: 11px 8px;
     min-height: 118px;
     font-size: 14px;
+  }
+  .index-shell .site-footer {
+    padding-inline: 20px;
   }
   .home-scene .index-route-detail {
     padding-left: 0;
