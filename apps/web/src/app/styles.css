@@ -1287,8 +1287,8 @@
 /* Navigation occupies no layout space until requested. */
 .site-menu-trigger {
   position: fixed;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  left: calc(12px + env(safe-area-inset-left, 0px));
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  right: calc(12px + env(safe-area-inset-right, 0px));
   z-index: 40;
   display: grid;
   place-items: center;
@@ -1306,8 +1306,8 @@
 }
 .site-menu-panel {
   position: fixed;
-  inset: auto auto calc(64px + env(safe-area-inset-bottom, 0px))
-    calc(12px + env(safe-area-inset-left, 0px));
+  inset: calc(64px + env(safe-area-inset-top, 0px))
+    calc(12px + env(safe-area-inset-right, 0px)) auto auto;
   margin: 0;
   width: min(240px, calc(100vw - 24px));
   max-height: calc(100dvh - 76px);
@@ -1563,13 +1563,6 @@
   border: 0;
   margin-top: 8px;
   padding-top: 0;
-}
-.brand-shell:has(.shell-handoff > *) .site-menu-trigger {
-  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-}
-.brand-shell:has(.shell-handoff > *) .site-menu-panel {
-  bottom: calc(148px + env(safe-area-inset-bottom, 0px));
-  max-height: calc(100dvh - 164px);
 }
 .brand-shell .site-footer {
   padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
