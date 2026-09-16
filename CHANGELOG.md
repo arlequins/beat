@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.7](https://github.com/arlequins/beat/compare/beat-v1.53.6...beat-v1.53.7) (2026-09-16)
+
+
+### Bug Fixes
+
+* align home folio spacing ([#194](https://github.com/arlequins/beat/issues/194)) ([be492b6](https://github.com/arlequins/beat/commit/be492b620365044535c528e6ea11724a5a9cf5eb))
+
 ## [1.53.6](https://github.com/arlequins/beat/compare/beat-v1.53.5...beat-v1.53.6) (2026-09-16)
 
 
