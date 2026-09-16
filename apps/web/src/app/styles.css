@@ -1759,18 +1759,18 @@
   }
   .home-scene .index-latest {
     width: calc(100% - 8px);
-    padding: 16px;
+    padding: 14px;
   }
   .home-scene .index-reading {
     width: 90%;
-    padding: 16px;
+    padding: 14px;
   }
   .home-scene .index-destinations {
     gap: 8px;
   }
   .home-scene .index-route {
-    padding: 12px 8px;
-    min-height: 132px;
+    padding: 11px 8px;
+    min-height: 118px;
     font-size: 14px;
   }
   .home-scene .index-route-detail {
