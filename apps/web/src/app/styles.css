@@ -1546,7 +1546,6 @@
   background: transparent;
   color: var(--ink);
   padding-block: 20px;
-  padding-inline: max(24px, calc((100% - 960px) / 2));
   border-top: 1px solid var(--line);
 }
 .index-shell .site-footer > div:first-child > div {
@@ -1639,23 +1638,11 @@
 .home-scene .home-index {
   position: relative;
   width: min(100% - 48px, 960px);
-  padding-top: 22px;
-  padding-bottom: 42px;
+  padding-top: 28px;
+  padding-bottom: 64px;
 }
 .home-scene .index-signature {
-  position: relative;
-  padding-bottom: 12px;
-  margin-bottom: 22px;
-  border-bottom: 1px solid var(--line);
-}
-.home-scene .index-signature::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  width: 34px;
-  height: 2px;
-  background: var(--coral);
+  margin-bottom: 32px;
 }
 .scene-thread {
   position: absolute;
@@ -1689,8 +1676,8 @@
 .home-scene .index-latest,
 .home-scene .index-reading {
   position: relative;
-  padding: 22px 26px 24px;
-  margin-bottom: 30px;
+  padding: 22px 28px 24px;
+  margin-bottom: 32px;
   border: 1px solid var(--line);
   border-radius: 3px 20px 3px 3px;
   background: var(--paper);
@@ -1700,17 +1687,17 @@
 .home-scene .index-reading::before {
   content: "";
   position: absolute;
-  inset: 8px 0 -10px 10px;
-  border: 1px solid color-mix(in srgb, var(--line) 58%, transparent);
+  inset: 6px 0 -8px 8px;
+  border: 1px solid var(--line);
   background: var(--paper);
   transform: skewY(-1.3deg);
   z-index: -1;
 }
 .home-scene .index-latest {
-  width: 94%;
+  width: 87%;
 }
 .home-scene .index-reading {
-  width: 88%;
+  width: 77%;
   margin-left: auto;
   border-radius: 20px 3px 3px 3px;
 }
@@ -1722,13 +1709,13 @@
 }
 .home-scene .index-destinations {
   border: 0;
-  gap: 14px;
+  gap: 16px;
   padding: 0 0 28px;
 }
 .home-scene .index-route {
   position: relative;
-  min-height: 136px;
-  padding: 18px;
+  min-height: 154px;
+  padding: 20px;
   justify-content: flex-start;
   border-radius: 14px;
   background-image: linear-gradient(
@@ -1736,12 +1723,10 @@
     color-mix(in srgb, var(--route-color) 12%, transparent),
     transparent
   );
-  background-color: color-mix(in srgb, var(--paper) 90%, transparent);
-  -webkit-backdrop-filter: blur(7px) saturate(108%);
-  backdrop-filter: blur(7px) saturate(108%);
-  border: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
+  background-color: var(--paper);
+  border: 1px solid var(--line);
   border-top: 2px solid var(--route-color);
-  box-shadow: 0 18px 26px -26px #483c3955;
+  box-shadow: 0 16px 22px -24px #483c3966;
   transition:
     transform 220ms,
     box-shadow 220ms;
@@ -1754,46 +1739,31 @@
 }
 .home-scene .index-projects {
   border-top: 1px solid var(--line);
-  padding-top: 16px;
+  padding-top: 8px;
 }
 @media (max-width: 767px) {
   .home-scene .home-index {
-    width: calc(100% - 32px);
-    padding-top: 20px;
-    padding-bottom: 32px;
+    width: calc(100% - 40px);
+    padding-top: 24px;
   }
   .home-scene .index-signature {
-    margin-bottom: 20px;
+    margin-bottom: 28px;
   }
   .home-scene .index-latest {
-    width: 100%;
-    padding: 18px;
-    margin-bottom: 26px;
+    width: calc(100% - 8px);
+    padding: 16px;
   }
   .home-scene .index-reading {
-    width: 100%;
-    padding: 18px;
-    margin-bottom: 24px;
+    width: 90%;
+    padding: 16px;
   }
   .home-scene .index-destinations {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    padding-bottom: 24px;
-  }
-  .home-scene .index-route-writing {
-    grid-column: 1 / -1;
-    min-height: 132px;
-  }
-  .home-scene :is(.index-route-gourmet, .index-route-fiction) {
-    min-height: 104px;
+    gap: 8px;
   }
   .home-scene .index-route {
-    padding: 14px 10px;
-    min-height: 116px;
+    padding: 12px 8px;
+    min-height: 132px;
     font-size: 14px;
-  }
-  .index-shell .site-footer {
-    padding-inline: 20px;
   }
   .home-scene .index-route-detail {
     padding-left: 0;
