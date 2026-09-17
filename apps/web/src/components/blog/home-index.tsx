@@ -109,6 +109,15 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
                       ? post.title
                       : (localizePost(locale, post)?.title ?? post.title)}
                   </span>
+                  {post.reviewStatus === "unreviewed" ? (
+                    <small>
+                      {locale === "ko"
+                        ? "미확정본"
+                        : locale === "ja"
+                          ? "未確認"
+                          : "Unreviewed"}
+                    </small>
+                  ) : null}
                 </Link>
               </li>
             ))}
