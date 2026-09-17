@@ -2,6 +2,14 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.12](https://github.com/arlequins/beat/compare/beat-v1.53.11...beat-v1.53.12) (2026-09-17)
+
+
+### Bug Fixes
+
+* expose novels to Safari Reader ([#204](https://github.com/arlequins/beat/issues/204)) ([6093c0b](https://github.com/arlequins/beat/commit/6093c0baab5eb60717c8fd21e15439f446e9ad6e))
+* **web:** polish fiction episodes 01-10 ([#206](https://github.com/arlequins/beat/issues/206)) ([9cfe087](https://github.com/arlequins/beat/commit/9cfe087664ab1da7d3252b0ff21875ee45f0c0d6))
+
 ## [1.53.11](https://github.com/arlequins/beat/compare/beat-v1.53.10...beat-v1.53.11) (2026-09-17)
 
 
