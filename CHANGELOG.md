@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.16](https://github.com/arlequins/beat/compare/beat-v1.53.15...beat-v1.53.16) (2026-09-17)
+
+
+### Bug Fixes
+
+* sync dark reader theme with safe areas ([#215](https://github.com/arlequins/beat/issues/215)) ([2587669](https://github.com/arlequins/beat/commit/25876695e19f79c3e3b5f8f7ececd85c2b662f14))
+
 ## [1.53.15](https://github.com/arlequins/beat/compare/beat-v1.53.14...beat-v1.53.15) (2026-09-17)
 
 
