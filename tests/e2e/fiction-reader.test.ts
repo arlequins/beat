@@ -76,7 +76,7 @@ test("story body is exposed as a semantic article for iPhone Reader", async ({
   ).toHaveAttribute("content", "2026-09-12");
   const body = article.locator('[itemprop="articleBody"]');
   await expect(body.locator("p").first()).toContainText(
-    "항복한 성의 창을 막는 일은",
+    "항복한 성의 창을 막으려면",
   );
   expect((await body.innerText()).length).toBeGreaterThan(1000);
 });
