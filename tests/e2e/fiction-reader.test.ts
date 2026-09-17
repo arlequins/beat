@@ -60,6 +60,27 @@ test("library omits free labels", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("story body is exposed as a semantic article for iPhone Reader", async ({
+  page,
+}) => {
+  await page.goto("/ko/fiction/the-last-window/");
+  const article = page.locator(
+    'article.book-flow[itemtype="https://schema.org/Article"]',
+  );
+  await expect(article).toHaveCount(1);
+  await expect(article.locator('[itemprop="headline"]')).toHaveText(
+    "마지막 창문",
+  );
+  await expect(
+    article.locator('meta[itemprop="datePublished"]'),
+  ).toHaveAttribute("content", "2026-09-12");
+  const body = article.locator('[itemprop="articleBody"]');
+  await expect(body.locator("p").first()).toContainText(
+    "항복한 성의 창문을 막는 일은",
+  );
+  expect((await body.innerText()).length).toBeGreaterThan(1000);
+});
+
 test("book repaginates when body content arrives after initial layout", async ({
   page,
 }) => {

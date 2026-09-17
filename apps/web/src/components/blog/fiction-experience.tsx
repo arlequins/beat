@@ -392,14 +392,25 @@ export function FictionViewer({
           className="book-track"
           style={{ width: width ? `${count * width}px` : "100%" }}
         >
-          <div className="book-flow viewer-prose" ref={flow}>
+          <article
+            className="book-flow viewer-prose"
+            ref={flow}
+            itemScope
+            itemType="https://schema.org/Article"
+          >
+            <meta itemProp="datePublished" content={story.publishedAt} />
+            <meta itemProp="inLanguage" content="ko" />
             <header className="book-title">
               <p>
                 {story.series} · {Number(story.episode)}화
               </p>
-              <h1 data-beat-context-title>{story.title}</h1>
+              <h1 itemProp="headline" data-beat-context-title>
+                {story.title}
+              </h1>
             </header>
-            {children}
+            <div className="book-article-body" itemProp="articleBody">
+              {children}
+            </div>
             <div className="book-end">
               <p>― 끝 ―</p>
               {next ? (
@@ -412,7 +423,7 @@ export function FictionViewer({
                 </Link>
               )}
             </div>
-          </div>
+          </article>
           <div className="book-snaps" aria-hidden="true">
             {Array.from({ length: count }, (_, index) => (
               <span
