@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.14](https://github.com/arlequins/beat/compare/beat-v1.53.13...beat-v1.53.14) (2026-09-17)
+
+
+### Bug Fixes
+
+* **web:** clarify brine amount in fiction episode 7 ([#211](https://github.com/arlequins/beat/issues/211)) ([f7ae7ea](https://github.com/arlequins/beat/commit/f7ae7ea79618736c2bfad0f65bf23ab7e38ba750))
+
 ## [1.53.13](https://github.com/arlequins/beat/compare/beat-v1.53.12...beat-v1.53.13) (2026-09-17)
 
 
