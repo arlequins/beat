@@ -51,6 +51,12 @@ function save(name: string, value: unknown) {
   }
 }
 
+function readerSurfaceColor(theme: Preferences["theme"]) {
+  if (theme === "night") return "#000000";
+  if (theme === "white") return "#ffffff";
+  return "#f5f0e6";
+}
+
 export function FictionLibrary({
   stories,
   locale,
@@ -225,6 +231,34 @@ export function FictionViewer({
     ready.current = true;
     save("last", story.slug);
   }, [story.slug]);
+  useEffect(() => {
+    // Safari paints its top and bottom safe areas from the document surface,
+    // outside the fixed book viewer. Keep those areas in step with reader mode.
+    const html = document.documentElement;
+    const body = document.body;
+    const themeColor = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]',
+    );
+    const previous = {
+      htmlBackground: html.style.backgroundColor,
+      bodyBackground: body.style.backgroundColor,
+      colorScheme: html.style.colorScheme,
+      themeColor: themeColor?.content,
+    };
+    const surface = readerSurfaceColor(preferences.theme);
+    html.style.backgroundColor = surface;
+    body.style.backgroundColor = surface;
+    html.style.colorScheme = preferences.theme === "night" ? "dark" : "light";
+    if (themeColor) themeColor.content = surface;
+
+    return () => {
+      html.style.backgroundColor = previous.htmlBackground;
+      body.style.backgroundColor = previous.bodyBackground;
+      html.style.colorScheme = previous.colorScheme;
+      if (themeColor && previous.themeColor !== undefined)
+        themeColor.content = previous.themeColor;
+    };
+  }, [preferences.theme]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: Font settings change column pagination after rendering.
   useEffect(() => {
     const el = viewport.current;

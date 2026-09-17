@@ -51,7 +51,9 @@ test("book controls stay visible, turn pages, and apply reading theme", async ({
   await expect(page.locator(".book-viewer")).toHaveClass(/viewer-night/);
 });
 
-test("dark book theme fills the iPhone safe areas", async ({ page }) => {
+test("dark book theme colors the document safe areas and restores the site", async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     try {
       localStorage.setItem("arlequin-theme", "dark");
@@ -70,11 +72,25 @@ test("dark book theme fills the iPhone safe areas", async ({ page }) => {
   );
   await expect(page.locator("html")).toHaveCSS(
     "background-color",
-    "rgb(17, 19, 38)",
+    "rgb(0, 0, 0)",
   );
   await expect(page.locator("body")).toHaveCSS(
     "background-color",
+    "rgb(0, 0, 0)",
+  );
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
+    "content",
+    "#000000",
+  );
+
+  await page.goto("/ko/fiction/");
+  await expect(page.locator("html")).toHaveCSS(
+    "background-color",
     "rgb(17, 19, 38)",
+  );
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
+    "content",
+    "#111326",
   );
 });
 
