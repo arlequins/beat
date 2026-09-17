@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.11](https://github.com/arlequins/beat/compare/beat-v1.53.10...beat-v1.53.11) (2026-09-17)
+
+
+### Reverts
+
+* restore original Astra home layout ([#202](https://github.com/arlequins/beat/issues/202)) ([51eb3df](https://github.com/arlequins/beat/commit/51eb3dfc1d01bdef49673b1089d991b56e460a4f))
+
 ## [1.53.10](https://github.com/arlequins/beat/compare/beat-v1.53.9...beat-v1.53.10) (2026-09-16)
 
 
