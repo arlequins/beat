@@ -48,6 +48,7 @@
   }
   html {
     scroll-behavior: smooth;
+    background: var(--paper);
   }
   body {
     background: var(--paper);
@@ -862,7 +863,7 @@
   --viewer-ink: #222;
 }
 .viewer-night {
-  --viewer-bg: #202020;
+  --viewer-bg: #000;
   --viewer-ink: #ddd;
 }
 .viewer-toolbar {
@@ -1836,7 +1837,7 @@
 }
 
 .book-viewport {
-  margin-top: 16px;
+  margin-top: max(16px, env(safe-area-inset-top, 0px));
   margin-bottom: max(12px, env(safe-area-inset-bottom, 0px));
 }
 

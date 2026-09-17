@@ -28,7 +28,7 @@ test("book controls stay visible, turn pages, and apply reading theme", async ({
   await expect(page.locator(".book-viewer")).toHaveClass(/viewer-night/);
   await expect(page.locator(".book-viewer")).toHaveCSS(
     "background-color",
-    "rgb(32, 32, 32)",
+    "rgb(0, 0, 0)",
   );
   await page.getByRole("button", { name: "닫기", exact: true }).click();
   await expect(page.locator(".book-page-number")).toHaveText(/^2 \/ /);
@@ -49,6 +49,33 @@ test("book controls stay visible, turn pages, and apply reading theme", async ({
   expect(resized!.y + resized!.height).toBeLessThanOrEqual(640);
   await page.reload();
   await expect(page.locator(".book-viewer")).toHaveClass(/viewer-night/);
+});
+
+test("dark book theme fills the iPhone safe areas", async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("arlequin-theme", "dark");
+    } catch {
+      // The app also follows the device preference when storage is unavailable.
+    }
+  });
+  await page.goto("/ko/fiction/the-last-window/");
+
+  const viewer = page.locator(".book-viewer");
+  await expect(viewer).toHaveClass(/viewer-night/);
+  await expect(viewer).toHaveCSS("background-color", "rgb(0, 0, 0)");
+  await expect(page.locator("meta[name='viewport']")).toHaveAttribute(
+    "content",
+    /viewport-fit=cover/,
+  );
+  await expect(page.locator("html")).toHaveCSS(
+    "background-color",
+    "rgb(17, 19, 38)",
+  );
+  await expect(page.locator("body")).toHaveCSS(
+    "background-color",
+    "rgb(17, 19, 38)",
+  );
 });
 
 test("library omits free labels", async ({ page }) => {
