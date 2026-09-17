@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.15](https://github.com/arlequins/beat/compare/beat-v1.53.14...beat-v1.53.15) (2026-09-17)
+
+
+### Bug Fixes
+
+* darken iPhone novel safe areas ([#213](https://github.com/arlequins/beat/issues/213)) ([4b46f33](https://github.com/arlequins/beat/commit/4b46f3371677d062d92609a68f510fbc8ec2927d))
+
 ## [1.53.14](https://github.com/arlequins/beat/compare/beat-v1.53.13...beat-v1.53.14) (2026-09-17)
 
 
