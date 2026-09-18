@@ -1417,7 +1417,7 @@
 }
 .index-role {
   margin: 0 0 18px;
-  color: var(--muted);
+  color: var(--ink);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -1517,10 +1517,11 @@
   border: 1px solid var(--line);
   border-radius: 3px 18px 3px 3px;
   background: var(--paper);
+  color: var(--ink);
 }
 .index-featured > .brand-eyebrow {
   margin: 4px 0 0;
-  color: var(--muted);
+  color: var(--ink);
   font-size: 11px;
 }
 .index-featured-copy h2 {
@@ -1531,7 +1532,7 @@
 }
 .index-featured-copy > p {
   margin: 8px 0 0;
-  color: var(--muted);
+  color: var(--ink);
   font-size: 14px;
   line-height: 1.65;
 }
