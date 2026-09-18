@@ -15,6 +15,7 @@ import {
   type CSSProperties,
   type ReactNode,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -31,7 +32,7 @@ type Preferences = {
 const defaults: Preferences = {
   size: 18,
   line: 1.9,
-  theme: "paper",
+  theme: "night",
   font: "sans",
 };
 function read<T>(name: string, fallback: T): T {
@@ -210,18 +211,13 @@ export function FictionViewer({
   const position = useRef(0);
   const ready = useRef(false);
   useEffect(() => {
-    const stored = read<Preferences>("preferences", {
-      ...defaults,
-      theme: document.documentElement.classList.contains("dark")
-        ? "night"
-        : "paper",
-    });
+    const stored = read<Preferences>("preferences", defaults);
     setPreferences({
       size: Math.max(14, Math.min(28, Number(stored.size) || 18)),
       line: Math.max(1.5, Math.min(2.5, Number(stored.line) || 1.9)),
       theme: ["white", "paper", "night"].includes(stored.theme)
         ? stored.theme
-        : "paper",
+        : "night",
       font: stored.font === "serif" ? "serif" : "sans",
     });
     position.current = Math.max(
@@ -231,32 +227,34 @@ export function FictionViewer({
     ready.current = true;
     save("last", story.slug);
   }, [story.slug]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Safari paints its top and bottom safe areas from the document surface,
-    // outside the fixed book viewer. Keep those areas in step with reader mode.
+    // outside the fixed book viewer. The head bootstrap paints this before
+    // hydration; this effect keeps client navigation and theme changes in step.
     const html = document.documentElement;
-    const body = document.body;
-    const themeColor = document.querySelector<HTMLMetaElement>(
+    const themeColors = document.querySelectorAll<HTMLMetaElement>(
       'meta[name="theme-color"]',
     );
-    const previous = {
-      htmlBackground: html.style.backgroundColor,
-      bodyBackground: body.style.backgroundColor,
-      colorScheme: html.style.colorScheme,
-      themeColor: themeColor?.content,
-    };
-    const surface = readerSurfaceColor(preferences.theme);
-    html.style.backgroundColor = surface;
-    body.style.backgroundColor = surface;
-    html.style.colorScheme = preferences.theme === "night" ? "dark" : "light";
-    if (themeColor) themeColor.content = surface;
+    const originalThemeColor =
+      html.dataset.siteThemeColor ?? themeColors[0]?.content;
+    if (originalThemeColor) html.dataset.siteThemeColor = originalThemeColor;
+    const bootTheme = html.dataset.readerTheme;
+    const theme = ["white", "paper", "night"].includes(bootTheme ?? "")
+      ? (bootTheme as Preferences["theme"])
+      : preferences.theme;
+    html.dataset.readerTheme = theme;
+    themeColors.forEach((themeColor) => {
+      themeColor.content = readerSurfaceColor(theme);
+    });
 
     return () => {
-      html.style.backgroundColor = previous.htmlBackground;
-      body.style.backgroundColor = previous.bodyBackground;
-      html.style.colorScheme = previous.colorScheme;
-      if (themeColor && previous.themeColor !== undefined)
-        themeColor.content = previous.themeColor;
+      delete html.dataset.readerTheme;
+      if (originalThemeColor !== undefined) {
+        themeColors.forEach((themeColor) => {
+          themeColor.content = originalThemeColor;
+        });
+      }
+      delete html.dataset.siteThemeColor;
     };
   }, [preferences.theme]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: Font settings change column pagination after rendering.
@@ -319,6 +317,16 @@ export function FictionViewer({
   }, [preferences.size, preferences.line, preferences.font]);
   const change = (next: Partial<Preferences>) => {
     const value = { ...preferences, ...next };
+    if (next.theme) {
+      const html = document.documentElement;
+      html.dataset.readerTheme = value.theme;
+      const themeColors = document.querySelectorAll<HTMLMetaElement>(
+        'meta[name="theme-color"]',
+      );
+      themeColors.forEach((themeColor) => {
+        themeColor.content = readerSurfaceColor(value.theme);
+      });
+    }
     setPreferences(value);
     save("preferences", value);
   };

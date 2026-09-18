@@ -78,19 +78,96 @@ test("dark book theme colors the document safe areas and restores the site", asy
     "background-color",
     "rgb(0, 0, 0)",
   );
-  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
-    "content",
-    "#000000",
-  );
+  await expect
+    .poll(() =>
+      page
+        .locator('meta[name="theme-color"]')
+        .evaluateAll((metas) =>
+          metas.every((meta) => meta.getAttribute("content") === "#000000"),
+        ),
+    )
+    .toBe(true);
 
   await page.goto("/ko/fiction/");
   await expect(page.locator("html")).toHaveCSS(
     "background-color",
     "rgb(17, 19, 38)",
   );
-  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
-    "content",
-    "#111326",
+  await expect
+    .poll(() =>
+      page
+        .locator('meta[name="theme-color"]')
+        .evaluateAll((metas) =>
+          metas.every((meta) => meta.getAttribute("content") === "#111326"),
+        ),
+    )
+    .toBe(true);
+});
+
+test("fiction reader renders night mode before hydration by default", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.removeItem("beat-fiction-v1-preferences");
+  });
+  await page.route("**/_next/static/**/*.js", (route) => route.abort());
+  await page.goto("/ko/fiction/the-last-window/", {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-reader-theme",
+    "night",
+  );
+  await expect(page.locator(".book-viewer")).toHaveClass(/viewer-night/);
+  await expect(page.locator("html")).toHaveCSS(
+    "background-color",
+    "rgb(0, 0, 0)",
+  );
+  await expect(page.locator("body")).toHaveCSS(
+    "background-color",
+    "rgb(0, 0, 0)",
+  );
+  await expect
+    .poll(() =>
+      page
+        .locator('meta[name="theme-color"]')
+        .evaluateAll((metas) =>
+          metas.every((meta) => meta.getAttribute("content") === "#000000"),
+        ),
+    )
+    .toBe(true);
+});
+
+test("fiction reader applies saved paper mode before hydration", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "beat-fiction-v1-preferences",
+      JSON.stringify({ size: 18, line: 1.9, theme: "paper", font: "sans" }),
+    );
+  });
+  await page.route("**/_next/static/**/*.js", (route) => route.abort());
+  await page.goto("/ko/fiction/the-last-window/", {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-reader-theme",
+    "paper",
+  );
+  await expect(page.locator("html")).toHaveCSS(
+    "background-color",
+    "rgb(245, 240, 230)",
+  );
+  await expect(page.locator("body")).toHaveCSS(
+    "background-color",
+    "rgb(245, 240, 230)",
+  );
+  await expect(page.locator(".book-viewer")).toHaveCSS(
+    "background-color",
+    "rgb(245, 240, 230)",
   );
 });
 

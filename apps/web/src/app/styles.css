@@ -60,6 +60,27 @@
     font-kerning: normal;
     letter-spacing: var(--tracking-normal);
   }
+  :root[data-reader-theme="night"] {
+    background-color: #000;
+    color-scheme: dark;
+  }
+  :root[data-reader-theme="night"] body {
+    background-color: #000;
+  }
+  :root[data-reader-theme="paper"] {
+    background-color: #f5f0e6;
+    color-scheme: light;
+  }
+  :root[data-reader-theme="paper"] body {
+    background-color: #f5f0e6;
+  }
+  :root[data-reader-theme="white"] {
+    background-color: #fff;
+    color-scheme: light;
+  }
+  :root[data-reader-theme="white"] body {
+    background-color: #fff;
+  }
   ::selection {
     background: var(--cyan);
     color: var(--ink);
@@ -865,6 +886,14 @@
 .viewer-night {
   --viewer-bg: #000;
   --viewer-ink: #ddd;
+}
+:root[data-reader-theme="paper"] .book-viewer.viewer-night {
+  --viewer-bg: #f5f0e6;
+  --viewer-ink: #292622;
+}
+:root[data-reader-theme="white"] .book-viewer.viewer-night {
+  --viewer-bg: #fff;
+  --viewer-ink: #222;
 }
 .viewer-toolbar {
   position: sticky;
