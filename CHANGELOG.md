@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.54.0](https://github.com/arlequins/beat/compare/beat-v1.53.17...beat-v1.54.0) (2026-09-18)
+
+
+### Features
+
+* **web:** improve site discovery and content quality ([#219](https://github.com/arlequins/beat/issues/219)) ([be28a9c](https://github.com/arlequins/beat/commit/be28a9c5666b8ee319d5ca5a450449088398e2be))
+
 ## [1.53.17](https://github.com/arlequins/beat/compare/beat-v1.53.16...beat-v1.53.17) (2026-09-18)
 
 
