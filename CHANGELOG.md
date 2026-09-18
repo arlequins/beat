@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.53.17](https://github.com/arlequins/beat/compare/beat-v1.53.16...beat-v1.53.17) (2026-09-18)
+
+
+### Bug Fixes
+
+* **web:** render fiction reader dark before hydration ([#217](https://github.com/arlequins/beat/issues/217)) ([0121940](https://github.com/arlequins/beat/commit/0121940dbb798e7b756f5f898944ebcc32c18a86))
+
 ## [1.53.16](https://github.com/arlequins/beat/compare/beat-v1.53.15...beat-v1.53.16) (2026-09-17)
 
 
