@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { KoreanPostDetailPage } from "~/app/posts/[slug]/page";
 import { LocalizedPostDetail } from "~/components/blog/localized-pages";
 import { isLocale, locales } from "~/lib/i18n";
-import { getPosts } from "~/lib/posts";
+import { localizePost } from "~/lib/localized-content";
+import { getPost, getPosts } from "~/lib/posts";
 import { localizedAlternates } from "~/lib/seo";
 
 export const dynamicParams = false;
@@ -19,7 +20,17 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { locale, slug } = await props.params;
   if (!isLocale(locale)) return {};
-  return { alternates: localizedAlternates(locale, `/posts/${slug}/`) };
+  const post = await getPost(slug);
+  const content = post
+    ? locale === "ko"
+      ? { excerpt: post.frontmatter.excerpt, title: post.frontmatter.title }
+      : localizePost(locale, { ...post.frontmatter, slug: post.slug })
+    : undefined;
+  return {
+    alternates: localizedAlternates(locale, `/posts/${slug}/`),
+    description: content?.excerpt,
+    title: content?.title ?? "Writing",
+  };
 }
 export default async function LocalePostPage(props: {
   params: Promise<{ locale: string; slug: string }>;

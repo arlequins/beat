@@ -43,7 +43,8 @@ const text = {
     average: "Average rating",
     map: "Open in Google Maps",
     minimumRating: "Any rating",
-    photoPending: "Photo under review",
+    noPhoto: "No photo",
+    photoPending: "Photo could not be loaded",
     records: "records",
     recommended: "Recommended to revisit",
     revisit: "Revisit",
@@ -73,6 +74,7 @@ const text = {
     average: "平均評価",
     map: "Google マップで開く",
     minimumRating: "すべての評価",
+    noPhoto: "写真なし",
     photoPending: "写真を読み込めません",
     records: "件の記録",
     recommended: "再訪したい店",
@@ -103,6 +105,7 @@ const text = {
     average: "평균 평점",
     map: "Google 지도에서 보기",
     minimumRating: "모든 평점",
+    noPhoto: "사진 없음",
     photoPending: "사진을 불러오지 못했습니다",
     records: "개 기록",
     recommended: "재방문 추천",
@@ -133,27 +136,32 @@ function Rating(props: { value: number }) {
 }
 
 function GourmetPhoto(props: {
+  emptyLabel: string;
   image?: GourmetEntry["images"][number];
   pendingLabel: string;
   priority?: boolean;
   sizes: string;
 }) {
   const [failed, setFailed] = useState(false);
+  const displayedImage = props.image && !failed ? props.image : undefined;
   return (
-    <div className="relative aspect-[4/3] overflow-hidden bg-[var(--surface)]">
-      {props.image && !failed ? (
+    <div
+      className={`relative overflow-hidden bg-[var(--surface)] ${displayedImage ? "aspect-[4/3]" : "grid min-h-32 place-items-center"}`}
+    >
+      {displayedImage ? (
         <Image
-          alt={props.image.altText}
+          alt={displayedImage.altText}
           className="object-cover transition duration-500 group-hover:scale-[1.025]"
           fill
           onError={() => setFailed(true)}
           priority={props.priority}
           sizes={props.sizes}
-          src={publicGourmetImage(props.image)}
+          src={publicGourmetImage(displayedImage)}
         />
       ) : (
-        <div className="absolute inset-0 grid place-items-center text-xs font-bold tracking-[0.15em] text-[var(--muted-foreground)] uppercase">
-          {props.pendingLabel}
+        <div className="flex flex-col items-center gap-2 px-4 py-6 text-center text-sm text-[var(--muted-foreground)]">
+          <Utensils aria-hidden="true" className="size-5" />
+          <span>{props.image ? props.pendingLabel : props.emptyLabel}</span>
         </div>
       )}
     </div>
@@ -264,6 +272,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <GourmetPhoto
+              emptyLabel={labels.noPhoto}
               image={selected.images[0]}
               pendingLabel={labels.photoPending}
               priority
@@ -475,8 +484,9 @@ export function GourmetBrowser(props: { locale: Locale }) {
                       scroll
                     >
                       <GourmetPhoto
+                        emptyLabel={labels.noPhoto}
                         image={entry.images[0]}
-                        pendingLabel="Beat Gourmet"
+                        pendingLabel={labels.photoPending}
                         sizes="(max-width: 640px) 100vw, 33vw"
                       />
                       <div className="mt-5 flex items-start justify-between gap-4">

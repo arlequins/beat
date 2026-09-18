@@ -14,7 +14,28 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { locale } = await props.params;
   if (!isLocale(locale)) return {};
-  return { alternates: localizedAlternates(locale) };
+  const copy = {
+    ko: {
+      title: "포트폴리오와 기술 노트",
+      description:
+        "AI 협업자 Lumen과 함께 만드는 Arlequin의 소프트웨어 포트폴리오와 기술 노트.",
+    },
+    en: {
+      title: "Portfolio and technical notes",
+      description:
+        "A software portfolio and technical journal by Arlequin, built with AI collaborator Lumen.",
+    },
+    ja: {
+      title: "ポートフォリオと技術ノート",
+      description:
+        "AI の協働者 Lumen と Arlequin が作るソフトウェアポートフォリオと技術ノート。",
+    },
+  }[locale];
+  return {
+    alternates: localizedAlternates(locale),
+    description: copy.description,
+    title: copy.title,
+  };
 }
 export default async function LocaleHome(props: {
   params: Promise<{ locale: string }>;

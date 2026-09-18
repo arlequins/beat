@@ -16,9 +16,25 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { locale } = await props.params;
   if (!isLocale(locale)) return {};
+  const copy = {
+    ko: {
+      title: "Gourmet 기록",
+      description: "Beat와 기록하고 Arlequin이 확인한 개인 식사 기록.",
+    },
+    en: {
+      title: "Gourmet notes",
+      description:
+        "Meals, discoveries, and personal restaurant notes recorded with Beat and reviewed by Arlequin.",
+    },
+    ja: {
+      title: "Gourmetノート",
+      description: "Beatと記録し、Arlequinが確認した食事とレストランのノート。",
+    },
+  }[locale];
   return {
     alternates: localizedAlternates(locale, "/gourmet/"),
-    title: "Gourmet",
+    description: copy.description,
+    title: copy.title,
   };
 }
 export default async function LocaleGourmetPage(props: {

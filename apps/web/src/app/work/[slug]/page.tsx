@@ -7,6 +7,10 @@ import { notFound } from "next/navigation";
 import { LocalizedWorkDetail } from "~/components/blog/localized-pages";
 import { projects } from "~/lib/blog-data";
 import { getProject } from "~/lib/github";
+import {
+  localizedProjectCopy,
+  projectPrimaryLink,
+} from "~/lib/project-content";
 import { localizedAlternates } from "~/lib/seo";
 
 export const dynamicParams = false;
@@ -20,10 +24,11 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { slug } = await props.params;
   const project = await getProject(slug);
+  const content = project ? localizedProjectCopy("en", project) : undefined;
   return {
     alternates: localizedAlternates("en", `/work/${slug}/`),
-    description: project?.description,
-    title: project?.title ?? "Work",
+    description: content?.description ?? project?.description,
+    title: content?.title ?? "Work",
   };
 }
 
@@ -33,6 +38,8 @@ export async function KoreanWorkDetailPage(props: {
   const { slug } = await props.params;
   const project = await getProject(slug);
   if (!project) notFound();
+  const content = localizedProjectCopy("ko", project);
+  const primaryLink = projectPrimaryLink(project, "ko");
 
   return (
     <article>
@@ -45,13 +52,13 @@ export async function KoreanWorkDetailPage(props: {
             <ArrowLeft aria-hidden="true" className="size-4" /> 프로젝트
           </Link>
           <p className="brand-eyebrow mt-12 text-[#f6c85f]">
-            Arlequin / {project.year} · {project.role}
+            Arlequin / {project.year} · {content.role}
           </p>
           <h1 className="display-serif mt-5 text-4xl leading-[1.04] tracking-[-0.055em] text-balance sm:text-6xl">
-            {project.title}
+            {content.title}
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300 sm:text-xl">
-            {project.description}
+            {content.description}
           </p>
         </div>
       </header>
@@ -60,7 +67,7 @@ export async function KoreanWorkDetailPage(props: {
           {project.image ? (
             <div className="relative aspect-[16/8] overflow-hidden border border-slate-900/15 shadow-[0.65rem_0.65rem_0_rgba(240,100,73,0.15)]">
               <Image
-                alt="AI agent assisted software template"
+                alt={content.title}
                 className="object-cover"
                 fill
                 priority
@@ -69,23 +76,25 @@ export async function KoreanWorkDetailPage(props: {
               />
             </div>
           ) : null}
-          <a
-            className="mt-10 inline-flex items-center gap-2 bg-[#111326] px-5 py-3 text-sm font-semibold text-white shadow-[0.3rem_0.3rem_0_#79e6e0] transition hover:-translate-y-1"
-            href={project.repository}
-            rel="noreferrer"
-            target="_blank"
-          >
-            GitHub repository{" "}
-            <ArrowUpRight aria-hidden="true" className="size-4" />
-          </a>
+          {primaryLink ? (
+            <a
+              className="mt-10 inline-flex items-center gap-2 bg-[#111326] px-5 py-3 text-sm font-semibold text-white shadow-[0.3rem_0.3rem_0_#79e6e0] transition hover:-translate-y-1"
+              href={primaryLink.href}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {primaryLink.label}
+              <ArrowUpRight aria-hidden="true" className="size-4" />
+            </a>
+          ) : null}
           <div className="mt-16 grid gap-10 border-t border-slate-900/20 pt-10 sm:grid-cols-3">
-            <h2 className="brand-eyebrow text-[#b63f2d]">Challenge</h2>
+            <h2 className="brand-eyebrow text-[#b63f2d]">도전 과제</h2>
             <p className="sm:col-span-2 leading-8 text-slate-700">
-              {project.challenge}
+              {content.challenge}
             </p>
-            <h2 className="brand-eyebrow text-[#075c66]">What I built</h2>
+            <h2 className="brand-eyebrow text-[#075c66]">주요 작업</h2>
             <ul className="space-y-3 sm:col-span-2">
-              {project.highlights.map((item) => (
+              {content.highlights.map((item) => (
                 <li
                   className="border-l-2 border-[#f06449] pl-4 font-medium"
                   key={item}
@@ -94,9 +103,9 @@ export async function KoreanWorkDetailPage(props: {
                 </li>
               ))}
             </ul>
-            <h2 className="brand-eyebrow text-[#b63f2d]">Outcome</h2>
+            <h2 className="brand-eyebrow text-[#b63f2d]">결과</h2>
             <p className="sm:col-span-2 leading-8 text-slate-700">
-              {project.outcome}
+              {content.outcome}
             </p>
           </div>
           <div className="mt-12 flex flex-wrap gap-2">

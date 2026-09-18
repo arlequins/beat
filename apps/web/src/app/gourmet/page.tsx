@@ -5,8 +5,9 @@ import { GourmetBrowser } from "~/widgets/gourmet-browser/ui/gourmet-browser";
 
 export const metadata: Metadata = {
   alternates: localizedAlternates("en", "/gourmet/"),
-  description: "Beat와 함께 기록하고 Arlequin이 확인한 개인 식사 기록",
-  title: "Gourmet 기록",
+  description:
+    "Meals, discoveries, and personal restaurant notes recorded with Beat and reviewed by Arlequin.",
+  title: "Gourmet notes",
 };
 
 export function KoreanGourmetPage() {
