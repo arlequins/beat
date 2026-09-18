@@ -53,13 +53,65 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const themeBootstrap = `(() => {
+  const root = document.documentElement;
+  const segments = location.pathname.split("/").filter(Boolean);
+  const fictionIndex = segments.lastIndexOf("fiction");
+  const isFictionReader =
+    fictionIndex >= 0 &&
+    fictionIndex === segments.length - 2 &&
+    segments[fictionIndex + 1] !== "guide";
+  let siteTheme = matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+
+  try {
+    const savedSiteTheme = localStorage.getItem("arlequin-theme");
+    if (savedSiteTheme === "dark" || savedSiteTheme === "light") {
+      siteTheme = savedSiteTheme;
+    }
+  } catch {
+    // Use the device appearance when site storage is unavailable.
+  }
+
+  root.classList.add(siteTheme);
+  if (!isFictionReader) return;
+
+  let readerTheme = "night";
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem("beat-fiction-v1-preferences") || "null",
+    );
+    if (["paper", "white", "night"].includes(saved?.theme)) {
+      readerTheme = saved.theme;
+    }
+  } catch {
+    // Fiction defaults to night when reader settings are unavailable.
+  }
+
+  root.dataset.readerTheme = readerTheme;
+  const surface =
+    readerTheme === "night"
+      ? "#000000"
+      : readerTheme === "white"
+        ? "#ffffff"
+        : "#f5f0e6";
+  const themeColors = document.querySelectorAll('meta[name="theme-color"]');
+  if (themeColors.length > 0) {
+    root.dataset.siteThemeColor = themeColors[0].content;
+    themeColors.forEach((themeColor) => {
+      themeColor.content = surface;
+    });
+  }
+})();`;
+
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(() => { try { const saved = localStorage.getItem("arlequin-theme"); const theme = saved === "dark" || saved === "light" ? saved : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); document.documentElement.classList.add(theme); } catch { document.documentElement.classList.add("light"); } })();`,
+            __html: themeBootstrap,
           }}
         />
       </head>
