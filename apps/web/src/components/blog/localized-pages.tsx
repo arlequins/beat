@@ -1,14 +1,28 @@
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { HomeIndex } from "~/components/blog/home-index";
+import { LocalizedPostFeed } from "~/components/blog/localized-post-feed";
 import { BeatPostAssistantCard } from "~/features/beat-handoff/ui/beat-chat-entry";
 import { getProject } from "~/lib/github";
 import { type Locale, localePath } from "~/lib/i18n";
 import { localizePost } from "~/lib/localized-content";
 import { getPost, getPosts, type PostCategory } from "~/lib/posts";
+import {
+  localizedProjectCopy,
+  projectPrimaryLink,
+} from "~/lib/project-content";
 
-const localized = {
+const postListCopy = {
+  ko: {
+    title: "IT 이슈",
+    categories: {
+      weekly: "주간 IT 브리핑",
+      "deep-dive": "테크 딥다이브",
+      "studio-log": "Backstage · 제작의 기록",
+    },
+  },
   en: {
+    title: "IT notes",
     categories: {
       weekly: "Weekly IT Brief",
       "deep-dive": "Tech Deep Dive",
@@ -16,116 +30,54 @@ const localized = {
     },
   },
   ja: {
+    title: "ITノート",
     categories: {
       weekly: "週刊 IT ブリーフ",
       "deep-dive": "テック・ディープダイブ",
       "studio-log": "Backstage · 制作の記録",
     },
   },
-} as const;
-
-const projectCopy = {
-  en: [
-    [
-      "Beat — Full-stack product template",
-      "A full-stack monorepo that makes it possible to start fast without discarding operational quality later.",
-    ],
-    [
-      "Agent-assisted product workflow",
-      "An experiment in using an AI agent as a product-development partner with human review checkpoints.",
-    ],
-    [
-      "Portfolio as a product",
-      "A static portfolio, MDX writing system, GitHub metadata, and deployment flow designed as one developer experience.",
-    ],
-  ],
-  ja: [
-    [
-      "Beat — フルスタック製品テンプレート",
-      "素早く始めながら、後の運用品質を捨てないためのフルスタック・モノレポです。",
-    ],
-    [
-      "エージェント支援の製品ワークフロー",
-      "人のレビュー地点を残し、AI エージェントを製品開発の協働者として使う実験です。",
-    ],
-    [
-      "プロダクトとしてのポートフォリオ",
-      "静的ポートフォリオ、MDX、GitHub メタデータ、配布を一つの開発体験として整えました。",
-    ],
-  ],
-} as const;
+} as const satisfies Record<
+  Locale,
+  { categories: Record<PostCategory, string>; title: string }
+>;
 
 function labels(locale: Exclude<Locale, "ko">, category: PostCategory) {
-  return localized[locale].categories[category];
+  return postListCopy[locale].categories[category];
 }
 
 export function LocalizedHome(props: { locale: Exclude<Locale, "ko"> }) {
   return <HomeIndex locale={props.locale} />;
 }
 
-export async function LocalizedPostsPage(props: {
-  locale: Exclude<Locale, "ko">;
-}) {
+export async function LocalizedPostsPage(props: { locale: Locale }) {
   const { locale } = props;
   const posts = await getPosts();
-  const title = locale === "en" ? "IT notes" : "ITノート";
+  const text = postListCopy[locale];
+  const categories = (
+    ["weekly", "deep-dive", "studio-log"] as PostCategory[]
+  ).map((value) => ({ label: text.categories[value], value }));
+  const feedPosts = posts.map((post) => {
+    const translation =
+      locale === "ko" ? undefined : localizePost(locale, post);
+    return {
+      ...post,
+      displayTitle: translation?.title ?? post.title,
+      displayExcerpt: translation?.excerpt ?? post.excerpt,
+    };
+  });
   return (
     <>
       <header className="page-heading">
         <div className="page-width">
-          <h1>{title}</h1>
+          <h1>{text.title}</h1>
         </div>
       </header>
-      <section className="px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl grid gap-16">
-          {(["weekly", "deep-dive", "studio-log"] as PostCategory[]).map(
-            (category) => (
-              <section key={category}>
-                <div className="border-b border-slate-950 pb-5">
-                  <p className="brand-eyebrow text-[#075c66]">
-                    {labels(locale, category)}
-                  </p>
-                </div>
-                <div className="mt-px grid gap-px bg-slate-900/15 sm:grid-cols-2">
-                  {posts
-                    .filter((post) => post.category === category)
-                    .map((post) => {
-                      const translation = localizePost(locale, post);
-                      return (
-                        <article
-                          className="note-card group flex flex-col bg-[#f5f0e6] p-6"
-                          key={post.slug}
-                        >
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                            {post.reviewStatus === "unreviewed" ? (
-                              <span className="border border-[#f06449]/40 bg-[#f06449]/10 px-2.5 py-1 text-[#9f3524]">
-                                {locale === "en" ? "◇ Unreviewed" : "◇ 未確認"}
-                              </span>
-                            ) : null}
-                            <span>
-                              {post.publishedAt} · {post.readTime}
-                            </span>
-                          </div>
-                          <h2 className="display-serif mt-5 text-3xl">
-                            <Link
-                              className="group-hover:text-[#b63f2d]"
-                              href={localePath(locale, `/posts/${post.slug}/`)}
-                            >
-                              {translation?.title ?? post.title}
-                            </Link>
-                          </h2>
-                          <p className="hidden sm:line-clamp-2 mt-4 leading-7 text-slate-600">
-                            {translation?.excerpt ?? post.excerpt}
-                          </p>
-                        </article>
-                      );
-                    })}
-                </div>
-              </section>
-            ),
-          )}
-        </div>
-      </section>
+      <LocalizedPostFeed
+        categories={categories}
+        locale={locale}
+        posts={feedPosts}
+      />
     </>
   );
 }
@@ -252,15 +204,12 @@ export async function LocalizedWorkDetail(props: {
 }) {
   const project = await getProject(props.slug);
   if (!project) return undefined;
-  const index = [
-    "beat-template",
-    "agent-assisted-product-workflow",
-    "portfolio-as-a-product",
-  ].indexOf(project.slug);
-  const translation = projectCopy[props.locale][index] ?? [
-    project.title,
-    project.description,
-  ];
+  const content = localizedProjectCopy(props.locale, project);
+  const primaryLink = projectPrimaryLink(project, props.locale);
+  const labels =
+    props.locale === "en"
+      ? { challenge: "Challenge", outcome: "Outcome", work: "What I built" }
+      : { challenge: "課題", outcome: "成果", work: "取り組んだこと" };
   return (
     <article>
       <header className="brand-hero px-5 py-14 sm:px-8 sm:py-20">
@@ -273,33 +222,48 @@ export async function LocalizedWorkDetail(props: {
             {props.locale === "en" ? "Work" : "作品"}
           </Link>
           <p className="brand-eyebrow mt-12 text-[#f6c85f]">
-            Arlequin / {project.year}
+            Arlequin / {project.year} · {content.role}
           </p>
           <h1 className="display-serif mt-5 text-4xl sm:text-6xl">
-            {translation[0]}
+            {content.title}
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">
-            {translation[1]}
+            {content.description}
           </p>
         </div>
       </header>
       <div className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-4xl">
-          <a
-            className="inline-flex items-center gap-2 bg-[#111326] px-5 py-3 text-sm font-semibold text-white shadow-[0.3rem_0.3rem_0_#79e6e0]"
-            href={project.repository}
-            rel="noreferrer"
-            target="_blank"
-          >
-            GitHub repository{" "}
-            <ArrowUpRight aria-hidden="true" className="size-4" />
-          </a>
+          {primaryLink ? (
+            <a
+              className="inline-flex items-center gap-2 bg-[#111326] px-5 py-3 text-sm font-semibold text-white shadow-[0.3rem_0.3rem_0_#79e6e0]"
+              href={primaryLink.href}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {primaryLink.label}
+              <ArrowUpRight aria-hidden="true" className="size-4" />
+            </a>
+          ) : null}
           <div className="mt-14 grid gap-10 border-t border-slate-900/20 pt-10 sm:grid-cols-3">
-            <h2 className="brand-eyebrow text-[#b63f2d]">
-              {props.locale === "en" ? "Focus" : "焦点"}
-            </h2>
+            <h2 className="brand-eyebrow text-[#b63f2d]">{labels.challenge}</h2>
             <p className="sm:col-span-2 leading-8 text-slate-700">
-              {translation[1]}
+              {content.challenge}
+            </p>
+            <h2 className="brand-eyebrow text-[#075c66]">{labels.work}</h2>
+            <ul className="space-y-3 sm:col-span-2">
+              {content.highlights.map((item) => (
+                <li
+                  className="border-l-2 border-[#f06449] pl-4 font-medium"
+                  key={item}
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <h2 className="brand-eyebrow text-[#b63f2d]">{labels.outcome}</h2>
+            <p className="sm:col-span-2 leading-8 text-slate-700">
+              {content.outcome}
             </p>
             <h2 className="brand-eyebrow text-[#075c66]">Stack</h2>
             <div className="flex flex-wrap gap-2 sm:col-span-2">

@@ -76,4 +76,4 @@ jobs:
       - name: Install Chromium for Playwright
         run: pnpm exec playwright install --with-deps chromium
       - name: Exercise the public Gourmet browser and accessibility routes
-        run: pnpm test:e2e tests/e2e/accessibility.test.ts tests/e2e/beat-admin-login.test.ts tests/e2e/gourmet-browser.test.ts tests/e2e/home-index.test.ts tests/e2e/fiction-reader.test.ts
+        run: pnpm test:e2e tests/e2e/accessibility.test.ts tests/e2e/beat-admin-login.test.ts tests/e2e/gourmet-browser.test.ts tests/e2e/home-index.test.ts tests/e2e/site-quality.test.ts tests/e2e/fiction-reader.test.ts

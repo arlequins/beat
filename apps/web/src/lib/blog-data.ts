@@ -4,7 +4,8 @@ export type PortfolioProject = {
   highlights: string[];
   image?: string;
   outcome: string;
-  repository: string;
+  repository?: string;
+  liveSite?: string;
   role: string;
   slug: string;
   stack: string[];
@@ -12,7 +13,6 @@ export type PortfolioProject = {
   year: string;
 };
 
-/** Replace these entries with your own GitHub repositories and career stories. */
 export const projects: PortfolioProject[] = [
   {
     challenge:
@@ -46,7 +46,7 @@ export const projects: PortfolioProject[] = [
     ],
     outcome:
       "반복적인 초기 구현 시간을 줄이는 동시에, 변경 이유와 검증 결과가 코드베이스에 남도록 했습니다.",
-    repository: "https://github.com/your-github-id",
+    repository: "https://github.com/arlequins/beat-agent",
     role: "AI-assisted product development",
     slug: "agent-assisted-product-workflow",
     stack: ["Codex", "TypeScript", "Next.js", "Playwright"],
@@ -57,18 +57,18 @@ export const projects: PortfolioProject[] = [
     challenge:
       "새 프로젝트마다 같은 배포 설정과 문서가 반복되면서, 개인 실험의 결과가 다음 프로젝트로 이어지지 않는 문제가 있었습니다.",
     description:
-      "정적 포트폴리오, MDX 기술 블로그, GitHub 메타데이터, Vercel 배포를 한 흐름으로 정리한 개발자 경험 개선 사례입니다.",
+      "정적 포트폴리오, MDX 기술 블로그, GitHub 메타데이터, GitHub Pages 배포를 한 흐름으로 정리한 개발자 경험 개선 사례입니다.",
     highlights: [
       "MDX content workflow",
       "GitHub metadata fallback",
-      "Static Vercel delivery",
+      "Static GitHub Pages delivery",
     ],
     outcome:
       "새 작업을 공개 가능한 사례 연구와 기술 노트로 전환하는 시간을 줄이고, 개인 학습 기록을 꾸준히 쌓을 기반을 마련했습니다.",
-    repository: "https://github.com/your-github-id",
+    liveSite: "https://arlequins.github.io/beat/",
     role: "Developer experience · Content system",
     slug: "portfolio-as-a-product",
-    stack: ["MDX", "Vercel", "GitHub API", "SEO"],
+    stack: ["MDX", "GitHub Pages", "GitHub API", "SEO"],
     title: "Portfolio as a product",
     year: "2026",
   },

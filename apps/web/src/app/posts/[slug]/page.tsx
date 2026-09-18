@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LocalizedPostDetail } from "~/components/blog/localized-pages";
 import { BeatPostAssistantCard } from "~/features/beat-handoff/ui/beat-chat-entry";
+import { localizePost } from "~/lib/localized-content";
 import { getPost, getPosts, postCategoryMeta } from "~/lib/posts";
 import { localizedAlternates } from "~/lib/seo";
 
@@ -18,10 +19,13 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { slug } = await props.params;
   const post = await getPost(slug);
+  const content = post
+    ? localizePost("en", { ...post.frontmatter, slug: post.slug })
+    : undefined;
   return {
     alternates: localizedAlternates("en", `/posts/${slug}/`),
-    description: post?.frontmatter.excerpt,
-    title: post?.frontmatter.title ?? "Writing",
+    description: content?.excerpt ?? post?.frontmatter.excerpt,
+    title: content?.title ?? post?.frontmatter.title ?? "Writing",
   };
 }
 

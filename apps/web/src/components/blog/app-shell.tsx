@@ -15,6 +15,7 @@ export function AppShell(props: { children: React.ReactNode }) {
   const segment = pathname.split("/")[1] ?? "";
   const locale: Locale = isLocale(segment) ? segment : "en";
   const text = copy[locale];
+  const isPostDetail = /^\/(?:(?:ko|en|ja)\/)?posts\/[^/]+\/?$/.test(pathname);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -209,9 +210,11 @@ export function AppShell(props: { children: React.ReactNode }) {
         </span>
         <a href={`mailto:${siteConfig.email}`}>{text.email}</a>
       </footer>
-      <div className="shell-handoff">
-        <BeatChatEntry />
-      </div>
+      {isPostDetail ? null : (
+        <div className="shell-handoff">
+          <BeatChatEntry />
+        </div>
+      )}
     </div>
   );
 }

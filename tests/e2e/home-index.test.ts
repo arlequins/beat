@@ -7,6 +7,12 @@ for (const locale of ["ko", "en", "ja"]) {
   }) => {
     const prefix = locale === "en" ? "" : `/${locale}`;
     await page.goto(`${prefix}/`);
+    await expect(page.locator(".index-role")).toBeVisible();
+    await expect(page.locator(".index-featured")).toBeVisible();
+    await expect(page.locator(".index-featured h2 a")).toHaveAttribute(
+      "href",
+      `${prefix}/work/beat-template/`,
+    );
     const destinations = page.locator(".index-destinations");
     await expect(destinations.getByRole("link")).toHaveCount(3);
     for (const path of ["posts", "gourmet", "fiction"]) {
@@ -47,6 +53,25 @@ for (const locale of ["ko", "en", "ja"]) {
     ).toEqual([]);
   });
 }
+
+test("home and featured work remain readable at narrow mobile widths", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/");
+  await expect(page.locator(".index-featured")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  expect(
+    await page
+      .locator(".index-notes a > span")
+      .first()
+      .evaluate((element) => getComputedStyle(element).whiteSpace),
+  ).toBe("normal");
+});
 
 test("home menu opens after a touch long press", async ({ page }) => {
   await page.goto("/ko/");

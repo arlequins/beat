@@ -21,7 +21,9 @@ function repositoryPath(url: string) {
 async function enrichProject(
   project: PortfolioProject,
 ): Promise<SyncedProject> {
-  const path = repositoryPath(project.repository);
+  const path = project.repository
+    ? repositoryPath(project.repository)
+    : undefined;
   if (!path) return project;
   try {
     const response = await fetch(`https://api.github.com/repos/${path}`, {
