@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.54.5](https://github.com/arlequins/beat/compare/beat-v1.54.4...beat-v1.54.5) (2026-09-19)
+
+
+### Bug Fixes
+
+* **web:** polish Korean prose across fiction episodes 2-20 ([4f3b6ba](https://github.com/arlequins/beat/commit/4f3b6ba6dc99c4c65a90c54a9e995825c0e85ea9))
+
 ## [1.54.4](https://github.com/arlequins/beat/compare/beat-v1.54.3...beat-v1.54.4) (2026-09-19)
 
 
