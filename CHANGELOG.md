@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.54.1](https://github.com/arlequins/beat/compare/beat-v1.54.0...beat-v1.54.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* complete Gourmet photos and comfortable mobile titles ([#222](https://github.com/arlequins/beat/issues/222)) ([df9d110](https://github.com/arlequins/beat/commit/df9d11062714645e7e3da7ecfea5acae64be1432))
+
 ## [1.54.0](https://github.com/arlequins/beat/compare/beat-v1.53.17...beat-v1.54.0) (2026-09-18)
 
 
