@@ -70,3 +70,69 @@ test("filters Gourmet records and offers a safe Maps handoff", async ({
   await expect(maps).toHaveAttribute("rel", "noopener noreferrer");
   await expect(maps).toHaveAttribute("target", "_blank");
 });
+
+test("detail displays every photo in order and recovers transient image failures", async ({
+  page,
+}) => {
+  const images = [2, 0, 1].map((sortOrder) => ({
+    id: `image-${sortOrder}`,
+    publicPath: `/api/gourmet/images/meal-1/${sortOrder}`,
+    altText: "IMG_001.jpeg",
+    byteSize: 100,
+    sortOrder,
+  }));
+  await page.route("**/api/gourmet/entries?*", (route) =>
+    route.fulfill({
+      json: { entries: [{ ...entry, images }], page: 1, total: 1 },
+    }),
+  );
+  await page.route("**/api/gourmet/entries/sample-table", (route) =>
+    route.fulfill({ json: { ...entry, images } }),
+  );
+  let failedRequests = 0;
+  await page.route("**/api/gourmet/images/**", (route) => {
+    if (route.request().url().endsWith("/0")) {
+      failedRequests++;
+      return route.fulfill({ status: 500 });
+    }
+    return route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="green"/></svg>',
+    });
+  });
+  await page.goto("/gourmet/?entry=sample-table");
+  const gallery = page.getByRole("region", { name: "Photos", exact: true });
+  await expect(gallery.getByRole("img")).toHaveCount(3);
+  await expect(gallery.getByRole("img").first()).toHaveAttribute(
+    "alt",
+    "Sample Table · Tasting menu (1/3)",
+  );
+  for (const image of await gallery.getByRole("img").all()) {
+    await image.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() => image.evaluate((node: HTMLImageElement) => node.naturalWidth))
+      .toBeGreaterThan(0);
+  }
+  expect(failedRequests).toBeGreaterThan(0);
+  await expect(gallery.getByRole("img").first()).toHaveAttribute(
+    "src",
+    /\/0\?retry=1$/,
+  );
+});
+
+test("missing Gourmet detail shows an error with a route back", async ({
+  page,
+}) => {
+  await page.route("**/api/gourmet/entries?*", (route) =>
+    route.fulfill({ json: { entries: [entry], page: 1, total: 1 } }),
+  );
+  await page.route("**/api/gourmet/entries/missing", (route) =>
+    route.fulfill({ status: 404 }),
+  );
+  await page.goto("/gourmet/?entry=missing");
+  await expect(page.getByRole("status")).toHaveText(
+    "Unable to load Gourmet records.",
+  );
+  await expect(page.getByRole("link", { name: "All records" })).toBeVisible();
+  await expect(page.getByText("Sample Table")).toHaveCount(0);
+});

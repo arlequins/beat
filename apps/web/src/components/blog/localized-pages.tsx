@@ -115,7 +115,7 @@ export async function LocalizedPostDetail(props: {
             </p>
           </div>
           <h1
-            className="display-serif mt-5 text-4xl leading-[1.04] sm:text-6xl"
+            className="detail-title display-serif mt-5"
             data-beat-context-title
           >
             {translation.title}
@@ -148,8 +148,8 @@ export async function LocalizedPostDetail(props: {
                 <h2>{props.locale === "en" ? "Sources" : "参考資料"}</h2>
                 <p>
                   {props.locale === "en"
-                    ? "Official documentation checked on September 13, 2026. This is an explanatory special issue, not a report of announcements made today."
-                    : "公式文書の確認日：2026年9月13日。本稿は技術解説であり、当日発表されたニュースの報告ではありません。"}
+                    ? "Official references for the topics discussed in this article."
+                    : "本稿で取り上げた内容に関する公式資料です。"}
                 </p>
                 <ul>
                   {translation.sources.map((source) => (
@@ -224,9 +224,7 @@ export async function LocalizedWorkDetail(props: {
           <p className="brand-eyebrow mt-12 text-[#f6c85f]">
             Arlequin / {project.year} · {content.role}
           </p>
-          <h1 className="display-serif mt-5 text-4xl sm:text-6xl">
-            {content.title}
-          </h1>
+          <h1 className="detail-title display-serif mt-5">{content.title}</h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">
             {content.description}
           </p>

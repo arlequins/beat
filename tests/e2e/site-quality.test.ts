@@ -1,5 +1,28 @@
 import { expect, test } from "@playwright/test";
 
+test("mobile article titles stay readable without horizontal overflow", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  for (const path of [
+    "/posts/weekly-it-brief-2026-09-14/",
+    "/ko/posts/weekly-it-brief-2026-09-14/",
+    "/work/portfolio-as-a-product/",
+  ]) {
+    await page.goto(path);
+    const title = page.getByRole("heading", { level: 1 });
+    await expect(title).toBeVisible();
+    const size = await title.evaluate((node) =>
+      Number.parseFloat(getComputedStyle(node).fontSize),
+    );
+    expect(size).toBeGreaterThanOrEqual(28);
+    expect(size).toBeLessThanOrEqual(32);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(320);
+  }
+});
+
 test("writing search and topic filters narrow the published notes", async ({
   page,
 }) => {

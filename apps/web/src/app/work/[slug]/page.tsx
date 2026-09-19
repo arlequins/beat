@@ -54,9 +54,7 @@ export async function KoreanWorkDetailPage(props: {
           <p className="brand-eyebrow mt-12 text-[#f6c85f]">
             Arlequin / {project.year} · {content.role}
           </p>
-          <h1 className="display-serif mt-5 text-4xl leading-[1.04] tracking-[-0.055em] text-balance sm:text-6xl">
-            {content.title}
-          </h1>
+          <h1 className="detail-title display-serif mt-5">{content.title}</h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300 sm:text-xl">
             {content.description}
           </p>

@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 
 import { serverEnv } from "@arlequins/env/server-env";
 import type { RateLimitPort, RateLimitRequest } from "@arlequins/service";
@@ -27,6 +28,8 @@ function preconditionFailed(error: unknown) {
   };
   return (
     candidate.$metadata?.httpStatusCode === 412 ||
+    candidate.$metadata?.httpStatusCode === 409 ||
+    candidate.name === "ConditionalRequestConflict" ||
     candidate.name === "PreconditionFailed"
   );
 }
@@ -87,7 +90,7 @@ export function createS3RateLimitAdapter(options?: {
     "v1"
   ).replace(/^\/|\/$/g, "");
   const client = options?.client ?? new S3Client({});
-  const retries = options?.retries ?? 4;
+  const retries = options?.retries ?? 12;
 
   return {
     async consume(input) {
@@ -141,6 +144,12 @@ export function createS3RateLimitAdapter(options?: {
           };
         } catch (error) {
           if (!preconditionFailed(error)) throw error;
+          // Simultaneous image requests share an IP bucket. Jitter prevents
+          // their conditional writes from repeatedly colliding in lockstep.
+          if (attempt + 1 < retries)
+            await delay(
+              Math.floor(Math.random() * Math.min(400, 25 * 2 ** attempt)),
+            );
         }
       }
       throw new Error("S3 rate-limit state remained contended");

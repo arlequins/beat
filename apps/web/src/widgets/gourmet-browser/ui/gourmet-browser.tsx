@@ -45,6 +45,8 @@ const text = {
     minimumRating: "Any rating",
     noPhoto: "No photo",
     photoPending: "Photo could not be loaded",
+    retryPhoto: "Retry photo",
+    photos: "Photos",
     records: "records",
     recommended: "Recommended to revisit",
     revisit: "Revisit",
@@ -76,6 +78,8 @@ const text = {
     minimumRating: "すべての評価",
     noPhoto: "写真なし",
     photoPending: "写真を読み込めません",
+    retryPhoto: "写真を再読み込み",
+    photos: "写真",
     records: "件の記録",
     recommended: "再訪したい店",
     revisit: "再訪",
@@ -107,6 +111,8 @@ const text = {
     minimumRating: "모든 평점",
     noPhoto: "사진 없음",
     photoPending: "사진을 불러오지 못했습니다",
+    retryPhoto: "사진 다시 불러오기",
+    photos: "사진",
     records: "개 기록",
     recommended: "재방문 추천",
     revisit: "재방문",
@@ -141,27 +147,61 @@ function GourmetPhoto(props: {
   pendingLabel: string;
   priority?: boolean;
   sizes: string;
+  fallbackAlt: string;
+  retryLabel?: string;
+  contain?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    if (!failed || attempt >= 2) return;
+    const timer = setTimeout(
+      () => {
+        setAttempt((value) => value + 1);
+        setFailed(false);
+      },
+      750 * 2 ** attempt,
+    );
+    return () => clearTimeout(timer);
+  }, [failed, attempt]);
   const displayedImage = props.image && !failed ? props.image : undefined;
+  const alt = props.image?.altText.trim();
+  const meaningfulAlt =
+    alt && !/\.(jpe?g|png|webp|heic)$/i.test(alt) && !/^(미상\s*)+$/.test(alt);
   return (
     <div
       className={`relative overflow-hidden bg-[var(--surface)] ${displayedImage ? "aspect-[4/3]" : "grid min-h-32 place-items-center"}`}
     >
       {displayedImage ? (
         <Image
-          alt={displayedImage.altText}
-          className="object-cover transition duration-500 group-hover:scale-[1.025]"
+          alt={meaningfulAlt ? alt : props.fallbackAlt}
+          className={
+            props.contain
+              ? "object-contain"
+              : "object-cover transition duration-500 group-hover:scale-[1.025]"
+          }
           fill
           onError={() => setFailed(true)}
           priority={props.priority}
           sizes={props.sizes}
-          src={publicGourmetImage(displayedImage)}
+          src={`${publicGourmetImage(displayedImage)}${attempt ? `${displayedImage.publicPath.includes("?") ? "&" : "?"}retry=${attempt}` : ""}`}
         />
       ) : (
         <div className="flex flex-col items-center gap-2 px-4 py-6 text-center text-sm text-[var(--muted-foreground)]">
           <Utensils aria-hidden="true" className="size-5" />
           <span>{props.image ? props.pendingLabel : props.emptyLabel}</span>
+          {props.image && props.retryLabel ? (
+            <button
+              type="button"
+              className="min-h-11 px-4 font-semibold text-[var(--ink)] underline"
+              onClick={() => {
+                setAttempt((value) => value + 1);
+                setFailed(false);
+              }}
+            >
+              {props.retryLabel}
+            </button>
+          ) : null}
         </div>
       )}
     </div>
@@ -179,6 +219,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
   const [revisit, setRevisit] = useState<"" | GourmetEntry["revisit"]>("");
   const [list, setList] = useState<GourmetList>();
   const [selected, setSelected] = useState<GourmetEntry>();
+  const [detailError, setDetailError] = useState(false);
   const [message, setMessage] = useState(labels.loading);
 
   useEffect(() => {
@@ -208,6 +249,8 @@ export function GourmetBrowser(props: { locale: Locale }) {
   }, [area, cuisineTag, labels.failed, minimumRating, query, revisit]);
 
   useEffect(() => {
+    setSelected(undefined);
+    setDetailError(false);
     if (!selectedSlug) {
       setSelected(undefined);
       return;
@@ -226,7 +269,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
       .then(setSelected)
       .catch((error: unknown) => {
         if ((error as { name?: string }).name !== "AbortError")
-          setMessage(labels.failed);
+          setDetailError(true);
       });
     return () => controller.abort();
   }, [labels.failed, selectedSlug]);
@@ -260,6 +303,15 @@ export function GourmetBrowser(props: { locale: Locale }) {
       ),
     [entries, props.locale],
   );
+  if (selectedSlug && (!selected || selected.slug !== selectedSlug))
+    return (
+      <section className="page-width py-16">
+        <Link href={localePath(props.locale, "/gourmet/")}>{labels.back}</Link>
+        <p role="status" className="py-8">
+          {detailError ? labels.failed : labels.loading}
+        </p>
+      </section>
+    );
   if (selectedSlug && selected)
     return (
       <article className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-20">
@@ -271,19 +323,30 @@ export function GourmetBrowser(props: { locale: Locale }) {
         </Link>
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
-            <GourmetPhoto
-              emptyLabel={labels.noPhoto}
-              image={selected.images[0]}
-              pendingLabel={labels.photoPending}
-              priority
-              sizes="(max-width: 1024px) 100vw, 60vw"
-            />
+            <section aria-label={labels.photos} className="grid gap-4">
+              {(selected.images.length
+                ? [...selected.images].sort((a, b) => a.sortOrder - b.sortOrder)
+                : [undefined]
+              ).map((image, index) => (
+                <GourmetPhoto
+                  key={`${selected.id}-${image?.id ?? "empty"}`}
+                  emptyLabel={labels.noPhoto}
+                  image={image}
+                  fallbackAlt={`${selected.restaurantName} · ${selected.menuName} (${index + 1}/${selected.images.length})`}
+                  pendingLabel={labels.photoPending}
+                  retryLabel={labels.retryPhoto}
+                  contain
+                  priority={index === 0}
+                  sizes="(max-width: 1024px) 100vw, 60vw"
+                />
+              ))}
+            </section>
           </div>
-          <div className="self-center">
+          <div className="order-first min-w-0 self-start lg:order-none">
             <p className="brand-eyebrow text-[var(--accent-foreground)]">
               {gourmetDate(selected)} · {selected.source}
             </p>
-            <h1 className="display-serif mt-4 text-5xl tracking-[-0.05em]">
+            <h1 className="detail-title display-serif mt-4">
               {selected.restaurantName}
             </h1>
             <p className="mt-3 text-xl font-semibold">{selected.menuName}</p>
@@ -390,6 +453,9 @@ export function GourmetBrowser(props: { locale: Locale }) {
                 value={area}
               >
                 <option value="">{labels.allAreas}</option>
+                {area && !areas.includes(area) ? (
+                  <option value={area}>{area}</option>
+                ) : null}
                 {areas.map((value) => (
                   <option key={value}>{value}</option>
                 ))}
@@ -484,8 +550,10 @@ export function GourmetBrowser(props: { locale: Locale }) {
                       scroll
                     >
                       <GourmetPhoto
+                        key={entry.images[0]?.publicPath ?? "empty"}
                         emptyLabel={labels.noPhoto}
                         image={entry.images[0]}
+                        fallbackAlt={`${entry.restaurantName} · ${entry.menuName}`}
                         pendingLabel={labels.photoPending}
                         sizes="(max-width: 640px) 100vw, 33vw"
                       />
