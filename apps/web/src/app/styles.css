@@ -1226,6 +1226,15 @@
   width: min(100% - 2.5rem, 72rem);
   margin-inline: auto;
 }
+.detail-title {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  text-wrap: balance;
+}
+
 .page-heading {
   padding-block: 2.5rem 1rem;
 }

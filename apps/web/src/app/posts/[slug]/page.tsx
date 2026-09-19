@@ -61,7 +61,7 @@ export async function KoreanPostDetailPage(props: {
             ))}
           </div>
           <h1
-            className="display-serif mt-6 text-4xl leading-[1.04] tracking-[-0.055em] text-balance sm:text-6xl"
+            className="detail-title display-serif mt-6"
             data-beat-context-title
           >
             {post.frontmatter.title}

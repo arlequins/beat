@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createS3RateLimitAdapter } from "./s3-rate-limit";
 
-function harness(conflicts = 0) {
+function harness(conflicts = 0, conflictStatus = 412) {
   let stored: { body: string; etag: string } | undefined;
   let version = 0;
   let remainingConflicts = conflicts;
@@ -27,8 +27,11 @@ function harness(conflicts = 0) {
       if (remainingConflicts > 0) {
         remainingConflicts -= 1;
         throw Object.assign(new Error("conflict"), {
-          $metadata: { httpStatusCode: 412 },
-          name: "PreconditionFailed",
+          $metadata: { httpStatusCode: conflictStatus },
+          name:
+            conflictStatus === 409
+              ? "ConditionalRequestConflict"
+              : "PreconditionFailed",
         });
       }
       version += 1;
@@ -127,4 +130,30 @@ describe("S3 rate limiter", () => {
       "Invalid S3 rate-limit state",
     );
   });
+
+  it.each([409, 412])(
+    "tolerates repeated %i write conflicts without weakening the limit",
+    async (status) => {
+      const { client } = harness(6, status);
+      const limiter = createS3RateLimitAdapter({
+        bucket: "state",
+        client,
+        lookupSecret: "test-secret",
+      });
+      const input = {
+        key: "identity",
+        limit: 1,
+        now: new Date("2026-07-30T00:00:10.000Z"),
+        windowMs: 60_000,
+      };
+      await expect(limiter.consume(input)).resolves.toMatchObject({
+        allowed: true,
+        remaining: 0,
+      });
+      await expect(limiter.consume(input)).resolves.toMatchObject({
+        allowed: false,
+        remaining: 0,
+      });
+    },
+  );
 });
