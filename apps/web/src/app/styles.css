@@ -1231,6 +1231,7 @@
   line-height: 1.25;
   letter-spacing: -0.035em;
   overflow-wrap: anywhere;
+  word-break: keep-all;
   text-wrap: balance;
 }
 
