@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.54.3](https://github.com/arlequins/beat/compare/beat-v1.54.2...beat-v1.54.3) (2026-09-19)
+
+
+### Bug Fixes
+
+* **web:** refine Korean prose in fiction episodes 6-20 ([#228](https://github.com/arlequins/beat/issues/228)) ([02a4a79](https://github.com/arlequins/beat/commit/02a4a794072818b844e0d4666cd1877cc0738a9f))
+
 ## [1.54.2](https://github.com/arlequins/beat/compare/beat-v1.54.1...beat-v1.54.2) (2026-09-19)
 
 
