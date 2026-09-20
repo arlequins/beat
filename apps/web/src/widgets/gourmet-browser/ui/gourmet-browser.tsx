@@ -47,7 +47,6 @@ const text = {
     photoPending: "Photo could not be loaded",
     retryPhoto: "Retry photo",
     photos: "Photos",
-    records: "records",
     recommended: "Recommended to revisit",
     revisit: "Revisit",
     revisitFilter: "Any revisit plan",
@@ -80,7 +79,6 @@ const text = {
     photoPending: "写真を読み込めません",
     retryPhoto: "写真を再読み込み",
     photos: "写真",
-    records: "件の記録",
     recommended: "再訪したい店",
     revisit: "再訪",
     revisitFilter: "再訪予定すべて",
@@ -92,7 +90,7 @@ const text = {
   },
   ko: {
     allAreas: "모든 지역",
-    allCuisines: "모든 장르",
+    allCuisines: "모든 음식 종류",
     adminLink: "관리 화면 열기",
     emptyBody:
       "모바일 Beat에서 식사를 기록하거나 관리자 화면에서 첫 기록을 추가해 주세요.",
@@ -113,10 +111,9 @@ const text = {
     photoPending: "사진을 불러오지 못했습니다",
     retryPhoto: "사진 다시 불러오기",
     photos: "사진",
-    records: "개 기록",
     recommended: "재방문 추천",
     revisit: "재방문",
-    revisitFilter: "모든 재방문 계획",
+    revisitFilter: "재방문 여부",
     revisitNo: "보류",
     revisitUnknown: "미정",
     revisitYes: "추천",
@@ -139,6 +136,12 @@ function Rating(props: { value: number }) {
       {props.value.toFixed(1)}
     </span>
   );
+}
+
+function recordCount(locale: Locale, count: number) {
+  if (locale === "ko") return `${count}개 기록`;
+  if (locale === "ja") return `${count}件の記録`;
+  return `${count} ${count === 1 ? "record" : "records"}`;
 }
 
 function GourmetPhoto(props: {
@@ -503,7 +506,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
         </div>
         {!message && list ? (
           <p className="py-4 text-sm text-[var(--muted-foreground)]">
-            {list.total} {labels.records}
+            {recordCount(props.locale, list.total)}
           </p>
         ) : null}
         {message ? (
@@ -539,7 +542,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
                   {month.label}
                 </h2>
                 <span className="text-xs font-bold tracking-[0.12em] text-[var(--muted-foreground)] uppercase">
-                  {month.entries.length} {labels.records}
+                  {recordCount(props.locale, month.entries.length)}
                 </span>
               </header>
               <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">

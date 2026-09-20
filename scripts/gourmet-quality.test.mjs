@@ -16,18 +16,24 @@ test("reports missing dates and photos without mutating entries", () => {
   assert.equal(entries[0].images.length, 0);
 });
 
-test("reports unknown metadata as an error only for names", () => {
+test("reports unknown names and unhelpful photo descriptions", () => {
   const report = auditPublicGourmetEntries([
     {
       id: "two",
       restaurantName: "미상",
       menuName: "미상",
       visitedAt: "2026-08-22",
-      images: [{ altText: "미상", originalFilename: "unknown.webp" }],
+      images: [
+        { altText: "미상 미상", originalFilename: "unknown.webp" },
+        {
+          altText: "31877F1F-46EA-48C4-8F92-F908D1AE2790.jpeg",
+          originalFilename: "31877F1F-46EA-48C4-8F92-F908D1AE2790.jpeg",
+        },
+      ],
     },
   ]);
   assert.equal(report.errorCount, 2);
-  assert.equal(report.warningCount, 1);
+  assert.equal(report.warningCount, 2);
 });
 
 test("fetches only the public gourmet list over HTTPS", async () => {
