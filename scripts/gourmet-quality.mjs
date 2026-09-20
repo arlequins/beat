@@ -1,7 +1,17 @@
 import process from "node:process";
 
 function isUnknown(value) {
-  return !value?.trim() || value.trim().toLocaleLowerCase() === "미상";
+  const normalized = value?.trim().replace(/\s+/g, " ");
+  return (
+    !normalized ||
+    /^(?:미상|unknown|n\/a)(?:\s+(?:미상|unknown|n\/a))*$/i.test(normalized)
+  );
+}
+
+function hasUnhelpfulImageAlt(value) {
+  return (
+    isUnknown(value) || /\.(jpe?g|png|webp|heic)$/i.test(value?.trim() ?? "")
+  );
 }
 
 /**
@@ -42,13 +52,13 @@ export function auditPublicGourmetEntries(entries) {
       });
     for (const image of entry.images ?? []) {
       if (
-        isUnknown(image.altText) ||
+        hasUnhelpfulImageAlt(image.altText) ||
         /미상|unknown/i.test(image.originalFilename ?? "")
       )
         issues.push({
           code: "unknown-image-metadata",
           entryId: entry.id ?? "unknown",
-          message: `${restaurant} 사진의 설명 또는 원본 이름이 미확인입니다.`,
+          message: `${restaurant} 사진 설명이 없거나 파일명으로 되어 있습니다.`,
           severity: "warning",
         });
     }
