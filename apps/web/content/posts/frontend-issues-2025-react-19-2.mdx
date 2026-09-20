@@ -1,6 +1,6 @@
 ---
 title: "2025 프런트엔드 이슈 03 — React 19.2의 Activity와 화면의 생명주기"
-excerpt: Activity, useEffectEvent, Performance Tracks가 UI의 상태와 측정을 어떻게 다시 나누는지 살펴봅니다.
+excerpt: React 19.2의 Activity와 useEffectEvent, Performance Tracks가 화면 상태 보존과 작업 측정에 어떤 도움을 주는지 살펴봅니다.
 category: deep-dive
 reviewStatus: reviewed
 publishedAt: "2025-10-02"
@@ -10,13 +10,13 @@ tags:
   - UI Architecture
   - Observability
 ---
-## 숨김과 제거 사이에 Activity가 놓인다
+## 화면을 숨겨도 상태를 유지하는 Activity
 
-React 19.2의 `<Activity />`는 화면을 조건부로 완전히 제거하는 대신, 보이지 않는 활동을 숨기고 우선순위를 조정하는 모델을 제시합니다. 탭, 작성 중인 폼, 최근 방문 화면처럼 다시 돌아올 가능성이 높은 UI의 상태를 어디에 둘지 선택지가 늘었습니다.
+React 19.2의 `<Activity />`는 화면을 완전히 없애는 대신 보이지 않게 숨기고, 그 화면에서 처리할 작업의 우선순위를 낮출 수 있게 합니다. 탭이나 작성 중인 폼처럼 다시 돌아올 화면의 상태를 유지하는 방법이 하나 더 생겼습니다.
 
-## 효과와 측정의 언어가 세분화된다
+## 효과의 실행 시점과 성능 기록이 분명해진다
 
-`useEffectEvent`는 이벤트성 로직과 렌더링에 반응하는 효과를 구분하는 데 도움을 줍니다. Performance Tracks는 React 작업을 브라우저 성능 기록에서 읽기 쉽게 만듭니다. 둘 다 “무엇을 최적화할까”보다 “어떤 생명주기에서 일이 일어나는가”를 먼저 묻게 합니다.
+`useEffectEvent`를 쓰면 사용자 이벤트에 따른 로직과 렌더링에 반응하는 효과를 구분하기 쉬워집니다. Performance Tracks는 브라우저 성능 기록에서 React 작업을 더 쉽게 살펴보도록 돕습니다. 두 기능은 최적화에 앞서 각 작업이 언제 실행되는지 확인하게 합니다.
 
 ## 적용할 때의 질문
 
