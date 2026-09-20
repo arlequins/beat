@@ -1,6 +1,6 @@
 ---
 title: "2025 프런트엔드 이슈 06 — Interop 2025가 브라우저 선택을 바꾼 방식"
-excerpt: Anchor positioning, View Transition, Navigation API를 브라우저 파편화가 아닌 공통 테스트의 관점에서 읽습니다.
+excerpt: 앵커 위치 지정과 화면 전환, Navigation API를 브라우저별 차이보다 함께 검증할 기능이라는 관점에서 살펴봅니다.
 category: deep-dive
 reviewStatus: reviewed
 publishedAt: "2025-02-13"
@@ -10,9 +10,9 @@ tags:
   - CSS
   - Interoperability
 ---
-## 새 기능보다 같은 기능이 중요하다
+## 새 기능만큼 브라우저 간 호환성이 중요하다
 
-Interop 2025는 anchor positioning, View Transition API, Navigation API, `@scope`, WebAssembly 등 여러 영역을 브라우저 공동의 테스트 목표로 삼았습니다. 개발자에게 중요한 변화는 기능 목록보다 “언제부터 공통 기준으로 설명할 수 있는가”가 선명해진 점입니다.
+Interop 2025는 anchor positioning, View Transition API, Navigation API, `@scope`, WebAssembly 등을 브라우저 업체들이 함께 검증할 항목으로 정했습니다. 기능 목록을 늘리는 데 그치지 않고, 브라우저별 지원 상황을 공통 기준으로 살펴볼 수 있게 된 점이 중요합니다.
 
 ## 라이브러리의 역할이 달라진다
 
@@ -20,6 +20,6 @@ Popover와 anchor positioning처럼 브라우저가 위치·포커스·닫힘을
 
 ## Baseline을 팀 언어로 쓰기
 
-지원 브라우저를 막연히 “모던”이라고 부르는 대신 Baseline 상태와 사내 사용량을 나란히 기록합니다. 점진적 향상이 가능한 기능은 기본 경로에, 아직 불안정한 기능은 실험 경로에 둡니다.
+지원 브라우저를 막연히 “모던”이라고 부르는 대신 Baseline 지원 상태와 사내 사용 비율을 함께 기록합니다. 점진적 향상을 적용할 수 있는 기능은 기본 경로에 두고, 아직 안정적이지 않은 기능은 실험 경로에서 검증합니다.
 
 출처: [Interop 2025](https://web.dev/blog/interop-2025)

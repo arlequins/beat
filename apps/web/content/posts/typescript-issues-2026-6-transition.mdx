@@ -12,14 +12,14 @@ tags:
 ---
 ## 호환되지만 그대로 머물 수는 없다
 
-TypeScript 6.0은 5.9와의 지식을 이어가면서도 `rootDir`, `types`, module resolution과 같은 기본값·deprecated 옵션을 정리했습니다. 즉시 모든 코드를 고치는 릴리스라기보다 다음 네이티브 컴파일러를 위해 저장소의 숨은 가정을 드러내는 릴리스입니다.
+TypeScript 6.0은 5.9와 호환성을 유지하면서 `rootDir`, `types`, 모듈 해석과 관련된 기본값 및 폐기 예정 옵션을 정리했습니다. 모든 코드를 당장 고치기보다 다음 네이티브 컴파일러에 앞서 저장소의 숨은 가정을 확인하도록 돕는 릴리스입니다.
 
 ## 설정 부채를 목록으로 만들기
 
-`baseUrl`, `moduleResolution: node10`, ES5 target처럼 사라질 옵션을 먼저 검색합니다. `tsc`에 파일 인자를 넘기면서 `tsconfig`가 자동으로 읽힐 것이라고 기대하는 스크립트도 실패할 수 있으므로, CI 명령을 명시적인 project 모드로 바꿉니다.
+먼저 `baseUrl`, `moduleResolution: node10`, ES5 타깃처럼 폐기될 옵션을 검색합니다. 파일 이름을 `tsc`에 직접 넘기면서 `tsconfig`도 자동으로 읽힐 거라 기대하는 스크립트는 실패할 수 있습니다. CI 명령을 명시적인 프로젝트 모드로 바꿉니다.
 
 ## 점진적 업그레이드
 
-경고를 모두 끄기보다 패키지별로 수정 PR을 쪼갭니다. `ignoreDeprecations`는 시간을 버는 장치이지 최종 설정이 아니며, 타입 검사와 declaration emit을 함께 실행해야 실제 라이브러리 소비자까지 확인할 수 있습니다.
+경고를 전부 끄기보다 패키지별로 수정 작업을 나눕니다. `ignoreDeprecations`는 임시 방편이지 최종 설정이 아닙니다. 타입 검사와 선언 파일 출력도 함께 확인해야 라이브러리를 사용하는 쪽에 문제가 없는지 알 수 있습니다.
 
 출처: [TypeScript 6.0 release notes](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html)

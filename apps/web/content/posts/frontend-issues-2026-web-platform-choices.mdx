@@ -1,6 +1,6 @@
 ---
-title: "2026 프런트엔드 이슈 20 — Baseline을 빌드 타깃으로 번역하는 법"
-excerpt: Baseline, Vite, Next.js의 브라우저 타깃 언어를 하나의 지원 정책과 테스트 매트릭스로 합치는 방법을 정리합니다.
+title: "2026 프런트엔드 이슈 20 — Baseline을 빌드 설정에 반영하는 법"
+excerpt: Baseline을 Vite와 Next.js 설정에 반영하고 브라우저 지원 정책과 테스트 항목으로 연결하는 방법을 정리합니다.
 category: deep-dive
 reviewStatus: reviewed
 publishedAt: "2026-07-01"
@@ -12,14 +12,14 @@ tags:
 ---
 ## “모던 브라우저”라는 말은 부족하다
 
-Baseline은 기능이 여러 주요 브라우저에서 안정적으로 지원되는 시점을 공통 언어로 제공합니다. Vite는 이를 기본 빌드 타깃에 반영했고, 프레임워크도 브라우저 기능과 정적 산출물의 관계를 더 명시하고 있습니다.
+Baseline은 웹 기능이 주요 브라우저에서 어느 정도 지원되는지 공통 기준으로 보여줍니다. Vite는 이를 기본 빌드 타깃에 반영했고, 프레임워크도 빌드 결과가 어떤 브라우저 기능에 기대는지 더 분명히 드러내고 있습니다.
 
 ## 지원 정책은 코드보다 먼저다
 
-사내 WebView, 저가형 Android, 검색 크롤러처럼 일반적인 핵심 브라우저 집합 밖의 대상이 있다면 별도 정책을 선언해야 합니다. “Baseline이라서 된다”가 아니라, 지원 대상·점진적 향상·fallback을 테스트 매트릭스로 만들 때 정책이 실행됩니다.
+사내 WebView나 보급형 Android 기기, 검색 크롤러처럼 일반적인 브라우저 범위 밖의 대상도 지원한다면 별도 정책을 정해야 합니다. “Baseline이니까 된다”고 가정하지 말고 지원 대상과 점진적 향상, 대체 경로를 테스트 항목에 넣어야 정책이 실제로 작동합니다.
 
 ## 올해의 실천
 
-브라우저 타깃을 package.json이나 bundler 설정에 흩어놓지 말고 한 문서에서 관리합니다. CSS·Web API·JS 문법에 각각 Baseline 상태와 fallback을 기록하고, 분기마다 실제 사용자 비율과 함께 갱신합니다.
+브라우저 타깃을 `package.json`과 번들러 설정에 흩어 두지 말고 한 문서에서 관리합니다. CSS와 Web API, JavaScript 문법별 Baseline 지원 상태와 대체 경로를 기록하고, 분기마다 실제 사용자 비율에 맞춰 갱신합니다.
 
 출처: [Interop 2025](https://web.dev/blog/interop-2025), [Vite 7](https://vite.dev/blog/announcing-vite7), [Next.js blog](https://nextjs.org/blog)
