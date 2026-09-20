@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.54.7](https://github.com/arlequins/beat/compare/beat-v1.54.6...beat-v1.54.7) (2026-09-20)
+
+
+### Bug Fixes
+
+* **fiction:** clarify episode continuity and Korean prose ([#237](https://github.com/arlequins/beat/issues/237)) ([eaa619f](https://github.com/arlequins/beat/commit/eaa619fd255e76398f50babf192c156ce1cd383f))
+
 ## [1.54.6](https://github.com/arlequins/beat/compare/beat-v1.54.5...beat-v1.54.6) (2026-09-20)
 
 
