@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.54.6](https://github.com/arlequins/beat/compare/beat-v1.54.5...beat-v1.54.6) (2026-09-20)
+
+
+### Bug Fixes
+
+* **fiction:** smooth repeated deadline in episode two ([#235](https://github.com/arlequins/beat/issues/235)) ([e060e4a](https://github.com/arlequins/beat/commit/e060e4a3be4465a9fddd74577f14793dfce0535c))
+
 ## [1.54.5](https://github.com/arlequins/beat/compare/beat-v1.54.4...beat-v1.54.5) (2026-09-19)
 
 
