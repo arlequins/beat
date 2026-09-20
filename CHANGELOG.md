@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.54.9](https://github.com/arlequins/beat/compare/beat-v1.54.8...beat-v1.54.9) (2026-09-20)
+
+
+### Bug Fixes
+
+* **content:** polish Korean copy and Gourmet quality checks ([#241](https://github.com/arlequins/beat/issues/241)) ([109dc0e](https://github.com/arlequins/beat/commit/109dc0e7e657061d171c258d536b53238de42df6))
+
 ## [1.54.8](https://github.com/arlequins/beat/compare/beat-v1.54.7...beat-v1.54.8) (2026-09-20)
 
 
