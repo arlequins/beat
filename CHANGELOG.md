@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.54.8](https://github.com/arlequins/beat/compare/beat-v1.54.7...beat-v1.54.8) (2026-09-20)
+
+
+### Bug Fixes
+
+* **content:** polish Korean IT articles ([#239](https://github.com/arlequins/beat/issues/239)) ([24f7667](https://github.com/arlequins/beat/commit/24f76671ad38f05bebbe056d0c15f60b0f16cf99))
+
 ## [1.54.7](https://github.com/arlequins/beat/compare/beat-v1.54.6...beat-v1.54.7) (2026-09-20)
 
 
