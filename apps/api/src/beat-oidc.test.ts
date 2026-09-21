@@ -183,6 +183,23 @@ describe("Beat OIDC client contract", () => {
     ).toThrowError(BeatOidcRequestError);
   });
 
+  it("accepts OAuth requests that omit the optional OIDC nonce", () => {
+    const request = validateAuthorizationRequest(
+      {
+        client_id: "chatgpt-gourmet",
+        redirect_uri: "https://chatgpt.com/connector/oauth/callback-example",
+        resource: "https://api.example.com/mcp",
+        response_type: "code",
+        scope: "openid profile email offline_access gourmet:read",
+        state: "state",
+        code_challenge: "A".repeat(43),
+        code_challenge_method: "S256",
+      },
+      mcpClients,
+    );
+    expect(request.nonce).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
   it("accepts a pre-registered ChatGPT CIMD URL as an exact client id", () => {
     const clientId = "https://chatgpt.com/oauth/example/client.json";
     const raw = mcpClients.replace(

@@ -222,12 +222,12 @@ function baseRequest(input: Record<string, unknown>, raw?: string) {
   const nonce = text(input.nonce);
   if (
     typeof state !== "string" ||
-    typeof nonce !== "string" ||
     !oauthValue(state) ||
-    !oauthValue(nonce)
+    (input.nonce !== undefined &&
+      (typeof nonce !== "string" || !oauthValue(nonce)))
   )
     throw new BeatOidcRequestError("invalid_request");
-  return { client, nonce, redirectUri, state };
+  return { client, nonce: nonce ?? crypto.randomUUID(), redirectUri, state };
 }
 
 export function validateAuthorizationRequest(
