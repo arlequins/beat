@@ -174,9 +174,11 @@ test("fiction reader applies saved paper mode before hydration", async ({
 test("library omits free labels", async ({ page }) => {
   await page.goto("/ko/fiction/");
   await expect(page.getByText("무료", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("총 20화", { exact: true })).toBeVisible();
+  await expect(page.getByText("총 40화", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "20화. 물빛만 남은 길" }),
+    page.getByRole("heading", {
+      name: "40화. 돌아가는 물 5: 다음 배가 오는 날",
+    }),
   ).toBeVisible();
 });
 
@@ -272,7 +274,7 @@ test("setting guide reads all world documents without entering the story viewer"
     .evaluateAll((elements) =>
       elements.map((element) => element.getAttribute("href")),
     );
-  expect(links).toHaveLength(17);
+  expect(links).toHaveLength(18);
   for (const href of links) {
     await page.goto(href!);
     await expect(page.locator(".guide-status")).toContainText("설정집");
@@ -287,5 +289,5 @@ test("setting guide reads all world documents without entering the story viewer"
     ).toBe(true);
   }
   await page.getByRole("link", { name: "설정집 목차", exact: true }).click();
-  await expect(page.locator(".guide-contents li")).toHaveCount(17);
+  await expect(page.locator(".guide-contents li")).toHaveCount(18);
 });
