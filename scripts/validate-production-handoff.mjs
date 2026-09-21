@@ -30,6 +30,10 @@ function exactCallback(base, path) {
   return new URL(path, base).href;
 }
 
+const APPROVED_CHATGPT_CONNECTOR_CALLBACKS = new Set([
+  "https://chatgpt.com/connector/oauth/O8bneWii3GuT",
+]);
+
 function parseClientRegistration(value) {
   if (!value) throw new Error("BEAT_AUTH_CLIENTS_JSON is required");
   let parsed;
@@ -67,11 +71,16 @@ export function validateProductionHandoff(env = process.env) {
   const expectedLogout = exactCallback(base, "auth/logout-callback/");
 
   if (
-    client.redirect_uris?.length !== 1 ||
-    client.redirect_uris[0] !== expectedRedirect
+    !Array.isArray(client.redirect_uris) ||
+    !client.redirect_uris.includes(expectedRedirect) ||
+    client.redirect_uris.some(
+      (redirectUri) =>
+        redirectUri !== expectedRedirect &&
+        !APPROVED_CHATGPT_CONNECTOR_CALLBACKS.has(redirectUri),
+    )
   ) {
     throw new Error(
-      `beat-agent-web redirect URI must be exactly ${expectedRedirect}`,
+      `beat-agent-web redirect URIs must include the Agent callback ${expectedRedirect} and only approved ChatGPT connector callbacks`,
     );
   }
   if (
