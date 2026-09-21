@@ -253,6 +253,9 @@ importers:
       jose:
         specifier: 'catalog:'
         version: 6.2.3
+      sharp:
+        specifier: 0.34.5
+        version: 0.34.5
     devDependencies:
       '@arlequins/tsconfig':
         specifier: workspace:*
@@ -8094,8 +8097,7 @@ snapshots:
       hono: 4.12.31
       zod: 4.4.3
 
-  '@img/colour@1.1.0':
-    optional: true
+  '@img/colour@1.1.0': {}
 
   '@img/sharp-darwin-arm64@0.34.5':
     optionalDependencies:
@@ -13214,7 +13216,6 @@ snapshots:
       '@img/sharp-win32-arm64': 0.34.5
       '@img/sharp-win32-ia32': 0.34.5
       '@img/sharp-win32-x64': 0.34.5
-    optional: true
 
   shebang-command@2.0.0:
     dependencies:

@@ -4,6 +4,7 @@ import { DEFAULT_LOCALHOST_SITE_URL } from "@arlequins/env/public-defaults";
 import { serverEnv } from "@arlequins/env/server-env";
 import type { Logger } from "@arlequins/logger";
 import { type OpenAPIHono, z } from "@hono/zod-openapi";
+import sharp from "sharp";
 
 import type { ApiBindings } from "./app";
 import type { GourmetPort } from "./features/gourmet/application/ports";
@@ -17,6 +18,11 @@ const MCP_PROTOCOL_VERSIONS = [
 const MCP_SERVER_VERSION = "1.0.0";
 const MCP_SCOPE_READ = "gourmet:read";
 const MCP_SCOPE_WRITE = "gourmet:write";
+const MAX_SOURCE_IMAGE_BYTES = 12 * 1024 * 1024;
+const MAX_TOTAL_SOURCE_IMAGE_BYTES = 30 * 1024 * 1024;
+const MAX_IMPORTED_IMAGES = 6;
+const MAX_OPTIMIZED_IMAGE_BYTES = 700 * 1024;
+const TRUSTED_OPENAI_FILE_HOST = "files.oaiusercontent.com";
 
 type McpPrincipal = {
   email: string;
@@ -102,11 +108,53 @@ const previewSchema = z
   })
   .strict();
 
+const openAIFileSchema = z
+  .object({
+    download_url: z.string().url().max(4_096),
+    file_id: z.string().min(1).max(512),
+    file_name: z.string().max(255).optional(),
+    mime_type: z.string().max(120).optional(),
+  })
+  .strict();
+
 const confirmSchema = previewSchema
   .extend({
     confirmed: z.literal(true),
+    imageEntryIndexes: z
+      .array(z.number().int().min(0).max(23))
+      .max(6)
+      .optional(),
+    images: z.array(openAIFileSchema).max(MAX_IMPORTED_IMAGES).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((input, context) => {
+    const images = input.images ?? [];
+    const indexes = input.imageEntryIndexes;
+    if (indexes && indexes.length !== images.length)
+      context.addIssue({
+        code: "custom",
+        message: "imageEntryIndexes must match the number of images",
+        path: ["imageEntryIndexes"],
+      });
+    if (images.length > 0 && input.entries.length > 1 && !indexes)
+      context.addIssue({
+        code: "custom",
+        message: "imageEntryIndexes is required when importing multiple meals",
+        path: ["imageEntryIndexes"],
+      });
+    if (indexes?.some((index) => index >= input.entries.length))
+      context.addIssue({
+        code: "custom",
+        message: "imageEntryIndexes must refer to an imported meal",
+        path: ["imageEntryIndexes"],
+      });
+    if (!images.length && indexes?.length)
+      context.addIssue({
+        code: "custom",
+        message: "imageEntryIndexes requires images",
+        path: ["imageEntryIndexes"],
+      });
+  });
 
 const toolRecordJsonSchema = {
   type: "object",
@@ -133,6 +181,134 @@ const toolRecordJsonSchema = {
     tasteNotes: { type: "array", maxItems: 24, items: { type: "string" } },
   },
 } as const;
+
+const toolFileJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["download_url", "file_id"],
+  properties: {
+    download_url: { type: "string", format: "uri", maxLength: 4_096 },
+    file_id: { type: "string", minLength: 1, maxLength: 512 },
+    mime_type: { type: "string", maxLength: 120 },
+    file_name: { type: "string", maxLength: 255 },
+  },
+} as const;
+
+function validateOpenAIFileUrl(rawUrl: string) {
+  const url = new URL(rawUrl);
+  const trustedHost = url.hostname === TRUSTED_OPENAI_FILE_HOST;
+  if (
+    url.protocol !== "https:" ||
+    url.username ||
+    url.password ||
+    (url.port && url.port !== "443") ||
+    !trustedHost
+  )
+    throw new Error("Untrusted ChatGPT file download URL");
+  return url;
+}
+
+async function readBoundedResponse(response: Response, maximumBytes: number) {
+  const length = Number(response.headers.get("content-length"));
+  if (Number.isFinite(length) && length > maximumBytes)
+    throw new Error("ChatGPT image is too large");
+  if (!response.body) throw new Error("ChatGPT image has no content");
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maximumBytes) {
+      await reader.cancel();
+      throw new Error("ChatGPT image is too large");
+    }
+    chunks.push(value);
+  }
+  if (!total) throw new Error("ChatGPT image has no content");
+  return Buffer.concat(chunks, total);
+}
+
+async function downloadOpenAIFile(
+  file: z.infer<typeof openAIFileSchema>,
+  remainingSourceBytes: number,
+) {
+  const maximumBytes = Math.min(MAX_SOURCE_IMAGE_BYTES, remainingSourceBytes);
+  if (maximumBytes <= 0)
+    throw new Error("Total ChatGPT image size is too large");
+  let url = validateOpenAIFileUrl(file.download_url);
+  for (let redirectCount = 0; redirectCount <= 2; redirectCount += 1) {
+    const response = await fetch(url, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      await response.body?.cancel();
+      const location = response.headers.get("location");
+      if (!location || redirectCount === 2)
+        throw new Error("ChatGPT image redirect is invalid");
+      url = validateOpenAIFileUrl(new URL(location, url).toString());
+      continue;
+    }
+    if (!response.ok) throw new Error("ChatGPT image download failed");
+    return readBoundedResponse(response, maximumBytes);
+  }
+  throw new Error("ChatGPT image download failed");
+}
+
+async function optimizeImportedImage(
+  file: z.infer<typeof openAIFileSchema>,
+  remainingSourceBytes: number,
+) {
+  const input = await downloadOpenAIFile(file, remainingSourceBytes);
+  const source = sharp(input, {
+    failOn: "error",
+    limitInputPixels: 40_000_000,
+  });
+  const metadata = await source.metadata();
+  if (!metadata.width || !metadata.height)
+    throw new Error("ChatGPT file is not a supported image");
+  if (!metadata.format || !["jpeg", "png", "webp"].includes(metadata.format))
+    throw new Error("Only JPEG, PNG, and WebP images are supported");
+
+  let longestEdge = 1_600;
+  let quality = 84;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const output = await sharp(input, {
+      failOn: "error",
+      limitInputPixels: 40_000_000,
+    })
+      .rotate()
+      .resize({
+        fit: "inside",
+        height: longestEdge,
+        withoutEnlargement: true,
+        width: longestEdge,
+      })
+      .webp({ effort: 4, quality })
+      .toBuffer();
+    if (output.byteLength <= MAX_OPTIMIZED_IMAGE_BYTES) {
+      const baseName = (file.file_name ?? "meal")
+        .split(/[\\/]/)
+        .at(-1)
+        ?.replace(/\.[^.]*$/, "")
+        .replace(/[^\p{L}\p{N}._ -]/gu, "")
+        .trim()
+        .slice(0, 200);
+      return {
+        altText: "식사 사진",
+        contentBase64: output.toString("base64"),
+        contentType: "image/webp" as const,
+        originalFilename: `${baseName || "meal"}.webp`,
+        sourceBytes: input.byteLength,
+      };
+    }
+    quality = Math.max(50, quality - 6);
+    if (attempt % 3 === 2) longestEdge = Math.floor(longestEdge * 0.8);
+  }
+  throw new Error("ChatGPT image could not be optimized to a safe size");
+}
 
 function bearer(value: string | undefined) {
   return value ? /^Bearer\s+(\S+)$/i.exec(value.trim())?.[1] : undefined;
@@ -205,12 +381,11 @@ function oauthToolError(
 
 function idempotencyKey(
   entry: GourmetInput,
-  index: number,
-  sourceConversation?: string,
+  sourceConversation: string | undefined,
+  occurrence: number,
 ) {
-  if (entry.externalRequestId) return entry.externalRequestId;
   const digest = createHash("sha256")
-    .update(JSON.stringify({ entry, index, sourceConversation }))
+    .update(JSON.stringify({ entry, occurrence, sourceConversation }))
     .digest("hex");
   return `mcp:${digest}`;
 }
@@ -267,7 +442,7 @@ function tools() {
         readOnlyHint: false,
       },
       description:
-        "Save explicitly confirmed meal records as Beat Gourmet drafts. Call only after the user confirms the complete preview.",
+        "Save meal records and any attached ChatGPT images as Beat Gourmet drafts. Call only when the user has asked to save or import the meal; never publish. If the meal details are uncertain, preview them first and wait for the user's confirmation.",
       inputSchema: {
         additionalProperties: false,
         properties: {
@@ -278,11 +453,22 @@ function tools() {
             minItems: 1,
             type: "array",
           },
+          imageEntryIndexes: {
+            items: { maximum: 23, minimum: 0, type: "integer" },
+            maxItems: MAX_IMPORTED_IMAGES,
+            type: "array",
+          },
+          images: {
+            items: toolFileJsonSchema,
+            maxItems: MAX_IMPORTED_IMAGES,
+            type: "array",
+          },
           sourceConversation: { maxLength: 200, type: "string" },
         },
         required: ["confirmed", "entries"],
         type: "object",
       },
+      _meta: { "openai/fileParams": ["images"] },
       name: "gourmet_confirm_import",
       securitySchemes: [{ scopes: [MCP_SCOPE_WRITE], type: "oauth2" }],
     },
@@ -503,12 +689,39 @@ export function registerMcpRoutes(
             200,
           );
         const input = confirmSchema.parse(rawArguments);
-        const entries = await Promise.all(
-          input.entries.map(async (entry, index) => {
+        const images: Array<{
+          entryIndex: number;
+          input: Omit<
+            Awaited<ReturnType<typeof optimizeImportedImage>>,
+            "sourceBytes"
+          >;
+        }> = [];
+        let totalSourceBytes = 0;
+        const imageEntryIndexes =
+          input.imageEntryIndexes ?? (input.images ?? []).map(() => 0);
+        for (const [index, file] of (input.images ?? []).entries()) {
+          const image = await optimizeImportedImage(
+            file,
+            MAX_TOTAL_SOURCE_IMAGE_BYTES - totalSourceBytes,
+          );
+          totalSourceBytes += image.sourceBytes;
+          const { sourceBytes: _sourceBytes, ...imageInput } = image;
+          images.push({
+            entryIndex: imageEntryIndexes[index] ?? 0,
+            input: imageInput,
+          });
+        }
+
+        const entryOccurrences = new Map<string, number>();
+        const importedEntries = await Promise.all(
+          input.entries.map(async (entry) => {
+            const identity = JSON.stringify(entry);
+            const occurrence = entryOccurrences.get(identity) ?? 0;
+            entryOccurrences.set(identity, occurrence + 1);
             const idempotency = idempotencyKey(
               entry as GourmetInput,
-              index,
               input.sourceConversation,
+              occurrence,
             );
             const created = await gourmet.create(
               {
@@ -522,14 +735,36 @@ export function registerMcpRoutes(
             return { detailUrl: detailUrl(created), entry: created };
           }),
         );
+        for (const image of images) {
+          const imported = importedEntries[image.entryIndex];
+          if (!imported) throw new Error("Image meal mapping is invalid");
+          const attached = await gourmet.attachImage(
+            imported.entry.id,
+            {
+              ...image.input,
+              altText: `${imported.entry.restaurantName} ${imported.entry.menuName}`,
+            },
+            principal.subject,
+          );
+          importedEntries[image.entryIndex] = {
+            detailUrl: detailUrl(attached),
+            entry: attached,
+          };
+        }
         log?.info("mcp.gourmet.imported", {
-          count: entries.length,
+          count: importedEntries.length,
+          imageCount: images.length,
           subject: principal.subject,
         });
         return context.json(
           jsonRpcResult(
             id,
-            textResult({ count: entries.length, entries, status: "saved" }),
+            textResult({
+              count: importedEntries.length,
+              entries: importedEntries,
+              imageCount: images.length,
+              status: "saved",
+            }),
           ),
         );
       }

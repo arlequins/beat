@@ -41,7 +41,8 @@
     "@trpc/server": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
-    "jose": "catalog:"
+    "jose": "catalog:",
+    "sharp": "0.34.5"
   },
   "devDependencies": {
     "@arlequins/tsconfig": "workspace:*",
