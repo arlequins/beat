@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.55.0](https://github.com/arlequins/beat/compare/beat-v1.54.9...beat-v1.55.0) (2026-09-21)
+
+
+### Features
+
+* **api:** import Gourmet photos through MCP ([40cb89a](https://github.com/arlequins/beat/commit/40cb89aaa741e8dc832bdbed58e232223bf9f228))
+
 ## [1.54.9](https://github.com/arlequins/beat/compare/beat-v1.54.8...beat-v1.54.9) (2026-09-20)
 
 
