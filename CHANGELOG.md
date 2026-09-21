@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.56.0](https://github.com/arlequins/beat/compare/beat-v1.55.0...beat-v1.56.0) (2026-09-21)
+
+
+### Features
+
+* **fiction:** add episodes 21-40 in four connected arcs ([d5f2edf](https://github.com/arlequins/beat/commit/d5f2edf2794aeeb54179a11eeb1f7b158c9743c0))
+
 ## [1.55.0](https://github.com/arlequins/beat/compare/beat-v1.54.9...beat-v1.55.0) (2026-09-21)
 
 
