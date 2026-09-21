@@ -111,9 +111,15 @@ assert(
   toolsList.response.status === 401,
   `Unauthenticated tools/list returned ${toolsList.response.status}`,
 );
-const challenge = toolsList.response.headers.get("www-authenticate") ?? "";
+// AWS remaps WWW-Authenticate on Lambda Function URL 401 responses. ChatGPT
+// can also discover this server from the protected-resource metadata endpoint
+// checked above, so validate the challenge payload under either header name.
+const challenge =
+  toolsList.response.headers.get("www-authenticate") ??
+  toolsList.response.headers.get("x-amzn-remapped-www-authenticate") ??
+  "";
 assert(
-  challenge.includes("resource_metadata=") &&
+  challenge.includes(`resource_metadata="${metadataUrl}"`) &&
     challenge.includes('error="invalid_token"'),
   "Unauthenticated tools/list did not return an OAuth challenge",
 );
