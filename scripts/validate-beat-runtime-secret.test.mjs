@@ -21,7 +21,6 @@ const valid = {
     x: "public-x",
     y: "public-y",
   }),
-  BEAT_GOURMET_ACTION_API_KEY: "gourmet-action-key-at-least-32-chars",
   GITHUB_APP_ID: "123456",
   GITHUB_APP_INSTALLATION_ID: "987654",
   GITHUB_APP_PRIVATE_KEY:
@@ -37,9 +36,6 @@ describe("Beat runtime secret contract", () => {
   });
 
   it("rejects missing, public HTTP, weak, and malformed values", () => {
-    assert.throws(() =>
-      validateBeatRuntimeSecret({ ...valid, BEAT_GOURMET_ACTION_API_KEY: "" }),
-    );
     assert.throws(() =>
       validateBeatRuntimeSecret({
         ...valid,

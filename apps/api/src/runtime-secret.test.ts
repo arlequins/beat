@@ -11,7 +11,6 @@ const runtimeSecret = {
   BEAT_AUTH_LOOKUP_SECRET: "lookup-secret-at-least-32-characters",
   BEAT_AUTH_SIGNING_KEY_ID: "beat-auth-2026-01",
   BEAT_AUTH_SIGNING_PRIVATE_JWK: JSON.stringify({ kty: "EC" }),
-  BEAT_GOURMET_ACTION_API_KEY: "gourmet-action-key-at-least-32-chars",
   GITHUB_APP_ID: "123456",
   GITHUB_APP_INSTALLATION_ID: "987654",
   GITHUB_APP_PRIVATE_KEY:

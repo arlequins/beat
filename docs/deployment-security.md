@@ -58,7 +58,6 @@ The JSON object must contain these string values:
   "BEAT_AUTH_GOOGLE_CLIENT_ID": "...apps.googleusercontent.com",
   "BEAT_AUTH_GOOGLE_CLIENT_SECRET": "...",
   "BEAT_AUTH_GOOGLE_REDIRECT_URI": "https://api.example.com/auth/google/callback",
-  "BEAT_GOURMET_ACTION_API_KEY": "...at least 32 random characters...",
   "GITHUB_APP_ID": "...",
   "GITHUB_APP_INSTALLATION_ID": "...",
   "GITHUB_APP_PRIVATE_KEY": "-----BEGIN RSA PRIVATE KEY-----\\n...",
@@ -119,11 +118,11 @@ contracts.
 
 Rotate a signing key only in a dedicated change that supports an overlap window
 in JWKS for the previous and next ES256 keys. Do not replace the sole signing
-key in place while access or ID tokens remain valid. Rotate the Gourmet Action
-key, GitHub App key, or lookup secret during a maintenance window, update the
-corresponding protected consumer first, validate redaction, and revoke the old
-value after the smoke checks pass. Never copy a secret value into a workflow
-input, issue, artifact, SST state, or `NEXT_PUBLIC_*` variable.
+key in place while access or ID tokens remain valid. Rotate the GitHub App key
+or lookup secret during a maintenance window, update the corresponding
+protected consumer first, validate redaction, and revoke the old value after
+the smoke checks pass. Never copy a secret value into a workflow input, issue,
+artifact, SST state, or `NEXT_PUBLIC_*` variable.
 
 Password changes and disable operations increment the credential version, so
 existing refresh sessions can no longer rotate. Already-issued access tokens

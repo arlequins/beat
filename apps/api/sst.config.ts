@@ -154,6 +154,9 @@ export default $config({
     });
     const handler = {
       handler: "src/lambda.handler",
+      memory: "1024 MB",
+      nodejs: { install: ["sharp"] },
+      timeout: "90 seconds",
       logging: {
         format: "json" as const,
         retention: $app.stage === Stage.PRODUCTION ? "13 months" : "1 month",
