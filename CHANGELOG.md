@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.56.1](https://github.com/arlequins/beat/compare/beat-v1.56.0...beat-v1.56.1) (2026-09-21)
+
+
+### Bug Fixes
+
+* **fiction:** align episodes 21-40 prose ([420c4a1](https://github.com/arlequins/beat/commit/420c4a19a490c1b88e0388b8ecfe240e558de122))
+
 ## [1.56.0](https://github.com/arlequins/beat/compare/beat-v1.55.0...beat-v1.56.0) (2026-09-21)
 
 
