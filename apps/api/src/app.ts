@@ -104,7 +104,6 @@ export type CreateApiAppOptions = {
     saveDraft: typeof saveBeatDraft;
   };
   gourmet?: Partial<GourmetPort>;
-  gourmetActionApiKey?: string;
   mcp?: {
     issuer?: string;
     resource?: string;
@@ -646,7 +645,6 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   });
   const gourmet = createGourmetPort(options.gourmet);
   registerGourmetRoutes(app, {
-    actionApiKey: options.gourmetActionApiKey,
     gourmet,
     verifyAccessToken: auth.verifyAccessToken,
   });

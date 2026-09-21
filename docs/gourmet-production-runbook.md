@@ -1,6 +1,6 @@
 # Gourmet 프로덕션 운영 런북
 
-이 런북은 ChatGPT Action으로 저장한 식사 기록과 관리자 사진을 확인할 때
+이 런북은 ChatGPT MCP로 저장한 식사 기록과 대화 첨부 사진을 확인할 때
 사용한다. AWS 자격 증명을 로컬에서 사용하지 않는다. 모든 AWS 확인은 보호된
 GitHub Actions production Environment와 OIDC로 실행한다.
 
@@ -9,8 +9,10 @@ GitHub Actions production Environment와 OIDC로 실행한다.
 1. **Production availability monitor**를 수동 실행해 GitHub Pages,
    `/health/live`, `/health/ready`, OIDC discovery/JWKS/CORS, 인증 없는 관리자
    접근 거부, 공개 Gourmet 목록 계약이 모두 정상인지 확인한다.
-2. Custom GPT Preview 또는 모바일 ChatGPT에서 최근 맥락을 읽고, 사용자의 명시적
-   확인 뒤 한 건을 저장한다. 응답의 `id`, `revision`, `detailUrl`만 기록한다.
+2. ChatGPT 웹에서 Gourmet MCP 커넥터의 최근 기록 조회와 미리보기를 확인한다.
+   사용자가 초안 저장을 확인하면 대화의 식사 사진도 함께 첨부되는지 검증하고,
+   응답의 `id`, `revision`, `detailUrl`만 기록한다. MCP 앱은 현재 모바일에서
+   사용할 수 없으므로 모바일 ChatGPT를 이 검증에 사용하지 않는다.
 3. `https://arlequins.github.io/beat/admin/`에서 Google SSO로 로그인해 같은 기록을
    찾는다.
 4. 관리자 화면에서 사진을 선택하고 `S3에 사진 저장`을 실행한다. 화면에 표시된
@@ -51,7 +53,7 @@ GitHub Actions production Environment와 OIDC로 실행한다.
   그룹의 redacted 초기화 메시지만 포함하고, 원본 로그를 artifact로 저장하지
   않는다.
 - S3 상태 또는 이미지 오류는 request ID, entry ID, deployment SHA와 발생
-  시각을 남긴다. 토큰, API key, Secrets Manager 값, GitHub App private key는
+  시각을 남긴다. 토큰, OAuth token, Secrets Manager 값, GitHub App private key는
   Issue나 PR에 복사하지 않는다.
 - 이미지 고아 객체를 자동 삭제하는 작업은 제공하지 않는다. 먼저 보호된
   Actions에서 read-only Inventory 또는 버전 목록으로 실제 고아 여부를

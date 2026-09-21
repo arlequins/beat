@@ -1,4 +1,5 @@
 import { createLogger } from "@arlequins/logger";
+import sharp from "sharp";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createApiApp } from "./app";
@@ -51,7 +52,19 @@ function rpc(id: string, method: string, params?: Record<string, unknown>) {
 }
 
 function appHarness(scopes = ["gourmet:read", "gourmet:write"]) {
-  const create = vi.fn(async () => entry);
+  const create = vi.fn(
+    async (
+      input: Parameters<GourmetPort["create"]>[0],
+      _options: Parameters<GourmetPort["create"]>[1],
+    ) => ({ ...entry, ...input }),
+  );
+  const attachImage = vi.fn(
+    async (
+      entryId: string,
+      _input: Parameters<GourmetPort["attachImage"]>[1],
+      _subject: string,
+    ) => ({ ...entry, id: entryId }),
+  );
   const context = vi.fn(async () => ({
     recentEntries: [],
   })) as unknown as GourmetPort["context"];
@@ -74,7 +87,7 @@ function appHarness(scopes = ["gourmet:read", "gourmet:write"]) {
     },
     corsOrigins: ["https://chatgpt.com"],
     gourmet: {
-      attachImage: vi.fn(),
+      attachImage,
       context,
       create,
       delete: vi.fn(),
@@ -89,10 +102,46 @@ function appHarness(scopes = ["gourmet:read", "gourmet:write"]) {
     },
     rateLimiter: false,
   });
-  return { app, context, create };
+  return { app, attachImage, context, create };
 }
 
-afterEach(() => vi.restoreAllMocks());
+function asArrayBuffer(value: Uint8Array) {
+  return value.buffer.slice(
+    value.byteOffset,
+    value.byteOffset + value.byteLength,
+  ) as ArrayBuffer;
+}
+
+function fileInput(downloadUrl = "https://files.oaiusercontent.com/file-1") {
+  return {
+    download_url: downloadUrl,
+    file_id: "file-1",
+    file_name: "lunch.jpg",
+    mime_type: "image/jpeg",
+  };
+}
+
+async function confirmWithImages(
+  app: ReturnType<typeof createApiApp>,
+  arguments_: Record<string, unknown>,
+  id = "image-confirm",
+) {
+  return app.request("/mcp", {
+    ...rpc(id, "tools/call", {
+      arguments: arguments_,
+      name: "gourmet_confirm_import",
+    }),
+    headers: {
+      Authorization: "Bearer mcp-token",
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 describe("Beat Gourmet MCP", () => {
   it("publishes protected-resource metadata and requires a bearer token", async () => {
@@ -262,6 +311,256 @@ describe("Beat Gourmet MCP", () => {
       headers: { ...headers, "Content-Type": "application/json" },
     });
     expect(unknownTool.status).toBe(404);
+  });
+
+  it("declares ChatGPT file parameters on the top-level images field", async () => {
+    const { app } = appHarness();
+    const listed = await app.request("/mcp", {
+      ...rpc("files", "tools/list"),
+      headers: {
+        Authorization: "Bearer mcp-token",
+        "Content-Type": "application/json",
+      },
+    });
+    const body = await listed.json();
+    const confirmTool = body.result.tools.find(
+      (tool: { name: string }) => tool.name === "gourmet_confirm_import",
+    );
+    expect(confirmTool._meta["openai/fileParams"]).toEqual(["images"]);
+    expect(confirmTool.inputSchema.properties.images.items.required).toEqual([
+      "download_url",
+      "file_id",
+    ]);
+    expect(
+      confirmTool.inputSchema.properties.images.items.properties,
+    ).toHaveProperty("mime_type");
+    expect(
+      confirmTool.inputSchema.properties.images.items.properties,
+    ).toHaveProperty("file_name");
+  });
+
+  it("downloads an attached photo, normalizes it, and attaches it to the draft", async () => {
+    const { app, attachImage, create } = appHarness();
+    const source = await sharp({
+      create: {
+        background: { alpha: 1, b: 30, g: 120, r: 190 },
+        channels: 3,
+        height: 1_200,
+        width: 2_400,
+      },
+    })
+      .jpeg()
+      .withMetadata({ orientation: 6 })
+      .toBuffer();
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(asArrayBuffer(source), {
+          headers: {
+            "content-length": String(source.byteLength),
+            "content-type": "image/jpeg",
+          },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput()],
+      sourceConversation: "conversation-1",
+    });
+    expect(response.status).toBe(200);
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(attachImage).toHaveBeenCalledTimes(1);
+    expect(attachImage).toHaveBeenCalledWith(
+      "entry-1",
+      expect.objectContaining({
+        altText: "Example Tasting menu",
+        contentType: "image/webp",
+        originalFilename: "lunch.webp",
+      }),
+      "admin-1",
+    );
+    const normalized = attachImage.mock.calls[0]?.[1];
+    expect(normalized).toBeDefined();
+    if (!normalized) throw new Error("normalized photo was not attached");
+    const metadata = await sharp(
+      Buffer.from(normalized.contentBase64, "base64"),
+    ).metadata();
+    expect(metadata).toMatchObject({
+      format: "webp",
+      height: 1_600,
+      width: 800,
+    });
+    expect(metadata.exif).toBeUndefined();
+    expect(metadata.orientation).toBeUndefined();
+    expect(
+      Buffer.from(normalized.contentBase64, "base64").byteLength,
+    ).toBeLessThan(700 * 1024);
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL("https://files.oaiusercontent.com/file-1"),
+      expect.objectContaining({ redirect: "manual" }),
+    );
+  });
+
+  it("reuses the same meal idempotency key when a photo import is retried", async () => {
+    const { app, create } = appHarness();
+    const source = await sharp({
+      create: {
+        background: { alpha: 1, b: 30, g: 120, r: 190 },
+        channels: 3,
+        height: 24,
+        width: 24,
+      },
+    })
+      .png()
+      .toBuffer();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(asArrayBuffer(source), {
+            headers: { "content-length": String(source.byteLength) },
+          }),
+      ),
+    );
+    const arguments_ = {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput()],
+      sourceConversation: "retryable-conversation",
+    };
+
+    expect(
+      (await confirmWithImages(app, arguments_, "first-write")).status,
+    ).toBe(200);
+    expect(
+      (await confirmWithImages(app, arguments_, "retry-write")).status,
+    ).toBe(200);
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(create.mock.calls[0]?.[1].idempotencyKey).toBe(
+      create.mock.calls[1]?.[1].idempotencyKey,
+    );
+  });
+
+  it("rejects an oversized file from its declared length before creating a draft", async () => {
+    const { app, create } = appHarness();
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(null, {
+          headers: { "content-length": String(12 * 1024 * 1024 + 1) },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput()],
+    });
+    expect(response.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(create).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: -32000 },
+    });
+  });
+
+  it("rejects untrusted downloads and redirects before creating a draft", async () => {
+    const { app, create } = appHarness();
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(null, {
+          headers: { location: "https://attacker.example/image" },
+          status: 302,
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const initialUrl = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput("https://attacker.example/image")],
+    });
+    expect(initialUrl.status).toBe(200);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+
+    const redirect = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput()],
+    });
+    expect(redirect.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("requires an unambiguous photo-to-meal map before downloading files", async () => {
+    const { app, create } = appHarness();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record, { ...record, restaurantName: "Another place" }],
+      images: [fileInput()],
+    });
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: -32602 },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("attaches each photo to its explicitly mapped meal", async () => {
+    const { app, attachImage, create } = appHarness();
+    create.mockImplementation(async (input) => ({
+      ...entry,
+      ...input,
+      id: input.restaurantName === "Another place" ? "entry-2" : "entry-1",
+      slug:
+        input.restaurantName === "Another place"
+          ? "another-entry"
+          : "example-entry",
+    }));
+    const source = await sharp({
+      create: {
+        background: { alpha: 1, b: 30, g: 120, r: 190 },
+        channels: 3,
+        height: 24,
+        width: 24,
+      },
+    })
+      .png()
+      .toBuffer();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(asArrayBuffer(source), {
+            headers: { "content-length": String(source.byteLength) },
+          }),
+      ),
+    );
+
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record, { ...record, restaurantName: "Another place" }],
+      images: [
+        fileInput(),
+        { ...fileInput(), file_id: "file-2", file_name: "supper.jpg" },
+      ],
+      imageEntryIndexes: [1, 0],
+    });
+    expect(response.status).toBe(200);
+    expect(
+      attachImage.mock.calls.map(([entryId, input]) => [
+        entryId,
+        input.altText,
+      ]),
+    ).toEqual([
+      ["entry-2", "Another place Tasting menu"],
+      ["entry-1", "Example Tasting menu"],
+    ]);
   });
 
   it("enforces separate read and write scopes", async () => {

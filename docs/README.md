@@ -24,12 +24,11 @@ local application; the pages below explain design decisions and ongoing work.
    defines the bot-authored review and publishing flow.
 8. [Beat Gourmet records](gourmet.md) explains the S3 record model, repository
    image review, public browser, and administrator workflow.
-9. [Custom GPT setup for Gourmet](gourmet-custom-gpt.md) covers the Action
-   credential, schema, instructions, Preview checks, and photo boundary.
-10. [Gourmet end-to-end integration](gourmet-integration-flow.md) traces the
-    exact ChatGPT, Beat API, S3, administrator, GitHub PR, and public-site flow.
-11. [ChatGPT MCP import for Gourmet](gourmet-chatgpt-mcp.md) documents the
-    OAuth-protected, preview-first bridge from ChatGPT context to S3 drafts.
+9. [Gourmet end-to-end integration](gourmet-integration-flow.md) traces the
+   ChatGPT, Beat API, S3, administrator, and public-site flow.
+10. [ChatGPT MCP import for Gourmet](gourmet-chatgpt-mcp.md) documents the
+    OAuth-protected, preview-first bridge from conversation text and attachments
+    to S3 drafts.
 
 ## Development
 

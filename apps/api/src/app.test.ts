@@ -283,7 +283,7 @@ describe("API app", () => {
     );
   });
 
-  it("accepts the separate Gourmet Action key and preserves idempotency headers", async () => {
+  it("rejects the retired Action key and accepts administrator JWTs", async () => {
     const entry = {
       area: "서울",
       cookingMethods: [],
@@ -325,7 +325,6 @@ describe("API app", () => {
         list: vi.fn(async () => ({ entries: [entry], page: 1, total: 1 })),
         update: vi.fn(async () => entry),
       } as never,
-      gourmetActionApiKey: "gourmet-action-key-at-least-32-characters",
       logger: createLogger({ service: "api", sink: () => {} }),
       rateLimiter: false,
     });
@@ -359,18 +358,8 @@ describe("API app", () => {
       },
       method: "POST",
     });
-    expect(response.status).toBe(201);
-    await expect(response.json()).resolves.toMatchObject({
-      detailUrl: expect.stringContaining("/gourmet/?entry="),
-      status: "saved",
-    });
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({ restaurantName: "Beat 식당" }),
-      expect.objectContaining({
-        idempotencyKey: "custom-gpt-message-1",
-        subject: "chatgpt-action",
-      }),
-    );
+    expect(response.status).toBe(401);
+    expect(create).not.toHaveBeenCalled();
   });
 
   it("rejects missing Gourmet authentication and invalid half-step ratings", async () => {
@@ -385,7 +374,17 @@ describe("API app", () => {
         list: vi.fn(),
         update: vi.fn(),
       } as never,
-      gourmetActionApiKey: "gourmet-action-key-at-least-32-characters",
+      beatAuth: {
+        authenticate: vi.fn(),
+        issueTokenPair: vi.fn(),
+        jwks: vi.fn(async () => ({ keys: [] })),
+        refreshTokenPair: vi.fn(),
+        revokeRefreshToken: vi.fn(async () => {}),
+        verifyAccessToken: vi.fn(async (token) => {
+          if (token !== "admin-token") throw new Error("invalid");
+          return { email: "admin@example.com", subject: "admin-1" };
+        }),
+      },
       logger: createLogger({ service: "api", sink: () => {} }),
       rateLimiter: false,
     });
@@ -404,7 +403,7 @@ describe("API app", () => {
         summary: "요약",
       }),
       headers: {
-        Authorization: "Bearer gourmet-action-key-at-least-32-characters",
+        Authorization: "Bearer admin-token",
         "Content-Type": "application/json",
       },
       method: "POST",
@@ -1006,7 +1005,7 @@ describe("API app", () => {
     expect(rejectedDraft.status).toBe(400);
   });
 
-  it("enforces public, Action, and administrator Gourmet route boundaries", async () => {
+  it("enforces public and administrator Gourmet route boundaries", async () => {
     const baseEntry = {
       area: "서울",
       cookingMethods: [],
@@ -1148,7 +1147,6 @@ describe("API app", () => {
         update,
         updateImage: vi.fn(async () => baseEntry),
       } as never,
-      gourmetActionApiKey: "gourmet-action-key-at-least-32-characters",
       logger: createLogger({
         service: "api",
         sink: (record) => gourmetLogs.push(record),
@@ -1188,10 +1186,7 @@ describe("API app", () => {
           headers: actionHeaders,
         })
       ).status,
-    ).toBe(200);
-    expect(list).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "draft" }),
-    );
+    ).toBe(403);
     expect(
       (
         await gourmetApp.request("/api/gourmet/entries?status=deleted", {
@@ -1207,28 +1202,7 @@ describe("API app", () => {
       ).status,
     ).toBe(200);
 
-    expect((await gourmetApp.request("/api/gourmet/context")).status).toBe(401);
-    expect(
-      (
-        await gourmetApp.request("/api/gourmet/context?days=30&limit=5", {
-          headers: actionHeaders,
-        })
-      ).status,
-    ).toBe(200);
-    expect(gourmetLogs).toContainEqual(
-      expect.objectContaining({
-        clientRequestId: "gpt-session-1",
-        message: "gourmet.action.read",
-        operation: "context",
-      }),
-    );
-    expect(
-      (
-        await gourmetApp.request("/api/gourmet/context?days=invalid", {
-          headers: actionHeaders,
-        })
-      ).status,
-    ).toBe(400);
+    expect((await gourmetApp.request("/api/gourmet/context")).status).toBe(404);
     expect(
       (
         await gourmetApp.request("/api/gourmet/quality", {
@@ -1356,7 +1330,7 @@ describe("API app", () => {
           method: "PATCH",
         })
       ).status,
-    ).toBe(400);
+    ).toBe(401);
     expect(
       (
         await gourmetApp.request("/api/gourmet/entries/published-entry", {
@@ -1365,7 +1339,7 @@ describe("API app", () => {
           method: "PATCH",
         })
       ).status,
-    ).toBe(200);
+    ).toBe(401);
     await gourmetApp.request("/api/gourmet/entries/published-entry", {
       body: JSON.stringify({ expectedRevision: 1, visitedAt: "2026-08-03" }),
       headers: adminHeaders,
@@ -1387,7 +1361,7 @@ describe("API app", () => {
           method: "PATCH",
         })
       ).status,
-    ).toBe(409);
+    ).toBe(401);
     expect(
       (
         await gourmetApp.request("/api/gourmet/entries/published-entry", {
@@ -1396,7 +1370,7 @@ describe("API app", () => {
           method: "PATCH",
         })
       ).status,
-    ).toBe(400);
+    ).toBe(401);
 
     expect(
       (

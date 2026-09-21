@@ -1,5 +1,3 @@
-import { timingSafeEqual } from "node:crypto";
-
 import { DEFAULT_LOCALHOST_SITE_URL } from "@arlequins/env/public-defaults";
 import { serverEnv } from "@arlequins/env/server-env";
 import type { Logger } from "@arlequins/logger";
@@ -122,25 +120,10 @@ const filterSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
 });
-const contextSchema = z.object({
-  days: optionalQueryNumber(z.number().int().min(1).max(365)).default(30),
-  limit: optionalQueryNumber(z.number().int().min(1).max(50)).default(30),
-});
-
 function bearer(authorization: string | undefined) {
   return authorization
     ? /^Bearer\s+(\S+)$/i.exec(authorization.trim())?.[1]
     : undefined;
-}
-
-function matchesActionKey(
-  token: string | undefined,
-  expected: string | undefined,
-) {
-  if (!token || !expected) return false;
-  const left = Buffer.from(token);
-  const right = Buffer.from(expected);
-  return left.length === right.length && timingSafeEqual(left, right);
 }
 
 function errorResponse(
@@ -197,29 +180,18 @@ function filters(url: URL): GourmetListFilter {
 export function registerGourmetRoutes(
   app: OpenAPIHono<ApiBindings>,
   options: {
-    actionApiKey?: string;
     gourmet: GourmetPort;
     verifyAccessToken: (token: string) => Promise<Administrator>;
   },
 ) {
   const gourmet = options.gourmet;
-  const principal = async (context: {
+  const administrator = async (context: {
     req: { header: (name: string) => string | undefined };
   }) => {
     const token = bearer(context.req.header("authorization"));
-    if (
-      matchesActionKey(
-        token,
-        options.actionApiKey ?? serverEnv.BEAT_GOURMET_ACTION_API_KEY,
-      )
-    )
-      return { kind: "action" as const, subject: "chatgpt-action" };
     if (!token) return undefined;
     try {
-      return {
-        kind: "admin" as const,
-        subject: (await options.verifyAccessToken(token)).subject,
-      };
+      return await options.verifyAccessToken(token);
     } catch {
       return undefined;
     }
@@ -246,35 +218,11 @@ export function registerGourmetRoutes(
     const value = context.req.header("x-client-request-id")?.trim();
     return value && /^[A-Za-z0-9._:-]{1,128}$/.test(value) ? value : undefined;
   };
-  const auditActionRead = (
-    context: {
-      get: (key: "requestId") => string;
-      req: { header: (name: string) => string | undefined };
-    },
-    logger: Logger,
-    user: { kind: "action" | "admin"; subject: string } | undefined,
-    operation: string,
-    details: Record<string, unknown> = {},
-  ) => {
-    if (user?.kind !== "action") return;
-    const requestId = context.get("requestId");
-    const requestClientId = clientRequestId(context);
-    logger.info("gourmet.action.read", {
-      ...(requestClientId ? { clientRequestId: requestClientId } : {}),
-      operation,
-      requestId,
-      ...details,
-    });
-  };
-
   app.get("/api/gourmet/entries", async (context) => {
     try {
       const filter = filters(new URL(context.req.url));
-      const user = await principal(context);
-      auditActionRead(context, context.get("logger"), user, "list", {
-        status: filter.status ?? "published",
-      });
-      if (filter.status === "deleted" && user?.kind !== "admin")
+      const user = await administrator(context);
+      if (filter.status === "deleted" && !user)
         return context.json(
           {
             error: {
@@ -320,7 +268,7 @@ export function registerGourmetRoutes(
   });
 
   app.post("/api/gourmet/entries", async (context) => {
-    const user = await principal(context);
+    const user = await administrator(context);
     if (!user)
       return context.json(
         {
@@ -363,45 +311,9 @@ export function registerGourmetRoutes(
     }
   });
 
-  app.get("/api/gourmet/context", async (context) => {
-    const user = await principal(context);
-    if (!user)
-      return context.json(
-        {
-          error: {
-            code: "UNAUTHORIZED",
-            message: "Bearer authentication is required",
-            requestId: context.get("requestId"),
-          },
-        },
-        401,
-      );
-    try {
-      auditActionRead(context, context.get("logger"), user, "context");
-      const { days, limit } = contextSchema.parse(
-        Object.fromEntries(new URL(context.req.url).searchParams),
-      );
-      return context.json(await gourmet.context({ days, limit }));
-    } catch (error) {
-      return (
-        errorResponse(context, error) ??
-        context.json(
-          {
-            error: {
-              code: "INTERNAL",
-              message: "Unable to create gourmet context",
-              requestId: context.get("requestId"),
-            },
-          },
-          500,
-        )
-      );
-    }
-  });
-
   app.get("/api/gourmet/quality", async (context) => {
-    const user = await principal(context);
-    if (user?.kind !== "admin")
+    const user = await administrator(context);
+    if (!user)
       return context.json(
         {
           error: {
@@ -438,15 +350,12 @@ export function registerGourmetRoutes(
 
   app.get("/api/gourmet/entries/:id", async (context) => {
     try {
-      const user = await principal(context);
+      const user = await administrator(context);
       const result = await gourmet.get(context.req.param("id"));
-      auditActionRead(context, context.get("logger"), user, "get", {
-        found: Boolean(result),
-      });
       if (
         !result ||
         (result.entry.status === "deleted"
-          ? user?.kind !== "admin"
+          ? !user
           : result.entry.status !== "published" && !user)
       )
         return context.json(
@@ -518,8 +427,8 @@ export function registerGourmetRoutes(
   });
 
   app.get("/admin/gourmet/entries/:id/images/:imageId", async (context) => {
-    const user = await principal(context);
-    if (user?.kind !== "admin")
+    const user = await administrator(context);
+    if (!user)
       return context.json(
         {
           error: {
@@ -563,7 +472,7 @@ export function registerGourmetRoutes(
   });
 
   app.patch("/api/gourmet/entries/:id", async (context) => {
-    const user = await principal(context);
+    const user = await administrator(context);
     if (!user)
       return context.json(
         {
@@ -594,8 +503,8 @@ export function registerGourmetRoutes(
   });
 
   app.get("/api/gourmet/entries/:id/history", async (context) => {
-    const user = await principal(context);
-    if (user?.kind !== "admin")
+    const user = await administrator(context);
+    if (!user)
       return context.json(
         {
           error: {
@@ -614,8 +523,8 @@ export function registerGourmetRoutes(
   });
 
   app.get("/admin/gourmet/entries/:id/image-history", async (context) => {
-    const user = await principal(context);
-    if (user?.kind !== "admin")
+    const user = await administrator(context);
+    if (!user)
       return context.json(
         {
           error: {
@@ -634,8 +543,8 @@ export function registerGourmetRoutes(
   });
 
   app.post("/api/gourmet/entries/:id/restore", async (context) => {
-    const user = await principal(context);
-    if (user?.kind !== "admin")
+    const user = await administrator(context);
+    if (!user)
       return context.json(
         {
           error: {
@@ -656,8 +565,8 @@ export function registerGourmetRoutes(
   });
 
   app.delete("/api/gourmet/entries/:id", async (context) => {
-    const user = await principal(context);
-    if (user?.kind !== "admin")
+    const user = await administrator(context);
+    if (!user)
       return context.json(
         {
           error: {
@@ -690,8 +599,8 @@ export function registerGourmetRoutes(
   });
 
   app.post("/admin/gourmet/entries/:id/images", async (context) => {
-    const user = await principal(context);
-    if (user?.kind !== "admin")
+    const user = await administrator(context);
+    if (!user)
       return context.json(
         {
           error: {
@@ -722,8 +631,8 @@ export function registerGourmetRoutes(
   });
 
   app.patch("/admin/gourmet/entries/:id/images/:imageId", async (context) => {
-    const user = await principal(context);
-    if (user?.kind !== "admin")
+    const user = await administrator(context);
+    if (!user)
       return context.json(
         {
           error: {
@@ -749,8 +658,8 @@ export function registerGourmetRoutes(
   });
 
   app.delete("/admin/gourmet/entries/:id/images/:imageId", async (context) => {
-    const user = await principal(context);
-    if (user?.kind !== "admin")
+    const user = await administrator(context);
+    if (!user)
       return context.json(
         {
           error: {
@@ -781,8 +690,8 @@ export function registerGourmetRoutes(
   app.post(
     "/admin/gourmet/entries/:id/images/:imageId/restore",
     async (context) => {
-      const user = await principal(context);
-      if (user?.kind !== "admin")
+      const user = await administrator(context);
+      if (!user)
         return context.json(
           {
             error: {
