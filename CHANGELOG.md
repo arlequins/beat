@@ -2,6 +2,14 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.56.2](https://github.com/arlequins/beat/compare/beat-v1.56.1...beat-v1.56.2) (2026-09-21)
+
+
+### Bug Fixes
+
+* **api:** accept oauth requests without nonce ([#252](https://github.com/arlequins/beat/issues/252)) ([3d6058f](https://github.com/arlequins/beat/commit/3d6058f2a2fa4543fbc8d243dfcb978a7e51e6a9))
+* **fiction:** remove outdated episode range labels ([58482d2](https://github.com/arlequins/beat/commit/58482d2fa7750a78ebec7c5391fb00dd0634ea75))
+
 ## [1.56.1](https://github.com/arlequins/beat/compare/beat-v1.56.0...beat-v1.56.1) (2026-09-21)
 
 
