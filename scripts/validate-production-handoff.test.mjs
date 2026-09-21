@@ -28,6 +28,31 @@ test("validates the exact Agent callback and logout contract", () => {
   });
 });
 
+test("accepts the exact approved ChatGPT connector callback", () => {
+  const withChatGptCallback = {
+    ...valid,
+    BEAT_AUTH_CLIENTS_JSON: valid.BEAT_AUTH_CLIENTS_JSON.replace(
+      '"https://arlequins.github.io/beat-agent/auth/callback/"',
+      '"https://arlequins.github.io/beat-agent/auth/callback/", "https://chatgpt.com/connector/oauth/O8bneWii3GuT"',
+    ),
+  };
+  assert.equal(
+    validateProductionHandoff(withChatGptCallback).callback,
+    "https://arlequins.github.io/beat-agent/auth/callback/",
+  );
+  assert.throws(
+    () =>
+      validateProductionHandoff({
+        ...valid,
+        BEAT_AUTH_CLIENTS_JSON: valid.BEAT_AUTH_CLIENTS_JSON.replace(
+          '"https://arlequins.github.io/beat-agent/auth/callback/"',
+          '"https://arlequins.github.io/beat-agent/auth/callback/", "https://chatgpt.com/connector/oauth/other"',
+        ),
+      }),
+    /only approved ChatGPT connector callbacks/,
+  );
+});
+
 test("rejects a path-mismatched callback or wildcard CORS", () => {
   assert.throws(
     () =>
@@ -46,6 +71,6 @@ test("rejects a path-mismatched callback or wildcard CORS", () => {
           "/wrong/callback/",
         ),
       }),
-    /redirect URI must be exactly/,
+    /redirect URIs must include/,
   );
 });
