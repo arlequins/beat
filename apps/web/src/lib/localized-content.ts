@@ -489,6 +489,24 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-09-21": {
+    title:
+      "Weekly IT Brief — Turning automation boundaries into deployable policy",
+    excerpt:
+      "A developer's view of the Agents API, GitHub Actions execution protections, and iPhone Duo readiness through explicit operational boundaries.",
+    intro:
+      "This week's signal is not simply that tools can do more. Teams need deployable policies for who can start automation, what it can reach, and how it behaves as the interface changes.",
+    sections: [
+      {
+        heading: "Three boundaries to verify before release",
+        paragraphs: [
+          "The public-beta Agents API brings a managed Codex harness, hosted sandboxes, long-session context management, and tool orchestration. Start with read-only tools and test data, then record permitted files, network destinations, secrets, time limits, approvals, and a job identifier for every run.",
+          "GitHub Actions execution protections are generally available with actor and event allowlists, workflow-file targeting, REST management, and an evaluate mode. Inventory pull_request_target paths, use the shadow results before enforcing rules, and keep any exception scoped to the precise workflow and event that need it.",
+          "Apple's iPhone Duo preparation materials pair beta SDK support with guidance for dynamic resizing, adaptive layouts, multiple displays, and scenes. Test state preservation, focus, safe areas, and active tasks while the window changes size or orientation, not only in a single expanded screenshot.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -1229,6 +1247,23 @@ const japanese: Record<string, LocalizedArticle> = {
           "Chrome 153 から Stable は2週間周期になり、次の Stable 前に Chrome 154 Beta を試せます。各移行後に重要な導線を Stable と Beta で実行し、管理対象顧客の Extended Stable の節目は別に扱います。",
           "GitHub Actions は runner バージョンの終了予定、読み取り専用の vulnerability-alerts 権限、再利用ワークフローの定義元を示す情報を追加しました。runner を棚卸しし、最小のトークン権限を与え、配布記録には workflow SHA とファイルパスを残します。",
           "Amazon Quick の予約・監視エージェントは、ノート PC を閉じても動き続けます。恒常的なタスクごとに所有者、読むデータの範囲、受信者、保存期間、失敗通知を定め、権限を広げる前に運用できる状態にします。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-09-21": {
+    title: "週刊 IT ブリーフ — 自動化の境界を配布できるポリシーにする",
+    excerpt:
+      "Agents API、GitHub Actions の実行保護、iPhone Duo への準備を、明示的な運用境界から整理します。",
+    intro:
+      "今週の焦点は道具ができることの増加だけではありません。誰が自動化を始められるか、何に到達できるか、画面の変化でどう振る舞うかを、配布できるポリシーにする必要があります。",
+    sections: [
+      {
+        heading: "リリース前に確認する三つの境界",
+        paragraphs: [
+          "公開ベータの Agents API は、管理された Codex ハーネス、ホスト型サンドボックス、長時間セッションのコンテキスト管理、ツールのオーケストレーションを提供します。まず読み取り専用のツールとテストデータから始め、許可するファイル、通信先、シークレット、時間制限、承認、ジョブ ID を実行ごとに記録します。",
+          "GitHub Actions の実行保護は、実行者とイベントの allowlist、ワークフローファイル単位の対象指定、REST 管理、評価モードとともに一般提供されました。pull_request_target の経路を棚卸しし、強制前にシャドー結果を確認し、例外は必要なワークフローとイベントだけに絞ります。",
+          "Apple の iPhone Duo 向け資料は、ベータ SDK の対応と、動的リサイズ、適応レイアウト、複数ディスプレイ、シーンのガイダンスを組み合わせています。単一の展開スクリーンショットだけでなく、ウィンドウのサイズや向きが変わる間に状態、フォーカス、安全領域、進行中の作業が保たれるかを確認します。",
         ],
       },
     ],
