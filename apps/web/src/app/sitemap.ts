@@ -26,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localePath(locale, "/gourmet/"),
     localePath(locale, "/fiction/"),
     localePath(locale, "/fiction/guide/"),
+    localePath(locale, "/fiction/worlds/ordinary-tomorrow/"),
     ...guide.map((entry) =>
       localePath(locale, `/fiction/guide/${entry.slug}/`),
     ),

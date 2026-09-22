@@ -11,6 +11,12 @@ export type NovelWorld = {
 
 export const worldDefinitions: NovelWorld[] = [
   {
+    id: "ordinary-tomorrow",
+    title: "내일의 생활비 세계관",
+    description: "AGI가 일상이 된 2041년, 서로 다른 속도로 내일을 사는 도시들.",
+    guidePath: "/fiction/worlds/ordinary-tomorrow/",
+  },
+  {
     id: "yeobaek-river",
     title: "여백의 사람들 세계관",
     description: "전쟁이 지나간 강 하류의 생활권과 그곳에서 이어지는 이야기.",
@@ -39,6 +45,16 @@ export type NovelCollection = NovelDefinition & {
 };
 
 export const novelDefinitions: NovelDefinition[] = [
+  {
+    series: "내일의 생활비",
+    title: "내일의 생활비",
+    category: "근미래 · 옴니버스",
+    description:
+      "서울, 뭄바이, 라고스, 상파울루, 런던. 편리해진 하루에 남은 작은 선택들이 바다를 건넌다.",
+    worldId: "ordinary-tomorrow",
+    worldRelation: "standalone",
+    status: "1–5화 · 연재 중",
+  },
   {
     series: "여백의 사람들",
     title: "여백의 사람들",
