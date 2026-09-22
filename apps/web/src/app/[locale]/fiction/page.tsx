@@ -4,8 +4,8 @@ import { FictionIndex } from "~/components/blog/fiction-pages";
 import { isLocale, locales } from "~/lib/i18n";
 export const dynamicParams = false;
 export const metadata: Metadata = {
-  title: "소설 · 여백의 사람들",
-  description: "하나의 세계, 저마다의 삶. 짧은 판타지 옴니버스.",
+  title: "소설 목록",
+  description: "서로 다른 세계와 사람들의 이야기를 골라 읽는 소설 목록.",
 };
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));

@@ -20,6 +20,7 @@ import {
   useState,
 } from "react";
 import type { Story } from "~/lib/fiction";
+import { getNovelCollections } from "~/lib/fiction-catalog";
 import { type Locale, localePath } from "~/lib/i18n";
 
 const key = "beat-fiction-v1";
@@ -65,22 +66,31 @@ export function FictionLibrary({
   stories: Story[];
   locale: Locale;
 }) {
+  const novels = getNovelCollections(stories);
   const [liked, setLiked] = useState(false);
   const [last, setLast] = useState("");
+  const [selectedSeries, setSelectedSeries] = useState(novels[0]?.series ?? "");
   const [section, setSection] = useState("episodes");
   const [descending, setDescending] = useState(false);
   useEffect(() => {
     setLiked(read("liked", false));
-    setLast(read("last", ""));
-  }, []);
-  const current = stories.find((story) => story.slug === last) ?? stories[0];
+    const savedLast = read("last", "");
+    setLast(savedLast);
+    const savedStory = stories.find((story) => story.slug === savedLast);
+    if (savedStory) setSelectedSeries(savedStory.series);
+  }, [stories]);
+  const selected =
+    novels.find((novel) => novel.series === selectedSeries) ?? novels[0];
+  const current =
+    selected?.stories.find((story) => story.slug === last) ??
+    selected?.stories[0];
   return (
     <div className="novel-home" lang="ko">
       <header className="novel-summary">
-        <p className="novel-category">판타지 · 옴니버스</p>
-        <h1>여백의 사람들</h1>
+        <p className="novel-library-kicker">BEAT FICTION LIBRARY</p>
+        <h1>읽을 소설을 고르세요</h1>
         <p className="novel-description">
-          하나의 세계에서 만나는 서로 다른 사람들의 이야기.
+          서로 다른 세계와 사람들의 이야기를 한곳에서 골라 읽습니다.
         </p>
         <p>
           <Link href={localePath(locale, "/fiction/guide/")}>
@@ -88,97 +98,152 @@ export function FictionLibrary({
           </Link>
         </p>
         <div className="novel-facts">
+          <span>{novels.length}편</span>
           <span>총 {stories.length}화</span>
           <span>한국어</span>
         </div>
-        <div className="novel-actions">
-          <button
-            type="button"
-            aria-pressed={liked}
-            onClick={() => {
-              setLiked(!liked);
-              save("liked", !liked);
-            }}
-          >
-            <Bookmark size={17} fill={liked ? "currentColor" : "none"} />
-            {liked ? "관심 작품" : "관심 등록"}
-          </button>
-          {current && (
-            <Link
-              className="novel-primary"
-              href={localePath(locale, `/fiction/${current.slug}/`)}
-            >
-              {last === current.slug ? "이어보기" : "첫 화 보기"}
-              <ChevronRight size={18} />
-            </Link>
-          )}
-        </div>
       </header>
-      <div className="novel-tabs">
-        <button
-          type="button"
-          aria-pressed={section === "episodes"}
-          onClick={() => setSection("episodes")}
+      <section className="novel-shelf" aria-labelledby="novel-shelf-title">
+        <div className="novel-shelf-heading">
+          <div>
+            <p>LIBRARY</p>
+            <h2 id="novel-shelf-title">작품 목록</h2>
+          </div>
+          <span>{novels.length}편</span>
+        </div>
+        <div className="novel-picker">
+          {novels.map((novel, index) => (
+            <button
+              className="novel-card"
+              type="button"
+              aria-pressed={novel.series === selected?.series}
+              key={novel.series}
+              onClick={() => {
+                setSelectedSeries(novel.series);
+                setSection("episodes");
+              }}
+            >
+              <span className="novel-card-index">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="novel-card-copy">
+                <span className="novel-card-category">{novel.category}</span>
+                <strong>{novel.title}</strong>
+                <span>{novel.description}</span>
+                <small>
+                  {novel.stories.length}화 · {novel.status}
+                </small>
+              </span>
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {selected && (
+        <section
+          className="novel-selection"
+          aria-labelledby="selected-novel-title"
         >
-          회차 {stories.length}
-        </button>
-        <button
-          type="button"
-          aria-pressed={section === "about"}
-          onClick={() => setSection("about")}
-        >
-          작품 소개
-        </button>
-      </div>
-      {section === "episodes" ? (
-        <section aria-label="회차 목록">
-          <div className="novel-list-heading">
-            <span>전체 {stories.length}화</span>
-            <button type="button" onClick={() => setDescending(!descending)}>
-              {descending ? "최신화부터 ↓" : "첫 화부터 ↑"}
+          <header className="novel-selection-header">
+            <div>
+              <p className="novel-category">{selected.category}</p>
+              <h2 id="selected-novel-title">{selected.title}</h2>
+              <p>{selected.description}</p>
+              <div className="novel-facts">
+                <span>총 {selected.stories.length}화</span>
+                <span>{selected.status}</span>
+              </div>
+            </div>
+            <div className="novel-actions">
+              <button
+                type="button"
+                aria-pressed={liked}
+                onClick={() => {
+                  setLiked(!liked);
+                  save("liked", !liked);
+                }}
+              >
+                <Bookmark size={17} fill={liked ? "currentColor" : "none"} />
+                {liked ? "관심 작품" : "관심 등록"}
+              </button>
+              {current && (
+                <Link
+                  className="novel-primary"
+                  href={localePath(locale, `/fiction/${current.slug}/`)}
+                >
+                  {last === current.slug ? "이어보기" : "첫 화 보기"}
+                  <ChevronRight size={18} />
+                </Link>
+              )}
+            </div>
+          </header>
+          <div className="novel-tabs">
+            <button
+              type="button"
+              aria-pressed={section === "episodes"}
+              onClick={() => setSection("episodes")}
+            >
+              회차 {selected.stories.length}
+            </button>
+            <button
+              type="button"
+              aria-pressed={section === "about"}
+              onClick={() => setSection("about")}
+            >
+              작품 소개
             </button>
           </div>
-          <ol>
-            {[...stories]
-              .sort((a, b) =>
-                descending
-                  ? b.episode.localeCompare(a.episode)
-                  : a.episode.localeCompare(b.episode),
-              )
-              .map((story) => (
-                <li key={story.slug}>
-                  <Link
-                    className="novel-episode"
-                    href={localePath(locale, `/fiction/${story.slug}/`)}
-                  >
-                    <div>
-                      <h2>
-                        {Number(story.episode)}화. {story.title}
-                      </h2>
-                      <p>
-                        {story.publishedAt.replaceAll("-", ".")} ·{" "}
-                        {story.readTime}
-                        {last === story.slug && <span>최근 읽음</span>}
-                      </p>
-                    </div>
-                    <ChevronRight size={16} />
-                  </Link>
-                </li>
-              ))}
-          </ol>
-        </section>
-      ) : (
-        <section className="novel-about">
-          <h2>여백의 사람들</h2>
-          <p>
-            하나의 세계, 저마다의 삶. 각 편이 독립적으로 완결되는 짧은 판타지
-            소설입니다. 어느 이야기부터 읽어도 괜찮습니다.
-          </p>
-          <p>
-            장르 · 판타지 / 옴니버스
-            <br />
-            본문 언어 · 한국어
-          </p>
+          {section === "episodes" ? (
+            <section aria-label={`${selected.title} 회차 목록`}>
+              <div className="novel-list-heading">
+                <span>전체 {selected.stories.length}화</span>
+                <button
+                  type="button"
+                  onClick={() => setDescending(!descending)}
+                >
+                  {descending ? "최신화부터 ↓" : "첫 화부터 ↑"}
+                </button>
+              </div>
+              <ol>
+                {[...selected.stories]
+                  .sort((a, b) => {
+                    const result = Number(a.episode) - Number(b.episode);
+                    return descending ? -result : result;
+                  })
+                  .map((story) => (
+                    <li key={story.slug}>
+                      <Link
+                        className="novel-episode"
+                        href={localePath(locale, `/fiction/${story.slug}/`)}
+                      >
+                        <div>
+                          <h3>
+                            {Number(story.episode)}화. {story.title}
+                          </h3>
+                          <p>
+                            {story.publishedAt.replaceAll("-", ".")} ·{" "}
+                            {story.readTime}
+                            {last === story.slug && <span>최근 읽음</span>}
+                          </p>
+                        </div>
+                        <ChevronRight size={16} />
+                      </Link>
+                    </li>
+                  ))}
+              </ol>
+            </section>
+          ) : (
+            <section className="novel-about">
+              <h3>{selected.title}</h3>
+              <p>{selected.description}</p>
+              <p>
+                장르 · {selected.category}
+                <br />
+                본문 언어 · 한국어
+              </p>
+            </section>
+          )}
         </section>
       )}
     </div>
@@ -344,8 +409,11 @@ export function FictionViewer({
     position.current = count > 1 ? target / (count - 1) : 0;
     save(`book-position-${story.slug}`, position.current);
   };
+  const novelStories = stories.filter((item) => item.series === story.series);
   const next =
-    stories[stories.findIndex((item) => item.slug === story.slug) + 1];
+    novelStories[
+      novelStories.findIndex((item) => item.slug === story.slug) + 1
+    ];
   return (
     <div
       className={`novel-viewer book-viewer viewer-${preferences.theme}`}
@@ -629,7 +697,7 @@ export function FictionViewer({
           </div>
         ) : (
           <ol className="viewer-episode-list">
-            {stories.map((item) => (
+            {novelStories.map((item) => (
               <li key={item.slug}>
                 <Link
                   aria-current={item.slug === story.slug ? "page" : undefined}

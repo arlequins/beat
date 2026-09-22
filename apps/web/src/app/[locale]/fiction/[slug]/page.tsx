@@ -19,7 +19,7 @@ export async function generateMetadata({
   return {
     title:
       (await getStories()).find((story) => story.slug === slug)?.title ??
-      "여백의 사람들",
+      "소설",
   };
 }
 export default async function Page({
