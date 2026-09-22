@@ -2,6 +2,18 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.57.0](https://github.com/arlequins/beat/compare/beat-v1.56.2...beat-v1.57.0) (2026-09-22)
+
+
+### Features
+
+* **web:** add selectable fiction library and new novel ([141b000](https://github.com/arlequins/beat/commit/141b000ea205d37d640c68cddce9abc2aa47fb33))
+
+
+### Bug Fixes
+
+* **deploy:** allow approved ChatGPT callback ([#255](https://github.com/arlequins/beat/issues/255)) ([edd5bdb](https://github.com/arlequins/beat/commit/edd5bdbccf2f5814480f576545492c2f9588c2ef))
+
 ## [1.56.2](https://github.com/arlequins/beat/compare/beat-v1.56.1...beat-v1.56.2) (2026-09-21)
 
 
