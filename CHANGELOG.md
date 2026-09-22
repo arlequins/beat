@@ -2,6 +2,14 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.60.0](https://github.com/arlequins/beat/compare/beat-v1.59.0...beat-v1.60.0) (2026-09-22)
+
+
+### Features
+
+* **web:** revise ordinary tomorrow across twenty episodes ([#268](https://github.com/arlequins/beat/issues/268)) ([b0fa470](https://github.com/arlequins/beat/commit/b0fa4700e7ec007d2fe20008e77b12b0cab49808))
+* **web:** revise Ordinary Tomorrow and continue through episode 20 ([38b6bda](https://github.com/arlequins/beat/commit/38b6bdacb85d8f54cdd737bc0f1a84df7a5eee11))
+
 ## [1.59.0](https://github.com/arlequins/beat/compare/beat-v1.58.0...beat-v1.59.0) (2026-09-22)
 
 
