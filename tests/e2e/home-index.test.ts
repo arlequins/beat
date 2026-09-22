@@ -27,11 +27,7 @@ for (const locale of ["ko", "en", "ja"]) {
     );
     await expect(page.locator(".index-fiction-novel")).toHaveCount(2);
     await expect(page.locator(".index-fiction-novel").first()).toContainText(
-      locale === "ko"
-        ? "여백의 사람들"
-        : locale === "ja"
-          ? "余白の人々"
-          : "People in the Margins",
+      "여백의 사람들",
     );
     await page.locator(".index-fiction").click();
     await expect(page).toHaveURL(new RegExp(`${prefix}/fiction/$`));
