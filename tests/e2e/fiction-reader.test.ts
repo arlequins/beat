@@ -182,6 +182,21 @@ test("library omits free labels", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("library switches between novels before opening an episode", async ({
+  page,
+}) => {
+  await page.goto("/ko/fiction/");
+  await expect(page.locator(".novel-card")).toHaveCount(2);
+  await page.getByRole("button", { name: /낮은 지붕 아래/ }).click();
+  await expect(page.locator("#selected-novel-title")).toHaveText(
+    "낮은 지붕 아래",
+  );
+  await page.getByRole("link", { name: "1화. 비가 그친 뒤의 집" }).click();
+  await expect(page.locator('[itemprop="headline"]')).toHaveText(
+    "비가 그친 뒤의 집",
+  );
+});
+
 test("story body is exposed as a semantic article for iPhone Reader", async ({
   page,
 }) => {

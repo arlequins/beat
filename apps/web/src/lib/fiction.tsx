@@ -12,6 +12,18 @@ export type Story = {
   publishedAt: string;
   readTime: string;
 };
+
+function episodeNumber(story: Story) {
+  return Number.parseInt(story.episode, 10) || 0;
+}
+
+function sortStories(stories: Story[]) {
+  return [...stories].sort(
+    (a, b) =>
+      episodeNumber(a) - episodeNumber(b) || a.title.localeCompare(b.title),
+  );
+}
+
 export async function getStories(): Promise<Story[]> {
   const files = (await readdir(directory)).filter((file) =>
     file.endsWith(".mdx"),
@@ -22,7 +34,7 @@ export async function getStories(): Promise<Story[]> {
       return { ...data, slug: file.replace(/\.mdx$/, "") } as Story;
     }),
   );
-  return stories.sort((a, b) => a.episode.localeCompare(b.episode));
+  return sortStories(stories);
 }
 export async function getStory(slug: string) {
   const story = (await getStories()).find((item) => item.slug === slug);
