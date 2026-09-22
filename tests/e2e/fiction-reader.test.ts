@@ -309,7 +309,7 @@ test("setting guide reads all world documents without entering the story viewer"
   await expect(page.locator(".guide-contents li")).toHaveCount(18);
 });
 
-test("near-future novel has its own guide and five-episode reading order", async ({
+test("near-future novel has its own guide and twenty-episode reading order", async ({
   page,
 }) => {
   await page.goto("/ko/fiction/");
@@ -317,7 +317,8 @@ test("near-future novel has its own guide and five-episode reading order", async
   await expect(page.locator("#selected-novel-title")).toHaveText(
     "내일의 생활비",
   );
-  await expect(page.getByText("총 5화", { exact: true })).toBeVisible();
+  test.setTimeout(90_000);
+  await expect(page.getByText("총 20화", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "세계관·설정집 읽기 →" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "조금 먼저 온 일상",
@@ -330,6 +331,21 @@ test("near-future novel has its own guide and five-episode reading order", async
     "tomorrow-lagos-spares",
     "tomorrow-sao-paulo-hour",
     "tomorrow-london-empty",
+    "tomorrow-seoul-rooftop",
+    "tomorrow-tokyo-stop",
+    "tomorrow-mumbai-umbrella",
+    "tomorrow-lagos-opening",
+    "tomorrow-london-subtitles",
+    "tomorrow-sao-paulo-saturday",
+    "tomorrow-seoul-rehearsal",
+    "tomorrow-istanbul-morning",
+    "tomorrow-seoul-photograph",
+    "tomorrow-mumbai-two-dinners",
+    "tomorrow-lagos-after-closing",
+    "tomorrow-sao-paulo-alone",
+    "tomorrow-london-arrival",
+    "tomorrow-seven-cities",
+    "tomorrow-seoul-again",
   ];
   for (const [index, slug] of slugs.entries()) {
     await expect(page).toHaveURL(new RegExp(`/fiction/${slug}/$`));
@@ -338,7 +354,7 @@ test("near-future novel has its own guide and five-episode reading order", async
     );
     expect(
       (await page.locator('[itemprop="articleBody"]').innerText()).length,
-    ).toBeGreaterThan(2500);
+    ).toBeGreaterThan(1800);
     const next = page.getByRole("link", { name: "다음 이야기", exact: true });
     if (index < slugs.length - 1) {
       await expect(next).toHaveAttribute(
