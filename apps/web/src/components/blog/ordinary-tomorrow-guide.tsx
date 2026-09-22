@@ -7,7 +7,7 @@ import { type Locale, localePath } from "~/lib/i18n";
 export const ordinaryTomorrowMetadata = {
   title: "세계관 · 내일의 생활비",
   description:
-    "AGI가 일상이 된 2041년, 다섯 도시에서 시작하는 근미래 옴니버스.",
+    "조금 달라진 미래, 일곱 도시에서 살아가는 사람들의 일상과 로맨스.",
 };
 
 export async function OrdinaryTomorrowGuide({ locale }: { locale: Locale }) {
@@ -28,7 +28,8 @@ export async function OrdinaryTomorrowGuide({ locale }: { locale: Locale }) {
         <p>내일의 생활비 · 독립 세계관</p>
         <h1>조금 먼저 온 일상</h1>
         <p>
-          작품의 배경과 생활 제도를 소개합니다. 회차의 결말은 담지 않았습니다.
+          작품 속 도시와 사람들의 일상을 소개합니다. 회차의 결말은 담지
+          않았습니다.
         </p>
       </header>
       <article className="guide-prose">{content}</article>

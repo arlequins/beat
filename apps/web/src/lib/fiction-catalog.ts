@@ -13,7 +13,8 @@ export const worldDefinitions: NovelWorld[] = [
   {
     id: "ordinary-tomorrow",
     title: "내일의 생활비 세계관",
-    description: "AGI가 일상이 된 2041년, 서로 다른 속도로 내일을 사는 도시들.",
+    description:
+      "2041년부터, 조금 달라진 도시에서 일하고 사랑하며 살아가는 사람들.",
     guidePath: "/fiction/worlds/ordinary-tomorrow/",
   },
   {
@@ -48,12 +49,12 @@ export const novelDefinitions: NovelDefinition[] = [
   {
     series: "내일의 생활비",
     title: "내일의 생활비",
-    category: "근미래 · 옴니버스",
+    category: "일상 · 로맨스 · 근미래",
     description:
-      "서울, 뭄바이, 라고스, 상파울루, 런던. 편리해진 하루에 남은 작은 선택들이 바다를 건넌다.",
+      "돌아온 동창, 잘못 가져온 우산, 화면 너머의 식탁. 일곱 도시에서 조금씩 가까워지는 사람들의 생활.",
     worldId: "ordinary-tomorrow",
     worldRelation: "standalone",
-    status: "1–5화 · 연재 중",
+    status: "1–20화 · 연재 중",
   },
   {
     series: "여백의 사람들",
