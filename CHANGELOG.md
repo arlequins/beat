@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.58.0](https://github.com/arlequins/beat/compare/beat-v1.57.0...beat-v1.58.0) (2026-09-22)
+
+
+### Features
+
+* **web:** organize fiction by world ([aaa7c91](https://github.com/arlequins/beat/commit/aaa7c91d9710f1474ea985bcd7d902c7ebc7631c))
+
 ## [1.57.0](https://github.com/arlequins/beat/compare/beat-v1.56.2...beat-v1.57.0) (2026-09-22)
 
 
