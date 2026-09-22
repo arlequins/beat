@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.59.0](https://github.com/arlequins/beat/compare/beat-v1.58.0...beat-v1.59.0) (2026-09-22)
+
+
+### Features
+
+* **web:** publish Ordinary Tomorrow omnibus episodes 1–5 ([c5add93](https://github.com/arlequins/beat/commit/c5add93cea1f723ddbd4d4069609f69808d02c8b))
+
 ## [1.58.0](https://github.com/arlequins/beat/compare/beat-v1.57.0...beat-v1.58.0) (2026-09-22)
 
 
