@@ -3,6 +3,7 @@ import Link from "next/link";
 import { HomeScene } from "~/components/blog/home-scene";
 import { projects } from "~/lib/blog-data";
 import { getStories } from "~/lib/fiction";
+import { getNovelCollections } from "~/lib/fiction-catalog";
 import { copy, type Locale, localePath } from "~/lib/i18n";
 import { localizePost } from "~/lib/localized-content";
 import { getPosts } from "~/lib/posts";
@@ -14,6 +15,7 @@ const labels = {
     meals: "식사 기록",
     stories: "여백의 사람들",
     episodes: "화",
+    novels: "편",
     projects: "프로젝트",
     all: "전체",
     korean: "한국어",
@@ -26,6 +28,7 @@ const labels = {
     meals: "Meals & places",
     stories: "People in the Margins",
     episodes: "episodes",
+    novels: "novels",
     projects: "Projects",
     all: "All",
     korean: "Korean",
@@ -38,6 +41,7 @@ const labels = {
     meals: "食事の記録",
     stories: "余白の人々",
     episodes: "話",
+    novels: "作品",
     projects: "プロジェクト",
     all: "すべて",
     korean: "韓国語",
@@ -49,6 +53,7 @@ const labels = {
 
 export async function HomeIndex({ locale }: { locale: Locale }) {
   const [posts, stories] = await Promise.all([getPosts(), getStories()]);
+  const novels = getNovelCollections(stories);
   const text = labels[locale];
   const featuredProject = projects[0]
     ? localizedProjectCopy(locale, projects[0])
@@ -102,7 +107,7 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
             </div>
             <span>{copy[locale].fiction}</span>
             <span className="index-route-detail">
-              {stories.length} {text.episodes}
+              {novels.length} {text.novels}
             </span>
           </Link>
         </nav>
@@ -179,10 +184,18 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
                 <h2 id="index-fiction-title">{copy[locale].fiction}</h2>
                 <span>{text.korean}</span>
               </div>
-              <div className="index-story-link">
-                <span className="index-story-series">{text.stories}</span>
-                <span>
-                  {stories.length} {text.episodes}{" "}
+              <div className="index-fiction-list">
+                {novels.map((novel) => (
+                  <div className="index-fiction-novel" key={novel.series}>
+                    <span className="index-story-series">{novel.title}</span>
+                    <span>
+                      {novel.stories.length} {text.episodes} ·{" "}
+                      {novel.world.title}
+                    </span>
+                  </div>
+                ))}
+                <span className="index-fiction-open">
+                  {text.all}
                   <ArrowUpRight size={18} aria-hidden="true" />
                 </span>
               </div>

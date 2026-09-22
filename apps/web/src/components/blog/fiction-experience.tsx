@@ -20,7 +20,10 @@ import {
   useState,
 } from "react";
 import type { Story } from "~/lib/fiction";
-import { getNovelCollections } from "~/lib/fiction-catalog";
+import {
+  getNovelCollections,
+  getWorldRelationLabel,
+} from "~/lib/fiction-catalog";
 import { type Locale, localePath } from "~/lib/i18n";
 
 const key = "beat-fiction-v1";
@@ -92,11 +95,6 @@ export function FictionLibrary({
         <p className="novel-description">
           서로 다른 세계와 사람들의 이야기를 한곳에서 골라 읽습니다.
         </p>
-        <p>
-          <Link href={localePath(locale, "/fiction/guide/")}>
-            세계관·설정집 읽기 →
-          </Link>
-        </p>
         <div className="novel-facts">
           <span>{novels.length}편</span>
           <span>총 {stories.length}화</span>
@@ -130,6 +128,10 @@ export function FictionLibrary({
                 <span className="novel-card-category">{novel.category}</span>
                 <strong>{novel.title}</strong>
                 <span>{novel.description}</span>
+                <small className="novel-card-world">
+                  {getWorldRelationLabel(novel.worldRelation)} ·{" "}
+                  {novel.world.title}
+                </small>
                 <small>
                   {novel.stories.length}화 · {novel.status}
                 </small>
@@ -150,6 +152,19 @@ export function FictionLibrary({
               <p className="novel-category">{selected.category}</p>
               <h2 id="selected-novel-title">{selected.title}</h2>
               <p>{selected.description}</p>
+              <div className="novel-world-row">
+                <span>
+                  {getWorldRelationLabel(selected.worldRelation)} ·{" "}
+                  {selected.world.title}
+                </span>
+                {selected.world.guidePath ? (
+                  <Link href={localePath(locale, selected.world.guidePath)}>
+                    세계관·설정집 읽기 →
+                  </Link>
+                ) : (
+                  <span>이 작품에서 처음 여는 배경</span>
+                )}
+              </div>
               <div className="novel-facts">
                 <span>총 {selected.stories.length}화</span>
                 <span>{selected.status}</span>
