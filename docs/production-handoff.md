@@ -29,6 +29,15 @@ https://arlequins.github.io/beat/admin/callback/
 https://arlequins.github.io/beat/admin/
 ```
 
+The `beat-agent-web` registration may also include the explicitly approved
+ChatGPT connector callback below. The production handoff validator requires
+the Agent callback, permits only this additional callback, and rejects any
+other redirect URI:
+
+```text
+https://chatgpt.com/connector/oauth/O8bneWii3GuT
+```
+
 The portfolio's `/admin/` page uses Google SSO through `beat-admin-web` and
 does not display or submit an email/password form. The existing protected
 administrator operation still uses a one-time password only to bootstrap or

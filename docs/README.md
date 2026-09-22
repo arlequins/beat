@@ -32,6 +32,8 @@ local application; the pages below explain design decisions and ongoing work.
 
 ## Development
 
+- [Fiction guide and production handoff engineering notes](engineering-notes/2026-09-22-fiction-guide-and-production-handoff.md): open-ended fiction scope wording,
+  prose review boundaries, approved OAuth callbacks, and release diagnosis.
 - [OpenID Connect authentication](authentication.md): provider registration,
   local identity provider, token validation, and application authorization.
 - [Database operations](database-operations.md): migration order, backups,
