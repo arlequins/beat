@@ -14,7 +14,7 @@ export const worldDefinitions: NovelWorld[] = [
     id: "ordinary-tomorrow",
     title: "내일의 생활비 세계관",
     description:
-      "2041년부터, 조금 달라진 도시에서 일하고 사랑하며 살아가는 사람들.",
+      "2041년, 불확실해진 내일을 앞두고 일하고 사랑하며 살아가는 사람들.",
     guidePath: "/fiction/worlds/ordinary-tomorrow/",
   },
   {
@@ -51,7 +51,7 @@ export const novelDefinitions: NovelDefinition[] = [
     title: "내일의 생활비",
     category: "일상 · 로맨스 · 근미래",
     description:
-      "돌아온 동창, 잘못 가져온 우산, 화면 너머의 식탁. 일곱 도시에서 조금씩 가까워지는 사람들의 생활.",
+      "돌아온 동창, 잘못 가져온 우산, 화면 너머의 식탁. 불안한 뉴스가 흐르는 일곱 도시에서 사람들은 다음 약속을 잡는다.",
     worldId: "ordinary-tomorrow",
     worldRelation: "standalone",
     status: "1–20화 · 연재 중",

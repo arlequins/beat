@@ -7,7 +7,7 @@ import { type Locale, localePath } from "~/lib/i18n";
 export const ordinaryTomorrowMetadata = {
   title: "세계관 · 내일의 생활비",
   description:
-    "조금 달라진 미래, 일곱 도시에서 살아가는 사람들의 일상과 로맨스.",
+    "2041년, 일곱 도시의 일상과 로맨스. 서로 다른 세대가 불확실한 내일을 살아가는 근미래 연작.",
 };
 
 export async function OrdinaryTomorrowGuide({ locale }: { locale: Locale }) {
