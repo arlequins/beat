@@ -25,7 +25,7 @@ for (const locale of ["ko", "en", "ja"]) {
       "href",
       `${prefix}/fiction/`,
     );
-    await expect(page.locator(".index-fiction-novel")).toHaveCount(3);
+    await expect(page.locator(".index-fiction-novel")).toHaveCount(5);
     await expect(page.locator(".index-fiction-novel").first()).toContainText(
       "내일의 생활비",
     );

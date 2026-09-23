@@ -187,7 +187,7 @@ test("library switches between novels before opening an episode", async ({
   page,
 }) => {
   await page.goto("/ko/fiction/");
-  await expect(page.locator(".novel-card")).toHaveCount(3);
+  await expect(page.locator(".novel-card")).toHaveCount(5);
   await page.getByRole("button", { name: /낮은 지붕 아래/ }).click();
   await expect(page.locator("#selected-novel-title")).toHaveText(
     "낮은 지붕 아래",
@@ -196,6 +196,26 @@ test("library switches between novels before opening an episode", async ({
   await expect(page.locator('[itemprop="headline"]')).toHaveText(
     "비가 그친 뒤의 집",
   );
+});
+
+test("independent one-shot novels keep separate world labels", async ({
+  page,
+}) => {
+  await page.goto("/ko/fiction/");
+
+  for (const [novel, episodeTitle] of [
+    ["우편함의 계절", "새벽 네 시의 우편함"],
+    ["마지막 환승", "마지막 환승 안내방송"],
+  ]) {
+    await page.getByRole("button", { name: new RegExp(novel) }).click();
+    await expect(page.locator("#selected-novel-title")).toHaveText(novel);
+    await expect(page.locator(".novel-world-row")).toContainText(
+      `새 세계관 · ${novel} 세계관`,
+    );
+    await expect(
+      page.getByRole("link", { name: `1화. ${episodeTitle}` }),
+    ).toBeVisible();
+  }
 });
 
 test("story body is exposed as a semantic article for iPhone Reader", async ({
