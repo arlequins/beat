@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.60.1](https://github.com/arlequins/beat/compare/beat-v1.60.0...beat-v1.60.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* **web:** deepen characters in ordinary tomorrow ([#269](https://github.com/arlequins/beat/issues/269)) ([315dd13](https://github.com/arlequins/beat/commit/315dd13c5f1ed0c259d0c76954dfd7ca12b86ea8))
+
 ## [1.60.0](https://github.com/arlequins/beat/compare/beat-v1.59.0...beat-v1.60.0) (2026-09-22)
 
 
