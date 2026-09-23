@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.60.3](https://github.com/arlequins/beat/compare/beat-v1.60.2...beat-v1.60.3) (2026-09-23)
+
+
+### Bug Fixes
+
+* **fiction:** refine prose across published stories ([#273](https://github.com/arlequins/beat/issues/273)) ([af770d7](https://github.com/arlequins/beat/commit/af770d7648669227cb5a31eca02344797a03aaaa))
+
 ## [1.60.2](https://github.com/arlequins/beat/compare/beat-v1.60.1...beat-v1.60.2) (2026-09-23)
 
 
