@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.61.0](https://github.com/arlequins/beat/compare/beat-v1.60.3...beat-v1.61.0) (2026-09-23)
+
+
+### Features
+
+* **fiction:** add two independent short novels ([19e7d1b](https://github.com/arlequins/beat/commit/19e7d1b0913437aab53dd7ffe276cf0e19c0e30d))
+
 ## [1.60.3](https://github.com/arlequins/beat/compare/beat-v1.60.2...beat-v1.60.3) (2026-09-23)
 
 
