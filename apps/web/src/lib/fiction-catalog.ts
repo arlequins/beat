@@ -28,6 +28,16 @@ export const worldDefinitions: NovelWorld[] = [
     title: "낮은 지붕 아래 세계관",
     description: "비가 그친 뒤에도 지붕 아래 남은 마음을 고치는 사람들의 세계.",
   },
+  {
+    id: "mailbox-season",
+    title: "우편함의 계절 세계관",
+    description: "도착하지 못한 말이 새벽의 우편함을 통해 다시 길을 찾는 세계.",
+  },
+  {
+    id: "last-transfer",
+    title: "마지막 환승 세계관",
+    description: "지도에서 지워진 노선과 아직 떠나지 않은 사람들의 도시.",
+  },
 ];
 
 export type NovelDefinition = {
@@ -75,6 +85,26 @@ export const novelDefinitions: NovelDefinition[] = [
     worldId: "low-roof",
     worldRelation: "new",
     status: "새 연재",
+  },
+  {
+    series: "우편함의 계절",
+    title: "우편함의 계절",
+    category: "현대 판타지 · 단편",
+    description:
+      "도착하지 못한 말들이 새벽 네 시의 우편함에서 다시 길을 찾는다.",
+    worldId: "mailbox-season",
+    worldRelation: "new",
+    status: "1화 · 단편",
+  },
+  {
+    series: "마지막 환승",
+    title: "마지막 환승",
+    category: "SF · 단편",
+    description:
+      "지도에서 지워진 역 앞에서, 떠나는 사람은 마지막 행선지를 고른다.",
+    worldId: "last-transfer",
+    worldRelation: "new",
+    status: "1화 · 단편",
   },
 ];
 
