@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.60.2](https://github.com/arlequins/beat/compare/beat-v1.60.1...beat-v1.60.2) (2026-09-23)
+
+
+### Bug Fixes
+
+* **fiction:** polish published prose consistency ([#271](https://github.com/arlequins/beat/issues/271)) ([d6c10ad](https://github.com/arlequins/beat/commit/d6c10adfcabac1ab9319b968b0a8cd36d8b0d347))
+
 ## [1.60.1](https://github.com/arlequins/beat/compare/beat-v1.60.0...beat-v1.60.1) (2026-09-23)
 
 
