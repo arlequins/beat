@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.62.1](https://github.com/arlequins/beat/compare/beat-v1.62.0...beat-v1.62.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **web:** prefix character image URLs on Pages ([#281](https://github.com/arlequins/beat/issues/281)) ([7f558d9](https://github.com/arlequins/beat/commit/7f558d9d4256e4a4eff02c9afd13bf816944dbe7))
+
 ## [1.62.0](https://github.com/arlequins/beat/compare/beat-v1.61.0...beat-v1.62.0) (2026-09-26)
 
 
