@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.64.0](https://github.com/arlequins/beat/compare/beat-v1.63.0...beat-v1.64.0) (2026-09-26)
+
+
+### Features
+
+* **fiction:** simplify library collection entry ([#288](https://github.com/arlequins/beat/issues/288)) ([2d78ec4](https://github.com/arlequins/beat/commit/2d78ec42688e4325ca705af64bb6beda5bc6ceb6))
+
 ## [1.63.0](https://github.com/arlequins/beat/compare/beat-v1.62.2...beat-v1.63.0) (2026-09-26)
 
 
