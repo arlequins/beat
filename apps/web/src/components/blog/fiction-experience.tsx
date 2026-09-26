@@ -5,6 +5,7 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  MessageCircle,
   Moon,
   Settings2,
   Sun,
@@ -19,6 +20,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { FictionComments } from "~/components/blog/fiction-comments";
 import type { Story } from "~/lib/fiction";
 import {
   getNovelCollections,
@@ -284,7 +286,9 @@ export function FictionViewer({
   const lastTap = useRef({ time: 0, x: 0, y: 0 });
   const touchStart = useRef({ x: 0, y: 0 });
   const [width, setWidth] = useState(0);
-  const [panel, setPanel] = useState<"settings" | "episodes">("settings");
+  const [panel, setPanel] = useState<"settings" | "episodes" | "comments">(
+    "settings",
+  );
   const dialog = useRef<HTMLDialogElement>(null);
   const viewport = useRef<HTMLDivElement>(null);
   const flow = useRef<HTMLDivElement>(null);
@@ -410,7 +414,7 @@ export function FictionViewer({
     setPreferences(value);
     save("preferences", value);
   };
-  const open = (next: "settings" | "episodes") => {
+  const open = (next: "settings" | "episodes" | "comments") => {
     setPanel(next);
     dialog.current?.showModal();
   };
@@ -610,6 +614,13 @@ export function FictionViewer({
         </button>
         <button
           type="button"
+          aria-label="코멘트"
+          onClick={() => open("comments")}
+        >
+          <MessageCircle size={18} />
+        </button>
+        <button
+          type="button"
           aria-label={
             preferences.theme === "night"
               ? "밝은 배경으로 전환"
@@ -635,7 +646,13 @@ export function FictionViewer({
       </nav>
       <dialog ref={dialog} className="viewer-dialog">
         <header>
-          <h2>{panel === "settings" ? "뷰어 설정" : "회차 목록"}</h2>
+          <h2>
+            {panel === "settings"
+              ? "뷰어 설정"
+              : panel === "episodes"
+                ? "회차 목록"
+                : "독자 코멘트"}
+          </h2>
           <button
             type="button"
             aria-label="닫기"
@@ -710,7 +727,7 @@ export function FictionViewer({
             </button>
             <p>읽기 설정과 기록은 이 브라우저에 저장됩니다.</p>
           </div>
-        ) : (
+        ) : panel === "episodes" ? (
           <ol className="viewer-episode-list">
             {novelStories.map((item) => (
               <li key={item.slug}>
@@ -725,6 +742,8 @@ export function FictionViewer({
               </li>
             ))}
           </ol>
+        ) : (
+          <FictionComments story={story} />
         )}
       </dialog>
     </div>
