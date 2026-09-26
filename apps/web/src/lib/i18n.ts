@@ -16,6 +16,7 @@ export const copy: Record<Locale, Record<string, string>> = {
   ko: {
     backstage: "Backstage · 제작의 기록",
     brandTagline: "사람의 방향 · AI의 조명",
+    characters: "두 사람",
     email: "이메일",
     footer:
       "Arlequin과 Lumen이 함께 묻고 만듭니다. 대화에서 찾은 가능성을 글과 코드로 이어갑니다.",
@@ -28,6 +29,7 @@ export const copy: Record<Locale, Record<string, string>> = {
   en: {
     backstage: "Backstage · The making of it",
     brandTagline: "Human direction · AI illumination",
+    characters: "Characters",
     email: "Email",
     footer:
       "Arlequin and Lumen ask questions and build together, turning ideas from their conversations into writing and code.",
@@ -40,6 +42,7 @@ export const copy: Record<Locale, Record<string, string>> = {
   ja: {
     backstage: "Backstage · 制作の記録",
     brandTagline: "人の方向性 · AIの照明",
+    characters: "二人の紹介",
     email: "メール",
     footer:
       "ArlequinとLumenがともに問い、つくる。対話で見つけた可能性を、文章とコードへつなげます。",

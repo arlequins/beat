@@ -177,6 +177,13 @@ export function AppShell(props: { children: React.ReactNode }) {
           >
             {text.fiction}
           </Link>
+          <Link
+            onClick={() => menuRef.current?.hidePopover()}
+            href={localePath(locale, "/characters/")}
+            aria-current={route.startsWith("/characters") ? "page" : undefined}
+          >
+            {text.characters}
+          </Link>
         </nav>
         <div className="site-menu-settings">
           <div>
