@@ -14,12 +14,20 @@ for (const locale of ["ko", "en", "ja"]) {
       `${prefix}/work/beat-template/`,
     );
     const destinations = page.locator(".index-destinations");
-    await expect(destinations.getByRole("link")).toHaveCount(3);
-    for (const path of ["posts", "gourmet", "fiction"]) {
+    await expect(destinations.getByRole("link")).toHaveCount(4);
+    for (const path of ["posts", "gourmet", "fiction", "characters"]) {
       await expect(
         destinations.locator(`a[href="${prefix}/${path}/"]`),
       ).toBeVisible();
     }
+    await destinations.locator(`a[href="${prefix}/characters/"]`).click();
+    await expect(page).toHaveURL(new RegExp(`${prefix}/characters/$`));
+    await expect(page.locator(".character-card h2")).toHaveText([
+      "Arlequin",
+      "Lumen",
+    ]);
+    await expect(page.locator(".character-portrait img")).toHaveCount(2);
+    await page.goto(`${prefix}/`);
     await expect(page.locator(".home-object")).toHaveCount(0);
     await expect(page.locator(".index-fiction")).toHaveAttribute(
       "href",
