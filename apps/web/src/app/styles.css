@@ -32,6 +32,8 @@
     --surface: var(--card);
     --line: var(--border);
     --shadow-accent: rgba(240, 100, 73, 0.22);
+    --character-heading-muted: #536173;
+    --character-heading-eyebrow: #8b4e1f;
   }
   :root.dark {
     --ink: #f8f1e4;
@@ -42,6 +44,8 @@
     --surface: var(--card);
     --line: var(--border);
     --shadow-accent: rgba(121, 230, 224, 0.24);
+    --character-heading-muted: #b9c2d5;
+    --character-heading-eyebrow: #f6c85f;
   }
   * {
     @apply border-border;
@@ -1436,17 +1440,18 @@
 }
 .character-heading .brand-eyebrow {
   margin-bottom: 0.75rem;
-  color: #b48c43;
+  color: var(--character-heading-eyebrow);
 }
 .character-heading h1 {
   font-family: var(--font-display, Georgia, serif);
   font-size: clamp(2rem, 5vw, 3.25rem);
   line-height: 1.15;
+  color: var(--ink);
 }
 .character-heading .page-width > p:last-child {
   max-width: 46rem;
   margin-top: 1rem;
-  color: var(--muted);
+  color: var(--character-heading-muted);
   font-size: 1rem;
   line-height: 1.8;
 }
