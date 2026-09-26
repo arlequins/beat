@@ -187,10 +187,10 @@ test("library switches between novels before opening an episode", async ({
   page,
 }) => {
   await page.goto("/ko/fiction/");
-  await expect(page.locator(".novel-card")).toHaveCount(15);
-  await page.getByRole("button", { name: /낮은 지붕 아래/ }).click();
+  await expect(page.locator(".novel-card")).toHaveCount(3);
+  await page.getByRole("button", { name: /각자의 세계 단편선/ }).click();
   await expect(page.locator("#selected-novel-title")).toHaveText(
-    "낮은 지붕 아래",
+    "각자의 세계 단편선",
   );
   await page.getByRole("link", { name: "1화. 비가 그친 뒤의 집" }).click();
   await expect(page.locator('[itemprop="headline"]')).toHaveText(
@@ -198,46 +198,35 @@ test("library switches between novels before opening an episode", async ({
   );
 });
 
-test("independent one-shot novels keep separate world labels", async ({
-  page,
-}) => {
+test("one-shot novels share one catalog collection", async ({ page }) => {
   await page.goto("/ko/fiction/");
 
-  for (const [novel, episodeTitle] of [
-    ["우편함의 계절", "새벽 네 시의 우편함"],
-    ["마지막 환승", "마지막 환승 안내방송"],
+  await page.getByRole("button", { name: /각자의 세계 단편선/ }).click();
+  await expect(page.locator("#selected-novel-title")).toHaveText(
+    "각자의 세계 단편선",
+  );
+  await expect(page.locator(".novel-world-row")).toContainText(
+    "여러 세계관 · 각자의 세계 단편선",
+  );
+  await expect(page.getByText("총 13화", { exact: true })).toBeVisible();
+  for (const episodeTitle of [
+    "비가 그친 뒤의 집",
+    "새벽 네 시의 우편함",
+    "이름을 빌려드립니다",
   ]) {
-    await page.getByRole("button", { name: new RegExp(novel) }).click();
-    await expect(page.locator("#selected-novel-title")).toHaveText(novel);
-    await expect(page.locator(".novel-world-row")).toContainText(
-      `새 세계관 · ${novel} 세계관`,
-    );
     await expect(
       page.getByRole("link", { name: `1화. ${episodeTitle}` }),
     ).toBeVisible();
   }
 });
 
-test("library includes ten new category one-shots", async ({ page }) => {
+test("library keeps the three top-level collections", async ({ page }) => {
   await page.goto("/ko/fiction/");
-
-  for (const [novel, category] of [
-    ["식탁 아래의 별", "문학 · 가족"],
-    ["여섯 번째 열쇠", "미스터리 · 단편"],
-    ["구름 보관소", "기후 SF · 단편"],
-    ["기억보다 늦은 답장", "로맨스 · 단편"],
-    ["숲의 이름을 빌린 날", "판타지 · 우화"],
-    ["벽 너머의 발소리", "심리 공포 · 단편"],
-    ["사라진 역참의 등불", "시대극 · 단편"],
-    ["파란 섬의 마지막 지도", "해양 모험 · 단편"],
-    ["퇴근하지 않는 엘리베이터", "오피스 코미디 · 단편"],
-    ["이름을 빌려드립니다", "디스토피아 · 사회"],
-  ]) {
-    const card = page.locator(".novel-card").filter({ hasText: novel });
-    await expect(card).toHaveCount(1);
-    await expect(card).toContainText(category);
-    await expect(card).toContainText("새 세계관");
-  }
+  await expect(page.locator(".novel-card")).toHaveCount(3);
+  await expect(page.locator(".novel-card").nth(2)).toContainText(
+    "각자의 세계 단편선",
+  );
+  await expect(page.locator(".novel-card").nth(2)).toContainText("13화");
 });
 
 test("story body is exposed as a semantic article for iPhone Reader", async ({
