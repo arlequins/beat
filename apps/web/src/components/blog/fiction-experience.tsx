@@ -93,7 +93,7 @@ export function FictionLibrary({
         <p className="novel-library-kicker">BEAT FICTION LIBRARY</p>
         <h1>읽을 소설을 고르세요</h1>
         <p className="novel-description">
-          서로 다른 세계와 사람들의 이야기를 한곳에서 골라 읽습니다.
+          세 작품 목록에서 골라, 서로 다른 세계와 사람들의 이야기로 들어갑니다.
         </p>
         <div className="novel-facts">
           <span>{novels.length}편</span>
