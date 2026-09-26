@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.63.0](https://github.com/arlequins/beat/compare/beat-v1.62.2...beat-v1.63.0) (2026-09-26)
+
+
+### Features
+
+* **fiction:** add ten category one-shots ([#285](https://github.com/arlequins/beat/issues/285)) ([ba87ed7](https://github.com/arlequins/beat/commit/ba87ed7bb6a15b854eaa9770e7bc44ebe0d7ed59))
+
 ## [1.62.2](https://github.com/arlequins/beat/compare/beat-v1.62.1...beat-v1.62.2) (2026-09-26)
 
 
