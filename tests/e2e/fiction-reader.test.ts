@@ -175,7 +175,7 @@ test("library omits free labels", async ({ page }) => {
   await page.goto("/ko/fiction/");
   await expect(page.getByText("무료", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: /여백의 사람들/ }).click();
-  await expect(page.getByText("총 40화", { exact: true })).toBeVisible();
+  await expect(page.getByText("총 100화", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("heading", {
       name: "40화. 돌아가는 물 5: 다음 배가 오는 날",
