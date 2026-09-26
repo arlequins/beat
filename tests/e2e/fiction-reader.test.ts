@@ -187,7 +187,7 @@ test("library switches between novels before opening an episode", async ({
   page,
 }) => {
   await page.goto("/ko/fiction/");
-  await expect(page.locator(".novel-card")).toHaveCount(5);
+  await expect(page.locator(".novel-card")).toHaveCount(15);
   await page.getByRole("button", { name: /낮은 지붕 아래/ }).click();
   await expect(page.locator("#selected-novel-title")).toHaveText(
     "낮은 지붕 아래",
@@ -215,6 +215,28 @@ test("independent one-shot novels keep separate world labels", async ({
     await expect(
       page.getByRole("link", { name: `1화. ${episodeTitle}` }),
     ).toBeVisible();
+  }
+});
+
+test("library includes ten new category one-shots", async ({ page }) => {
+  await page.goto("/ko/fiction/");
+
+  for (const [novel, category] of [
+    ["식탁 아래의 별", "문학 · 가족"],
+    ["여섯 번째 열쇠", "미스터리 · 단편"],
+    ["구름 보관소", "기후 SF · 단편"],
+    ["기억보다 늦은 답장", "로맨스 · 단편"],
+    ["숲의 이름을 빌린 날", "판타지 · 우화"],
+    ["벽 너머의 발소리", "심리 공포 · 단편"],
+    ["사라진 역참의 등불", "시대극 · 단편"],
+    ["파란 섬의 마지막 지도", "해양 모험 · 단편"],
+    ["퇴근하지 않는 엘리베이터", "오피스 코미디 · 단편"],
+    ["이름을 빌려드립니다", "디스토피아 · 사회"],
+  ]) {
+    const card = page.locator(".novel-card").filter({ hasText: novel });
+    await expect(card).toHaveCount(1);
+    await expect(card).toContainText(category);
+    await expect(card).toContainText("새 세계관");
   }
 });
 
