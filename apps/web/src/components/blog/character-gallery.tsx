@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { siteAssetPath } from "~/config/site";
 import type { Locale } from "~/lib/i18n";
 
 const copy = {
@@ -126,7 +127,7 @@ export function CharacterGallery({ locale }: { locale: Locale }) {
               <Image
                 alt={character.alt}
                 height={1402}
-                src={character.image}
+                src={siteAssetPath(character.image)}
                 unoptimized
                 width={1122}
               />
