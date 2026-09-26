@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.62.0](https://github.com/arlequins/beat/compare/beat-v1.61.0...beat-v1.62.0) (2026-09-26)
+
+
+### Features
+
+* **web:** add character gallery ([#278](https://github.com/arlequins/beat/issues/278)) ([38b07d9](https://github.com/arlequins/beat/commit/38b07d985b698c79e5176ded0b542340a0aadeb4))
+
 ## [1.61.0](https://github.com/arlequins/beat/compare/beat-v1.60.3...beat-v1.61.0) (2026-09-23)
 
 
