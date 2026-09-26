@@ -1,4 +1,10 @@
-import { ArrowUpRight, BookOpen, NotebookPen, Utensils } from "lucide-react";
+import {
+  ArrowUpRight,
+  BookOpen,
+  NotebookPen,
+  Sparkles,
+  Utensils,
+} from "lucide-react";
 import Link from "next/link";
 import { HomeScene } from "~/components/blog/home-scene";
 import { projects } from "~/lib/blog-data";
@@ -22,6 +28,7 @@ const labels = {
     role: "소프트웨어 엔지니어 · AI 협업 제품 개발",
     featuredWork: "대표 프로젝트",
     viewProject: "사례 보기",
+    meetCharacters: "두 사람 소개",
   },
   en: {
     latest: "Latest notes",
@@ -35,6 +42,7 @@ const labels = {
     role: "Software engineer · AI-native product builder",
     featuredWork: "Featured work",
     viewProject: "View case study",
+    meetCharacters: "Meet the characters",
   },
   ja: {
     latest: "最近のノート",
@@ -48,6 +56,7 @@ const labels = {
     role: "ソフトウェアエンジニア · AI 協働プロダクト開発",
     featuredWork: "注力したプロジェクト",
     viewProject: "事例を見る",
+    meetCharacters: "二人の紹介",
   },
 };
 
@@ -109,6 +118,17 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
             <span className="index-route-detail">
               {novels.length} {text.novels}
             </span>
+          </Link>
+          <Link
+            href={localePath(locale, "/characters/")}
+            className="index-route index-route-characters"
+          >
+            <div className="index-route-top">
+              <Sparkles size={22} aria-hidden="true" />
+              <ArrowUpRight size={18} aria-hidden="true" />
+            </div>
+            <span>{copy[locale].characters}</span>
+            <span className="index-route-detail">{text.meetCharacters}</span>
           </Link>
         </nav>
         {projects[0] && featuredProject ? (
