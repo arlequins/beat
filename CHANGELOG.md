@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.68.0](https://github.com/arlequins/beat/compare/beat-v1.67.0...beat-v1.68.0) (2026-09-26)
+
+
+### Features
+
+* **fiction:** expand short story anthology to 45 works ([#299](https://github.com/arlequins/beat/issues/299)) ([280aa80](https://github.com/arlequins/beat/commit/280aa801af05226474be6ad8b183899b1e3dcd85))
+
 ## [1.67.0](https://github.com/arlequins/beat/compare/beat-v1.66.0...beat-v1.67.0) (2026-09-26)
 
 
