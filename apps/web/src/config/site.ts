@@ -21,3 +21,10 @@ export function siteUrl(path = "") {
   const base = `${siteConfig.url.replace(/\/$/, "")}/`;
   return new URL(path.replace(/^\//, ""), base).toString();
 }
+
+/** Prefix public assets for the GitHub Pages project-site base path. */
+export function siteAssetPath(path: string) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const basePath = process.env.GITHUB_PAGES === "true" ? "/beat" : "";
+  return `${basePath}${normalizedPath}`;
+}
