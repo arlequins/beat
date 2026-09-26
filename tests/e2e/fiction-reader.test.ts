@@ -171,6 +171,46 @@ test("fiction reader applies saved paper mode before hydration", async ({
   );
 });
 
+test("comments reject profanity and mask spoiler text", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("fiction-comments-test-cleared")) {
+      localStorage.removeItem("beat-fiction-comments-v1-the-last-window");
+      sessionStorage.setItem("fiction-comments-test-cleared", "true");
+    }
+  });
+  await page.goto("/ko/fiction/the-last-window/");
+  await page.locator(".book-viewport").focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "코멘트", exact: true }).click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.locator("h2")).toHaveText("독자 코멘트");
+  await dialog.getByLabel("닉네임").fill("독자");
+  await dialog.getByLabel("댓글").fill("시-발이 들어간 댓글");
+  await dialog.getByRole("button", { name: "댓글 등록" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("비속어");
+
+  await dialog.getByLabel("댓글").fill("결말 공개");
+  await dialog.getByLabel("스포일러 포함").check();
+  await dialog.getByRole("button", { name: "댓글 등록" }).click();
+  await expect(dialog.locator(".fiction-comment-spoiler")).toBeVisible();
+  await expect(dialog.getByText("결말 공개", { exact: true })).toHaveCount(0);
+  await dialog.locator(".fiction-comment-spoiler").click();
+  await expect(dialog.getByText("결말 공개", { exact: true })).toBeVisible();
+
+  await dialog.getByRole("button", { name: "닫기" }).click();
+  await page.reload();
+  await page.locator(".book-viewport").focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "코멘트", exact: true }).click();
+  await expect(
+    page.getByRole("dialog").locator(".fiction-comment-spoiler"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("dialog").getByText("결말 공개", { exact: true }),
+  ).toHaveCount(0);
+});
+
 test("library omits free labels", async ({ page }) => {
   await page.goto("/ko/fiction/");
   await expect(page.getByText("무료", { exact: true })).toHaveCount(0);
@@ -322,7 +362,7 @@ test("setting guide reads all world documents without entering the story viewer"
     .evaluateAll((elements) =>
       elements.map((element) => element.getAttribute("href")),
     );
-  expect(links).toHaveLength(19);
+  expect(links).toHaveLength(20);
   for (const href of links) {
     await page.goto(href!);
     await expect(page.locator(".guide-status")).toContainText("설정집");
@@ -337,7 +377,7 @@ test("setting guide reads all world documents without entering the story viewer"
     ).toBe(true);
   }
   await page.getByRole("link", { name: "설정집 목차", exact: true }).click();
-  await expect(page.locator(".guide-contents li")).toHaveCount(19);
+  await expect(page.locator(".guide-contents li")).toHaveCount(20);
 });
 
 test("near-future novel has its own guide and twenty-episode reading order", async ({

@@ -1262,6 +1262,175 @@
   font-size: 11px;
   opacity: 0.65;
 }
+.fiction-comments {
+  display: grid;
+  gap: 18px;
+}
+.fiction-comments-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.fiction-comments-kicker {
+  margin-bottom: 6px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+.fiction-comments h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+.fiction-comments-sort {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  opacity: 0.75;
+}
+.fiction-comments-sort select,
+.fiction-comments input,
+.fiction-comments textarea {
+  border: 1px solid #8885;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+}
+.fiction-comments-sort select {
+  padding: 7px 8px;
+}
+.fiction-comments-form {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #8884;
+}
+.fiction-comments-fields {
+  display: grid;
+  gap: 12px;
+}
+.fiction-comments-fields label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.fiction-comments input,
+.fiction-comments textarea {
+  width: 100%;
+  padding: 10px;
+  font: inherit;
+  font-size: 13px;
+}
+.fiction-comments textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+.fiction-comments input:focus-visible,
+.fiction-comments textarea:focus-visible,
+.fiction-comments select:focus-visible,
+.fiction-comments button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.fiction-comments-form-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fiction-comments-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.fiction-comments-checkbox input {
+  width: auto;
+  accent-color: #a98b12;
+}
+.fiction-comments-count {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.6;
+}
+.fiction-comments-form-footer > button {
+  padding: 9px 12px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.fiction-comments-note,
+.fiction-comments-error,
+.fiction-comments-empty {
+  font-size: 11px;
+  line-height: 1.6;
+}
+.fiction-comments-note,
+.fiction-comments-empty {
+  opacity: 0.65;
+}
+.fiction-comments-error {
+  color: #d66;
+}
+.fiction-comments-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fiction-comment {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #8884;
+  border-radius: 7px;
+}
+.fiction-comment > header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.fiction-comment > header strong {
+  font-size: 13px;
+}
+.fiction-comment time {
+  font-size: 10px;
+  opacity: 0.6;
+}
+.fiction-comment > p {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.fiction-comment footer {
+  display: flex;
+  gap: 12px;
+}
+.fiction-comment footer button,
+.fiction-comment-hidden button,
+.fiction-comment-spoiler {
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.7;
+}
+.fiction-comment-spoiler {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px;
+  border: 1px dashed #8886;
+  border-radius: 5px;
+  text-decoration: none;
+}
+.fiction-comment-hidden {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  opacity: 0.7;
+}
 .novel-home button,
 .novel-viewer button {
   cursor: pointer;
