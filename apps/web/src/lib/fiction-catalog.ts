@@ -1,6 +1,7 @@
 import type { Story } from "~/lib/fiction";
 
 export type WorldRelation = "shared" | "standalone" | "new" | "multiple";
+export type NovelUnit = "episode" | "story";
 
 export type NovelWorld = {
   id: string;
@@ -38,6 +39,7 @@ export type NovelDefinition = {
   description: string;
   worldId: string;
   worldRelation: WorldRelation;
+  unit: NovelUnit;
   status: string;
 };
 
@@ -55,6 +57,7 @@ export const novelDefinitions: NovelDefinition[] = [
       "돌아온 동창, 잘못 가져온 우산, 화면 너머의 식탁. 불안한 뉴스가 흐르는 일곱 도시에서 사람들은 다음 약속을 잡는다.",
     worldId: "ordinary-tomorrow",
     worldRelation: "standalone",
+    unit: "episode",
     status: "1–20화 · 연재 중",
   },
   {
@@ -65,6 +68,7 @@ export const novelDefinitions: NovelDefinition[] = [
       "전쟁이 지나간 강 하류에서 집과 밥과 이름을 다시 마련하는 사람들.",
     worldId: "yeobaek-river",
     worldRelation: "shared",
+    unit: "episode",
     status: "400화 완결",
   },
   {
@@ -75,6 +79,7 @@ export const novelDefinitions: NovelDefinition[] = [
       "서로 다른 배경에서 시작해 각자의 방식으로 끝나는 열세 편의 단편.",
     worldId: "short-fiction-anthology",
     worldRelation: "multiple",
+    unit: "story",
     status: "13편 · 단편선",
   },
 ];
@@ -132,6 +137,7 @@ export function getNovelCollections(stories: Story[]): NovelCollection[] {
       description: "새로 시작하는 이야기.",
       worldId: series,
       worldRelation: "new" as const,
+      unit: "episode" as const,
       status: "연재 중",
       world: getWorld(series),
       stories: sortStories(groupedStories),

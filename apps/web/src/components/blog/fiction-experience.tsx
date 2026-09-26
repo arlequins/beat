@@ -64,6 +64,14 @@ function readerSurfaceColor(theme: Preferences["theme"]) {
   return "#f5f0e6";
 }
 
+function itemUnit(unit: "episode" | "story") {
+  return unit === "story" ? "편" : "화";
+}
+
+function itemName(unit: "episode" | "story") {
+  return unit === "story" ? "단편" : "회차";
+}
+
 export function FictionLibrary({
   stories,
   locale,
@@ -92,15 +100,23 @@ export function FictionLibrary({
   return (
     <div className="novel-home" lang="ko">
       <header className="novel-summary">
-        <p className="novel-library-kicker">BEAT FICTION LIBRARY</p>
-        <h1>읽을 소설을 고르세요</h1>
-        <p className="novel-description">
-          세 작품 목록에서 골라, 서로 다른 세계와 사람들의 이야기로 들어갑니다.
-        </p>
-        <div className="novel-facts">
-          <span>{novels.length}편</span>
-          <span>총 {stories.length}화</span>
-          <span>한국어</span>
+        <div className="novel-summary-copy">
+          <p className="novel-library-kicker">BEAT FICTION LIBRARY</p>
+          <h1>읽을 소설을 고르세요</h1>
+          <p className="novel-description">
+            작품을 고르고, 그 작품이 가진 세계의 규칙과 사람들의 시간으로
+            들어갑니다.
+          </p>
+        </div>
+        <div className="novel-summary-aside">
+          <span className="novel-summary-mark" aria-hidden="true">
+            {String(novels.length).padStart(2, "0")}
+          </span>
+          <div className="novel-facts">
+            <span>{novels.length}편</span>
+            <span>총 {stories.length}화·편</span>
+            <span>한국어</span>
+          </div>
         </div>
       </header>
       <section className="novel-shelf" aria-labelledby="novel-shelf-title">
@@ -114,7 +130,7 @@ export function FictionLibrary({
         <div className="novel-picker">
           {novels.map((novel, index) => (
             <button
-              className="novel-card"
+              className={`novel-card novel-card-${index + 1}`}
               type="button"
               aria-pressed={novel.series === selected?.series}
               key={novel.series}
@@ -123,22 +139,29 @@ export function FictionLibrary({
                 setSection("episodes");
               }}
             >
-              <span className="novel-card-index">
+              <span className="novel-card-index" aria-hidden="true">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="novel-card-copy">
-                <span className="novel-card-category">{novel.category}</span>
+                <span className="novel-card-topline">
+                  <span className="novel-card-category">{novel.category}</span>
+                  <span className="novel-card-arrow" aria-hidden="true">
+                    <ChevronRight size={18} />
+                  </span>
+                </span>
                 <strong>{novel.title}</strong>
                 <span>{novel.description}</span>
-                <small className="novel-card-world">
-                  {getWorldRelationLabel(novel.worldRelation)} ·{" "}
-                  {novel.world.title}
-                </small>
-                <small>
-                  {novel.stories.length}화 · {novel.status}
-                </small>
+                <span className="novel-card-bottomline">
+                  <small className="novel-card-world">
+                    {getWorldRelationLabel(novel.worldRelation)} ·{" "}
+                    {novel.world.title}
+                  </small>
+                  <small>
+                    {novel.stories.length}
+                    {itemUnit(novel.unit)} · {novel.status}
+                  </small>
+                </span>
               </span>
-              <ChevronRight size={18} aria-hidden="true" />
             </button>
           ))}
         </div>
@@ -168,7 +191,10 @@ export function FictionLibrary({
                 )}
               </div>
               <div className="novel-facts">
-                <span>총 {selected.stories.length}화</span>
+                <span>
+                  총 {selected.stories.length}
+                  {itemUnit(selected.unit)}
+                </span>
                 <span>{selected.status}</span>
               </div>
             </div>
@@ -189,7 +215,9 @@ export function FictionLibrary({
                   className="novel-primary"
                   href={localePath(locale, `/fiction/${current.slug}/`)}
                 >
-                  {last === current.slug ? "이어보기" : "첫 화 보기"}
+                  {last === current.slug
+                    ? "이어보기"
+                    : `첫 ${itemUnit(selected.unit)} 보기`}
                   <ChevronRight size={18} />
                 </Link>
               )}
@@ -201,7 +229,7 @@ export function FictionLibrary({
               aria-pressed={section === "episodes"}
               onClick={() => setSection("episodes")}
             >
-              회차 {selected.stories.length}
+              {itemName(selected.unit)} {selected.stories.length}
             </button>
             <button
               type="button"
@@ -214,12 +242,19 @@ export function FictionLibrary({
           {section === "episodes" ? (
             <section aria-label={`${selected.title} 회차 목록`}>
               <div className="novel-list-heading">
-                <span>전체 {selected.stories.length}화</span>
+                <span>
+                  전체 {selected.stories.length}
+                  {itemUnit(selected.unit)}
+                </span>
                 <button
                   type="button"
                   onClick={() => setDescending(!descending)}
                 >
-                  {descending ? "최신화부터 ↓" : "첫 화부터 ↑"}
+                  {descending
+                    ? selected.unit === "story"
+                      ? "마지막 편부터 ↓"
+                      : "최신화부터 ↓"
+                    : `첫 ${itemUnit(selected.unit)}부터 ↑`}
                 </button>
               </div>
               <ol>
@@ -236,7 +271,8 @@ export function FictionLibrary({
                       >
                         <div>
                           <h3>
-                            {Number(story.episode)}화. {story.title}
+                            {Number(story.episode)}
+                            {itemUnit(selected.unit)}. {story.title}
                           </h3>
                           <p>
                             {story.publishedAt.replaceAll("-", ".")} ·{" "}
@@ -429,6 +465,10 @@ export function FictionViewer({
     save(`book-position-${story.slug}`, position.current);
   };
   const novelStories = stories.filter((item) => item.series === story.series);
+  const novel = getNovelCollections(stories).find(
+    (item) => item.series === story.series,
+  );
+  const unit = itemUnit(novel?.unit ?? "episode");
   const next =
     novelStories[
       novelStories.findIndex((item) => item.slug === story.slug) + 1
@@ -531,7 +571,8 @@ export function FictionViewer({
             <meta itemProp="inLanguage" content="ko" />
             <header className="book-title">
               <p>
-                {story.series} · {Number(story.episode)}화
+                {story.series} · {Number(story.episode)}
+                {unit}
               </p>
               <h1 itemProp="headline" data-beat-context-title>
                 {story.title}
@@ -736,7 +777,8 @@ export function FictionViewer({
                   href={localePath(locale, `/fiction/${item.slug}/`)}
                   onClick={() => dialog.current?.close()}
                 >
-                  {Number(item.episode)}화. {item.title}
+                  {Number(item.episode)}
+                  {unit}. {item.title}
                   {item.slug === story.slug && <span>읽는 중</span>}
                 </Link>
               </li>

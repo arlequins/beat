@@ -232,7 +232,7 @@ test("library switches between novels before opening an episode", async ({
   await expect(page.locator("#selected-novel-title")).toHaveText(
     "각자의 세계 단편선",
   );
-  await page.getByRole("link", { name: "1화. 비가 그친 뒤의 집" }).click();
+  await page.getByRole("link", { name: "1편. 비가 그친 뒤의 집" }).click();
   await expect(page.locator('[itemprop="headline"]')).toHaveText(
     "비가 그친 뒤의 집",
   );
@@ -248,14 +248,14 @@ test("one-shot novels share one catalog collection", async ({ page }) => {
   await expect(page.locator(".novel-world-row")).toContainText(
     "여러 세계관 · 각자의 세계 단편선",
   );
-  await expect(page.getByText("총 13화", { exact: true })).toBeVisible();
+  await expect(page.getByText("총 13편", { exact: true })).toBeVisible();
   for (const episodeTitle of [
     "비가 그친 뒤의 집",
     "새벽 네 시의 우편함",
     "이름을 빌려드립니다",
   ]) {
     await expect(
-      page.getByRole("link", { name: `1화. ${episodeTitle}` }),
+      page.getByRole("link", { name: new RegExp(`\\d+편\\. ${episodeTitle}`) }),
     ).toBeVisible();
   }
 });
@@ -266,7 +266,7 @@ test("library keeps the three top-level collections", async ({ page }) => {
   await expect(page.locator(".novel-card").nth(2)).toContainText(
     "각자의 세계 단편선",
   );
-  await expect(page.locator(".novel-card").nth(2)).toContainText("13화");
+  await expect(page.locator(".novel-card").nth(2)).toContainText("13편");
 });
 
 test("story body is exposed as a semantic article for iPhone Reader", async ({
