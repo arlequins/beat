@@ -209,7 +209,8 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
                   <div className="index-fiction-novel" key={novel.series}>
                     <span className="index-story-series">{novel.title}</span>
                     <span>
-                      {novel.stories.length} {text.episodes} ·{" "}
+                      {novel.stories.length}{" "}
+                      {novel.unit === "story" ? text.novels : text.episodes} ·{" "}
                       {novel.world.title}
                     </span>
                   </div>

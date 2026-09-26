@@ -1,6 +1,7 @@
 import type { Story } from "~/lib/fiction";
 
 export type WorldRelation = "shared" | "standalone" | "new" | "multiple";
+export type NovelUnit = "episode" | "story";
 
 export type NovelWorld = {
   id: string;
@@ -25,9 +26,9 @@ export const worldDefinitions: NovelWorld[] = [
   },
   {
     id: "short-fiction-anthology",
-    title: "각자의 세계 단편선",
+    title: "작은 세계의 문장들",
     description:
-      "작품마다 서로 다른 배경과 규칙을 가진 단편들을 한자리에서 만나는 묶음.",
+      "서로 다른 세계에서 살아가는 사람들이 남긴 작고 이상한 문장들의 모음.",
   },
 ];
 
@@ -38,6 +39,7 @@ export type NovelDefinition = {
   description: string;
   worldId: string;
   worldRelation: WorldRelation;
+  unit: NovelUnit;
   status: string;
 };
 
@@ -55,6 +57,7 @@ export const novelDefinitions: NovelDefinition[] = [
       "돌아온 동창, 잘못 가져온 우산, 화면 너머의 식탁. 불안한 뉴스가 흐르는 일곱 도시에서 사람들은 다음 약속을 잡는다.",
     worldId: "ordinary-tomorrow",
     worldRelation: "standalone",
+    unit: "episode",
     status: "1–20화 · 연재 중",
   },
   {
@@ -65,17 +68,19 @@ export const novelDefinitions: NovelDefinition[] = [
       "전쟁이 지나간 강 하류에서 집과 밥과 이름을 다시 마련하는 사람들.",
     worldId: "yeobaek-river",
     worldRelation: "shared",
+    unit: "episode",
     status: "400화 완결",
   },
   {
-    series: "각자의 세계 단편선",
-    title: "각자의 세계 단편선",
+    series: "작은 세계의 문장들",
+    title: "작은 세계의 문장들",
     category: "단편선 · 여러 세계",
     description:
-      "서로 다른 배경에서 시작해 각자의 방식으로 끝나는 열세 편의 단편.",
+      "서로 다른 배경에서 시작해 각자의 방식으로 끝나는 마흔다섯 편의 단편.",
     worldId: "short-fiction-anthology",
     worldRelation: "multiple",
-    status: "13편 · 단편선",
+    unit: "story",
+    status: "45편 · 단편선",
   },
 ];
 
@@ -132,6 +137,7 @@ export function getNovelCollections(stories: Story[]): NovelCollection[] {
       description: "새로 시작하는 이야기.",
       worldId: series,
       worldRelation: "new" as const,
+      unit: "episode" as const,
       status: "연재 중",
       world: getWorld(series),
       stories: sortStories(groupedStories),
