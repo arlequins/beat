@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.66.0](https://github.com/arlequins/beat/compare/beat-v1.65.0...beat-v1.66.0) (2026-09-26)
+
+
+### Features
+
+* **fiction:** continue yeobaek people to episode 400 ([#294](https://github.com/arlequins/beat/issues/294)) ([5e6b10c](https://github.com/arlequins/beat/commit/5e6b10c7fa5e805aa40590bdb8b5aba95cd0350c))
+
 ## [1.65.0](https://github.com/arlequins/beat/compare/beat-v1.64.0...beat-v1.65.0) (2026-09-26)
 
 
