@@ -228,9 +228,9 @@ test("library switches between novels before opening an episode", async ({
 }) => {
   await page.goto("/ko/fiction/");
   await expect(page.locator(".novel-card")).toHaveCount(3);
-  await page.getByRole("button", { name: /각자의 세계 단편선/ }).click();
+  await page.getByRole("button", { name: /작은 세계의 문장들/ }).click();
   await expect(page.locator("#selected-novel-title")).toHaveText(
-    "각자의 세계 단편선",
+    "작은 세계의 문장들",
   );
   await page.getByRole("link", { name: "1편. 비가 그친 뒤의 집" }).click();
   await expect(page.locator('[itemprop="headline"]')).toHaveText(
@@ -241,14 +241,14 @@ test("library switches between novels before opening an episode", async ({
 test("one-shot novels share one catalog collection", async ({ page }) => {
   await page.goto("/ko/fiction/");
 
-  await page.getByRole("button", { name: /각자의 세계 단편선/ }).click();
+  await page.getByRole("button", { name: /작은 세계의 문장들/ }).click();
   await expect(page.locator("#selected-novel-title")).toHaveText(
-    "각자의 세계 단편선",
+    "작은 세계의 문장들",
   );
   await expect(page.locator(".novel-world-row")).toContainText(
-    "여러 세계관 · 각자의 세계 단편선",
+    "여러 세계관 · 작은 세계의 문장들",
   );
-  await expect(page.getByText("총 13편", { exact: true })).toBeVisible();
+  await expect(page.getByText("총 45편", { exact: true })).toBeVisible();
   for (const episodeTitle of [
     "비가 그친 뒤의 집",
     "새벽 네 시의 우편함",
@@ -264,9 +264,9 @@ test("library keeps the three top-level collections", async ({ page }) => {
   await page.goto("/ko/fiction/");
   await expect(page.locator(".novel-card")).toHaveCount(3);
   await expect(page.locator(".novel-card").nth(2)).toContainText(
-    "각자의 세계 단편선",
+    "작은 세계의 문장들",
   );
-  await expect(page.locator(".novel-card").nth(2)).toContainText("13편");
+  await expect(page.locator(".novel-card").nth(2)).toContainText("45편");
 });
 
 test("story body is exposed as a semantic article for iPhone Reader", async ({

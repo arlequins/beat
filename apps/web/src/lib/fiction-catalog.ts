@@ -26,9 +26,9 @@ export const worldDefinitions: NovelWorld[] = [
   },
   {
     id: "short-fiction-anthology",
-    title: "각자의 세계 단편선",
+    title: "작은 세계의 문장들",
     description:
-      "작품마다 서로 다른 배경과 규칙을 가진 단편들을 한자리에서 만나는 묶음.",
+      "서로 다른 세계에서 살아가는 사람들이 남긴 작고 이상한 문장들의 모음.",
   },
 ];
 
@@ -72,15 +72,15 @@ export const novelDefinitions: NovelDefinition[] = [
     status: "400화 완결",
   },
   {
-    series: "각자의 세계 단편선",
-    title: "각자의 세계 단편선",
+    series: "작은 세계의 문장들",
+    title: "작은 세계의 문장들",
     category: "단편선 · 여러 세계",
     description:
-      "서로 다른 배경에서 시작해 각자의 방식으로 끝나는 열세 편의 단편.",
+      "서로 다른 배경에서 시작해 각자의 방식으로 끝나는 마흔다섯 편의 단편.",
     worldId: "short-fiction-anthology",
     worldRelation: "multiple",
     unit: "story",
-    status: "13편 · 단편선",
+    status: "45편 · 단편선",
   },
 ];
 
