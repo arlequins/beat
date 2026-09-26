@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.62.2](https://github.com/arlequins/beat/compare/beat-v1.62.1...beat-v1.62.2) (2026-09-26)
+
+
+### Bug Fixes
+
+* **web:** restore character text contrast by theme ([#283](https://github.com/arlequins/beat/issues/283)) ([c6588d1](https://github.com/arlequins/beat/commit/c6588d16bb3de12457c427799d20abdd3da5965d))
+
 ## [1.62.1](https://github.com/arlequins/beat/compare/beat-v1.62.0...beat-v1.62.1) (2026-09-26)
 
 
