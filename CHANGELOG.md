@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.67.0](https://github.com/arlequins/beat/compare/beat-v1.66.0...beat-v1.67.0) (2026-09-26)
+
+
+### Features
+
+* add fiction comments and strengthen longform conflict ([#296](https://github.com/arlequins/beat/issues/296)) ([1b4f373](https://github.com/arlequins/beat/commit/1b4f37346813ffa0f6bbd91012709179dfe98f19))
+
 ## [1.66.0](https://github.com/arlequins/beat/compare/beat-v1.65.0...beat-v1.66.0) (2026-09-26)
 
 
