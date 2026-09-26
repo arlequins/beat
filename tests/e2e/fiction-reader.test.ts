@@ -362,7 +362,7 @@ test("setting guide reads all world documents without entering the story viewer"
     .evaluateAll((elements) =>
       elements.map((element) => element.getAttribute("href")),
     );
-  expect(links).toHaveLength(19);
+  expect(links).toHaveLength(20);
   for (const href of links) {
     await page.goto(href!);
     await expect(page.locator(".guide-status")).toContainText("설정집");
@@ -377,7 +377,7 @@ test("setting guide reads all world documents without entering the story viewer"
     ).toBe(true);
   }
   await page.getByRole("link", { name: "설정집 목차", exact: true }).click();
-  await expect(page.locator(".guide-contents li")).toHaveCount(19);
+  await expect(page.locator(".guide-contents li")).toHaveCount(20);
 });
 
 test("near-future novel has its own guide and twenty-episode reading order", async ({
