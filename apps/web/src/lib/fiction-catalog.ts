@@ -65,7 +65,7 @@ export const novelDefinitions: NovelDefinition[] = [
       "전쟁이 지나간 강 하류에서 집과 밥과 이름을 다시 마련하는 사람들.",
     worldId: "yeobaek-river",
     worldRelation: "shared",
-    status: "100화 완결",
+    status: "400화 완결",
   },
   {
     series: "각자의 세계 단편선",
