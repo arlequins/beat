@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.73.0](https://github.com/arlequins/beat/compare/beat-v1.72.0...beat-v1.73.0) (2026-09-27)
+
+
+### Features
+
+* **web:** organize admin workspaces ([#316](https://github.com/arlequins/beat/issues/316)) ([7c87c7f](https://github.com/arlequins/beat/commit/7c87c7febef2f1a750e2ec83bb2256a5a5f5437b))
+
 ## [1.72.0](https://github.com/arlequins/beat/compare/beat-v1.71.0...beat-v1.72.0) (2026-09-27)
 
 
