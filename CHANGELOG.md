@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.73.1](https://github.com/arlequins/beat/compare/beat-v1.73.0...beat-v1.73.1) (2026-09-27)
+
+
+### Bug Fixes
+
+* **web:** read private fiction in paged book layout ([#318](https://github.com/arlequins/beat/issues/318)) ([a12c431](https://github.com/arlequins/beat/commit/a12c431ba97685ec2517d2d849b5782b80c7539e))
+
 ## [1.73.0](https://github.com/arlequins/beat/compare/beat-v1.72.0...beat-v1.73.0) (2026-09-27)
 
 
