@@ -377,7 +377,7 @@ test("setting guide reads all world documents without entering the story viewer"
     );
   expect(links).toHaveLength(20);
   for (const href of links) {
-    await page.goto(href!);
+    await page.goto(href!, { waitUntil: "domcontentloaded" });
     await expect(page.locator(".guide-status")).toContainText("설정집");
     await expect(page.locator(".book-viewer")).toHaveCount(0);
     await expect(
