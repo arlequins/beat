@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.72.0](https://github.com/arlequins/beat/compare/beat-v1.71.0...beat-v1.72.0) (2026-09-27)
+
+
+### Features
+
+* render private fiction in reader layout ([1378e48](https://github.com/arlequins/beat/commit/1378e48e8b60c85db3f4f8cf438175df44aa727c))
+
 ## [1.71.0](https://github.com/arlequins/beat/compare/beat-v1.70.2...beat-v1.71.0) (2026-09-27)
 
 
