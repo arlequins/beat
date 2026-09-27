@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.70.2](https://github.com/arlequins/beat/compare/beat-v1.70.1...beat-v1.70.2) (2026-09-27)
+
+
+### Bug Fixes
+
+* **web:** translate remaining Korean Gourmet details ([#308](https://github.com/arlequins/beat/issues/308)) ([4d5297c](https://github.com/arlequins/beat/commit/4d5297c5ef6636a1eed9a22088f4814840303d80))
+
 ## [1.70.1](https://github.com/arlequins/beat/compare/beat-v1.70.0...beat-v1.70.1) (2026-09-27)
 
 
