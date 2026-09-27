@@ -47,12 +47,14 @@ test("renders the private Markdown as a navigable fiction reader", async ({
     page.getByRole("heading", { name: "비공개 원고 보관함" }),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "현실 오류" })).toBeVisible();
+  await page.getByRole("button", { name: /정본 설정집/ }).click();
   await expect(
     page.getByRole("heading", { name: "정본 설정집" }),
   ).toBeVisible();
   await expect(page.locator(".private-fiction-prose strong")).toHaveText(
     "설정",
   );
+  await page.getByRole("button", { name: /목차/ }).click();
   await expect(page.getByRole("button", { name: /1화/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /2화/ })).toBeVisible();
 
@@ -67,10 +69,20 @@ test("renders the private Markdown as a navigable fiction reader", async ({
   await expect(page.locator(".private-fiction-page-nav span")).toHaveText(
     /2 \/ \d+/,
   );
+  await page.getByRole("region", { name: "책 페이지" }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator(".private-fiction-page-nav span")).toHaveText(
+    /1 \/ \d+/,
+  );
+  await page.getByRole("button", { name: "다음 페이지" }).click();
+  await expect(page.locator(".private-fiction-page-nav span")).toHaveText(
+    /2 \/ \d+/,
+  );
   await page.getByRole("button", { name: /이전 문서/ }).click();
   await expect(
     page.getByRole("heading", { name: "1화 — 첫 번째 장면" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: /목차/ }).click();
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator(".private-fiction-toc")).toBeVisible();
@@ -79,4 +91,18 @@ test("renders the private Markdown as a navigable fiction reader", async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  if (test.info().project.name === "mobile-chrome") {
+    await page.getByRole("button", { name: /2화/ }).click();
+    const viewport = page.getByRole("region", { name: "책 페이지" });
+    const bounds = await viewport.boundingBox();
+    if (!bounds) throw new Error("The reading page is not visible.");
+    await page.touchscreen.tap(bounds.x + bounds.width - 60, bounds.y + 180);
+    await expect(page.locator(".private-fiction-page-number")).toHaveText(
+      /2 \/ \d+/,
+    );
+    await page.touchscreen.tap(bounds.x + 60, bounds.y + 180);
+    await expect(page.locator(".private-fiction-page-number")).toHaveText(
+      /1 \/ \d+/,
+    );
+  }
 });

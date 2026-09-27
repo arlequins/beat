@@ -978,9 +978,28 @@
   padding-top: 20px;
   border-top: 1px solid #8883;
 }
+.private-fiction-book-shell {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  width: min(100%, 760px);
+  margin-inline: auto;
+}
 .private-fiction-page-nav {
-  justify-content: center;
-  gap: clamp(28px, 8vw, 72px);
+  position: relative;
+  order: -1;
+  z-index: 2;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 58px;
+  margin: 0 auto;
+  padding: 6px 16px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
 }
 .private-fiction-page-nav span,
 .private-fiction-document-nav span {
@@ -988,15 +1007,50 @@
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
+.private-fiction-page-nav .private-fiction-page-number {
+  min-width: 76px;
+  text-align: center;
+}
+.private-fiction-page-nav button,
+.private-fiction-reader-toolbar button,
+.private-fiction-document-nav button {
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  font-size: 14px;
+}
+.private-fiction-page-nav button:disabled,
+.private-fiction-document-nav button:disabled {
+  cursor: default;
+  opacity: 0.25;
+}
+.private-fiction-page-nav button:not(:disabled):hover,
+.private-fiction-book-reader .private-fiction-reader-toolbar button:hover,
+.private-fiction-book-reader
+  .private-fiction-document-nav
+  button:not(:disabled):hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
 .private-fiction-book-viewport {
-  height: min(68vh, 820px);
-  min-height: 490px;
+  flex: 1;
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  scroll-snap-type: x mandatory;
   overscroll-behavior-x: contain;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scrollbar-width: none;
   outline: none;
+  touch-action: pan-x pinch-zoom;
 }
 .private-fiction-book-viewport::-webkit-scrollbar {
   display: none;
@@ -1014,26 +1068,91 @@
   height: 100%;
   padding-right: 48px;
 }
-.private-fiction-book-flow :is(h2, h3, blockquote, li) {
+.private-fiction-book-title {
+  margin: 0 0 36px;
   break-inside: avoid;
 }
-.private-fiction-page-nav button,
-.private-fiction-document-nav button {
-  border: 1px solid #8885;
-  border-radius: 999px;
-  padding: 9px 14px;
-  font-size: 12px;
+.private-fiction-book-title p {
+  margin: 0 0 14px;
+  font:
+    12px system-ui,
+    sans-serif;
+  opacity: 0.6;
 }
-.private-fiction-page-nav button:disabled,
-.private-fiction-document-nav button:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
+.private-fiction-book-title h1 {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.private-fiction-page-snaps {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.private-fiction-page-snaps span {
+  position: absolute;
+  top: 0;
+  height: 1px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.private-fiction-book-flow :is(h2, h3, blockquote, li) {
+  break-inside: avoid;
 }
 .private-fiction-document-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: min(100%, 760px);
+  flex: none;
+  margin: 0 auto;
+  padding: 8px 16px max(8px, env(safe-area-inset-bottom));
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
   gap: 16px;
+}
+.private-fiction-book-reader {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--foreground, #222);
+  background: var(--background, #fff);
+}
+.private-fiction-reader-toolbar {
+  z-index: 2;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100%, 760px);
+  min-height: 58px;
+  margin-inline: auto;
+  padding: max(6px, env(safe-area-inset-top)) 16px 6px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+.private-fiction-reader-title {
+  overflow: hidden;
+  padding-inline: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.private-fiction-reader-doc-count {
+  flex: none;
+  color: var(--muted-foreground, #777);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.private-fiction-library-intro {
+  align-self: center;
+  max-width: 32rem;
+  margin: 4rem auto;
+  color: var(--muted-foreground);
+  text-align: center;
 }
 @media (max-width: 800px) {
   .private-fiction-shell {
@@ -1067,8 +1186,15 @@
     padding: 32px clamp(20px, 6vw, 48px);
   }
   .private-fiction-book-viewport {
-    height: min(68dvh, 760px);
-    min-height: 410px;
+    height: min(72dvh, 760px);
+    min-height: min(410px, 62dvh);
+  }
+  .private-fiction-book-reader .private-fiction-book-shell {
+    min-height: 0;
+  }
+  .private-fiction-book-reader .private-fiction-book-viewport {
+    height: auto;
+    min-height: 0;
   }
 }
 @media (max-width: 560px) {

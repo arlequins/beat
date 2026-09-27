@@ -183,7 +183,15 @@ function MarkdownBlocks({ source }: { source: string }) {
   return <>{blocks}</>;
 }
 
-function PaginatedReadingPage({ source }: { source: string }) {
+function PaginatedReadingPage({
+  source,
+  title,
+  eyebrow,
+}: {
+  source: string;
+  title: string;
+  eyebrow: string;
+}) {
   const viewport = useRef<HTMLDivElement>(null);
   const flow = useRef<HTMLDivElement>(null);
   const pageRef = useRef(0);
@@ -257,10 +265,28 @@ function PaginatedReadingPage({ source }: { source: string }) {
   };
 
   return (
-    <>
+    <div className="private-fiction-book-shell">
       <div
         className="private-fiction-book-viewport"
         ref={viewport}
+        role="region"
+        aria-label="책 페이지"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: Arrow keys turn pages when the book viewport is focused.
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+            event.preventDefault();
+            turn(event.key === "ArrowRight" ? 1 : -1);
+          }
+        }}
+        onClick={(event) => {
+          if ((event.target as Element).closest("button, a")) return;
+          const bounds = viewport.current?.getBoundingClientRect();
+          if (!bounds) return;
+          const edge = Math.min(120, bounds.width * 0.25);
+          if (event.clientX >= bounds.right - edge) turn(1);
+          else if (event.clientX <= bounds.left + edge) turn(-1);
+        }}
         onScroll={() => {
           if (!width || !viewport.current) return;
           const nextPage = Math.max(
@@ -274,11 +300,23 @@ function PaginatedReadingPage({ source }: { source: string }) {
           setPage(nextPage);
         }}
       >
-        <div
+        <article
           className="private-fiction-book-flow private-fiction-prose fiction-prose"
           ref={flow}
         >
+          <header className="private-fiction-book-title">
+            <p>{eyebrow}</p>
+            <h1>{title}</h1>
+          </header>
           <MarkdownBlocks source={source} />
+        </article>
+        <div className="private-fiction-page-snaps" aria-hidden="true">
+          {Array.from({ length: count }, (_, index) => (
+            <span
+              key={`page-${index + 1}`}
+              style={{ left: index * width, width }}
+            />
+          ))}
         </div>
       </div>
       <nav className="private-fiction-page-nav" aria-label="페이지 이동">
@@ -288,9 +326,9 @@ function PaginatedReadingPage({ source }: { source: string }) {
           onClick={() => turn(-1)}
           type="button"
         >
-          ‹ 이전
+          ‹
         </button>
-        <span aria-live="polite">
+        <span aria-live="polite" className="private-fiction-page-number">
           {page + 1} / {count}
         </span>
         <button
@@ -299,10 +337,10 @@ function PaginatedReadingPage({ source }: { source: string }) {
           onClick={() => turn(1)}
           type="button"
         >
-          다음 ›
+          ›
         </button>
       </nav>
-    </>
+    </div>
   );
 }
 
@@ -373,11 +411,10 @@ export function PrivateFictionReader() {
     [manuscript],
   );
   const sections = parsed?.sections ?? [];
-  const selectedIndex = Math.max(
-    0,
-    sections.findIndex((section) => section.id === selectedId),
+  const selectedIndex = sections.findIndex(
+    (section) => section.id === selectedId,
   );
-  const selected = sections[selectedIndex];
+  const selected = selectedIndex >= 0 ? sections[selectedIndex] : undefined;
 
   async function upload(file?: File) {
     if (!file) return;
@@ -486,54 +523,68 @@ export function PrivateFictionReader() {
                 ))}
               </ol>
             </nav>
-            {selected ? (
-              <article className="private-fiction-page">
-                <header className="private-fiction-page-title">
-                  <p>
-                    {selected.kind === "episode"
-                      ? `현실 오류 · ${selected.episode}화`
-                      : selected.kind === "guide"
-                        ? "작품 설정집"
-                        : "작품 문서"}
-                  </p>
-                  <h1>{selected.title}</h1>
-                </header>
-                <PaginatedReadingPage
-                  key={selected.id}
-                  source={selected.content}
-                />
-                <footer className="private-fiction-document-nav">
-                  <button
-                    disabled={selectedIndex === 0}
-                    onClick={() =>
-                      setSelectedId(sections[selectedIndex - 1]?.id)
-                    }
-                    type="button"
-                  >
-                    이전 문서
-                  </button>
-                  <span>
-                    {selectedIndex + 1} / {sections.length} 문서
-                  </span>
-                  <button
-                    disabled={selectedIndex >= sections.length - 1}
-                    onClick={() =>
-                      setSelectedId(sections[selectedIndex + 1]?.id)
-                    }
-                    type="button"
-                  >
-                    다음 문서
-                  </button>
-                </footer>
-              </article>
-            ) : (
+            <div className="private-fiction-library-intro">
               <p>
-                읽을 수 있는 문서를 찾지 못했습니다. Markdown의 제목이 `#`으로
-                시작하는지 확인해 주세요.
+                읽을 문서를 고르면 공개 소설 뷰어와 같은 책 화면으로 열립니다.
               </p>
-            )}
+              <p>
+                페이지는 좌우 화살표, 키보드 방향키, 화면 가장자리 탭으로 넘길
+                수 있습니다.
+              </p>
+            </div>
           </div>
         </>
+      )}
+      {selected && authenticated && (
+        <section
+          aria-label="비공개 책 읽기"
+          className="private-fiction-book-reader"
+          role="dialog"
+          aria-modal="true"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setSelectedId(undefined);
+          }}
+        >
+          <header className="private-fiction-reader-toolbar">
+            <button onClick={() => setSelectedId(undefined)} type="button">
+              ‹ 목차
+            </button>
+            <span className="private-fiction-reader-title">
+              {selected.title}
+            </span>
+            <span className="private-fiction-reader-doc-count">
+              {selectedIndex + 1} / {sections.length}
+            </span>
+          </header>
+          <PaginatedReadingPage
+            key={selected.id}
+            eyebrow={
+              selected.kind === "episode"
+                ? `현실 오류 · ${selected.episode}화`
+                : selected.kind === "guide"
+                  ? "작품 설정집"
+                  : "작품 문서"
+            }
+            source={selected.content}
+            title={selected.title}
+          />
+          <nav className="private-fiction-document-nav" aria-label="문서 이동">
+            <button
+              disabled={selectedIndex <= 0}
+              onClick={() => setSelectedId(sections[selectedIndex - 1]?.id)}
+              type="button"
+            >
+              ← 이전 문서
+            </button>
+            <button
+              disabled={selectedIndex >= sections.length - 1}
+              onClick={() => setSelectedId(sections[selectedIndex + 1]?.id)}
+              type="button"
+            >
+              다음 문서 →
+            </button>
+          </nav>
+        </section>
       )}
     </section>
   );
