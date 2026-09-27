@@ -17,10 +17,68 @@ type GourmetCopy = Partial<
   >
 >;
 
-const translations: Record<
-  Exclude<Locale, "ko">,
-  Record<string, GourmetCopy>
-> = {
+const translations: Record<Locale, Record<string, GourmetCopy>> = {
+  ko: {
+    "gourmet-9b882654": {
+      menuName: "특제 닭소바",
+      summary: "닭고기와 국물을 함께 맛볼 때 고소한 향이 퍼지는 닭소바입니다.",
+      cuisineTags: ["소바", "일본 요리"],
+      tasteNotes: ["구운 향", "감칠맛"],
+      liked: [
+        "닭고기와 국물에서 함께 느껴지는 고소한 향",
+        "국물에 고르게 밴 깊은 감칠맛",
+      ],
+      discoveries: ["메뉴가 많아 무엇을 고를지 고민했습니다."],
+      ingredients: ["닭고기", "면"],
+    },
+    "gourmet-4d7cbe64": {
+      area: "도쿄도 가쓰시카구 신코이와역 북쪽",
+      menuName: "특제 덴세이로 소바",
+      summary:
+        "손으로 뽑은 소바와 바삭하게 튀긴 모둠 튀김을 함께 즐기는 세트입니다. 맷돌로 간 메밀면과 정성껏 튀긴 채소가 든든한 한 끼를 만듭니다.",
+      cuisineTags: ["소바", "일본 요리"],
+      tasteNotes: ["고소한 메밀 향", "바삭한 튀김"],
+      ingredients: [
+        "메밀",
+        "새우",
+        "김",
+        "꽈리고추",
+        "표고버섯",
+        "단호박",
+        "고구마",
+        "가지",
+      ],
+      cookingMethods: ["수제 소바", "맷돌 제분", "튀김"],
+    },
+    "gourmet-a29a4189": {
+      area: "도쿄도 고토구 시라카와(기요스미시라카와)",
+      menuName: "후카가와메시",
+      summary:
+        "조개의 감칠맛을 밥에 담아낸 도쿄 향토 음식 후카가와메시입니다. 소박한 곁들임 반찬이 국물의 풍미를 돋웁니다.",
+      freeTextNote:
+        "곁들임 반찬 하나가 네팔 요리처럼 보였지만, 추측일 뿐 확인된 내용은 아닙니다.",
+    },
+    "gourmet-6090436d": {
+      menuName: "마파두부(얼얼함 3·매운맛 2)",
+      summary:
+        "산초의 얼얼한 향이 살아 있고 매운맛은 적당한 마파두부입니다. 혀를 얼얼하게 하는 풍미가 이 요리의 특징입니다.",
+    },
+    "gourmet-3f87f9ae": {
+      menuName: "튀김 정식",
+      summary:
+        "갓 튀긴 튀김과 밥을 함께 즐기는 정식입니다. 가벼운 튀김옷 덕분에 부담 없이 먹을 수 있습니다.",
+    },
+    "gourmet-33c3ce40": {
+      menuName: "국내산 돼지 등심 생강구이 정식",
+      summary:
+        "생강으로 양념한 넉넉한 돼지 등심 정식입니다. 방문 날짜와 일부 세부 정보는 원본 기록에서도 확인되지 않았습니다.",
+    },
+    "gourmet-d80693ad": {
+      menuName: "간장 세이로(이나니와 우동)",
+      summary:
+        "부드럽고 가는 이나니와 우동을 간장 베이스 소스에 찍어 먹습니다. 섬세한 식감과 기분 좋은 탄력이 돋보입니다.",
+    },
+  },
   en: {
     "gourmet-9b882654": {
       area: "Shinkoiwa, Tokyo",
@@ -149,7 +207,6 @@ const translations: Record<
 };
 
 export function localizeGourmetEntry(entry: GourmetEntry, locale: Locale) {
-  if (locale === "ko") return entry;
   const copy = translations[locale][entry.slug];
   if (!copy) return entry;
   return { ...entry, ...copy };
