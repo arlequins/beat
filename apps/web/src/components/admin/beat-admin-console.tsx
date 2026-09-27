@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  ArrowLeft,
   Bold,
   Check,
   Code2,
@@ -47,6 +48,7 @@ import {
 import { AdminStudioOverview } from "~/widgets/admin-studio/ui/admin-studio-overview";
 
 type AuthStatus = "loading" | "authenticated" | "anonymous";
+type Workspace = "home" | "articles" | "gourmet";
 type MessageTone = "error" | "info";
 
 type Draft = {
@@ -95,6 +97,7 @@ type ContentRecord = {
 
 export function BeatAdminConsole() {
   const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
+  const [workspace, setWorkspace] = useState<Workspace>("home");
   const [slug, setSlug] = useState("");
   const [title, setTitle] = useState("");
   const [source, setSource] = useState("---\n");
@@ -571,6 +574,7 @@ export function BeatAdminConsole() {
   }
 
   function startNewArticle() {
+    setWorkspace("articles");
     setSlug("");
     setTitle("");
     setSource("---\n");
@@ -585,6 +589,19 @@ export function BeatAdminConsole() {
     setEditorMode("write");
     setPrUrl(undefined);
     showMessage("새 글을 시작합니다. 슬러그와 제목을 입력하세요.");
+  }
+
+  function returnToWorkspaceList() {
+    if (
+      workspace === "articles" &&
+      dirty &&
+      !window.confirm(
+        "저장하지 않은 변경 사항이 있습니다. 작업 목록으로 이동할까요?",
+      )
+    )
+      return;
+    setWorkspace("home");
+    clearMessage();
   }
 
   const draftCount = records.filter(
@@ -670,26 +687,44 @@ export function BeatAdminConsole() {
     <section className="mx-auto flex max-w-7xl flex-col gap-4">
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[var(--line)] bg-[var(--surface)] px-5 py-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <div className="grid size-10 place-items-center rounded-2xl bg-[var(--night)] text-[var(--cyan)]">
-            <MessageCircle className="size-5" />
-          </div>
+          {workspace === "home" ? (
+            <div className="grid size-10 place-items-center rounded-2xl bg-[var(--night)] text-[var(--cyan)]">
+              <ShieldCheck className="size-5" />
+            </div>
+          ) : (
+            <button
+              aria-label="작업 목록으로 돌아가기"
+              className="grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--line)] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--background)] hover:text-[var(--foreground)]"
+              onClick={returnToWorkspaceList}
+              title="작업 목록"
+              type="button"
+            >
+              <ArrowLeft className="size-4" />
+            </button>
+          )}
           <div>
             <p className="text-xs font-bold tracking-[0.16em] text-[var(--accent-foreground)] uppercase">
-              Beat editorial chat
+              {workspace === "home" ? "Beat admin" : "Beat workspace"}
             </p>
             <h1 className="font-serif text-2xl font-black tracking-[-0.03em]">
-              기사 작업 공간
+              {workspace === "home"
+                ? "Beat 관리자"
+                : workspace === "articles"
+                  ? "기사 작성·검토"
+                  : "Gourmet 기록 관리"}
             </h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            className="flex items-center gap-2 rounded-xl border border-[var(--line)] px-3 py-2 text-sm font-bold transition-colors hover:bg-[var(--background)]"
-            onClick={startNewArticle}
-            type="button"
-          >
-            <Plus className="size-4" />새 글
-          </button>
+          {workspace === "articles" ? (
+            <button
+              className="flex items-center gap-2 rounded-xl border border-[var(--line)] px-3 py-2 text-sm font-bold transition-colors hover:bg-[var(--background)]"
+              onClick={startNewArticle}
+              type="button"
+            >
+              <Plus className="size-4" />새 글
+            </button>
+          ) : null}
           <button
             aria-label="로그아웃"
             className="grid size-9 place-items-center rounded-xl border border-[var(--line)] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--background)] hover:text-[var(--foreground)]"
@@ -702,13 +737,20 @@ export function BeatAdminConsole() {
         </div>
       </header>
 
-      <AdminStudioOverview
-        onNewArticle={startNewArticle}
-        onSelectRecord={(selectedSlug) => void loadDraft(selectedSlug)}
-        records={records}
-      />
+      {workspace === "home" ? (
+        <AdminStudioOverview
+          articleCount={records.length}
+          onOpenArticles={() => setWorkspace("articles")}
+          onOpenGourmet={() => setWorkspace("gourmet")}
+          reviewCount={reviewCount}
+        />
+      ) : null}
 
-      <div className="grid min-h-[42rem] gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <div
+        className="grid min-h-[42rem] gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]"
+        hidden={workspace !== "articles"}
+        style={{ display: workspace === "articles" ? "grid" : "none" }}
+      >
         <aside className="flex min-h-0 flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)]">
           <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-4">
             <div>
@@ -1158,7 +1200,7 @@ export function BeatAdminConsole() {
           </footer>
         </main>
       </div>
-      <GourmetManager />
+      {workspace === "gourmet" ? <GourmetManager /> : null}
     </section>
   );
 }
