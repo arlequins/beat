@@ -1,7 +1,10 @@
 import { createLogger } from "@arlequins/logger";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createApiApp } from "../../../../app";
 import { GOOGLE_ALLOWED_EMAIL } from "../../../../beat-google";
+import { PrivateFictionStorageError } from "../../s3-private-fiction-repository";
+
+afterEach(() => vi.unstubAllEnvs());
 
 describe("private fiction routes", () => {
   it("requires a verified owner account and never touches storage for other accounts", async () => {
@@ -87,5 +90,78 @@ describe("private fiction routes", () => {
       expectedEtag: document.etag,
       source: "# revised",
     });
+  });
+
+  it("handles missing objects, malformed writes, conflicts, and storage failures", async () => {
+    const store = {
+      get: vi.fn(
+        async () =>
+          undefined as
+            | { etag: string; source: string; updatedAt: string }
+            | undefined,
+      ),
+      save: vi.fn(async () => ({ etag: '"revision"', updatedAt: "now" })),
+    };
+    const app = createApiApp({
+      corsOrigins: [],
+      logger: createLogger({ service: "api", sink: () => {} }),
+      privateFiction: store,
+      rateLimiter: false,
+      beatAuth: {
+        authenticate: vi.fn(),
+        issueTokenPair: vi.fn(),
+        jwks: vi.fn(async () => ({ keys: [] })),
+        refreshTokenPair: vi.fn(),
+        revokeRefreshToken: vi.fn(),
+        verifyAccessToken: vi.fn(async (token) => {
+          if (token === "invalid") throw new Error("bad token");
+          if (token === "empty-subject")
+            return { email: GOOGLE_ALLOWED_EMAIL, subject: "  " };
+          return { email: GOOGLE_ALLOWED_EMAIL, subject: "owner-id" };
+        }),
+      },
+    });
+    const get = (token = "owner") =>
+      app.request("/admin/private-fiction", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    const put = (body: string, token = "owner") =>
+      app.request("/admin/private-fiction", {
+        body,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        method: "PUT",
+      });
+
+    expect((await get("invalid")).status).toBe(401);
+    expect((await get("empty-subject")).status).toBe(404);
+    expect((await get()).status).toBe(404);
+    store.get.mockRejectedValueOnce(new Error("s3 failure"));
+    expect((await get()).status).toBe(503);
+    expect((await put("not-json")).status).toBe(400);
+    expect((await put(JSON.stringify({ source: "missing etag" }))).status).toBe(
+      400,
+    );
+    expect(
+      (
+        await put(
+          JSON.stringify({ expectedEtag: null, source: "가".repeat(250_001) }),
+        )
+      ).status,
+    ).toBe(400);
+    store.save.mockRejectedValueOnce(
+      new PrivateFictionStorageError("conflict"),
+    );
+    expect(
+      (await put(JSON.stringify({ expectedEtag: null, source: "draft" })))
+        .status,
+    ).toBe(409);
+    store.save.mockRejectedValueOnce(new Error("s3 failure"));
+    expect(
+      (await put(JSON.stringify({ expectedEtag: null, source: "draft" })))
+        .status,
+    ).toBe(503);
   });
 });
