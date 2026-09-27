@@ -12,6 +12,14 @@ export function localePath(locale: Locale, path = "/") {
   return normalized === "/" ? `/${locale}/` : `/${locale}${normalized}`;
 }
 
+export function localizedReadTime(locale: Locale, value: string) {
+  const minutes = value.match(/\d+/)?.[0];
+  if (!minutes) return value;
+  if (locale === "ko") return `${minutes}분 읽기`;
+  if (locale === "ja") return `${minutes}分で読める`;
+  return `${minutes} min read`;
+}
+
 export const copy: Record<Locale, Record<string, string>> = {
   ko: {
     backstage: "Backstage · 제작의 기록",

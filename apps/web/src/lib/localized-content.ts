@@ -1,11 +1,13 @@
 import type { Locale } from "~/lib/i18n";
+import { archiveTranslations } from "~/lib/localized-content-archive";
 import type { PostSummary } from "~/lib/posts";
 
-type LocalizedArticle = {
+export type LocalizedArticle = {
   sources?: Array<{ label: string; url: string }>;
   excerpt: string;
   intro: string;
   links?: Array<{ label: string; slug: string }>;
+  linksHeading?: string;
   sections: Array<{ heading: string; paragraphs: string[] }>;
   title: string;
 };
@@ -1559,5 +1561,7 @@ export function localizePost(
   post: PostSummary,
 ): LocalizedArticle | undefined {
   if (locale === "ko") return undefined;
-  return translations[locale][post.slug];
+  return (
+    translations[locale][post.slug] ?? archiveTranslations[locale][post.slug]
+  );
 }

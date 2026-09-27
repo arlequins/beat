@@ -46,7 +46,15 @@ export function AppShell(props: { children: React.ReactNode }) {
     return (
       <div className="ebook-shell">
         <header className="ebook-toolbar">
-          <nav aria-label="Primary">
+          <nav
+            aria-label={
+              locale === "ko"
+                ? "주요 메뉴"
+                : locale === "ja"
+                  ? "メインメニュー"
+                  : "Primary navigation"
+            }
+          >
             <Link href={localePath(locale)}>Beat</Link>
             <Link href={localePath(locale, "/posts/")}>{text.writing}</Link>
             <Link href={localePath(locale, "/gourmet/")}>{text.gourmet}</Link>
@@ -65,7 +73,13 @@ export function AppShell(props: { children: React.ReactNode }) {
     <div className={`brand-shell ${route === "/" ? "index-shell" : ""}`}>
       {route === "/" || route.startsWith("/admin") ? null : (
         <Link
-          aria-label={`${siteConfig.name} home`}
+          aria-label={
+            locale === "ko"
+              ? `${siteConfig.name} 홈`
+              : locale === "ja"
+                ? `${siteConfig.name} ホーム`
+                : `${siteConfig.name} home`
+          }
           className="site-home-mark"
           href={localePath(locale)}
         >

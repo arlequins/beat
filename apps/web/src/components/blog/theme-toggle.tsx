@@ -1,7 +1,9 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { isLocale, type Locale } from "~/lib/i18n";
 
 type Theme = "dark" | "light";
 
@@ -10,6 +12,9 @@ function appliedTheme(): Theme {
 }
 
 export function ThemeToggle() {
+  const pathname = usePathname() ?? "/";
+  const segment = pathname.split("/")[1] ?? "";
+  const locale: Locale = isLocale(segment) ? segment : "en";
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
@@ -32,7 +37,19 @@ export function ThemeToggle() {
   const isDark = theme === "dark";
   return (
     <button
-      aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
+      aria-label={
+        locale === "ko"
+          ? isDark
+            ? "라이트 모드로 전환"
+            : "다크 모드로 전환"
+          : locale === "ja"
+            ? isDark
+              ? "ライトモードに切り替え"
+              : "ダークモードに切り替え"
+            : isDark
+              ? "Switch to light mode"
+              : "Switch to dark mode"
+      }
       className="inline-flex size-8 items-center justify-center border border-[var(--line)] text-[var(--ink)] transition hover:border-[var(--coral)] hover:text-[var(--coral)]"
       onClick={toggleTheme}
       type="button"

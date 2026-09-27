@@ -22,6 +22,7 @@ import {
 } from "~/entities/gourmet";
 import { GourmetShareButton } from "~/features/gourmet-share/ui/gourmet-share-button";
 import { type Locale, localePath } from "~/lib/i18n";
+import { localizeGourmetEntry } from "~/lib/localized-gourmet";
 
 const text = {
   en: {
@@ -147,6 +148,23 @@ function recordCount(locale: Locale, count: number) {
   return `${count} ${count === 1 ? "record" : "records"}`;
 }
 
+function localizedDate(locale: Locale, entry: GourmetEntry) {
+  const date = new Date(`${gourmetDate(entry)}T00:00:00Z`);
+  return new Intl.DateTimeFormat(
+    locale === "ko" ? "ko-KR" : locale === "ja" ? "ja-JP" : "en-US",
+    { dateStyle: "long", timeZone: "UTC" },
+  ).format(date);
+}
+
+function localizedSource(locale: Locale, source: GourmetEntry["source"]) {
+  const labels: Record<Locale, Record<GourmetEntry["source"], string>> = {
+    ko: { chatgpt: "ChatGPT", import: "가져오기", manual: "직접 기록" },
+    en: { chatgpt: "ChatGPT", import: "Imported", manual: "Manual" },
+    ja: { chatgpt: "ChatGPT", import: "インポート", manual: "手動記録" },
+  };
+  return labels[locale][source];
+}
+
 function GourmetPhoto(props: {
   emptyLabel: string;
   image?: GourmetEntry["images"][number];
@@ -156,6 +174,7 @@ function GourmetPhoto(props: {
   fallbackAlt: string;
   retryLabel?: string;
   contain?: boolean;
+  locale: Locale;
 }) {
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -173,7 +192,10 @@ function GourmetPhoto(props: {
   const displayedImage = props.image && !failed ? props.image : undefined;
   const alt = props.image?.altText.trim();
   const meaningfulAlt =
-    alt && !/\.(jpe?g|png|webp|heic)$/i.test(alt) && !/^(미상\s*)+$/.test(alt);
+    props.locale === "ko" &&
+    alt &&
+    !/\.(jpe?g|png|webp|heic)$/i.test(alt) &&
+    !/^(미상\s*)+$/.test(alt);
   return (
     <div className="relative grid aspect-[4/3] place-items-center overflow-hidden bg-[var(--surface)]">
       {displayedImage ? (
@@ -290,23 +312,43 @@ export function GourmetBrowser(props: { locale: Locale }) {
     return () => controller.abort();
   }, [labels.failed, selectedSlug]);
 
+  const rawEntries = list?.entries ?? [];
+  const entries = useMemo(
+    () => rawEntries.map((entry) => localizeGourmetEntry(entry, props.locale)),
+    [rawEntries, props.locale],
+  );
   const areas = useMemo(
     () =>
       [
         ...new Set(
-          list?.entries.map((entry) => entry.area).filter(Boolean) as string[],
+          rawEntries.map((entry) => entry.area).filter(Boolean) as string[],
         ),
       ].sort(),
-    [list],
+    [rawEntries],
   );
   const cuisines = useMemo(
-    () =>
-      [
-        ...new Set(list?.entries.flatMap((entry) => entry.cuisineTags) ?? []),
-      ].sort(),
-    [list],
+    () => [...new Set(rawEntries.flatMap((entry) => entry.cuisineTags))].sort(),
+    [rawEntries],
   );
-  const entries = list?.entries ?? [];
+  const localizedSelected = selected
+    ? localizeGourmetEntry(selected, props.locale)
+    : undefined;
+  const areaLabel = (value: string) => {
+    const source = rawEntries.find((entry) => entry.area === value);
+    return source
+      ? (localizeGourmetEntry(source, props.locale).area ?? value)
+      : value;
+  };
+  const cuisineLabel = (value: string) => {
+    const source = rawEntries.find((entry) =>
+      entry.cuisineTags.includes(value),
+    );
+    if (!source) return value;
+    const index = source.cuisineTags.indexOf(value);
+    return (
+      localizeGourmetEntry(source, props.locale).cuisineTags[index] ?? value
+    );
+  };
   const timeline = useMemo(
     () =>
       gourmetTimeline(
@@ -328,7 +370,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
         </p>
       </section>
     );
-  if (selectedSlug && selected)
+  if (selectedSlug && localizedSelected)
     return (
       <article className="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-20">
         <Link
@@ -340,60 +382,71 @@ export function GourmetBrowser(props: { locale: Locale }) {
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <section aria-label={labels.photos} className="grid gap-4">
-              {(selected.images.length
-                ? [...selected.images].sort((a, b) => a.sortOrder - b.sortOrder)
+              {(localizedSelected.images.length
+                ? [...localizedSelected.images].sort(
+                    (a, b) => a.sortOrder - b.sortOrder,
+                  )
                 : [undefined]
               ).map((image, index) => (
                 <GourmetPhoto
-                  key={`${selected.id}-${image?.id ?? "empty"}`}
+                  key={`${localizedSelected.id}-${image?.id ?? "empty"}`}
                   emptyLabel={labels.noPhoto}
                   image={image}
-                  fallbackAlt={`${selected.restaurantName} · ${selected.menuName} (${index + 1}/${selected.images.length})`}
+                  fallbackAlt={`${localizedSelected.restaurantName} · ${localizedSelected.menuName} (${index + 1}/${localizedSelected.images.length})`}
                   pendingLabel={labels.photoPending}
                   retryLabel={labels.retryPhoto}
                   contain
                   priority={index === 0}
                   sizes="(max-width: 1024px) 100vw, 60vw"
+                  locale={props.locale}
                 />
               ))}
             </section>
           </div>
           <div className="order-first min-w-0 self-start lg:order-none">
             <p className="brand-eyebrow text-[var(--accent-foreground)]">
-              {gourmetDate(selected)} · {selected.source}
+              {localizedDate(props.locale, localizedSelected)} ·{" "}
+              {localizedSource(props.locale, localizedSelected.source)}
             </p>
             <h1 className="detail-title display-serif mt-4">
-              {selected.restaurantName}
+              {localizedSelected.restaurantName}
             </h1>
-            <p className="mt-3 text-xl font-semibold">{selected.menuName}</p>
+            <p className="mt-3 text-xl font-semibold">
+              {localizedSelected.menuName}
+            </p>
             <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-[var(--muted-foreground)]">
-              <Rating value={selected.rating} />
-              {selected.area ? (
+              <Rating value={localizedSelected.rating} />
+              {localizedSelected.area ? (
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="size-3.5" />
-                  {selected.area}
+                  {localizedSelected.area}
                 </span>
               ) : null}
               <span>
                 {labels.revisit}{" "}
-                {selected.revisit === "yes"
+                {localizedSelected.revisit === "yes"
                   ? labels.revisitYes
-                  : selected.revisit === "no"
+                  : localizedSelected.revisit === "no"
                     ? labels.revisitNo
                     : labels.revisitUnknown}
               </span>
             </div>
             <a
               className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[var(--accent-foreground)] hover:underline"
-              href={gourmetMapUrl(selected)}
+              href={gourmetMapUrl(localizedSelected)}
               rel="noopener noreferrer"
               target="_blank"
             >
               <MapPin className="size-4" /> {labels.map}
             </a>
-            <p className="mt-8 text-lg leading-8">{selected.summary}</p>
+            <p className="mt-8 text-lg leading-8">
+              {localizedSelected.summary}
+            </p>
             <div className="mt-8 flex flex-wrap gap-2">
-              {[...selected.cuisineTags, ...selected.tasteNotes].map((tag) => (
+              {[
+                ...localizedSelected.cuisineTags,
+                ...localizedSelected.tasteNotes,
+              ].map((tag) => (
                 <span
                   className="border border-[var(--line)] px-3 py-1 text-xs"
                   key={tag}
@@ -402,27 +455,27 @@ export function GourmetBrowser(props: { locale: Locale }) {
                 </span>
               ))}
             </div>
-            {selected.images[0] ? (
+            {localizedSelected.images[0] ? (
               <div className="mt-8 border-y border-[var(--line)] py-5">
                 <GourmetShareButton
-                  entry={selected}
-                  imageUrl={publicGourmetImage(selected.images[0])}
+                  entry={localizedSelected}
+                  imageUrl={publicGourmetImage(localizedSelected.images[0])}
                   locale={props.locale}
                 />
               </div>
             ) : null}
-            {selected.liked.length ? (
+            {localizedSelected.liked.length ? (
               <p className="mt-8 text-sm leading-7">
                 <strong>{labels.liked}</strong>
                 <br />
-                {selected.liked.join(" · ")}
+                {localizedSelected.liked.join(" · ")}
               </p>
             ) : null}
-            {selected.discoveries.length ? (
+            {localizedSelected.discoveries.length ? (
               <p className="mt-5 text-sm leading-7">
                 <strong>{labels.discoveries}</strong>
                 <br />
-                {selected.discoveries.join(" · ")}
+                {localizedSelected.discoveries.join(" · ")}
               </p>
             ) : null}
           </div>
@@ -476,7 +529,9 @@ export function GourmetBrowser(props: { locale: Locale }) {
                   <option value={area}>{area}</option>
                 ) : null}
                 {areas.map((value) => (
-                  <option key={value}>{value}</option>
+                  <option key={value} value={value}>
+                    {areaLabel(value)}
+                  </option>
                 ))}
               </select>
               <select
@@ -490,7 +545,9 @@ export function GourmetBrowser(props: { locale: Locale }) {
                   <option value={cuisineTag}>{cuisineTag}</option>
                 ) : null}
                 {cuisines.map((value) => (
-                  <option key={value}>{value}</option>
+                  <option key={value} value={value}>
+                    {cuisineLabel(value)}
+                  </option>
                 ))}
               </select>
               <select
@@ -607,11 +664,12 @@ export function GourmetBrowser(props: { locale: Locale }) {
                           fallbackAlt={`${entry.restaurantName} · ${entry.menuName}`}
                           pendingLabel={labels.photoPending}
                           sizes="(max-width: 640px) 100vw, 33vw"
+                          locale={props.locale}
                         />
                         <div className="mt-5 flex items-start justify-between gap-4">
                           <div>
                             <p className="text-xs font-semibold text-[var(--muted-foreground)]">
-                              {gourmetDate(entry)}
+                              {localizedDate(props.locale, entry)}
                               {entry.area ? ` · ${entry.area}` : ""}
                             </p>
                             <h3 className="display-serif mt-2 text-2xl tracking-[-0.035em]">
