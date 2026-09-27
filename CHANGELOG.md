@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.70.0](https://github.com/arlequins/beat/compare/beat-v1.69.0...beat-v1.70.0) (2026-09-27)
+
+
+### Features
+
+* **web:** localize public site in Korean, English, and Japanese ([5968db4](https://github.com/arlequins/beat/commit/5968db4b807ecdbb23fe03495f36de0e27fbfb34))
+
 ## [1.69.0](https://github.com/arlequins/beat/compare/beat-v1.68.0...beat-v1.69.0) (2026-09-27)
 
 
