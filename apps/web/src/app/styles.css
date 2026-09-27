@@ -1121,6 +1121,14 @@
   color: var(--foreground, #222);
   background: var(--background, #fff);
 }
+.private-fiction-book-reader .private-fiction-book-shell {
+  min-height: 0;
+  width: min(100%, 760px);
+}
+.private-fiction-book-reader .private-fiction-book-viewport {
+  margin-top: max(16px, env(safe-area-inset-top, 0px));
+  margin-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
 .private-fiction-reader-toolbar {
   z-index: 2;
   display: flex;
@@ -1132,6 +1140,7 @@
   margin-inline: auto;
   padding: max(6px, env(safe-area-inset-top)) 16px 6px;
   border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  background: var(--viewer-bg, #f5f0e6);
 }
 .private-fiction-reader-title {
   overflow: hidden;

@@ -274,18 +274,21 @@ function PaginatedReadingPage({
         // biome-ignore lint/a11y/noNoninteractiveTabindex: Arrow keys turn pages when the book viewport is focused.
         tabIndex={0}
         onKeyDown={(event) => {
+          if (event.target !== event.currentTarget) return;
           if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
             event.preventDefault();
             turn(event.key === "ArrowRight" ? 1 : -1);
           }
         }}
         onClick={(event) => {
-          if ((event.target as Element).closest("button, a")) return;
+          const target = event.target;
+          if (!(target instanceof Element) || target.closest("button, a"))
+            return;
+          if (window.getSelection()?.toString()) return;
           const bounds = viewport.current?.getBoundingClientRect();
           if (!bounds) return;
-          const edge = Math.min(120, bounds.width * 0.25);
-          if (event.clientX >= bounds.right - edge) turn(1);
-          else if (event.clientX <= bounds.left + edge) turn(-1);
+          if (event.clientX >= bounds.left + bounds.width / 2) turn(1);
+          else turn(-1);
         }}
         onScroll={() => {
           if (!width || !viewport.current) return;
@@ -525,11 +528,13 @@ export function PrivateFictionReader() {
             </nav>
             <div className="private-fiction-library-intro">
               <p>
-                읽을 문서를 고르면 공개 소설 뷰어와 같은 책 화면으로 열립니다.
+                회차를 누르면 공개 소설과 같은 한 쪽씩 넘기는 책 화면으로
+                열립니다.
               </p>
               <p>
-                페이지는 좌우 화살표, 키보드 방향키, 화면 가장자리 탭으로 넘길
-                수 있습니다.
+                책 오른쪽을 누르면 다음 쪽, 왼쪽을 누르면 앞 쪽으로 넘어갑니다.
+                화면을 밀거나 키보드 방향키를 눌러도 됩니다. Escape 키를 누르면
+                목차로 돌아갑니다.
               </p>
             </div>
           </div>
@@ -538,7 +543,7 @@ export function PrivateFictionReader() {
       {selected && authenticated && (
         <section
           aria-label="비공개 책 읽기"
-          className="private-fiction-book-reader"
+          className="private-fiction-book-reader novel-viewer book-viewer viewer-paper"
           role="dialog"
           aria-modal="true"
           onKeyDown={(event) => {
