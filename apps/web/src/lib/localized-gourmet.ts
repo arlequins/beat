@@ -20,6 +20,7 @@ type GourmetCopy = Partial<
 const translations: Record<Locale, Record<string, GourmetCopy>> = {
   ko: {
     "gourmet-9b882654": {
+      area: "도쿄도 신코이와",
       menuName: "특제 닭소바",
       summary: "닭고기와 국물을 함께 맛볼 때 고소한 향이 퍼지는 닭소바입니다.",
       cuisineTags: ["소바", "일본 요리"],
@@ -33,11 +34,16 @@ const translations: Record<Locale, Record<string, GourmetCopy>> = {
     },
     "gourmet-4d7cbe64": {
       area: "도쿄도 가쓰시카구 신코이와역 북쪽",
-      menuName: "특제 덴세이로 소바",
+      menuName: "특제 덴푸라 세이로 소바",
       summary:
         "손으로 뽑은 소바와 바삭하게 튀긴 모둠 튀김을 함께 즐기는 세트입니다. 맷돌로 간 메밀면과 정성껏 튀긴 채소가 든든한 한 끼를 만듭니다.",
       cuisineTags: ["소바", "일본 요리"],
       tasteNotes: ["고소한 메밀 향", "바삭한 튀김"],
+      discoveries: [
+        "1952년 창업",
+        "매장 내 맷돌 제분·제면",
+        "메밀가루 80%와 밀가루 20%를 섞어 만드는 소바",
+      ],
       ingredients: [
         "메밀",
         "새우",
