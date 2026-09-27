@@ -2,6 +2,18 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.71.0](https://github.com/arlequins/beat/compare/beat-v1.70.2...beat-v1.71.0) (2026-09-27)
+
+
+### Features
+
+* add private fiction vault ([#310](https://github.com/arlequins/beat/issues/310)) ([afccf0c](https://github.com/arlequins/beat/commit/afccf0ce8bd8d56410e8bd8d94668e258cb6d32d))
+
+
+### Bug Fixes
+
+* localize fiction UI and report Gourmet warnings ([#311](https://github.com/arlequins/beat/issues/311)) ([4366ed3](https://github.com/arlequins/beat/commit/4366ed3c49f2af78b7e9db10bb41ee7ad7a8a81e))
+
 ## [1.70.2](https://github.com/arlequins/beat/compare/beat-v1.70.1...beat-v1.70.2) (2026-09-27)
 
 
