@@ -1,7 +1,9 @@
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { HomeIndex } from "~/components/blog/home-index";
 import { LocalizedPostFeed } from "~/components/blog/localized-post-feed";
+import { siteAssetPath } from "~/config/site";
 import { BeatPostAssistantCard } from "~/features/beat-handoff/ui/beat-chat-entry";
 import { getProject } from "~/lib/github";
 import { type Locale, localePath, localizedReadTime } from "~/lib/i18n";
@@ -242,6 +244,18 @@ export async function LocalizedWorkDetail(props: {
       </header>
       <div className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-4xl">
+          {project.image ? (
+            <div className="relative mb-10 aspect-[16/8] overflow-hidden border border-slate-900/15 shadow-[0.65rem_0.65rem_0_rgba(240,100,73,0.15)]">
+              <Image
+                alt={content.title}
+                className="object-cover"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 768px"
+                src={siteAssetPath(project.image)}
+              />
+            </div>
+          ) : null}
           {primaryLink ? (
             <a
               className="inline-flex items-center gap-2 bg-[#111326] px-5 py-3 text-sm font-semibold text-white shadow-[0.3rem_0.3rem_0_#79e6e0]"

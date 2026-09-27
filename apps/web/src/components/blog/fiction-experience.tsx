@@ -65,12 +65,276 @@ function readerSurfaceColor(theme: Preferences["theme"]) {
   return "#f5f0e6";
 }
 
-function itemUnit(unit: "episode" | "story") {
+const fictionUi = {
+  ko: {
+    libraryTitle: "읽을 소설을 고르세요",
+    libraryDescription:
+      "작품을 고르고, 그 작품이 가진 세계의 규칙과 사람들의 시간으로 들어갑니다.",
+    library: "작품 목록",
+    stories: "작품",
+    total: "총",
+    language: "한국어",
+    guide: "세계관·설정집 읽기 →",
+    firstBackground: "이 작품에서 처음 여는 배경",
+    interest: "관심 등록",
+    interested: "관심 작품",
+    resume: "이어보기",
+    first: "첫",
+    view: "보기",
+    about: "작품 소개",
+    all: "전체",
+    last: "마지막 편부터 ↓",
+    newest: "최신화부터 ↓",
+    firstFrom: "첫",
+    previous: "이전",
+    next: "다음",
+    recent: "최근 읽음",
+    genre: "장르",
+    bodyLanguage: "본문 언어",
+    pageList: "회차 목록",
+    readingOrder: "문서 읽기 순서",
+    settings: "뷰어 설정",
+    comments: "독자 코멘트",
+    commentAction: "코멘트",
+    close: "닫기",
+    bg: "배경색",
+    font: "글꼴",
+    size: "글자 크기",
+    line: "줄 간격",
+    reset: "기본 설정으로",
+    stored: "읽기 설정과 기록은 이 브라우저에 저장됩니다.",
+    white: "흰색",
+    paper: "종이",
+    night: "어둡게",
+    sans: "고딕",
+    serif: "명조",
+    hideNav: "내비게이션 숨기기",
+    prevPage: "이전 페이지",
+    nextPage: "다음 페이지",
+    openEpisodes: "회차 목록 열기",
+    finish: "― 끝 ―",
+    nextStory: "다음 이야기",
+    storyList: "작품 목록으로",
+    nav: "책보기 내비게이션",
+    viewport:
+      "좌우로 넘기는 소설 본문. 두 번 탭하거나 Enter 키로 내비게이션 열기",
+    light: "밝은 배경으로 전환",
+    dark: "어두운 배경으로 전환",
+    reading: "읽는 중",
+    end: "마지막 편부터 ↓",
+    start: "첫",
+    lastPart: "마지막 편부터 ↓",
+    latest: "최신화부터 ↓",
+    read: "읽기",
+    episodes: "회차",
+    works: "편",
+    sortPages: "회차 목록 페이지",
+    catalogNav: "설정집 탐색",
+    novelList: "소설 목록",
+    guideIndex: "설정집 목차",
+    guideSource: "이 문서의 마크다운 원본",
+    nextDoc: "다음:",
+    libraryIntro:
+      "위에서부터 읽으면 강 하류의 생활과 소설 전체를 관통하는 길이 이어집니다.",
+    libraryFooter:
+      "문서는 위 순서로 이어지며, 각 페이지의 라벨은 설정의 결을 보여줍니다. 웹 본문은 마크다운 원본에서 생성됩니다.",
+    guideIntro:
+      "이 문서는 소설을 읽기 위한 세계의 안내입니다. 아직 이름이 없는 곳과 여러 갈래로 전해지는 약속은 이야기 속에서 드러납니다.",
+    guideTitle: "세계부터, 하나씩",
+    guideStatus: "설정집",
+    tomorrowNav: "세계관 탐색",
+    firstEpisode: "1화 읽기",
+    tomorrowIntro:
+      "작품 속 도시와 사람들의 일상을 소개합니다. 회차의 결말은 담지 않았습니다.",
+    tomorrowLabel: "내일의 생활비 · 독립 세계관",
+    tomorrowTitle: "조금 먼저 온 일상",
+  },
+  en: {
+    libraryTitle: "Choose a story to read",
+    libraryDescription:
+      "Choose a work and step into the rules of its world and the lives within it.",
+    library: "Library",
+    stories: "works",
+    total: "Total",
+    language: "Korean",
+    guide: "Read the world guide →",
+    firstBackground: "The world begins in this work",
+    interest: "Add to favorites",
+    interested: "In your favorites",
+    resume: "Continue reading",
+    first: "Read from the",
+    view: "",
+    about: "About this work",
+    all: "All",
+    last: "Last story first ↓",
+    newest: "Latest episode first ↓",
+    firstFrom: "First",
+    previous: "Previous",
+    next: "Next",
+    recent: "Last read",
+    genre: "Genre",
+    bodyLanguage: "Text language",
+    pageList: "Episode list",
+    readingOrder: "Reading order",
+    settings: "Reader settings",
+    comments: "Reader comments",
+    commentAction: "Comments",
+    close: "Close",
+    bg: "Background",
+    font: "Font",
+    size: "Text size",
+    line: "Line spacing",
+    reset: "Reset to defaults",
+    stored: "Reading settings and progress are saved in this browser.",
+    white: "White",
+    paper: "Paper",
+    night: "Night",
+    sans: "Sans serif",
+    serif: "Serif",
+    hideNav: "Hide navigation",
+    prevPage: "Previous page",
+    nextPage: "Next page",
+    openEpisodes: "Open episode list",
+    finish: "— The End —",
+    nextStory: "Next story",
+    storyList: "Back to the library",
+    nav: "Reader navigation",
+    viewport:
+      "Story text. Swipe left or right, or press Enter to open navigation.",
+    light: "Switch to a light background",
+    dark: "Switch to a dark background",
+    reading: "Reading",
+    end: "Last story first ↓",
+    start: "First",
+    lastPart: "Last story first ↓",
+    latest: "Latest episode first ↓",
+    read: "Read",
+    episodes: "episodes",
+    works: "stories",
+    sortPages: "Episode list pages",
+    catalogNav: "World guide navigation",
+    novelList: "Story library",
+    guideIndex: "Guide contents",
+    guideSource: "Markdown source for this guide",
+    nextDoc: "Next:",
+    libraryIntro:
+      "Read from the beginning to follow life along the lower river and the thread running through the stories.",
+    libraryFooter:
+      "Read the guide in order. Page labels reveal the shape of this world. The web version is generated from Markdown.",
+    guideIntro:
+      "This guide introduces the world behind the stories. Unnamed places and promises passed down in many forms will unfold in the narrative.",
+    guideTitle: "Start with the world",
+    guideStatus: "World guide",
+    tomorrowNav: "World guide navigation",
+    firstEpisode: "Read episode 1",
+    tomorrowIntro:
+      "Meet the cities and everyday lives in this work. Episode endings are not revealed.",
+    tomorrowLabel: "The Cost of Tomorrow · standalone world",
+    tomorrowTitle: "Everyday life, a little ahead",
+  },
+  ja: {
+    libraryTitle: "読む小説を選んでください",
+    libraryDescription:
+      "作品を選び、その世界のルールと人々の時間へ入っていきます。",
+    library: "作品一覧",
+    stories: "作品",
+    total: "全",
+    language: "韓国語",
+    guide: "世界観・設定資料を読む →",
+    firstBackground: "この作品から始まる世界",
+    interest: "お気に入りに追加",
+    interested: "お気に入り",
+    resume: "続きを読む",
+    first: "最初の",
+    view: "を読む",
+    about: "作品紹介",
+    all: "全",
+    last: "最終話から ↓",
+    newest: "最新話から ↓",
+    firstFrom: "最初の",
+    previous: "前へ",
+    next: "次へ",
+    recent: "最近読んだ話",
+    genre: "ジャンル",
+    bodyLanguage: "本文の言語",
+    pageList: "話一覧",
+    readingOrder: "読む順序",
+    settings: "閲覧設定",
+    comments: "読者コメント",
+    commentAction: "コメント",
+    close: "閉じる",
+    bg: "背景色",
+    font: "フォント",
+    size: "文字サイズ",
+    line: "行間",
+    reset: "初期設定に戻す",
+    stored: "閲覧設定と読書記録はこのブラウザーに保存されます。",
+    white: "白",
+    paper: "紙",
+    night: "ダーク",
+    sans: "ゴシック",
+    serif: "明朝",
+    hideNav: "ナビゲーションを隠す",
+    prevPage: "前のページ",
+    nextPage: "次のページ",
+    openEpisodes: "話一覧を開く",
+    finish: "― おわり ―",
+    nextStory: "次の物語",
+    storyList: "作品一覧へ",
+    nav: "読書ナビゲーション",
+    viewport:
+      "小説本文。左右にスワイプするか Enter キーでナビゲーションを開きます。",
+    light: "明るい背景に切り替える",
+    dark: "暗い背景に切り替える",
+    reading: "読書中",
+    end: "最終話から ↓",
+    start: "最初の",
+    lastPart: "最終話から ↓",
+    latest: "最新話から ↓",
+    read: "を読む",
+    episodes: "話",
+    works: "作品",
+    sortPages: "話一覧のページ",
+    catalogNav: "設定資料のナビゲーション",
+    novelList: "小説一覧",
+    guideIndex: "設定資料の目次",
+    guideSource: "この文書の Markdown 原文",
+    nextDoc: "次へ:",
+    libraryIntro:
+      "最初から読むと、川下の暮らしと物語全体を貫く道がつながります。",
+    libraryFooter:
+      "文書は上から順に続きます。各ページのラベルが世界観の輪郭を示します。Web 本文は Markdown 原文から生成されます。",
+    guideIntro:
+      "この文書は小説を読むための世界案内です。まだ名のない場所や、さまざまに伝わる約束は物語の中で明らかになります。",
+    guideTitle: "世界から、ひとつずつ",
+    guideStatus: "設定資料",
+    tomorrowNav: "世界観ナビゲーション",
+    firstEpisode: "第1話を読む",
+    tomorrowIntro:
+      "作品に登場する街と人々の日常を紹介します。各話の結末には触れません。",
+    tomorrowLabel: "明日の生活費 · 独立した世界",
+    tomorrowTitle: "少し先に来た日常",
+  },
+} as const;
+
+function itemUnit(unit: "episode" | "story", locale: Locale) {
+  if (locale === "en") return unit === "story" ? " stories" : " episodes";
+  if (locale === "ja") return unit === "story" ? "作品" : "話";
   return unit === "story" ? "편" : "화";
 }
 
-function itemName(unit: "episode" | "story") {
+function itemName(unit: "episode" | "story", locale: Locale) {
+  if (locale === "en") return unit === "story" ? "Stories" : "Episodes";
+  if (locale === "ja") return unit === "story" ? "作品" : "話";
   return unit === "story" ? "단편" : "회차";
+}
+
+function firstItemLabel(unit: "episode" | "story", locale: Locale) {
+  if (locale === "en")
+    return unit === "story" ? "Read the first story" : "Read the first episode";
+  if (locale === "ja")
+    return unit === "story" ? "最初の作品を読む" : "第1話を読む";
+  return `첫 ${itemUnit(unit, locale)} 보기`;
 }
 
 export function FictionLibrary({
@@ -80,6 +344,7 @@ export function FictionLibrary({
   stories: Story[];
   locale: Locale;
 }) {
+  const t = fictionUi[locale];
   const novels = getNovelCollections(stories);
   const [liked, setLiked] = useState(false);
   const [last, setLast] = useState("");
@@ -123,24 +388,25 @@ export function FictionLibrary({
     (episodePage + 1) * episodePageSize,
   );
   return (
-    <div className="novel-home" lang="ko">
+    <div className="novel-home" lang={locale}>
       <header className="novel-summary">
         <div className="novel-summary-copy">
           <p className="novel-library-kicker">BEAT FICTION LIBRARY</p>
-          <h1>읽을 소설을 고르세요</h1>
-          <p className="novel-description">
-            작품을 고르고, 그 작품이 가진 세계의 규칙과 사람들의 시간으로
-            들어갑니다.
-          </p>
+          <h1>{t.libraryTitle}</h1>
+          <p className="novel-description">{t.libraryDescription}</p>
         </div>
         <div className="novel-summary-aside">
           <span className="novel-summary-mark" aria-hidden="true">
             {String(novels.length).padStart(2, "0")}
           </span>
           <div className="novel-facts">
-            <span>{novels.length}편</span>
-            <span>총 {stories.length}화·편</span>
-            <span>한국어</span>
+            <span>
+              {novels.length} {t.works}
+            </span>
+            <span>
+              {t.total} {stories.length}
+            </span>
+            <span>{t.language}</span>
           </div>
         </div>
       </header>
@@ -148,9 +414,11 @@ export function FictionLibrary({
         <div className="novel-shelf-heading">
           <div>
             <p>LIBRARY</p>
-            <h2 id="novel-shelf-title">작품 목록</h2>
+            <h2 id="novel-shelf-title">{t.library}</h2>
           </div>
-          <span>{novels.length}편</span>
+          <span>
+            {novels.length} {t.works}
+          </span>
         </div>
         <div className="novel-picker">
           {novels.map((novel, index) => (
@@ -184,7 +452,7 @@ export function FictionLibrary({
                   </small>
                   <small>
                     {novel.stories.length}
-                    {itemUnit(novel.unit)} · {novel.status}
+                    {itemUnit(novel.unit, locale)} · {novel.status}
                   </small>
                 </span>
               </span>
@@ -205,21 +473,23 @@ export function FictionLibrary({
               <p>{selected.description}</p>
               <div className="novel-world-row">
                 <span>
-                  {getWorldRelationLabel(selected.worldRelation)} ·{" "}
-                  {selected.world.title}
+                  <span lang="ko">
+                    {getWorldRelationLabel(selected.worldRelation)} ·{" "}
+                    {selected.world.title}
+                  </span>
                 </span>
                 {selected.world.guidePath ? (
                   <Link href={localePath(locale, selected.world.guidePath)}>
-                    세계관·설정집 읽기 →
+                    {t.guide}
                   </Link>
                 ) : (
-                  <span>이 작품에서 처음 여는 배경</span>
+                  <span>{t.firstBackground}</span>
                 )}
               </div>
               <div className="novel-facts">
                 <span>
-                  총 {selected.stories.length}
-                  {itemUnit(selected.unit)}
+                  {t.total} {selected.stories.length}
+                  {itemUnit(selected.unit, locale)}
                 </span>
                 <span>{selected.status}</span>
               </div>
@@ -234,7 +504,7 @@ export function FictionLibrary({
                 }}
               >
                 <Bookmark size={17} fill={liked ? "currentColor" : "none"} />
-                {liked ? "관심 작품" : "관심 등록"}
+                {liked ? t.interested : t.interest}
               </button>
               {current && (
                 <Link
@@ -242,8 +512,8 @@ export function FictionLibrary({
                   href={localePath(locale, `/fiction/${current.slug}/`)}
                 >
                   {last === current.slug
-                    ? "이어보기"
-                    : `첫 ${itemUnit(selected.unit)} 보기`}
+                    ? t.resume
+                    : firstItemLabel(selected.unit, locale)}
                   <ChevronRight size={18} />
                 </Link>
               )}
@@ -255,22 +525,22 @@ export function FictionLibrary({
               aria-pressed={section === "episodes"}
               onClick={() => setSection("episodes")}
             >
-              {itemName(selected.unit)} {selected.stories.length}
+              {itemName(selected.unit, locale)} {selected.stories.length}
             </button>
             <button
               type="button"
               aria-pressed={section === "about"}
               onClick={() => setSection("about")}
             >
-              작품 소개
+              {t.about}
             </button>
           </div>
           {section === "episodes" ? (
-            <section aria-label={`${selected.title} 회차 목록`}>
+            <section aria-label={`${selected.title} ${t.pageList}`}>
               <div className="novel-list-heading">
                 <span>
-                  전체 {selected.stories.length}
-                  {itemUnit(selected.unit)}
+                  {t.all} {selected.stories.length}
+                  {itemUnit(selected.unit, locale)}
                 </span>
                 <button
                   type="button"
@@ -281,19 +551,19 @@ export function FictionLibrary({
                 >
                   {descending
                     ? selected.unit === "story"
-                      ? "마지막 편부터 ↓"
-                      : "최신화부터 ↓"
-                    : `첫 ${itemUnit(selected.unit)}부터 ↑`}
+                      ? t.last
+                      : t.newest
+                    : `${t.firstFrom}${itemUnit(selected.unit, locale)} ↑`}
                 </button>
               </div>
               {episodePageCount > 1 ? (
-                <nav aria-label="회차 목록 페이지" className="site-pagination">
+                <nav aria-label={t.sortPages} className="site-pagination">
                   <button
                     type="button"
                     disabled={episodePage === 0}
                     onClick={() => setEpisodePage((page) => page - 1)}
                   >
-                    이전 회차
+                    {t.previous} {itemName(selected.unit, locale)}
                   </button>
                   <span aria-live="polite">
                     {episodePage * episodePageSize + 1}–
@@ -302,14 +572,14 @@ export function FictionLibrary({
                       selectedStories.length,
                     )}{" "}
                     / {selectedStories.length}
-                    {itemUnit(selected.unit)}
+                    {itemUnit(selected.unit, locale)}
                   </span>
                   <button
                     type="button"
                     disabled={episodePage >= episodePageCount - 1}
                     onClick={() => setEpisodePage((page) => page + 1)}
                   >
-                    다음 회차
+                    {t.next} {itemName(selected.unit, locale)}
                   </button>
                 </nav>
               ) : null}
@@ -323,12 +593,12 @@ export function FictionLibrary({
                       <div>
                         <h3>
                           {Number(story.episode)}
-                          {itemUnit(selected.unit)}. {story.title}
+                          {itemUnit(selected.unit, locale)}. {story.title}
                         </h3>
                         <p>
                           {story.publishedAt.replaceAll("-", ".")} ·{" "}
                           {story.readTime}
-                          {last === story.slug && <span>최근 읽음</span>}
+                          {last === story.slug && <span>{t.recent}</span>}
                         </p>
                       </div>
                       <ChevronRight size={16} />
@@ -342,9 +612,9 @@ export function FictionLibrary({
               <h3>{selected.title}</h3>
               <p>{selected.description}</p>
               <p>
-                장르 · {selected.category}
+                {t.genre} · <span lang="ko">{selected.category}</span>
                 <br />
-                본문 언어 · 한국어
+                {t.bodyLanguage} · {t.language}
               </p>
             </section>
           )}
@@ -365,6 +635,7 @@ export function FictionViewer({
   locale: Locale;
   children: ReactNode;
 }) {
+  const t = fictionUi[locale];
   const [preferences, setPreferences] = useState(defaults);
   const [page, setPage] = useState(0);
   const [count, setCount] = useState(1);
@@ -519,7 +790,7 @@ export function FictionViewer({
   const novel = getNovelCollections(stories).find(
     (item) => item.series === story.series,
   );
-  const unit = itemUnit(novel?.unit ?? "episode");
+  const unit = itemUnit(novel?.unit ?? "episode", locale);
   const next =
     novelStories[
       novelStories.findIndex((item) => item.slug === story.slug) + 1
@@ -527,7 +798,7 @@ export function FictionViewer({
   return (
     <div
       className={`novel-viewer book-viewer viewer-${preferences.theme}`}
-      lang="ko"
+      lang={locale}
       style={
         {
           "--reader-size": `${preferences.size}px`,
@@ -543,7 +814,7 @@ export function FictionViewer({
         className="book-viewport"
         ref={viewport}
         role="region"
-        aria-label="좌우로 넘기는 소설 본문. 두 번 탭하거나 Enter 키로 내비게이션 열기"
+        aria-label={t.viewport}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard-accessible scroll and paging region.
         tabIndex={0}
         onDoubleClick={(event) => {
@@ -620,7 +891,7 @@ export function FictionViewer({
           >
             <meta itemProp="datePublished" content={story.publishedAt} />
             <meta itemProp="inLanguage" content="ko" />
-            <header className="book-title">
+            <header className="book-title" lang="ko">
               <p>
                 {story.series} · {Number(story.episode)}
                 {unit}
@@ -629,18 +900,18 @@ export function FictionViewer({
                 {story.title}
               </h1>
             </header>
-            <div className="book-article-body" itemProp="articleBody">
+            <div className="book-article-body" itemProp="articleBody" lang="ko">
               {children}
             </div>
             <div className="book-end">
-              <p>― 끝 ―</p>
+              <p>{t.finish}</p>
               {next ? (
                 <Link href={localePath(locale, `/fiction/${next.slug}/`)}>
-                  다음 이야기
+                  {t.nextStory}
                 </Link>
               ) : (
                 <Link href={localePath(locale, "/fiction/")}>
-                  작품 목록으로
+                  {t.storyList}
                 </Link>
               )}
             </div>
@@ -657,7 +928,7 @@ export function FictionViewer({
       </div>
       <nav
         className="book-controls"
-        aria-label="책보기 내비게이션"
+        aria-label={t.nav}
         data-visible={controlsVisible}
         inert={!controlsVisible}
         onKeyDown={(event) => {
@@ -669,7 +940,7 @@ export function FictionViewer({
       >
         <button
           type="button"
-          aria-label="내비게이션 숨기기"
+          aria-label={t.hideNav}
           onClick={() => {
             setControlsVisible(false);
             viewport.current?.focus();
@@ -677,12 +948,12 @@ export function FictionViewer({
         >
           <X size={18} />
         </button>
-        <Link href={localePath(locale, "/fiction/")} aria-label="작품 목록">
+        <Link href={localePath(locale, "/fiction/")} aria-label={t.storyList}>
           <ArrowLeft size={18} />
         </Link>
         <button
           type="button"
-          aria-label="이전 페이지"
+          aria-label={t.prevPage}
           disabled={page === 0}
           onClick={() => turn(-1)}
         >
@@ -691,14 +962,14 @@ export function FictionViewer({
         <button
           className="book-page-number"
           type="button"
-          aria-label={`전체 ${count}쪽 중 ${page + 1}쪽, 회차 목록 열기`}
+          aria-label={`${t.total} ${count} · ${page + 1}, ${t.openEpisodes}`}
           onClick={() => open("episodes")}
         >
           {page + 1} / {count}
         </button>
         <button
           type="button"
-          aria-label="다음 페이지"
+          aria-label={t.nextPage}
           disabled={page === count - 1}
           onClick={() => turn(1)}
         >
@@ -706,18 +977,14 @@ export function FictionViewer({
         </button>
         <button
           type="button"
-          aria-label="코멘트"
+          aria-label={t.commentAction}
           onClick={() => open("comments")}
         >
           <MessageCircle size={18} />
         </button>
         <button
           type="button"
-          aria-label={
-            preferences.theme === "night"
-              ? "밝은 배경으로 전환"
-              : "어두운 배경으로 전환"
-          }
+          aria-label={preferences.theme === "night" ? t.light : t.dark}
           onClick={() =>
             change({ theme: preferences.theme === "night" ? "paper" : "night" })
           }
@@ -730,7 +997,7 @@ export function FictionViewer({
         </button>
         <button
           type="button"
-          aria-label="뷰어 설정"
+          aria-label={t.settings}
           onClick={() => open("settings")}
         >
           <Settings2 size={18} />
@@ -740,14 +1007,14 @@ export function FictionViewer({
         <header>
           <h2>
             {panel === "settings"
-              ? "뷰어 설정"
+              ? t.settings
               : panel === "episodes"
-                ? "회차 목록"
-                : "독자 코멘트"}
+                ? t.pageList
+                : t.comments}
           </h2>
           <button
             type="button"
-            aria-label="닫기"
+            aria-label={t.close}
             onClick={() => dialog.current?.close()}
           >
             <X size={20} />
@@ -756,7 +1023,7 @@ export function FictionViewer({
         {panel === "settings" ? (
           <div className="viewer-settings">
             <fieldset>
-              <legend>배경색</legend>
+              <legend>{t.bg}</legend>
               <div>
                 {(["white", "paper", "night"] as const).map((theme) => (
                   <button
@@ -765,32 +1032,32 @@ export function FictionViewer({
                     aria-pressed={preferences.theme === theme}
                     onClick={() => change({ theme })}
                   >
-                    {{ white: "흰색", paper: "종이", night: "어둡게" }[theme]}
+                    {{ white: t.white, paper: t.paper, night: t.night }[theme]}
                   </button>
                 ))}
               </div>
             </fieldset>
             <fieldset>
-              <legend>글꼴</legend>
+              <legend>{t.font}</legend>
               <div>
                 <button
                   type="button"
                   aria-pressed={preferences.font === "sans"}
                   onClick={() => change({ font: "sans" })}
                 >
-                  고딕
+                  {t.sans}
                 </button>
                 <button
                   type="button"
                   aria-pressed={preferences.font === "serif"}
                   onClick={() => change({ font: "serif" })}
                 >
-                  명조
+                  {t.serif}
                 </button>
               </div>
             </fieldset>
             <label>
-              글자 크기 <output>{preferences.size}px</output>
+              {t.size} <output>{preferences.size}px</output>
               <input
                 type="range"
                 min="14"
@@ -800,7 +1067,7 @@ export function FictionViewer({
               />
             </label>
             <label>
-              줄 간격 <output>{preferences.line.toFixed(1)}</output>
+              {t.line} <output>{preferences.line.toFixed(1)}</output>
               <input
                 type="range"
                 min="1.5"
@@ -815,9 +1082,9 @@ export function FictionViewer({
               type="button"
               onClick={() => change(defaults)}
             >
-              기본 설정으로
+              {t.reset}
             </button>
-            <p>읽기 설정과 기록은 이 브라우저에 저장됩니다.</p>
+            <p>{t.stored}</p>
           </div>
         ) : panel === "episodes" ? (
           <ol className="viewer-episode-list">
@@ -830,13 +1097,13 @@ export function FictionViewer({
                 >
                   {Number(item.episode)}
                   {unit}. {item.title}
-                  {item.slug === story.slug && <span>읽는 중</span>}
+                  {item.slug === story.slug && <span>{t.reading}</span>}
                 </Link>
               </li>
             ))}
           </ol>
         ) : (
-          <FictionComments story={story} />
+          <FictionComments story={story} locale={locale} />
         )}
       </dialog>
     </div>

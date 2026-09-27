@@ -1,3 +1,4 @@
+import { appendFile } from "node:fs/promises";
 import process from "node:process";
 
 function isUnknown(value) {
@@ -71,6 +72,10 @@ export function auditPublicGourmetEntries(entries) {
   };
 }
 
+export function gourmetQualityExitCode(report) {
+  return report.errorCount > 0 ? 1 : 0;
+}
+
 export async function fetchGourmetQuality(baseUrl, request = fetch) {
   const url = new URL("/api/gourmet/entries?page=1&pageSize=100", baseUrl);
   if (url.protocol !== "https:")
@@ -98,8 +103,19 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log(
         `${issue.severity}|${issue.code}|${issue.entryId}|${issue.message}`,
       );
-    if (report.issues.length > 0) process.exitCode = 1;
-    else console.log(`GOURMET_QUALITY_OK ${report.totalEntries} entries`);
+    console.log(`GOURMET_QUALITY_WARNINGS ${report.warningCount}`);
+    if (process.env.GITHUB_OUTPUT) {
+      await appendFile(
+        process.env.GITHUB_OUTPUT,
+        `warning_count=${report.warningCount}\n`,
+      );
+    }
+    process.exitCode = gourmetQualityExitCode(report);
+    if (process.exitCode === 0) {
+      console.log(
+        `GOURMET_QUALITY_OK ${report.totalEntries} entries; ${report.warningCount} warnings`,
+      );
+    }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

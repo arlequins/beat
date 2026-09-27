@@ -22,7 +22,7 @@ const copy: Record<
       challenge:
         "Repeated setup for infrastructure, authentication, and data slowed new products down. The challenge was to reduce that work without lowering the operational bar.",
       highlights: [
-        "Static Next.js delivery",
+        "Static Next.js site delivery",
         "Hono + tRPC API",
         "PostgreSQL migrations",
       ],
@@ -69,9 +69,9 @@ const copy: Record<
       challenge:
         "インフラ、認証、データの初期設定を繰り返す負担を減らしつつ、運用に必要な品質を保つことが課題でした。",
       highlights: [
-        "Static Next.js delivery",
+        "Next.js による静的サイト配信",
         "Hono + tRPC API",
-        "PostgreSQL migrations",
+        "PostgreSQL のデータベース移行",
       ],
       outcome:
         "静的ポートフォリオから API やデータベースを使う製品まで、段階的に拡張できる基盤を整えました。",
@@ -120,7 +120,24 @@ export function localizedProjectCopy(
     return {
       challenge: authoredProject.challenge,
       description: authoredProject.description,
-      highlights: authoredProject.highlights,
+      highlights:
+        authoredProject.slug === "beat-template"
+          ? [
+              "정적 Next.js 사이트 배포",
+              "Hono + tRPC API",
+              "PostgreSQL 데이터베이스 마이그레이션",
+            ]
+          : authoredProject.slug === "agent-assisted-product-workflow"
+            ? [
+                "작업 단위로 나눈 에이전트 지시",
+                "빌드와 타입 검사 반복",
+                "사람이 확인하는 검토 단계",
+              ]
+            : [
+                "MDX 콘텐츠 작성 흐름",
+                "GitHub 메타데이터 대체 경로",
+                "GitHub Pages 정적 배포",
+              ],
       outcome: authoredProject.outcome,
       role:
         authoredProject.slug === "beat-template"

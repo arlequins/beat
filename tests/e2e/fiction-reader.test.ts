@@ -251,6 +251,51 @@ test("library switches between novels before opening an episode", async ({
   );
 });
 
+test("fiction controls follow the selected UI language while prose stays Korean", async ({
+  page,
+}) => {
+  for (const locale of [
+    {
+      path: "/en/fiction/tomorrow-seoul-table/",
+      rootLanguage: "en",
+      settings: "Reader settings",
+      comments: "Reader comments",
+      commentAction: "Comments",
+      nickname: "Nickname",
+      close: "Close",
+    },
+    {
+      path: "/ja/fiction/tomorrow-seoul-table/",
+      rootLanguage: "ja",
+      settings: "閲覧設定",
+      comments: "読者コメント",
+      commentAction: "コメント",
+      nickname: "ニックネーム",
+      close: "閉じる",
+    },
+  ]) {
+    await page.goto(locale.path);
+    await expect(page.locator(".novel-viewer")).toHaveAttribute(
+      "lang",
+      locale.rootLanguage,
+    );
+    await expect(page.locator(".book-article-body")).toHaveAttribute(
+      "lang",
+      "ko",
+    );
+    await page.locator(".book-viewport").focus();
+    await page.keyboard.press("Enter");
+    await page.getByRole("button", { name: locale.settings }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(
+      dialog.getByText(locale.settings, { exact: true }),
+    ).toBeVisible();
+    await dialog.getByRole("button", { name: locale.close }).click();
+    await page.getByRole("button", { name: locale.commentAction }).click();
+    await expect(dialog.getByLabel(locale.nickname)).toBeVisible();
+  }
+});
+
 test("one-shot novels share one catalog collection", async ({ page }) => {
   await page.goto("/ko/fiction/");
 
