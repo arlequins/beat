@@ -4,7 +4,7 @@ import { HomeIndex } from "~/components/blog/home-index";
 import { LocalizedPostFeed } from "~/components/blog/localized-post-feed";
 import { BeatPostAssistantCard } from "~/features/beat-handoff/ui/beat-chat-entry";
 import { getProject } from "~/lib/github";
-import { type Locale, localePath } from "~/lib/i18n";
+import { type Locale, localePath, localizedReadTime } from "~/lib/i18n";
 import { localizePost } from "~/lib/localized-content";
 import { getPost, getPosts, type PostCategory } from "~/lib/posts";
 import {
@@ -127,7 +127,8 @@ export async function LocalizedPostDetail(props: {
             {translation.excerpt}
           </p>
           <p className="mt-8 border-t border-white/15 pt-4 text-sm text-slate-400">
-            {post.frontmatter.publishedAt} · {post.frontmatter.readTime}
+            {post.frontmatter.publishedAt} ·{" "}
+            {localizedReadTime(props.locale, post.frontmatter.readTime)}
           </p>
         </div>
       </header>
@@ -164,14 +165,13 @@ export async function LocalizedPostDetail(props: {
             ) : null}
             {translation.links ? (
               <nav
-                aria-label={
-                  props.locale === "en" ? "Issue series" : "Issue series"
-                }
+                aria-label={props.locale === "en" ? "Issue series" : "特集記事"}
               >
                 <h2>
-                  {props.locale === "en"
-                    ? "Explore the series"
-                    : "シリーズを読む"}
+                  {translation.linksHeading ??
+                    (props.locale === "en"
+                      ? "Explore the series"
+                      : "シリーズを読む")}
                 </h2>
                 <ul>
                   {translation.links.map((link) => (
@@ -208,8 +208,18 @@ export async function LocalizedWorkDetail(props: {
   const primaryLink = projectPrimaryLink(project, props.locale);
   const labels =
     props.locale === "en"
-      ? { challenge: "Challenge", outcome: "Outcome", work: "What I built" }
-      : { challenge: "課題", outcome: "成果", work: "取り組んだこと" };
+      ? {
+          challenge: "Challenge",
+          outcome: "Outcome",
+          stack: "Stack",
+          work: "What I built",
+        }
+      : {
+          challenge: "課題",
+          outcome: "成果",
+          stack: "技術スタック",
+          work: "取り組んだこと",
+        };
   return (
     <article>
       <header className="brand-hero px-5 py-14 sm:px-8 sm:py-20">
@@ -269,7 +279,7 @@ export async function LocalizedWorkDetail(props: {
             <p className="sm:col-span-2 leading-8 text-[var(--ink)]">
               {content.outcome}
             </p>
-            <h2 className="brand-eyebrow text-[#075c66]">Stack</h2>
+            <h2 className="brand-eyebrow text-[#075c66]">{labels.stack}</h2>
             <div className="flex flex-wrap gap-2 sm:col-span-2">
               {project.stack.map((item) => (
                 <span

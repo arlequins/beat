@@ -60,7 +60,11 @@ for (const locale of ["ko", "en", "ja"]) {
     const menu = page.locator("#site-menu");
     await expect(menu).toBeHidden();
     await page.locator(".site-menu-trigger").click();
-    await expect(menu.getByLabel("Language")).toBeVisible();
+    const languageLabel =
+      locale === "ko" ? "언어" : locale === "ja" ? "言語" : "Language";
+    await expect(
+      menu.locator(".site-menu-settings > div").first().locator("span"),
+    ).toHaveText(languageLabel);
     await page.keyboard.press("Escape");
     await expect(menu).toBeHidden();
     await page.locator("#work summary").click();

@@ -9,6 +9,7 @@ type ShareLabels = {
   copied: string;
   copyCaption: string;
   download: string;
+  instructions: string;
   failed: string;
   fallback: string;
   preview: string;
@@ -22,6 +23,8 @@ const labels = {
     copied: "Caption copied",
     copyCaption: "Copy caption",
     download: "Download JPEG",
+    instructions:
+      "The caption includes a Google Maps link and tags. Copy it, then post it with your photo on Instagram.",
     failed:
       "Could not prepare the Instagram post. Try downloading the image instead.",
     fallback: "The image was downloaded and the caption was copied.",
@@ -34,6 +37,8 @@ const labels = {
     copied: "キャプションをコピーしました",
     copyCaption: "キャプションをコピー",
     download: "JPEGを保存",
+    instructions:
+      "キャプションにはGoogleマップのリンクとタグが含まれます。コピーして写真と一緒にInstagramへ投稿してください。",
     failed:
       "Instagram用の投稿を準備できませんでした。画像を保存してお試しください。",
     fallback: "画像を保存し、キャプションをコピーしました。",
@@ -46,6 +51,8 @@ const labels = {
     copied: "캡션을 복사했습니다",
     copyCaption: "캡션 복사",
     download: "JPEG 저장",
+    instructions:
+      "Google 지도 링크와 태그가 포함된 문구입니다. 복사한 뒤 Instagram에서 사진과 함께 게시하세요.",
     failed:
       "Instagram용 게시물을 준비하지 못했습니다. 이미지를 저장해 다시 시도해 주세요.",
     fallback: "이미지를 저장하고 캡션을 복사했습니다.",
@@ -74,7 +81,13 @@ function captionFor(entry: GourmetEntry, locale: Locale) {
     .filter((tag, index, values) => values.indexOf(tag) === index)
     .slice(0, 2)
     .map((tag) => `#${tag}`);
-  tags.push(locale === "ko" ? "#구루메 #Beat" : "#Gourmet #Beat");
+  tags.push(
+    locale === "ko"
+      ? "#구루메 #Beat"
+      : locale === "ja"
+        ? "#グルメ #Beat"
+        : "#Gourmet #Beat",
+  );
   return [
     `${restaurant} · ${entry.menuName} · ${entry.rating.toFixed(1)}/10`,
     `https://www.google.com/maps/search/?api=1&query=${mapQuery}`,
@@ -255,10 +268,7 @@ export function GourmetShareButton(props: {
             readOnly
             value={caption}
           />
-          <p className="text-[var(--muted-foreground)]">
-            Google Maps 링크와 태그를 포함한 짧은 문구입니다. 복사 후
-            Instagram에서 사진과 함께 게시하세요.
-          </p>
+          <p className="text-[var(--muted-foreground)]">{copy.instructions}</p>
         </div>
       </details>
       <span

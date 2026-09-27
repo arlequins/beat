@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { type Locale, localePath } from "~/lib/i18n";
+import { type Locale, localePath, localizedReadTime } from "~/lib/i18n";
 import type { PostCategory, PostSummary } from "~/lib/posts";
 
 type FeedPost = PostSummary & {
@@ -226,7 +226,8 @@ export function LocalizedPostFeed(props: {
                             </span>
                           ) : null}
                           <span>
-                            {post.publishedAt} · {post.readTime}
+                            {post.publishedAt} ·{" "}
+                            {localizedReadTime(props.locale, post.readTime)}
                           </span>
                         </div>
                         <h3 className="display-serif mt-5 text-2xl leading-tight tracking-[-0.035em] sm:text-3xl">

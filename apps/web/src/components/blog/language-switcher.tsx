@@ -43,11 +43,13 @@ export function LanguageSwitcher() {
   const router = useRouter();
   const locale = currentLocale(pathname);
   const basePath = withoutLocale(pathname);
+  const label =
+    locale === "ko" ? "언어" : locale === "ja" ? "言語" : "Language";
 
   return (
     <div className="relative block">
       <label className="sr-only" htmlFor="language-switcher">
-        Language
+        {label}
       </label>
       <Languages
         aria-hidden="true"
