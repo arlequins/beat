@@ -773,267 +773,6 @@
 .private-fiction-status {
   margin-top: 5px;
 }
-.private-fiction-actions {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.private-fiction-actions button,
-.private-fiction-actions a,
-.private-fiction-upload,
-.private-fiction-page-nav button {
-  border: 1px solid #8885;
-  border-radius: 999px;
-  padding: 9px 14px;
-  font-size: 12px;
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease;
-}
-.private-fiction-actions :is(button, a, .private-fiction-upload):hover,
-.private-fiction-page-nav button:not(:disabled):hover {
-  background: color-mix(in srgb, var(--foreground) 7%, transparent);
-  border-color: #8889;
-}
-.private-fiction-actions button:disabled,
-.private-fiction-page-nav button:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
-}
-.private-fiction-upload {
-  cursor: pointer;
-}
-.private-fiction-upload input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  clip-path: inset(50%);
-}
-.private-fiction-work-heading {
-  align-items: flex-end;
-  margin: 34px auto 24px;
-  max-width: 950px;
-}
-.private-fiction-work-heading h2 {
-  margin-top: 4px;
-  font-family: "Iowan Old Style", "AppleMyungjo", "Batang", serif;
-  font-size: 34px;
-  font-weight: 400;
-  letter-spacing: -0.04em;
-}
-.private-fiction-work-heading > div > p:last-child {
-  max-width: 660px;
-  margin-top: 9px;
-  color: var(--muted-foreground);
-  font-size: 13px;
-  line-height: 1.8;
-}
-.private-fiction-work-heading > span {
-  flex: none;
-}
-.private-fiction-reading-layout {
-  display: grid;
-  grid-template-columns: minmax(190px, 250px) minmax(0, 720px);
-  align-items: start;
-  justify-content: center;
-  gap: clamp(24px, 5vw, 72px);
-}
-.private-fiction-toc {
-  position: sticky;
-  top: 24px;
-  max-height: calc(100dvh - 48px);
-  overflow: auto;
-  padding: 0 4px 12px 0;
-  scrollbar-width: thin;
-}
-.private-fiction-toc > p {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #8884;
-  font-size: 13px;
-  font-weight: 600;
-}
-.private-fiction-toc > p span {
-  color: var(--muted-foreground);
-  font-size: 11px;
-  font-weight: 400;
-}
-.private-fiction-toc ol {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.private-fiction-shell .private-fiction-toc li {
-  border-bottom: 1px solid #8882;
-}
-.private-fiction-toc li > button {
-  display: grid;
-  width: 100%;
-  grid-template-columns: 38px minmax(0, 1fr);
-  gap: 9px;
-  padding: 12px 7px;
-  text-align: left;
-  border-radius: 6px;
-}
-.private-fiction-toc li > button:hover,
-.private-fiction-toc li > button[aria-current="page"] {
-  background: color-mix(in srgb, var(--foreground) 6%, transparent);
-}
-.private-fiction-toc li > button > span {
-  color: var(--muted-foreground);
-  font-size: 11px;
-  padding-top: 2px;
-}
-.private-fiction-shell .private-fiction-toc li > button strong {
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.55;
-}
-.private-fiction-toc li hr {
-  margin: 4px 8px 10px;
-  border: 0;
-  border-top: 1px solid #8885;
-}
-.private-fiction-page {
-  min-width: 0;
-  padding: clamp(25px, 5vw, 60px) clamp(22px, 6vw, 76px) 38px;
-  border: 1px solid #8882;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--background) 88%, var(--foreground) 2%);
-  box-shadow: 0 18px 60px #00000008;
-}
-.private-fiction-page-title {
-  margin-bottom: 38px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #8883;
-}
-.private-fiction-page-title > p {
-  margin-bottom: 8px;
-  letter-spacing: 0.03em;
-}
-.private-fiction-page-title h1 {
-  font-size: clamp(25px, 4vw, 34px);
-  line-height: 1.45;
-}
-.private-fiction-prose {
-  font-size: 18px;
-  line-height: 2;
-}
-.private-fiction-prose h2,
-.private-fiction-prose h3 {
-  margin: 2.25em 0 0.8em;
-  font-family: "Iowan Old Style", "AppleMyungjo", "Batang", serif;
-  font-weight: 500;
-  line-height: 1.55;
-}
-.private-fiction-prose h2 {
-  font-size: 22px;
-}
-.private-fiction-prose h3 {
-  font-size: 19px;
-}
-.private-fiction-prose :is(ul, ol) {
-  margin: 0 0 1.2em;
-  padding-left: 1.35em;
-}
-.private-fiction-shell .private-fiction-prose li {
-  padding-left: 0.2em;
-  margin: 0.35em 0;
-}
-.private-fiction-prose blockquote {
-  margin: 1.35em 0;
-  padding: 0.2em 0 0.2em 1.15em;
-  border-left: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
-  color: var(--muted-foreground);
-}
-.private-fiction-prose blockquote p:last-child {
-  margin-bottom: 0;
-}
-.private-fiction-prose a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.private-fiction-prose code {
-  border-radius: 4px;
-  padding: 0.08em 0.3em;
-  background: color-mix(in srgb, var(--foreground) 7%, transparent);
-  font-size: 0.88em;
-}
-.private-fiction-prose pre {
-  overflow: auto;
-  margin: 1.2em 0;
-  padding: 1em;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--foreground) 7%, transparent);
-  font-size: 0.82em;
-  line-height: 1.7;
-}
-.private-fiction-page-nav {
-  margin-top: 48px;
-  padding-top: 20px;
-  border-top: 1px solid #8883;
-}
-.private-fiction-page-nav span {
-  color: var(--muted-foreground);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-@media (max-width: 800px) {
-  .private-fiction-shell {
-    padding: 22px 18px 60px;
-  }
-  .private-fiction-reading-layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-  }
-  .private-fiction-toc {
-    position: relative;
-    top: auto;
-    max-height: 220px;
-    padding-right: 0;
-  }
-  .private-fiction-toc ol {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 8px 0 12px;
-  }
-  .private-fiction-shell .private-fiction-toc li {
-    flex: 0 0 min(230px, 72vw);
-    border: 1px solid #8883;
-    border-radius: 8px;
-  }
-  .private-fiction-toc li hr {
-    display: none;
-  }
-  .private-fiction-page {
-    padding: 32px clamp(20px, 6vw, 48px);
-  }
-}
-@media (max-width: 560px) {
-  .private-fiction-header,
-  .private-fiction-work-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .private-fiction-header {
-    gap: 16px;
-  }
-  .private-fiction-actions {
-    justify-content: flex-start;
-  }
-  .private-fiction-work-heading > span {
-    align-self: flex-end;
-  }
-  .private-fiction-prose {
-    font-size: 17px;
-    line-height: 1.95;
-  }
-}
 @media (max-width: 639px) {
   .ebook-toolbar {
     padding: 16px 24px;
@@ -3369,5 +3108,162 @@
   }
   .novel-selection-header {
     padding-bottom: 26px;
+  }
+}
+
+/* Private fiction uses the same paged reader as the public fiction viewer. */
+.private-fiction-prose {
+  font-size: var(--reader-size);
+  line-height: var(--reader-line);
+}
+.private-fiction-prose h2,
+.private-fiction-prose h3 {
+  margin: 2.25em 0 0.8em;
+  font-family: "Iowan Old Style", "AppleMyungjo", "Batang", serif;
+  font-weight: 500;
+  line-height: 1.55;
+}
+.private-fiction-prose h2 {
+  font-size: 22px;
+}
+.private-fiction-prose h3 {
+  font-size: 19px;
+}
+.private-fiction-prose :is(ul, ol) {
+  margin: 0 0 1.2em;
+  padding-left: 1.35em;
+}
+.private-fiction-prose :where(li) {
+  padding-left: 0.2em;
+  margin: 0.35em 0;
+}
+.private-fiction-prose blockquote {
+  margin: 1.35em 0;
+  padding: 0.2em 0 0.2em 1.15em;
+  border-left: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  color: var(--muted-foreground);
+}
+.private-fiction-prose blockquote :where(p:last-child) {
+  margin-bottom: 0;
+}
+.private-fiction-prose a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.private-fiction-prose code {
+  border-radius: 4px;
+  padding: 0.08em 0.3em;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  font-size: 0.88em;
+}
+.private-fiction-prose pre {
+  overflow: auto;
+  margin: 1.2em 0;
+  padding: 1em;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  font-size: 0.82em;
+  line-height: 1.7;
+}
+.private-fiction-book-viewport {
+  cursor: pointer;
+}
+.private-fiction-book .book-flow {
+  padding: 20px 24px 32px;
+}
+.private-fiction-book .book-title {
+  margin-bottom: 34px;
+}
+.private-fiction-book .book-title h1 {
+  line-height: 1.55;
+  word-break: keep-all;
+}
+.private-fiction-book .book-article-body {
+  max-width: 680px;
+}
+.private-fiction-book .private-fiction-prose h2,
+.private-fiction-book .private-fiction-prose h3 {
+  break-after: avoid;
+}
+.private-fiction-book .book-end button {
+  margin-top: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.private-fiction-book-controls {
+  border: 1px solid #8883;
+  border-radius: 999px;
+}
+.private-fiction-contents-dialog > header button {
+  display: grid;
+  min-width: 40px;
+  min-height: 40px;
+  place-items: center;
+  font-size: 24px;
+}
+.private-fiction-contents-list {
+  max-height: min(52dvh, 520px);
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.private-fiction-contents-list :where(li) {
+  border-bottom: 1px solid #8883;
+}
+.private-fiction-contents-list button {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  text-align: left;
+  font-size: 14px;
+}
+.private-fiction-contents-list button[aria-current="page"] {
+  font-weight: 700;
+}
+.private-fiction-contents-list span,
+.private-fiction-dialog-status {
+  font-size: 11px;
+  opacity: 0.65;
+}
+.private-fiction-dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #8883;
+  font-size: 12px;
+}
+.private-fiction-upload {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.private-fiction-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+@media (max-width: 560px) {
+  .private-fiction-shell {
+    padding: 22px 18px 60px;
+  }
+  .private-fiction-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .private-fiction-book .book-flow {
+    padding: 16px 24px 30px;
   }
 }
