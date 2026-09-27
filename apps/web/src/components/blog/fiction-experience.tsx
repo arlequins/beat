@@ -41,6 +41,7 @@ const defaults: Preferences = {
   theme: "night",
   font: "sans",
 };
+const episodePageSize = 40;
 function read<T>(name: string, fallback: T): T {
   try {
     return (
@@ -85,18 +86,42 @@ export function FictionLibrary({
   const [selectedSeries, setSelectedSeries] = useState(novels[0]?.series ?? "");
   const [section, setSection] = useState("episodes");
   const [descending, setDescending] = useState(false);
+  const [episodePage, setEpisodePage] = useState(0);
   useEffect(() => {
     setLiked(read("liked", false));
     const savedLast = read("last", "");
     setLast(savedLast);
     const savedStory = stories.find((story) => story.slug === savedLast);
-    if (savedStory) setSelectedSeries(savedStory.series);
+    if (savedStory) {
+      setSelectedSeries(savedStory.series);
+      const savedNovel = getNovelCollections(stories).find(
+        (novel) => novel.series === savedStory.series,
+      );
+      const savedIndex =
+        savedNovel?.stories.findIndex((story) => story.slug === savedLast) ??
+        -1;
+      setEpisodePage(
+        savedIndex < 0 ? 0 : Math.floor(savedIndex / episodePageSize),
+      );
+    }
   }, [stories]);
   const selected =
     novels.find((novel) => novel.series === selectedSeries) ?? novels[0];
   const current =
     selected?.stories.find((story) => story.slug === last) ??
     selected?.stories[0];
+  const selectedStories = [...(selected?.stories ?? [])].sort((a, b) => {
+    const result = Number(a.episode) - Number(b.episode);
+    return descending ? -result : result;
+  });
+  const episodePageCount = Math.max(
+    1,
+    Math.ceil(selectedStories.length / episodePageSize),
+  );
+  const visibleStories = selectedStories.slice(
+    episodePage * episodePageSize,
+    (episodePage + 1) * episodePageSize,
+  );
   return (
     <div className="novel-home" lang="ko">
       <header className="novel-summary">
@@ -137,6 +162,7 @@ export function FictionLibrary({
               onClick={() => {
                 setSelectedSeries(novel.series);
                 setSection("episodes");
+                setEpisodePage(0);
               }}
             >
               <span className="novel-card-index" aria-hidden="true">
@@ -248,7 +274,10 @@ export function FictionLibrary({
                 </span>
                 <button
                   type="button"
-                  onClick={() => setDescending(!descending)}
+                  onClick={() => {
+                    setDescending(!descending);
+                    setEpisodePage(0);
+                  }}
                 >
                   {descending
                     ? selected.unit === "story"
@@ -257,33 +286,55 @@ export function FictionLibrary({
                     : `첫 ${itemUnit(selected.unit)}부터 ↑`}
                 </button>
               </div>
+              {episodePageCount > 1 ? (
+                <nav aria-label="회차 목록 페이지" className="site-pagination">
+                  <button
+                    type="button"
+                    disabled={episodePage === 0}
+                    onClick={() => setEpisodePage((page) => page - 1)}
+                  >
+                    이전 회차
+                  </button>
+                  <span aria-live="polite">
+                    {episodePage * episodePageSize + 1}–
+                    {Math.min(
+                      (episodePage + 1) * episodePageSize,
+                      selectedStories.length,
+                    )}{" "}
+                    / {selectedStories.length}
+                    {itemUnit(selected.unit)}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={episodePage >= episodePageCount - 1}
+                    onClick={() => setEpisodePage((page) => page + 1)}
+                  >
+                    다음 회차
+                  </button>
+                </nav>
+              ) : null}
               <ol>
-                {[...selected.stories]
-                  .sort((a, b) => {
-                    const result = Number(a.episode) - Number(b.episode);
-                    return descending ? -result : result;
-                  })
-                  .map((story) => (
-                    <li key={story.slug}>
-                      <Link
-                        className="novel-episode"
-                        href={localePath(locale, `/fiction/${story.slug}/`)}
-                      >
-                        <div>
-                          <h3>
-                            {Number(story.episode)}
-                            {itemUnit(selected.unit)}. {story.title}
-                          </h3>
-                          <p>
-                            {story.publishedAt.replaceAll("-", ".")} ·{" "}
-                            {story.readTime}
-                            {last === story.slug && <span>최근 읽음</span>}
-                          </p>
-                        </div>
-                        <ChevronRight size={16} />
-                      </Link>
-                    </li>
-                  ))}
+                {visibleStories.map((story) => (
+                  <li key={story.slug}>
+                    <Link
+                      className="novel-episode"
+                      href={localePath(locale, `/fiction/${story.slug}/`)}
+                    >
+                      <div>
+                        <h3>
+                          {Number(story.episode)}
+                          {itemUnit(selected.unit)}. {story.title}
+                        </h3>
+                        <p>
+                          {story.publishedAt.replaceAll("-", ".")} ·{" "}
+                          {story.readTime}
+                          {last === story.slug && <span>최근 읽음</span>}
+                        </p>
+                      </div>
+                      <ChevronRight size={16} />
+                    </Link>
+                  </li>
+                ))}
               </ol>
             </section>
           ) : (

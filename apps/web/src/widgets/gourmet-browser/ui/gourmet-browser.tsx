@@ -49,6 +49,7 @@ const text = {
     photos: "Photos",
     recommended: "Recommended to revisit",
     revisit: "Revisit",
+    retry: "Try again",
     revisitFilter: "Any revisit plan",
     revisitNo: "Not now",
     revisitUnknown: "Undecided",
@@ -81,6 +82,7 @@ const text = {
     photos: "写真",
     recommended: "再訪したい店",
     revisit: "再訪",
+    retry: "もう一度読み込む",
     revisitFilter: "再訪予定すべて",
     revisitNo: "保留",
     revisitUnknown: "未定",
@@ -113,6 +115,7 @@ const text = {
     photos: "사진",
     recommended: "재방문 추천",
     revisit: "재방문",
+    retry: "다시 불러오기",
     revisitFilter: "재방문 여부",
     revisitNo: "보류",
     revisitUnknown: "미정",
@@ -172,9 +175,7 @@ function GourmetPhoto(props: {
   const meaningfulAlt =
     alt && !/\.(jpe?g|png|webp|heic)$/i.test(alt) && !/^(미상\s*)+$/.test(alt);
   return (
-    <div
-      className={`relative overflow-hidden bg-[var(--surface)] ${displayedImage ? "aspect-[4/3]" : "grid min-h-32 place-items-center"}`}
-    >
+    <div className="relative grid aspect-[4/3] place-items-center overflow-hidden bg-[var(--surface)]">
       {displayedImage ? (
         <Image
           alt={meaningfulAlt ? alt : props.fallbackAlt}
@@ -224,9 +225,11 @@ export function GourmetBrowser(props: { locale: Locale }) {
   const [selected, setSelected] = useState<GourmetEntry>();
   const [detailError, setDetailError] = useState(false);
   const [message, setMessage] = useState(labels.loading);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
+    setMessage(labels.loading);
     const params = new URLSearchParams({ pageSize: "48" });
     if (query.trim()) params.set("restaurantName", query.trim());
     if (area.trim()) params.set("area", area.trim());
@@ -234,6 +237,7 @@ export function GourmetBrowser(props: { locale: Locale }) {
     if (minimumRating) params.set("minRating", minimumRating);
     if (revisit) params.set("revisit", revisit);
     fetch(`${gourmetApiUrl()}/api/gourmet/entries?${params}`, {
+      cache: retryCount > 0 ? "reload" : "default",
       signal: controller.signal,
     })
       .then(async (response) => {
@@ -249,7 +253,16 @@ export function GourmetBrowser(props: { locale: Locale }) {
           setMessage(labels.failed);
       });
     return () => controller.abort();
-  }, [area, cuisineTag, labels.failed, minimumRating, query, revisit]);
+  }, [
+    area,
+    cuisineTag,
+    labels.failed,
+    labels.loading,
+    minimumRating,
+    query,
+    revisit,
+    retryCount,
+  ]);
 
   useEffect(() => {
     setSelected(undefined);
@@ -424,7 +437,10 @@ export function GourmetBrowser(props: { locale: Locale }) {
           <h1>{labels.title}</h1>
         </div>
       </header>
-      <section className="page-width gourmet-content">
+      <section
+        aria-busy={message === labels.loading}
+        className="page-width gourmet-content"
+      >
         <div className="gourmet-filters">
           <label className="flex items-center gap-3 border border-[var(--line)] bg-[var(--surface)] px-4 py-3">
             <Search className="size-4 text-[var(--muted-foreground)]" />
@@ -510,9 +526,37 @@ export function GourmetBrowser(props: { locale: Locale }) {
           </p>
         ) : null}
         {message ? (
-          <p className="py-16 text-center text-[var(--muted-foreground)]">
-            {message}
-          </p>
+          <div
+            className={`gourmet-loading ${message === labels.loading ? "is-loading" : "is-error"}`}
+            role={message === labels.loading ? "status" : "alert"}
+          >
+            <p className="text-center text-[var(--muted-foreground)]">
+              {message}
+            </p>
+            {message === labels.loading ? (
+              <div
+                aria-hidden="true"
+                className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3"
+              >
+                {[0, 1, 2].map((item) => (
+                  <div className="gourmet-skeleton" key={item}>
+                    <div className="gourmet-skeleton-photo" />
+                    <div className="gourmet-skeleton-line" />
+                    <div className="gourmet-skeleton-line short" />
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {message === labels.failed ? (
+              <button
+                className="gourmet-retry"
+                onClick={() => setRetryCount((count) => count + 1)}
+                type="button"
+              >
+                {labels.retry}
+              </button>
+            ) : null}
+          </div>
         ) : null}
         {!message && list?.entries.length === 0 ? (
           <div className="mx-auto my-12 max-w-xl border border-dashed border-[var(--line)] bg-[var(--surface)] p-8 text-center sm:p-12">
@@ -534,65 +578,70 @@ export function GourmetBrowser(props: { locale: Locale }) {
             </Link>
           </div>
         ) : null}
-        <div className="mt-8 grid gap-12">
-          {timeline.map((month) => (
-            <section key={month.key}>
-              <header className="mb-5 flex items-center justify-between gap-4 border-b border-[var(--line)] pb-3">
-                <h2 className="display-serif text-2xl tracking-[-0.035em]">
-                  {month.label}
-                </h2>
-                <span className="text-xs font-bold tracking-[0.12em] text-[var(--muted-foreground)] uppercase">
-                  {recordCount(props.locale, month.entries.length)}
-                </span>
-              </header>
-              <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-                {month.entries.map((entry) => (
-                  <article className="group" key={entry.id}>
-                    <Link
-                      href={`?entry=${encodeURIComponent(entry.slug)}`}
-                      scroll
+        {!message ? (
+          <div className="mt-8 grid gap-12">
+            {timeline.map((month) => (
+              <section key={month.key}>
+                <header className="mb-5 flex items-center justify-between gap-4 border-b border-[var(--line)] pb-3">
+                  <h2 className="display-serif text-2xl tracking-[-0.035em]">
+                    {month.label}
+                  </h2>
+                  <span className="text-xs font-bold tracking-[0.12em] text-[var(--muted-foreground)] uppercase">
+                    {recordCount(props.locale, month.entries.length)}
+                  </span>
+                </header>
+                <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+                  {month.entries.map((entry) => (
+                    <article
+                      className="gourmet-record-card group"
+                      key={entry.id}
                     >
-                      <GourmetPhoto
-                        key={entry.images[0]?.publicPath ?? "empty"}
-                        emptyLabel={labels.noPhoto}
-                        image={entry.images[0]}
-                        fallbackAlt={`${entry.restaurantName} · ${entry.menuName}`}
-                        pendingLabel={labels.photoPending}
-                        sizes="(max-width: 640px) 100vw, 33vw"
-                      />
-                      <div className="mt-5 flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-xs font-semibold text-[var(--muted-foreground)]">
-                            {gourmetDate(entry)}
-                            {entry.area ? ` · ${entry.area}` : ""}
-                          </p>
-                          <h3 className="display-serif mt-2 text-2xl tracking-[-0.035em]">
-                            {entry.restaurantName}
-                          </h3>
-                          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                            {entry.menuName}
-                          </p>
+                      <Link
+                        href={`?entry=${encodeURIComponent(entry.slug)}`}
+                        scroll
+                      >
+                        <GourmetPhoto
+                          key={entry.images[0]?.publicPath ?? "empty"}
+                          emptyLabel={labels.noPhoto}
+                          image={entry.images[0]}
+                          fallbackAlt={`${entry.restaurantName} · ${entry.menuName}`}
+                          pendingLabel={labels.photoPending}
+                          sizes="(max-width: 640px) 100vw, 33vw"
+                        />
+                        <div className="mt-5 flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs font-semibold text-[var(--muted-foreground)]">
+                              {gourmetDate(entry)}
+                              {entry.area ? ` · ${entry.area}` : ""}
+                            </p>
+                            <h3 className="display-serif mt-2 text-2xl tracking-[-0.035em]">
+                              {entry.restaurantName}
+                            </h3>
+                            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                              {entry.menuName}
+                            </p>
+                          </div>
+                          <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--accent-foreground)]" />
                         </div>
-                        <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--accent-foreground)]" />
-                      </div>
-                      <div className="mt-3">
-                        <Rating value={entry.rating} />
-                      </div>
-                    </Link>
-                    <a
-                      className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[var(--muted-foreground)] hover:text-[var(--accent-foreground)]"
-                      href={gourmetMapUrl(entry)}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      <MapPin className="size-3" /> {labels.map}
-                    </a>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+                        <div className="mt-3">
+                          <Rating value={entry.rating} />
+                        </div>
+                      </Link>
+                      <a
+                        className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[var(--muted-foreground)] hover:text-[var(--accent-foreground)]"
+                        href={gourmetMapUrl(entry)}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <MapPin className="size-3" /> {labels.map}
+                      </a>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : null}
       </section>
     </div>
   );
