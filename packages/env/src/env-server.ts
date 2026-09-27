@@ -60,6 +60,8 @@ export const serverEnv = createEnv({
       .optional(),
     BEAT_AUTH_STATE_BUCKET: z.string().min(3).optional(),
     BEAT_AUTH_LEDGER_BUCKET: z.string().min(3).optional(),
+    /** Private manuscript bucket; never expose its name or objects to the browser. */
+    PRIVATE_FICTION_BUCKET: z.string().min(3).optional(),
     /** ARN of the protected Secrets Manager JSON object fetched by Lambda at runtime. */
     BEAT_RUNTIME_SECRET_ARN: z
       .string()
@@ -197,6 +199,7 @@ export const serverEnv = createEnv({
     GITHUB_CONTENT_REPOSITORY: process.env.GITHUB_CONTENT_REPOSITORY,
     BEAT_AUTH_STATE_BUCKET: process.env.BEAT_AUTH_STATE_BUCKET,
     BEAT_AUTH_LEDGER_BUCKET: process.env.BEAT_AUTH_LEDGER_BUCKET,
+    PRIVATE_FICTION_BUCKET: process.env.PRIVATE_FICTION_BUCKET,
     BEAT_RUNTIME_SECRET_ARN: process.env.BEAT_RUNTIME_SECRET_ARN,
     BEAT_AUTH_STATE_PREFIX: process.env.BEAT_AUTH_STATE_PREFIX,
     BEAT_AUTH_LOOKUP_SECRET: process.env.BEAT_AUTH_LOOKUP_SECRET,
