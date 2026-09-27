@@ -1,0 +1,71 @@
+import { expect, test } from "@playwright/test";
+
+const manuscript = [
+  "# 《현실 오류》 비공개 열람본",
+  "개인 열람용 소개 문장입니다.",
+  "# 정본 설정집",
+  "# 《현실 오류》 정본 설정집",
+  "## 세계의 기준",
+  "이 문서는 **설정**을 읽기 좋게 보여 줍니다.",
+  "# 1화 — 첫 번째 장면",
+  "첫 회차 본문입니다.",
+  "# 2화 — 다음 장면",
+  "두 번째 회차 본문입니다.",
+].join("\n\n");
+
+test("renders the private Markdown as a navigable fiction reader", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "beat-admin-session",
+      JSON.stringify({
+        accessExpiresAt: Date.now() + 60 * 60 * 1000,
+        accessToken: "private-fiction-test-token",
+        refreshExpiresAt: Date.now() + 2 * 60 * 60 * 1000,
+        refreshToken: "private-fiction-test-refresh-token",
+      }),
+    );
+  });
+  await page.route("**/admin/private-fiction", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        etag: "test-etag",
+        source: manuscript,
+        updatedAt: "2026-09-27T12:00:00.000Z",
+      }),
+    }),
+  );
+
+  await page.goto("/private-fiction");
+  await expect(
+    page.getByRole("heading", { name: "비공개 원고 보관함" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "현실 오류" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "정본 설정집" }),
+  ).toBeVisible();
+  await expect(page.locator(".private-fiction-prose strong")).toHaveText(
+    "설정",
+  );
+  await expect(page.getByRole("button", { name: /1화/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /2화/ })).toBeVisible();
+
+  await page.getByRole("button", { name: /2화/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "2화 — 다음 장면" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "이전 문서" }).click();
+  await expect(
+    page.getByRole("heading", { name: "1화 — 첫 번째 장면" }),
+  ).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".private-fiction-toc")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
