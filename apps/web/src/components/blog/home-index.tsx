@@ -30,7 +30,7 @@ const labels = {
     role: "소프트웨어 엔지니어 · AI 협업 제품 개발",
     featuredWork: "대표 프로젝트",
     viewProject: "사례 보기",
-    meetCharacters: "두 사람 소개",
+    meetCharacters: "사람과 AI 협업자 소개",
   },
   en: {
     latest: "Latest notes",
@@ -44,7 +44,7 @@ const labels = {
     role: "Software engineer · AI-native product builder",
     featuredWork: "Featured work",
     viewProject: "View case study",
-    meetCharacters: "Meet the characters",
+    meetCharacters: "About Arlequin & Lumen",
   },
   ja: {
     latest: "最近のノート",
@@ -58,7 +58,7 @@ const labels = {
     role: "ソフトウェアエンジニア · AI 協働プロダクト開発",
     featuredWork: "注力したプロジェクト",
     viewProject: "事例を見る",
-    meetCharacters: "二人の紹介",
+    meetCharacters: "人と AI の協働者について",
   },
 };
 

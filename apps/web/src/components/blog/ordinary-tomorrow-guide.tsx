@@ -16,23 +16,38 @@ export async function OrdinaryTomorrowGuide({ locale }: { locale: Locale }) {
     "utf8",
   );
   const { content } = await compileMDX({ source });
+  const ui = {
+    ko: { nav: "세계관 탐색", library: "소설 목록", first: "1화 읽기" },
+    en: {
+      nav: "World guide navigation",
+      library: "Story library",
+      first: "Read episode 1",
+    },
+    ja: {
+      nav: "世界観ナビゲーション",
+      library: "小説一覧",
+      first: "第1話を読む",
+    },
+  }[locale];
   return (
-    <div className="fiction-guide" lang="ko">
-      <nav aria-label="세계관 탐색">
-        <Link href={localePath(locale, "/fiction/")}>소설 목록</Link>
+    <div className="fiction-guide" lang={locale}>
+      <nav aria-label={ui.nav}>
+        <Link href={localePath(locale, "/fiction/")}>{ui.library}</Link>
         <Link href={localePath(locale, "/fiction/tomorrow-seoul-table/")}>
-          1화 읽기
+          {ui.first}
         </Link>
       </nav>
       <header>
-        <p>내일의 생활비 · 독립 세계관</p>
+        <p lang="ko">내일의 생활비 · 독립 세계관</p>
         <h1>조금 먼저 온 일상</h1>
         <p>
           작품 속 도시와 사람들의 일상을 소개합니다. 회차의 결말은 담지
           않았습니다.
         </p>
       </header>
-      <article className="guide-prose">{content}</article>
+      <article className="guide-prose" lang="ko">
+        {content}
+      </article>
     </div>
   );
 }

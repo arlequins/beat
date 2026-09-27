@@ -19,16 +19,42 @@ export async function FictionGuide({
   const previous = entry
     ? entries.find((item) => item.order === entry.order - 1)
     : undefined;
+  const ui = {
+    ko: {
+      nav: "설정집 탐색",
+      library: "소설 목록",
+      index: "설정집 목차",
+      source: "이 문서의 마크다운 원본",
+      order: "문서 읽기 순서",
+      next: "다음:",
+    },
+    en: {
+      nav: "World guide navigation",
+      library: "Story library",
+      index: "Guide contents",
+      source: "Markdown source for this guide",
+      order: "Reading order",
+      next: "Next:",
+    },
+    ja: {
+      nav: "設定資料のナビゲーション",
+      library: "小説一覧",
+      index: "設定資料の目次",
+      source: "この文書の Markdown 原文",
+      order: "読む順序",
+      next: "次へ:",
+    },
+  }[locale];
   return (
-    <div className="fiction-guide" lang="ko">
-      <nav aria-label="설정집 탐색">
-        <Link href={localePath(locale, "/fiction/")}>소설 목록</Link>
+    <div className="fiction-guide" lang={locale}>
+      <nav aria-label={ui.nav}>
+        <Link href={localePath(locale, "/fiction/")}>{ui.library}</Link>
         {entry && (
-          <Link href={localePath(locale, "/fiction/guide/")}>설정집 목차</Link>
+          <Link href={localePath(locale, "/fiction/guide/")}>{ui.index}</Link>
         )}
       </nav>
       <header>
-        <p>여백의 사람들 · 설정집</p>
+        <p lang="ko">여백의 사람들 · 설정집</p>
         <h1>{entry ? entry.title : "세계부터, 하나씩"}</h1>
         <p className="guide-status">
           {entry?.status ?? "설정집"} · {entry?.revision ?? "0.3 · 2026-09-22"}
@@ -40,13 +66,15 @@ export async function FictionGuide({
       </header>
       {entry ? (
         <>
-          <article className="guide-prose">{entry.content}</article>
+          <article className="guide-prose" lang="ko">
+            {entry.content}
+          </article>
           <a
             href={`https://github.com/arlequins/beat/blob/main/apps/web/content/fiction-guide/${entry.slug}.md`}
           >
-            이 문서의 마크다운 원본
+            {ui.source}
           </a>
-          <nav className="guide-pagination" aria-label="문서 읽기 순서">
+          <nav className="guide-pagination" aria-label={ui.order}>
             {previous && (
               <Link
                 href={localePath(locale, `/fiction/guide/${previous.slug}/`)}
@@ -56,7 +84,7 @@ export async function FictionGuide({
             )}
             {next && (
               <Link href={localePath(locale, `/fiction/guide/${next.slug}/`)}>
-                다음: {next.title} →
+                {ui.next} {next.title} →
               </Link>
             )}
           </nav>

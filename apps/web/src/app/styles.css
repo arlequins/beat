@@ -2912,6 +2912,7 @@
   max-width: 250px;
   font-size: 13px;
   line-height: 1.75;
+  word-break: keep-all;
 }
 .novel-card-bottomline {
   align-items: end;
@@ -3047,6 +3048,11 @@
     justify-items: initial;
     flex-wrap: wrap;
     justify-content: flex-end;
+    gap: 7px 12px;
+    max-width: 220px;
+  }
+  .novel-summary-aside .novel-facts span {
+    white-space: nowrap;
   }
   .novel-shelf {
     padding-top: 38px;

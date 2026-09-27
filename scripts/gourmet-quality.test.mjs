@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   auditPublicGourmetEntries,
   fetchGourmetQuality,
+  gourmetQualityExitCode,
 } from "./gourmet-quality.mjs";
 
 test("reports missing dates and photos without mutating entries", () => {
@@ -14,6 +15,7 @@ test("reports missing dates and photos without mutating entries", () => {
   assert.equal(report.errorCount, 0);
   assert.equal(report.warningCount, 2);
   assert.equal(entries[0].images.length, 0);
+  assert.equal(gourmetQualityExitCode(report), 0);
 });
 
 test("reports unknown names and unhelpful photo descriptions", () => {
@@ -34,6 +36,7 @@ test("reports unknown names and unhelpful photo descriptions", () => {
   ]);
   assert.equal(report.errorCount, 2);
   assert.equal(report.warningCount, 2);
+  assert.equal(gourmetQualityExitCode(report), 1);
 });
 
 test("fetches only the public gourmet list over HTTPS", async () => {

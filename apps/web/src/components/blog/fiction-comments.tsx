@@ -2,6 +2,7 @@
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import type { Story } from "~/lib/fiction";
+import type { Locale } from "~/lib/i18n";
 
 type FictionComment = {
   id: string;
@@ -84,20 +85,101 @@ function commentId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-function formatCommentDate(value: string) {
+function formatCommentDate(value: string, locale: Locale) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "방금 전";
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
+  if (Number.isNaN(date.getTime()))
+    return locale === "en"
+      ? "Just now"
+      : locale === "ja"
+        ? "たった今"
+        : "방금 전";
+  return new Intl.DateTimeFormat(
+    locale === "en" ? "en-US" : locale === "ja" ? "ja-JP" : "ko-KR",
+    {
+      dateStyle: "medium",
+      timeStyle: "short",
+    },
+  ).format(date);
 }
 
 export function FictionComments({
   story,
+  locale,
 }: {
   story: Pick<Story, "slug" | "title">;
+  locale: Locale;
 }) {
+  const text = {
+    ko: {
+      title: "독자 코멘트",
+      sort: "정렬",
+      newest: "최신순",
+      oldest: "오래된순",
+      nickname: "닉네임",
+      namePlaceholder: "이름을 남겨 주세요",
+      comment: "댓글",
+      commentPlaceholder: "이 회차에 대한 생각을 남겨 주세요",
+      spoiler: "스포일러 포함",
+      submit: "댓글 등록",
+      note: "비속어는 등록할 수 없으며, 댓글은 이 브라우저에만 저장됩니다.",
+      empty: "첫 번째 코멘트를 남겨 보세요.",
+      hidden: "숨긴 코멘트입니다.",
+      show: "다시 보기",
+      reveal: "스포일러 포함 · 눌러서 보기",
+      hide: "숨기기",
+      delete: "삭제",
+      required: "닉네임과 댓글을 모두 입력해 주세요.",
+      nicknameLength: "닉네임은 20자 이내로 입력해 주세요.",
+      bodyLength: "댓글은 500자 이내로 입력해 주세요.",
+      prohibited: "비속어가 포함된 댓글은 등록할 수 없습니다.",
+    },
+    en: {
+      title: "Reader comments",
+      sort: "Sort",
+      newest: "Newest",
+      oldest: "Oldest",
+      nickname: "Nickname",
+      namePlaceholder: "Leave a name",
+      comment: "Comment",
+      commentPlaceholder: "Share your thoughts on this episode",
+      spoiler: "Contains spoilers",
+      submit: "Post comment",
+      note: "Abusive language is not allowed. Comments are stored only in this browser.",
+      empty: "Be the first to leave a comment.",
+      hidden: "Comment hidden.",
+      show: "Show again",
+      reveal: "Spoiler · click to reveal",
+      hide: "Hide",
+      delete: "Delete",
+      required: "Enter both a nickname and comment.",
+      nicknameLength: "Nicknames must be 20 characters or fewer.",
+      bodyLength: "Comments must be 500 characters or fewer.",
+      prohibited: "Comments containing abusive language cannot be posted.",
+    },
+    ja: {
+      title: "読者コメント",
+      sort: "並び順",
+      newest: "新しい順",
+      oldest: "古い順",
+      nickname: "ニックネーム",
+      namePlaceholder: "名前を入力してください",
+      comment: "コメント",
+      commentPlaceholder: "この話の感想をお聞かせください",
+      spoiler: "ネタバレを含む",
+      submit: "コメントを投稿",
+      note: "不適切な言葉は投稿できません。コメントはこのブラウザーにのみ保存されます。",
+      empty: "最初のコメントを残してください。",
+      hidden: "非表示のコメントです。",
+      show: "再表示",
+      reveal: "ネタバレあり · タップして表示",
+      hide: "非表示",
+      delete: "削除",
+      required: "ニックネームとコメントを入力してください。",
+      nicknameLength: "ニックネームは20文字以内で入力してください。",
+      bodyLength: "コメントは500文字以内で入力してください。",
+      prohibited: "不適切な言葉を含むコメントは投稿できません。",
+    },
+  }[locale];
   const [comments, setComments] = useState<FictionComment[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [nickname, setNickname] = useState("");
@@ -132,19 +214,19 @@ export function FictionComments({
     const cleanNickname = nickname.trim();
     const cleanBody = body.trim();
     if (!cleanNickname || !cleanBody) {
-      setError("닉네임과 댓글을 모두 입력해 주세요.");
+      setError(text.required);
       return;
     }
     if (cleanNickname.length > 20) {
-      setError("닉네임은 20자 이내로 입력해 주세요.");
+      setError(text.nicknameLength);
       return;
     }
     if (cleanBody.length > 500) {
-      setError("댓글은 500자 이내로 입력해 주세요.");
+      setError(text.bodyLength);
       return;
     }
     if (containsProhibitedLanguage(`${cleanNickname} ${cleanBody}`)) {
-      setError("비속어가 포함된 댓글은 등록할 수 없습니다.");
+      setError(text.prohibited);
       return;
     }
 
@@ -171,16 +253,16 @@ export function FictionComments({
       <header className="fiction-comments-header">
         <div>
           <p className="fiction-comments-kicker">{story.title}</p>
-          <h3 id="fiction-comments-title">독자 코멘트</h3>
+          <h3 id="fiction-comments-title">{text.title}</h3>
         </div>
         <label className="fiction-comments-sort">
-          <span>정렬</span>
+          <span>{text.sort}</span>
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value as CommentSort)}
           >
-            <option value="newest">최신순</option>
-            <option value="oldest">오래된순</option>
+            <option value="newest">{text.newest}</option>
+            <option value="oldest">{text.oldest}</option>
           </select>
         </label>
       </header>
@@ -188,22 +270,22 @@ export function FictionComments({
       <form className="fiction-comments-form" onSubmit={submit}>
         <div className="fiction-comments-fields">
           <label>
-            닉네임
+            {text.nickname}
             <input
               value={nickname}
               maxLength={20}
               autoComplete="nickname"
-              placeholder="이름을 남겨 주세요"
+              placeholder={text.namePlaceholder}
               onChange={(event) => setNickname(event.target.value)}
             />
           </label>
           <label>
-            댓글
+            {text.comment}
             <textarea
               value={body}
               maxLength={500}
               rows={4}
-              placeholder="이 회차에 대한 생각을 남겨 주세요"
+              placeholder={text.commentPlaceholder}
               onChange={(event) => setBody(event.target.value)}
             />
           </label>
@@ -215,14 +297,12 @@ export function FictionComments({
               checked={spoiler}
               onChange={(event) => setSpoiler(event.target.checked)}
             />
-            <span>스포일러 포함</span>
+            <span>{text.spoiler}</span>
           </label>
           <span className="fiction-comments-count">{body.length}/500</span>
-          <button type="submit">댓글 등록</button>
+          <button type="submit">{text.submit}</button>
         </div>
-        <p className="fiction-comments-note">
-          비속어는 등록할 수 없으며, 댓글은 이 브라우저에만 저장됩니다.
-        </p>
+        <p className="fiction-comments-note">{text.note}</p>
         {error && (
           <p className="fiction-comments-error" role="alert">
             {error}
@@ -231,7 +311,7 @@ export function FictionComments({
       </form>
 
       {!hydrated ? null : orderedComments.length === 0 ? (
-        <p className="fiction-comments-empty">첫 번째 코멘트를 남겨 보세요.</p>
+        <p className="fiction-comments-empty">{text.empty}</p>
       ) : (
         <ol className="fiction-comments-list">
           {orderedComments.map((comment) =>
@@ -240,7 +320,7 @@ export function FictionComments({
                 className="fiction-comment fiction-comment-hidden"
                 key={comment.id}
               >
-                <span>숨긴 코멘트입니다.</span>
+                <span>{text.hidden}</span>
                 <button
                   type="button"
                   onClick={() =>
@@ -251,7 +331,7 @@ export function FictionComments({
                     })
                   }
                 >
-                  다시 보기
+                  {text.show}
                 </button>
               </li>
             ) : (
@@ -259,7 +339,7 @@ export function FictionComments({
                 <header>
                   <strong>{comment.nickname}</strong>
                   <time dateTime={comment.createdAt}>
-                    {formatCommentDate(comment.createdAt)}
+                    {formatCommentDate(comment.createdAt, locale)}
                   </time>
                 </header>
                 {comment.spoiler && !revealed.has(comment.id) ? (
@@ -270,7 +350,7 @@ export function FictionComments({
                       setRevealed((current) => new Set(current).add(comment.id))
                     }
                   >
-                    스포일러 포함 · 눌러서 보기
+                    {text.reveal}
                   </button>
                 ) : (
                   <p>{comment.body}</p>
@@ -282,7 +362,7 @@ export function FictionComments({
                       setHidden((current) => new Set(current).add(comment.id))
                     }
                   >
-                    숨기기
+                    {text.hide}
                   </button>
                   <button
                     type="button"
@@ -292,7 +372,7 @@ export function FictionComments({
                       )
                     }
                   >
-                    삭제
+                    {text.delete}
                   </button>
                 </footer>
               </li>
