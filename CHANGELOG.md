@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.69.0](https://github.com/arlequins/beat/compare/beat-v1.68.0...beat-v1.69.0) (2026-09-27)
+
+
+### Features
+
+* **web:** unify site design system ([#301](https://github.com/arlequins/beat/issues/301)) ([2c31d7b](https://github.com/arlequins/beat/commit/2c31d7b715ffbae62a0522806ccb11aba45de3d9))
+
 ## [1.68.0](https://github.com/arlequins/beat/compare/beat-v1.67.0...beat-v1.68.0) (2026-09-26)
 
 
