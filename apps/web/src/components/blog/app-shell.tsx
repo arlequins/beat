@@ -63,6 +63,15 @@ export function AppShell(props: { children: React.ReactNode }) {
 
   return (
     <div className={`brand-shell ${route === "/" ? "index-shell" : ""}`}>
+      {route === "/" || route.startsWith("/admin") ? null : (
+        <Link
+          aria-label={`${siteConfig.name} home`}
+          className="site-home-mark"
+          href={localePath(locale)}
+        >
+          Beat
+        </Link>
+      )}
       <button
         type="button"
         className="site-menu-trigger"

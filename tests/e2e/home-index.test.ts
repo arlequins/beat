@@ -9,6 +9,18 @@ for (const locale of ["ko", "en", "ja"]) {
     await page.goto(`${prefix}/`);
     await expect(page.locator(".index-role")).toBeVisible();
     await expect(page.locator(".index-featured")).toBeVisible();
+    const featuredCover = page.locator(".index-featured-media img");
+    if ((page.viewportSize()?.width ?? 1280) <= 767) {
+      await expect(featuredCover).toBeHidden();
+    } else {
+      await expect
+        .poll(() =>
+          featuredCover.evaluate(
+            (image: HTMLImageElement) => image.naturalWidth,
+          ),
+        )
+        .toBeGreaterThan(0);
+    }
     await expect(page.locator(".index-featured h2 a")).toHaveAttribute(
       "href",
       `${prefix}/work/beat-template/`,
@@ -22,6 +34,10 @@ for (const locale of ["ko", "en", "ja"]) {
     }
     await destinations.locator(`a[href="${prefix}/characters/"]`).click();
     await expect(page).toHaveURL(new RegExp(`${prefix}/characters/$`));
+    await expect(page.locator(".site-home-mark")).toHaveAttribute(
+      "href",
+      `${prefix}/`,
+    );
     await expect(page.locator(".character-card h2")).toHaveText([
       "Arlequin",
       "Lumen",

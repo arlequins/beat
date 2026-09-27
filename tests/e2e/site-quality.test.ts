@@ -43,6 +43,51 @@ test("writing search and topic filters narrow the published notes", async ({
   await expect(page.getByRole("article")).not.toHaveCount(0);
 });
 
+test("long writing lists use the shared pagination controls", async ({
+  page,
+}) => {
+  await page.goto("/posts/");
+  await expect(page.locator("article")).toHaveCount(20);
+  await expect(page.getByRole("button", { name: "Previous" })).toBeDisabled();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.locator("article")).toHaveCount(20);
+  await expect(page.getByRole("button", { name: "Previous" })).toBeEnabled();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.locator("article")).not.toHaveCount(0);
+  expect(await page.locator("article").count()).toBeLessThanOrEqual(20);
+});
+
+test("Gourmet errors offer a retry and clear the busy state", async ({
+  page,
+}) => {
+  let finishRetry!: () => void;
+  const retryPending = new Promise<void>((resolve) => {
+    finishRetry = resolve;
+  });
+  let attempts = 0;
+  await page.route("**/api/gourmet/entries?*", async (route) => {
+    attempts += 1;
+    if (attempts === 1) return route.abort();
+    await retryPending;
+    return route.abort();
+  });
+  await page.goto("/ko/gourmet/");
+  const content = page.locator(".gourmet-content");
+  await expect(content.getByRole("alert")).toContainText(
+    "기록을 불러오지 못했습니다.",
+  );
+  await expect(content).toHaveAttribute("aria-busy", "false");
+  await page.getByRole("button", { name: "다시 불러오기" }).click();
+  await expect(content).toHaveAttribute("aria-busy", "true");
+  await expect(content.getByRole("status")).toContainText(
+    "식탁을 준비하고 있습니다…",
+  );
+  finishRetry();
+  await expect(content.getByRole("alert")).toContainText(
+    "기록을 불러오지 못했습니다.",
+  );
+});
+
 test("localized post metadata follows the rendered English article", async ({
   page,
 }) => {
@@ -73,4 +118,19 @@ test("project case studies show their outcome and a real primary destination", a
   await expect(
     page.getByRole("link", { name: "Open live site" }),
   ).toHaveAttribute("href", "https://arlequins.github.io/beat/");
+});
+
+test("Korean project artwork and return link keep the GitHub Pages locale path", async ({
+  page,
+}) => {
+  await page.goto("/ko/work/beat-template/");
+  const cover = page.getByRole("img", { name: "Beat — 풀스택 제품 템플릿" });
+  await expect(cover).toBeVisible();
+  await expect
+    .poll(() => cover.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0);
+  await expect(page.getByRole("link", { name: "프로젝트" })).toHaveAttribute(
+    "href",
+    "/ko/#work",
+  );
 });

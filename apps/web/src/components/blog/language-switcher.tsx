@@ -51,10 +51,10 @@ export function LanguageSwitcher() {
       </label>
       <Languages
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-slate-500"
+        className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-[var(--muted-foreground)]"
       />
       <select
-        className="appearance-none border border-slate-900/15 bg-transparent py-1.5 pr-2 pl-7 text-[0.66rem] font-bold tracking-[0.07em] text-slate-700 uppercase outline-none transition hover:border-[#d94f38]"
+        className="appearance-none border border-[var(--line)] bg-transparent py-1.5 pr-2 pl-7 text-[0.66rem] font-bold tracking-[0.07em] text-[var(--ink)] uppercase outline-none transition hover:border-[var(--coral)]"
         defaultValue={locale}
         id="language-switcher"
         onChange={(event) => {

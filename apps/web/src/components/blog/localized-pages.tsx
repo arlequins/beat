@@ -133,7 +133,7 @@ export async function LocalizedPostDetail(props: {
       </header>
       <div className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-3xl">
-          <div className="prose-content text-[1.05rem] leading-8 text-slate-700">
+          <div className="prose-content text-[1.05rem] leading-8 text-[var(--ink)]">
             <p>{translation.intro}</p>
             {translation.sections.map((section) => (
               <section key={section.heading}>
@@ -243,12 +243,16 @@ export async function LocalizedWorkDetail(props: {
               <ArrowUpRight aria-hidden="true" className="size-4" />
             </a>
           ) : null}
-          <div className="mt-14 grid gap-10 border-t border-slate-900/20 pt-10 sm:grid-cols-3">
-            <h2 className="brand-eyebrow text-[#b63f2d]">{labels.challenge}</h2>
-            <p className="sm:col-span-2 leading-8 text-slate-700">
+          <div className="mt-14 grid gap-10 border-t border-[var(--line)] pt-10 sm:grid-cols-3">
+            <h2 className="brand-eyebrow text-[var(--accent-foreground)]">
+              {labels.challenge}
+            </h2>
+            <p className="sm:col-span-2 leading-8 text-[var(--ink)]">
               {content.challenge}
             </p>
-            <h2 className="brand-eyebrow text-[#075c66]">{labels.work}</h2>
+            <h2 className="brand-eyebrow text-[var(--accent-foreground)]">
+              {labels.work}
+            </h2>
             <ul className="space-y-3 sm:col-span-2">
               {content.highlights.map((item) => (
                 <li
@@ -259,15 +263,17 @@ export async function LocalizedWorkDetail(props: {
                 </li>
               ))}
             </ul>
-            <h2 className="brand-eyebrow text-[#b63f2d]">{labels.outcome}</h2>
-            <p className="sm:col-span-2 leading-8 text-slate-700">
+            <h2 className="brand-eyebrow text-[var(--accent-foreground)]">
+              {labels.outcome}
+            </h2>
+            <p className="sm:col-span-2 leading-8 text-[var(--ink)]">
               {content.outcome}
             </p>
             <h2 className="brand-eyebrow text-[#075c66]">Stack</h2>
             <div className="flex flex-wrap gap-2 sm:col-span-2">
               {project.stack.map((item) => (
                 <span
-                  className="border border-slate-900/15 px-3 py-1 text-sm"
+                  className="border border-[var(--line)] px-3 py-1 text-sm text-[var(--muted-foreground)]"
                   key={item}
                 >
                   {item}

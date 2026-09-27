@@ -79,11 +79,11 @@ export async function KoreanPostDetailPage(props: {
       </header>
       <div className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-3xl">
-          <div className="prose-content text-[1.05rem] leading-8 text-slate-700">
+          <div className="prose-content text-[1.05rem] leading-8 text-[var(--ink)]">
             {post.content}
           </div>
           <div className="lumen-rule mt-16" />
-          <p className="mt-6 text-sm leading-6 text-slate-500">
+          <p className="mt-6 text-sm leading-6 text-[var(--muted-foreground)]">
             Lumen이 자료를 모으고 그 사이의 연결을 찾습니다. Arlequin과 함께
             묻고 다듬어 한 편의 글로 엮습니다.
           </p>

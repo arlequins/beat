@@ -5,8 +5,10 @@ import {
   Sparkles,
   Utensils,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { HomeScene } from "~/components/blog/home-scene";
+import { siteAssetPath } from "~/config/site";
 import { projects } from "~/lib/blog-data";
 import { getStories } from "~/lib/fiction";
 import { getNovelCollections } from "~/lib/fiction-catalog";
@@ -154,6 +156,21 @@ export async function HomeIndex({ locale }: { locale: Locale }) {
                 <ArrowUpRight aria-hidden="true" size={16} />
               </Link>
             </div>
+            {projects[0].image ? (
+              <Link
+                aria-label={featuredProject.title}
+                className="index-featured-media"
+                href={localePath(locale, `/work/${projects[0].slug}/`)}
+              >
+                <Image
+                  alt=""
+                  className="object-cover"
+                  fill
+                  sizes="(max-width: 767px) 0px, 35vw"
+                  src={siteAssetPath(projects[0].image)}
+                />
+              </Link>
+            ) : null}
           </section>
         ) : null}
         <section className="index-latest" aria-labelledby="index-latest">

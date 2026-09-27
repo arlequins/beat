@@ -223,6 +223,19 @@ test("library omits free labels", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("large novel episode lists are paged without losing reading order", async ({
+  page,
+}) => {
+  await page.goto("/ko/fiction/");
+  await page.getByRole("button", { name: /여백의 사람들/ }).click();
+  await expect(page.locator(".novel-episode")).toHaveCount(40);
+  await expect(page.getByRole("button", { name: "이전 회차" })).toBeDisabled();
+  await page.getByRole("button", { name: "다음 회차" }).click();
+  await expect(page.locator(".novel-episode")).toHaveCount(40);
+  await expect(page.locator(".novel-episode").first()).toContainText("41화.");
+  await expect(page.getByRole("button", { name: "이전 회차" })).toBeEnabled();
+});
+
 test("library switches between novels before opening an episode", async ({
   page,
 }) => {

@@ -33,7 +33,7 @@ export function ThemeToggle() {
   return (
     <button
       aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
-      className="inline-flex size-8 items-center justify-center border border-slate-900/15 text-slate-600 transition hover:border-[#d94f38] hover:text-[#d94f38]"
+      className="inline-flex size-8 items-center justify-center border border-[var(--line)] text-[var(--ink)] transition hover:border-[var(--coral)] hover:text-[var(--coral)]"
       onClick={toggleTheme}
       type="button"
     >

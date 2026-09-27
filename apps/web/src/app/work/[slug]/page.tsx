@@ -5,8 +5,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { LocalizedWorkDetail } from "~/components/blog/localized-pages";
+import { siteAssetPath } from "~/config/site";
 import { projects } from "~/lib/blog-data";
 import { getProject } from "~/lib/github";
+import { localePath } from "~/lib/i18n";
 import {
   localizedProjectCopy,
   projectPrimaryLink,
@@ -47,7 +49,7 @@ export async function KoreanWorkDetailPage(props: {
         <div className="mx-auto max-w-5xl">
           <Link
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-[#79e6e0]"
-            href="/#work"
+            href={`${localePath("ko")}#work`}
           >
             <ArrowLeft aria-hidden="true" className="size-4" /> 프로젝트
           </Link>
@@ -70,7 +72,7 @@ export async function KoreanWorkDetailPage(props: {
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, 768px"
-                src={project.image}
+                src={siteAssetPath(project.image)}
               />
             </div>
           ) : null}
@@ -85,12 +87,16 @@ export async function KoreanWorkDetailPage(props: {
               <ArrowUpRight aria-hidden="true" className="size-4" />
             </a>
           ) : null}
-          <div className="mt-16 grid gap-10 border-t border-slate-900/20 pt-10 sm:grid-cols-3">
-            <h2 className="brand-eyebrow text-[#b63f2d]">도전 과제</h2>
-            <p className="sm:col-span-2 leading-8 text-slate-700">
+          <div className="mt-16 grid gap-10 border-t border-[var(--line)] pt-10 sm:grid-cols-3">
+            <h2 className="brand-eyebrow text-[var(--accent-foreground)]">
+              도전 과제
+            </h2>
+            <p className="sm:col-span-2 leading-8 text-[var(--ink)]">
               {content.challenge}
             </p>
-            <h2 className="brand-eyebrow text-[#075c66]">주요 작업</h2>
+            <h2 className="brand-eyebrow text-[var(--accent-foreground)]">
+              주요 작업
+            </h2>
             <ul className="space-y-3 sm:col-span-2">
               {content.highlights.map((item) => (
                 <li
@@ -101,15 +107,17 @@ export async function KoreanWorkDetailPage(props: {
                 </li>
               ))}
             </ul>
-            <h2 className="brand-eyebrow text-[#b63f2d]">결과</h2>
-            <p className="sm:col-span-2 leading-8 text-slate-700">
+            <h2 className="brand-eyebrow text-[var(--accent-foreground)]">
+              결과
+            </h2>
+            <p className="sm:col-span-2 leading-8 text-[var(--ink)]">
               {content.outcome}
             </p>
           </div>
           <div className="mt-12 flex flex-wrap gap-2">
             {project.stack.map((item) => (
               <span
-                className="border border-slate-900/15 px-3 py-1 text-sm font-medium text-slate-600"
+                className="border border-[var(--line)] px-3 py-1 text-sm font-medium text-[var(--muted-foreground)]"
                 key={item}
               >
                 {item}

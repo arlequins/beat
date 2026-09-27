@@ -13,7 +13,7 @@ for (const pageCase of pages) {
     await page.goto(pageCase.path);
     await page.waitForLoadState("networkidle");
     await page.evaluate(() => document.fonts.ready);
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main").first()).toBeVisible();
     await expect(page).toHaveScreenshot(`${pageCase.name}.png`, {
       animations: "disabled",
       fullPage: false,
