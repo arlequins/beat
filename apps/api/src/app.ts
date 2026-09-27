@@ -63,6 +63,14 @@ import {
 import type { GourmetPort } from "./features/gourmet/application/ports";
 import { createGourmetPort } from "./features/gourmet/composition";
 import { registerGourmetRoutes } from "./features/gourmet/interface/http/routes";
+import {
+  type PrivateFictionPort,
+  registerPrivateFictionRoutes,
+} from "./features/private-fiction/interface/http/routes";
+import {
+  getPrivateFictionDocument,
+  savePrivateFictionDocument,
+} from "./features/private-fiction/s3-private-fiction-repository";
 import { registerMcpRoutes } from "./mcp";
 import { registerOpenApiRoutes } from "./openapi";
 
@@ -104,6 +112,7 @@ export type CreateApiAppOptions = {
     saveDraft: typeof saveBeatDraft;
   };
   gourmet?: Partial<GourmetPort>;
+  privateFiction?: Partial<PrivateFictionPort>;
   mcp?: {
     issuer?: string;
     resource?: string;
@@ -286,6 +295,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     "/auth/sessions/revoke",
     "/admin/content/*",
     "/admin/gourmet/*",
+    "/admin/private-fiction",
     "/api/gourmet/*",
     "/mcp",
   ];
@@ -646,6 +656,13 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   const gourmet = createGourmetPort(options.gourmet);
   registerGourmetRoutes(app, {
     gourmet,
+    verifyAccessToken: auth.verifyAccessToken,
+  });
+  registerPrivateFictionRoutes(app, {
+    store: {
+      get: options.privateFiction?.get ?? getPrivateFictionDocument,
+      save: options.privateFiction?.save ?? savePrivateFictionDocument,
+    },
     verifyAccessToken: auth.verifyAccessToken,
   });
   registerMcpRoutes(app, {

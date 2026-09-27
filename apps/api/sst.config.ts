@@ -152,6 +152,7 @@ export default $config({
         },
       ],
     });
+    const privateFictionBucket = createPrivateBucket("PrivateFiction");
     const handler = {
       handler: "src/lambda.handler",
       memory: "1024 MB",
@@ -206,6 +207,23 @@ export default $config({
             $interpolate`${uploadBucket.arn}/${$app.name}/${$app.stage}/*`,
           ],
         },
+        {
+          actions: ["s3:ListBucket"],
+          conditions: [
+            {
+              test: "StringEquals",
+              variable: "s3:prefix",
+              values: ["author-vault/reality-error/outline.md"],
+            },
+          ],
+          resources: [privateFictionBucket.arn],
+        },
+        {
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [
+            $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/outline.md`,
+          ],
+        },
         ...(serverEnv.BEAT_RUNTIME_SECRET_ARN
           ? [
               {
@@ -236,6 +254,7 @@ export default $config({
         S3_CACHE_PREFIX: `${$app.name}/${$app.stage}`,
         S3_UPLOAD_BUCKET: uploadBucket.name,
         S3_UPLOAD_PREFIX: `${$app.name}/${$app.stage}`,
+        PRIVATE_FICTION_BUCKET: privateFictionBucket.name,
         SST_STAGE: $app.stage,
       },
     };
