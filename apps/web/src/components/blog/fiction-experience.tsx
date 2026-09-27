@@ -95,6 +95,7 @@ const fictionUi = {
     readingOrder: "문서 읽기 순서",
     settings: "뷰어 설정",
     comments: "독자 코멘트",
+    commentAction: "코멘트",
     close: "닫기",
     bg: "배경색",
     font: "글꼴",
@@ -177,6 +178,7 @@ const fictionUi = {
     readingOrder: "Reading order",
     settings: "Reader settings",
     comments: "Reader comments",
+    commentAction: "Comments",
     close: "Close",
     bg: "Background",
     font: "Font",
@@ -259,6 +261,7 @@ const fictionUi = {
     readingOrder: "読む順序",
     settings: "閲覧設定",
     comments: "読者コメント",
+    commentAction: "コメント",
     close: "閉じる",
     bg: "背景色",
     font: "フォント",
@@ -974,7 +977,7 @@ export function FictionViewer({
         </button>
         <button
           type="button"
-          aria-label={t.comments}
+          aria-label={t.commentAction}
           onClick={() => open("comments")}
         >
           <MessageCircle size={18} />

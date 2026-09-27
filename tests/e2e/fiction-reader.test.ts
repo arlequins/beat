@@ -260,6 +260,7 @@ test("fiction controls follow the selected UI language while prose stays Korean"
       rootLanguage: "en",
       settings: "Reader settings",
       comments: "Reader comments",
+      commentAction: "Comments",
       nickname: "Nickname",
       close: "Close",
     },
@@ -268,6 +269,7 @@ test("fiction controls follow the selected UI language while prose stays Korean"
       rootLanguage: "ja",
       settings: "閲覧設定",
       comments: "読者コメント",
+      commentAction: "コメント",
       nickname: "ニックネーム",
       close: "閉じる",
     },
@@ -289,7 +291,7 @@ test("fiction controls follow the selected UI language while prose stays Korean"
       dialog.getByText(locale.settings, { exact: true }),
     ).toBeVisible();
     await dialog.getByRole("button", { name: locale.close }).click();
-    await page.getByRole("button", { name: locale.comments }).click();
+    await page.getByRole("button", { name: locale.commentAction }).click();
     await expect(dialog.getByLabel(locale.nickname)).toBeVisible();
   }
 });
