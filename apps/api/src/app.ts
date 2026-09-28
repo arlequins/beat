@@ -69,6 +69,7 @@ import {
 } from "./features/private-fiction/interface/http/routes";
 import {
   getPrivateFictionDocument,
+  MAX_PRIVATE_FICTION_SOURCE_BYTES,
   savePrivateFictionDocument,
 } from "./features/private-fiction/s3-private-fiction-repository";
 import { registerMcpRoutes } from "./mcp";
@@ -285,25 +286,31 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     }),
   );
 
-  const guardedPaths = [
-    "/auth/authorize",
-    "/auth/login",
-    "/auth/google/*",
-    "/auth/token",
-    "/auth/refresh",
-    "/auth/sessions",
-    "/auth/sessions/revoke",
-    "/admin/content/*",
-    "/admin/gourmet/*",
-    "/admin/private-fiction",
-    "/api/gourmet/*",
-    "/mcp",
+  const guardedPaths: { path: string; bodyLimitBytes?: number }[] = [
+    { path: "/auth/authorize" },
+    { path: "/auth/login" },
+    { path: "/auth/google/*" },
+    { path: "/auth/token" },
+    { path: "/auth/refresh" },
+    { path: "/auth/sessions" },
+    { path: "/auth/sessions/revoke" },
+    { path: "/admin/content/*" },
+    { path: "/admin/gourmet/*" },
+    {
+      path: "/admin/private-fiction",
+      bodyLimitBytes: MAX_PRIVATE_FICTION_SOURCE_BYTES + 1_024,
+    },
+    { path: "/api/gourmet/*" },
+    { path: "/mcp" },
   ];
-  for (const path of guardedPaths) {
+  for (const {
+    path,
+    bodyLimitBytes: pathBodyLimitBytes = bodyLimitBytes,
+  } of guardedPaths) {
     app.use(
       path,
       bodyLimit({
-        maxSize: bodyLimitBytes,
+        maxSize: pathBodyLimitBytes,
         onError: (context) =>
           context.json(
             {

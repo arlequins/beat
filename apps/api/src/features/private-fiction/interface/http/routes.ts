@@ -3,12 +3,15 @@ import type { Context } from "hono";
 import type { ApiBindings } from "../../../../app";
 import type { ActiveAdmin } from "../../../../beat-auth";
 import { GOOGLE_ALLOWED_EMAIL } from "../../../../beat-google";
-import type { PrivateFictionDocument } from "../../s3-private-fiction-repository";
-import { PrivateFictionStorageError } from "../../s3-private-fiction-repository";
+import {
+  MAX_PRIVATE_FICTION_SOURCE_BYTES,
+  type PrivateFictionDocument,
+  PrivateFictionStorageError,
+} from "../../s3-private-fiction-repository";
 
 const saveSchema = z.object({
   expectedEtag: z.string().max(256).nullable(),
-  source: z.string().min(1).max(750_000),
+  source: z.string().min(1).max(MAX_PRIVATE_FICTION_SOURCE_BYTES),
 });
 
 export type PrivateFictionPort = {
@@ -76,7 +79,10 @@ export function registerPrivateFictionRoutes(
     );
     if (!parsed.success)
       return context.json({ error: "Invalid private manuscript" }, 400);
-    if (new TextEncoder().encode(parsed.data.source).byteLength > 750_000)
+    if (
+      new TextEncoder().encode(parsed.data.source).byteLength >
+      MAX_PRIVATE_FICTION_SOURCE_BYTES
+    )
       return context.json({ error: "Invalid private manuscript" }, 400);
     try {
       return context.json(await options.store.save(parsed.data));

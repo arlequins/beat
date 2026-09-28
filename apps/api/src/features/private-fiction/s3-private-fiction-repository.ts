@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 
 const OBJECT_KEY = "author-vault/reality-error/outline.md";
-const MAX_SOURCE_BYTES = 750_000;
+export const MAX_PRIVATE_FICTION_SOURCE_BYTES = 4_000_000;
 
 export type PrivateFictionDocument = {
   etag: string;
@@ -84,7 +84,10 @@ export async function savePrivateFictionDocument(
   },
   client = new S3Client({}),
 ) {
-  if (new TextEncoder().encode(input.source).byteLength > MAX_SOURCE_BYTES)
+  if (
+    new TextEncoder().encode(input.source).byteLength >
+    MAX_PRIVATE_FICTION_SOURCE_BYTES
+  )
     throw new PrivateFictionStorageError("storage_unavailable");
   try {
     const response = await client.send(
