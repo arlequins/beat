@@ -68,8 +68,10 @@ import {
   registerPrivateFictionRoutes,
 } from "./features/private-fiction/interface/http/routes";
 import {
+  getPrivateFictionAnnotations,
   getPrivateFictionDocument,
   MAX_PRIVATE_FICTION_SOURCE_BYTES,
+  savePrivateFictionAnnotations,
   savePrivateFictionDocument,
 } from "./features/private-fiction/s3-private-fiction-repository";
 import { registerMcpRoutes } from "./mcp";
@@ -669,6 +671,11 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     store: {
       get: options.privateFiction?.get ?? getPrivateFictionDocument,
       save: options.privateFiction?.save ?? savePrivateFictionDocument,
+      getAnnotations:
+        options.privateFiction?.getAnnotations ?? getPrivateFictionAnnotations,
+      saveAnnotations:
+        options.privateFiction?.saveAnnotations ??
+        savePrivateFictionAnnotations,
     },
     verifyAccessToken: auth.verifyAccessToken,
   });

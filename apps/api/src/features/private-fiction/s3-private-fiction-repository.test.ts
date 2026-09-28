@@ -94,6 +94,66 @@ describe("private fiction S3 repository", () => {
     expect((updateCall[0] as PutObjectCommand).input.IfMatch).toBe('"etag-1"');
   });
 
+  it("reads and conditionally writes owner feedback in its separate private object", async () => {
+    vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
+    const { getPrivateFictionAnnotations, savePrivateFictionAnnotations } =
+      await import("./s3-private-fiction-repository");
+    const annotations = [
+      {
+        id: "6c87c47a-d0f6-4425-a017-872b7deabc02",
+        episode: 1,
+        blockIndex: 0,
+        startOffset: 0,
+        endOffset: 4,
+        quote: "첫 문장",
+        prefix: "",
+        suffix: " 뒤 문장",
+        comment: "이 부분을 조금 다듬어 주세요.",
+        createdAt: "2026-09-29T00:00:00.000Z",
+      },
+    ];
+    const readSend = vi.fn(async (command: unknown) => {
+      expect(command).toBeInstanceOf(GetObjectCommand);
+      expect((command as GetObjectCommand).input).toMatchObject({
+        Bucket: "private-vault-bucket",
+        Key: "author-vault/reality-error/annotations.json",
+      });
+      return {
+        Body: {
+          transformToString: async () => JSON.stringify({ annotations }),
+        },
+        ETag: '"feedback-1"',
+        LastModified: new Date("2026-09-29T00:00:00.000Z"),
+      };
+    });
+    await expect(
+      getPrivateFictionAnnotations(client(readSend)),
+    ).resolves.toEqual({
+      etag: '"feedback-1"',
+      annotations,
+      updatedAt: "2026-09-29T00:00:00.000Z",
+    });
+
+    const writeSend = vi.fn(async (command: unknown) => {
+      expect(command).toBeInstanceOf(PutObjectCommand);
+      return { ETag: '"feedback-2"' };
+    });
+    const saved = await savePrivateFictionAnnotations(
+      { expectedEtag: '"feedback-1"', annotations },
+      client(writeSend),
+    );
+    expect(saved).toMatchObject({ etag: '"feedback-2"', annotations });
+    const command = writeSend.mock.calls[0]?.[0] as PutObjectCommand;
+    expect(command.input).toMatchObject({
+      Bucket: "private-vault-bucket",
+      CacheControl: "private, no-store, max-age=0",
+      ContentType: "application/json; charset=utf-8",
+      IfMatch: '"feedback-1"',
+      Key: "author-vault/reality-error/annotations.json",
+    });
+    expect(command.input.Body).toBe(JSON.stringify({ annotations }));
+  });
+
   it("maps precondition failures and missing configuration to safe errors", async () => {
     vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
     const { savePrivateFictionDocument } = await import(
