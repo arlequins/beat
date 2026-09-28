@@ -22,6 +22,11 @@ import {
 } from "react";
 import { BookReader } from "~/components/blog/book-reader";
 import { FictionComments } from "~/components/blog/fiction-comments";
+import {
+  defaultReaderPreferences,
+  type ReaderPreferences as Preferences,
+  ReaderSettingsPanel,
+} from "~/components/blog/reader-settings";
 import type { Story } from "~/lib/fiction";
 import {
   getNovelCollections,
@@ -30,18 +35,6 @@ import {
 import { type Locale, localePath } from "~/lib/i18n";
 
 const key = "beat-fiction-v1";
-type Preferences = {
-  size: number;
-  line: number;
-  theme: "paper" | "white" | "night";
-  font: "serif" | "sans";
-};
-const defaults: Preferences = {
-  size: 18,
-  line: 1.9,
-  theme: "night",
-  font: "sans",
-};
 const episodePageSize = 40;
 function read<T>(name: string, fallback: T): T {
   try {
@@ -637,13 +630,13 @@ export function FictionViewer({
   children: ReactNode;
 }) {
   const t = fictionUi[locale];
-  const [preferences, setPreferences] = useState(defaults);
+  const [preferences, setPreferences] = useState(defaultReaderPreferences);
   const [panel, setPanel] = useState<"settings" | "episodes" | "comments">(
     "settings",
   );
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    const stored = read<Preferences>("preferences", defaults);
+    const stored = read<Preferences>("preferences", defaultReaderPreferences);
     setPreferences({
       size: Math.max(14, Math.min(28, Number(stored.size) || 18)),
       line: Math.max(1.5, Math.min(2.5, Number(stored.line) || 1.9)),
@@ -882,71 +875,23 @@ export function FictionViewer({
           </button>
         </header>
         {panel === "settings" ? (
-          <div className="viewer-settings">
-            <fieldset>
-              <legend>{t.bg}</legend>
-              <div>
-                {(["white", "paper", "night"] as const).map((theme) => (
-                  <button
-                    type="button"
-                    key={theme}
-                    aria-pressed={preferences.theme === theme}
-                    onClick={() => change({ theme })}
-                  >
-                    {{ white: t.white, paper: t.paper, night: t.night }[theme]}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>{t.font}</legend>
-              <div>
-                <button
-                  type="button"
-                  aria-pressed={preferences.font === "sans"}
-                  onClick={() => change({ font: "sans" })}
-                >
-                  {t.sans}
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={preferences.font === "serif"}
-                  onClick={() => change({ font: "serif" })}
-                >
-                  {t.serif}
-                </button>
-              </div>
-            </fieldset>
-            <label>
-              {t.size} <output>{preferences.size}px</output>
-              <input
-                type="range"
-                min="14"
-                max="28"
-                value={preferences.size}
-                onChange={(e) => change({ size: Number(e.target.value) })}
-              />
-            </label>
-            <label>
-              {t.line} <output>{preferences.line.toFixed(1)}</output>
-              <input
-                type="range"
-                min="1.5"
-                max="2.5"
-                step="0.1"
-                value={preferences.line}
-                onChange={(e) => change({ line: Number(e.target.value) })}
-              />
-            </label>
-            <button
-              className="viewer-reset"
-              type="button"
-              onClick={() => change(defaults)}
-            >
-              {t.reset}
-            </button>
-            <p>{t.stored}</p>
-          </div>
+          <ReaderSettingsPanel
+            labels={{
+              background: t.bg,
+              font: t.font,
+              size: t.size,
+              line: t.line,
+              reset: t.reset,
+              stored: t.stored,
+              white: t.white,
+              paper: t.paper,
+              night: t.night,
+              sans: t.sans,
+              serif: t.serif,
+            }}
+            onChange={change}
+            preferences={preferences}
+          />
         ) : panel === "episodes" ? (
           <ol className="viewer-episode-list">
             {novelStories.map((item) => (

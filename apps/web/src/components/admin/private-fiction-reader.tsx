@@ -1,9 +1,22 @@
 "use client";
 
+import { Settings2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { BookReader } from "~/components/blog/book-reader";
+import {
+  defaultReaderPreferences,
+  type ReaderPreferences,
+  ReaderSettingsPanel,
+} from "~/components/blog/reader-settings";
 import {
   authorizedBeatAdminRequest,
   BeatAdminSessionEvent,
@@ -203,7 +216,27 @@ export function PrivateFictionReader() {
   const [busy, setBusy] = useState(false);
   const [selectedId, setSelectedId] = useState<string>();
   const [tocOpen, setTocOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [preferences, setPreferences] = useState(defaultReaderPreferences);
   const dialog = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem("beat-fiction-v1-preferences") ?? "null",
+      ) as Partial<ReaderPreferences> | null;
+      setPreferences({
+        size: Math.max(14, Math.min(28, Number(stored?.size) || 18)),
+        line: Math.max(1.5, Math.min(2.5, Number(stored?.line) || 1.9)),
+        theme: ["white", "paper", "night"].includes(stored?.theme ?? "")
+          ? (stored?.theme as ReaderPreferences["theme"])
+          : "night",
+        font: stored?.font === "serif" ? "serif" : "sans",
+      });
+    } catch {
+      setPreferences(defaultReaderPreferences);
+    }
+  }, []);
 
   const load = useCallback(async () => {
     if (!hasPersistentBeatAdminSession()) {
@@ -323,7 +356,27 @@ export function PrivateFictionReader() {
 
   function showContents() {
     setTocOpen(true);
+    setSettingsOpen(false);
     dialog.current?.showModal();
+  }
+
+  function showReaderSettings() {
+    setTocOpen(false);
+    setSettingsOpen(true);
+    dialog.current?.showModal();
+  }
+
+  function changePreferences(next: Partial<ReaderPreferences>) {
+    const value = { ...preferences, ...next };
+    setPreferences(value);
+    try {
+      localStorage.setItem(
+        "beat-fiction-v1-preferences",
+        JSON.stringify(value),
+      );
+    } catch {
+      // Reading settings still apply for this page when storage is unavailable.
+    }
   }
 
   async function upload(file?: File) {
@@ -455,14 +508,24 @@ export function PrivateFictionReader() {
 
   return (
     <div
-      className="novel-viewer book-viewer viewer-night private-fiction-book"
+      className={`novel-viewer book-viewer viewer-${preferences.theme} private-fiction-book`}
       lang="ko"
+      style={
+        {
+          "--reader-size": `${preferences.size}px`,
+          "--reader-line": preferences.line,
+          "--reader-font":
+            preferences.font === "serif"
+              ? '"AppleMyungjo", "Batang", serif'
+              : 'system-ui, "Apple SD Gothic Neo", sans-serif',
+        } as CSSProperties
+      }
     >
       <BookReader
         className="private-fiction-book-viewport"
         immersive
         label="소설 본문. 화면 좌우를 누르거나 밀어 페이지를 넘기세요. Enter 키를 누르면 메뉴가 열립니다."
-        layoutKey={selected.id}
+        layoutKey={`${selected.id}:${preferences.size}:${preferences.line}:${preferences.font}`}
         onBoundaryTurn={(delta) => {
           const target = readingOrder[selectedOrderIndex + delta];
           if (target) chooseSection(target.id, delta < 0);
@@ -529,6 +592,16 @@ export function PrivateFictionReader() {
               <Link href="/admin/">Admin</Link>
               <button
                 type="button"
+                aria-label="읽기 설정"
+                onClick={() => {
+                  setControlsVisible(false);
+                  showReaderSettings();
+                }}
+              >
+                <Settings2 size={18} />
+              </button>
+              <button
+                type="button"
                 aria-label="이전 페이지"
                 onClick={() => turn(-1)}
               >
@@ -556,10 +629,15 @@ export function PrivateFictionReader() {
       <dialog
         ref={dialog}
         className="viewer-dialog private-fiction-contents-dialog"
-        onClose={() => setTocOpen(false)}
+        onClose={() => {
+          setTocOpen(false);
+          setSettingsOpen(false);
+        }}
       >
         <header>
-          <h2>{tocOpen ? "목차" : "비공개 원고"}</h2>
+          <h2>
+            {settingsOpen ? "읽기 설정" : tocOpen ? "목차" : "비공개 원고"}
+          </h2>
           <button
             type="button"
             aria-label="닫기"
@@ -568,39 +646,65 @@ export function PrivateFictionReader() {
             ×
           </button>
         </header>
-        <p className="private-fiction-dialog-status" role="status">
-          {message}
-        </p>
-        <ol className="viewer-episode-list private-fiction-contents-list">
-          {sections.map((section) => (
-            <li key={section.id}>
-              <button
-                aria-current={section.id === selected.id ? "page" : undefined}
-                onClick={() => chooseSection(section.id)}
-                type="button"
-              >
-                {section.kind === "episode" && section.episode
-                  ? `${section.episode}화. ${section.title}`
-                  : section.title}
-                {section.id === selected.id && <span>읽는 중</span>}
+        {settingsOpen ? (
+          <ReaderSettingsPanel
+            labels={{
+              background: "배경색",
+              font: "글꼴",
+              size: "글자 크기",
+              line: "줄 간격",
+              reset: "기본 설정으로",
+              stored: "읽기 설정은 공개 소설과 함께 이 브라우저에 저장됩니다.",
+              white: "흰색",
+              paper: "종이",
+              night: "어둡게",
+              sans: "고딕",
+              serif: "명조",
+            }}
+            onChange={changePreferences}
+            preferences={preferences}
+          />
+        ) : (
+          <>
+            <p className="private-fiction-dialog-status" role="status">
+              {message}
+            </p>
+            <ol className="viewer-episode-list private-fiction-contents-list">
+              {sections.map((section) => (
+                <li key={section.id}>
+                  <button
+                    aria-current={
+                      section.id === selected.id ? "page" : undefined
+                    }
+                    onClick={() => chooseSection(section.id)}
+                    type="button"
+                  >
+                    {section.kind === "episode" && section.episode
+                      ? `${section.episode}화. ${section.title}`
+                      : section.title}
+                    {section.id === selected.id && <span>읽는 중</span>}
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <footer className="private-fiction-dialog-actions">
+              <label className="private-fiction-upload">
+                원고 Markdown 불러오기
+                <input
+                  accept=".md,.mdx,text/markdown,text/plain"
+                  disabled={busy}
+                  onChange={(event) =>
+                    void upload(event.currentTarget.files?.[0])
+                  }
+                  type="file"
+                />
+              </label>
+              <button disabled={busy} onClick={() => void load()} type="button">
+                새로고침
               </button>
-            </li>
-          ))}
-        </ol>
-        <footer className="private-fiction-dialog-actions">
-          <label className="private-fiction-upload">
-            원고 Markdown 불러오기
-            <input
-              accept=".md,.mdx,text/markdown,text/plain"
-              disabled={busy}
-              onChange={(event) => void upload(event.currentTarget.files?.[0])}
-              type="file"
-            />
-          </label>
-          <button disabled={busy} onClick={() => void load()} type="button">
-            새로고침
-          </button>
-        </footer>
+            </footer>
+          </>
+        )}
       </dialog>
     </div>
   );
