@@ -72,6 +72,31 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
       () => document.documentElement.scrollHeight <= window.innerHeight + 1,
     ),
   ).toBe(true);
+  expect(
+    await page.locator(".ebook-shell").evaluate((element) => ({
+      shellHeight: element.clientHeight,
+      contentHeight: element.scrollHeight,
+      toolbar: getComputedStyle(element.querySelector(".ebook-toolbar")!)
+        .display,
+    })),
+  ).toEqual({
+    shellHeight: await page.evaluate(() => window.innerHeight),
+    contentHeight: await page.evaluate(() => window.innerHeight),
+    toolbar: "none",
+  });
+  expect(
+    await viewport.evaluate((element) => ({
+      overflowX: getComputedStyle(element).overflowX,
+      top: element.getBoundingClientRect().top,
+      height: element.clientHeight,
+      margin: getComputedStyle(element).margin,
+    })),
+  ).toEqual({
+    overflowX: "hidden",
+    top: 0,
+    height: await page.evaluate(() => window.innerHeight),
+    margin: "0px",
+  });
 
   const controls = page.locator(".private-fiction-book-controls");
   await expect(controls).toBeHidden();
@@ -83,9 +108,7 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     .boundingBox();
   expect(controlsBox).not.toBeNull();
   expect(titleBox).not.toBeNull();
-  expect(titleBox!.y).toBeGreaterThanOrEqual(
-    controlsBox!.y + controlsBox!.height,
-  );
+  expect(titleBox!.y + titleBox!.height).toBeLessThanOrEqual(controlsBox!.y);
   await expect(controls.getByRole("link", { name: "Admin" })).toHaveAttribute(
     "href",
     "/admin/",
@@ -134,6 +157,34 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     await page.touchscreen.tap(bounds.x + bounds.width / 2, bounds.y + 140);
     await page.touchscreen.tap(bounds.x + bounds.width / 2, bounds.y + 140);
     await expect(controls).toBeVisible();
+    const [currentPage, totalPages] = (await pageCounter.innerText())
+      .split(" /")
+      .map(Number);
+    if (!currentPage || !totalPages || totalPages < 2)
+      throw new Error("Private fiction test chapter must span multiple pages");
+    const swipeForward = currentPage < totalPages;
+    await mobileViewport.dispatchEvent("pointerdown", {
+      pointerType: "touch",
+      pointerId: 1,
+      isPrimary: true,
+      clientX: bounds.x + (swipeForward ? bounds.width - 24 : 24),
+      clientY: bounds.y + 180,
+    });
+    await mobileViewport.dispatchEvent("pointerup", {
+      pointerType: "touch",
+      pointerId: 1,
+      isPrimary: true,
+      clientX: bounds.x + (swipeForward ? 24 : bounds.width - 24),
+      clientY: bounds.y + 180,
+    });
+    await expect(pageCounter).toContainText(
+      `${currentPage + (swipeForward ? 1 : -1)} / ${totalPages}`,
+    );
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollHeight <= window.innerHeight + 1,
+      ),
+    ).toBe(true);
   }
   await page.goto("/private-fiction/");
   await expect(page).toHaveURL(/\/private\/fictions\/$/);

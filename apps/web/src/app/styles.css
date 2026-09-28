@@ -792,6 +792,9 @@
     font-size: 17px;
   }
 }
+.ebook-shell:has(.private-fiction-book) .ebook-toolbar {
+  display: none;
+}
 @media (max-width: 390px) {
   .brand-header .brand-mark {
     display: none;
@@ -1535,6 +1538,11 @@
 }
 .book-viewport::-webkit-scrollbar {
   display: none;
+}
+.book-viewport--immersive {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: pan-y pinch-zoom;
 }
 .book-track {
   height: 100%;
@@ -3125,6 +3133,9 @@
   --reader-size: 20px;
   --reader-line: 1.9;
   --reader-font: system-ui, "Apple SD Gothic Neo", sans-serif;
+  height: auto;
+  inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
 .private-fiction-prose h2,
 .private-fiction-prose h3 {
@@ -3176,7 +3187,13 @@
   line-height: 1.7;
 }
 .private-fiction-book-viewport {
+  margin: 0;
   cursor: pointer;
+}
+.private-fiction-book-viewport .book-flow {
+  margin-left: 0;
+  padding-top: 0;
+  column-gap: 0;
 }
 .private-fiction-book .book-title h1 {
   line-height: 1.55;
@@ -3192,6 +3209,9 @@
   text-underline-offset: 4px;
 }
 .private-fiction-book-controls {
+  top: auto;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 16px;
   border: 1px solid #8883;
   border-radius: 999px;
 }
