@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.75.0](https://github.com/arlequins/beat/compare/beat-v1.74.5...beat-v1.75.0) (2026-09-28)
+
+
+### Features
+
+* **private-fiction:** share public reader settings ([#333](https://github.com/arlequins/beat/issues/333)) ([dd5e88d](https://github.com/arlequins/beat/commit/dd5e88dc85c2c119a1eafa13e8d4c54586cedb05))
+
 ## [1.74.5](https://github.com/arlequins/beat/compare/beat-v1.74.4...beat-v1.74.5) (2026-09-28)
 
 
