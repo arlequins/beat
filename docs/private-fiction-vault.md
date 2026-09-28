@@ -19,7 +19,9 @@ bucket has versioning, server-side encryption, enforced TLS, ownership controls,
 and S3 Block Public Access. The Lambda role can read or write only that object;
 it has no delete permission. Conditional ETag writes prevent overwriting a
 newer copy. HTTP responses and the S3 object use `private, no-store` cache
-controls. The content is never exposed through a public S3 URL.
+controls. Authenticated Markdown uploads are limited to 4,000,000 UTF-8 bytes,
+which accommodates the current multi-episode manuscript in one synchronous API
+request. The content is never exposed through a public S3 URL.
 
 The current deployment remains GitHub Actions/OIDC-only. Provision the bucket
 through the protected production workflow before using the page. Upload the

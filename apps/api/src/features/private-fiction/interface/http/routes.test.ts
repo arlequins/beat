@@ -90,6 +90,21 @@ describe("private fiction routes", () => {
       expectedEtag: document.etag,
       source: "# revised",
     });
+
+    const largeSource = "x".repeat(2_200_000);
+    const largeSave = await app.request("/admin/private-fiction", {
+      body: JSON.stringify({
+        expectedEtag: '"revision-2"',
+        source: largeSource,
+      }),
+      headers,
+      method: "PUT",
+    });
+    expect(largeSave.status).toBe(200);
+    expect(store.save).toHaveBeenLastCalledWith({
+      expectedEtag: '"revision-2"',
+      source: largeSource,
+    });
   });
 
   it("handles missing objects, malformed writes, conflicts, and storage failures", async () => {
@@ -147,7 +162,10 @@ describe("private fiction routes", () => {
     expect(
       (
         await put(
-          JSON.stringify({ expectedEtag: null, source: "가".repeat(250_001) }),
+          JSON.stringify({
+            expectedEtag: null,
+            source: "가".repeat(1_333_334),
+          }),
         )
       ).status,
     ).toBe(400);

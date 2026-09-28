@@ -115,7 +115,7 @@ describe("private fiction S3 repository", () => {
     ).rejects.toMatchObject({ code: "storage_unavailable" });
     await expect(
       savePrivateFictionDocument(
-        { expectedEtag: null, source: "x".repeat(750_001) },
+        { expectedEtag: null, source: "x".repeat(4_000_001) },
         client(async () => ({})),
       ),
     ).rejects.toMatchObject({ code: "storage_unavailable" });
@@ -127,5 +127,22 @@ describe("private fiction S3 repository", () => {
     await expect(
       getWithoutBucket(client(async () => ({}))),
     ).rejects.toMatchObject({ code: "storage_unavailable" });
+  });
+
+  it("accepts the multi-megabyte manuscript needed for the private reader", async () => {
+    vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
+    vi.resetModules();
+    const { savePrivateFictionDocument } = await import(
+      "./s3-private-fiction-repository"
+    );
+    const send = vi.fn(async () => ({ ETag: '"etag-large"' }));
+
+    await expect(
+      savePrivateFictionDocument(
+        { expectedEtag: '"etag-1"', source: "x".repeat(2_200_000) },
+        client(send),
+      ),
+    ).resolves.toMatchObject({ etag: '"etag-large"' });
+    expect(send).toHaveBeenCalledOnce();
   });
 });

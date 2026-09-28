@@ -204,6 +204,10 @@ provider-neutral `RateLimitPort`. Production uses a conditionally updated S3
 window so the quota is shared across Lambda instances. The bundled in-memory
 adapter remains available for local development.
 
+The owner-only private-fiction upload has a dedicated 4,001,024-byte request
+limit for its source capped at 4,000,000 UTF-8 bytes. Other guarded API paths
+continue to use `API_BODY_LIMIT_BYTES`.
+
 Production workloads should also keep API Gateway throttling enabled. A WAF
 remains appropriate for edge abuse controls. Rate-limited responses use HTTP
 429 with `Retry-After` and `RateLimit-*` metadata; oversized requests use HTTP
