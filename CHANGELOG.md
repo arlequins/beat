@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.74.1](https://github.com/arlequins/beat/compare/beat-v1.74.0...beat-v1.74.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* **web:** share fiction reader layout ([#323](https://github.com/arlequins/beat/issues/323)) ([fd77bbb](https://github.com/arlequins/beat/commit/fd77bbb6ac5ea4b63b6a9f87c6810add3a36217c))
+
 ## [1.74.0](https://github.com/arlequins/beat/compare/beat-v1.73.1...beat-v1.74.0) (2026-09-28)
 
 
