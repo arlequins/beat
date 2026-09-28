@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.74.3](https://github.com/arlequins/beat/compare/beat-v1.74.2...beat-v1.74.3) (2026-09-28)
+
+
+### Bug Fixes
+
+* **private-fiction:** restore reader padding ([#327](https://github.com/arlequins/beat/issues/327)) ([145df25](https://github.com/arlequins/beat/commit/145df2569adbea6e04195de2109f5526d27b9736))
+
 ## [1.74.2](https://github.com/arlequins/beat/compare/beat-v1.74.1...beat-v1.74.2) (2026-09-28)
 
 
