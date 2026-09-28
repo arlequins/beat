@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.74.5](https://github.com/arlequins/beat/compare/beat-v1.74.4...beat-v1.74.5) (2026-09-28)
+
+
+### Bug Fixes
+
+* **private-fiction:** move reader controls to top ([#331](https://github.com/arlequins/beat/issues/331)) ([3bfd56b](https://github.com/arlequins/beat/commit/3bfd56bba181be757ae880aa50c926097e48a13e))
+
 ## [1.74.4](https://github.com/arlequins/beat/compare/beat-v1.74.3...beat-v1.74.4) (2026-09-28)
 
 
