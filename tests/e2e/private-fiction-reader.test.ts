@@ -41,6 +41,12 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
       }),
     }),
   );
+  await page.route("**/admin/private-fiction/annotations", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+    }),
+  );
 
   await page.goto("/private/fictions/");
   await expect(
