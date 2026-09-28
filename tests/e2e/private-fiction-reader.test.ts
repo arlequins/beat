@@ -150,7 +150,29 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     "href",
     "/admin/",
   );
-  await viewport.dblclick();
+  await controls.getByRole("button", { name: "읽기 설정" }).click();
+  const readerSettings = page.getByRole("dialog");
+  await expect(
+    readerSettings.getByRole("heading", { name: "읽기 설정" }),
+  ).toBeVisible();
+  await readerSettings.getByRole("button", { name: "명조" }).click();
+  await readerSettings.locator('input[type="range"]').first().press("End");
+  await expect(readerSettings.locator("output").first()).toHaveText("28px");
+  await expect(page.locator(".private-fiction-prose").first()).toHaveCSS(
+    "font-size",
+    "28px",
+  );
+  await expect(page.locator(".private-fiction-prose").first()).toHaveCSS(
+    "font-family",
+    /AppleMyungjo/,
+  );
+  await readerSettings.getByRole("button", { name: "닫기" }).click();
+  await expect(readerSettings).toBeHidden();
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("beat-fiction-v1-preferences") ?? "{}"),
+    ),
+  ).toMatchObject({ font: "serif", size: 28 });
   await expect(controls).toBeHidden();
   await expect(viewport.locator(".book-flow")).toHaveCSS("padding-top", "24px");
   await viewport.focus();
