@@ -509,6 +509,24 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-09-28": {
+    title:
+      "Weekly IT Brief — Treating agent cost and control as product metrics",
+    excerpt:
+      "A developer's view of GPT-6 cache diagnostics, GitHub Copilot policy changes, and TestFlight updates through cost, review, and testing workflows.",
+    intro:
+      "This week's change is not just a collection of new capabilities. It provides practical inputs for deciding what recurring agent work costs, how automated review is governed, and whether a tester's journey still works as its tools change.",
+    sections: [
+      {
+        heading: "Three operating signals to measure together",
+        paragraphs: [
+          "GPT-6 Sol and Luna arrived with prompt-cache diagnostics and a dashboard for persistent agent work. Define allowed models, budget, and success criteria by task shape; then compare cache hit rate, latency, and output quality on the same evaluation set rather than treating a cache hit as proof of correctness.",
+          "GitHub's September 28 Copilot changes make Balanced the default code-review effort and align the github.com, Mobile, and cloud-agent experience under one policy. Inventory explicit effort settings, test review usefulness and turnaround on representative pull requests, and confirm the new data-retention scope with security and legal owners.",
+          "TestFlight 4.4 adds iPhone landscape and iPhone Mirroring resizing, while App Store Connect 3.3 improves internal-tester invitations for larger teams. Include invitation, build selection, and feedback in a short tester journey across orientation and mirroring conditions, while keeping actual app compatibility testing as a separate release gate.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -1266,6 +1284,24 @@ const japanese: Record<string, LocalizedArticle> = {
           "公開ベータの Agents API は、管理された Codex ハーネス、ホスト型サンドボックス、長時間セッションのコンテキスト管理、ツールのオーケストレーションを提供します。まず読み取り専用のツールとテストデータから始め、許可するファイル、通信先、シークレット、時間制限、承認、ジョブ ID を実行ごとに記録します。",
           "GitHub Actions の実行保護は、実行者とイベントの allowlist、ワークフローファイル単位の対象指定、REST 管理、評価モードとともに一般提供されました。pull_request_target の経路を棚卸しし、強制前にシャドー結果を確認し、例外は必要なワークフローとイベントだけに絞ります。",
           "Apple の iPhone Duo 向け資料は、ベータ SDK の対応と、動的リサイズ、適応レイアウト、複数ディスプレイ、シーンのガイダンスを組み合わせています。単一の展開スクリーンショットだけでなく、ウィンドウのサイズや向きが変わる間に状態、フォーカス、安全領域、進行中の作業が保たれるかを確認します。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-09-28": {
+    title:
+      "週刊 IT ブリーフ — エージェントのコストと統制をプロダクト指標として扱う",
+    excerpt:
+      "GPT-6 のキャッシュ診断、GitHub Copilot のポリシー変更、TestFlight の更新を、コスト、レビュー、テストの流れから整理します。",
+    intro:
+      "今週の変化は機能の追加だけではありません。繰り返すエージェント作業の費用、レビュー自動化の統制、テスターの導線がツールの更新後も機能するかを判断する材料が増えました。",
+    sections: [
+      {
+        heading: "一緒に測るべき三つの運用シグナル",
+        paragraphs: [
+          "GPT-6 Sol と Luna には、長時間エージェント向けのプロンプトキャッシュ診断とダッシュボードが加わりました。タスクの形ごとに利用モデル、予算、成功条件を決め、キャッシュヒットを正しさの証拠にせず、同じ評価セットでヒット率、待ち時間、出力品質を比較します。",
+          "9月28日の GitHub Copilot 変更では、code review の標準 effort が Balanced になり、github.com、Mobile、cloud agent の体験は一つのポリシーに揃います。明示的な effort 設定を棚卸しし、代表 PR で有効な指摘と完了時間を試し、新しいデータ保持範囲をセキュリティと法務の担当者に確認します。",
+          "TestFlight 4.4 は iPhone の横向きと iPhone Mirroring のリサイズに対応し、App Store Connect 3.3 は大きなチームでの内部テスター招待を改善しました。向きと Mirroring を含む短い導線で招待、ビルド選択、フィードバックを確認し、アプリ本体の互換性試験は別のリリースゲートとして続けます。",
         ],
       },
     ],
