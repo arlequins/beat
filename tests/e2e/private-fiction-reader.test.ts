@@ -63,6 +63,7 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=1$/);
   const viewport = page.locator(".private-fiction-book-viewport");
   await expect(viewport).toBeVisible();
+  await expect(viewport).toHaveAttribute("data-layout-ready", "true");
   await expect(
     page.getByRole("heading", { name: "첫 번째 장면" }),
   ).toBeVisible();
@@ -195,15 +196,60 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   await expect(
     contents.getByRole("button", { name: /2화\. 다음 장면/ }),
   ).toBeVisible();
+  await page.evaluate(() => {
+    sessionStorage.setItem("private-fiction-toolbar-flashes", "");
+    const shell = document.querySelector(".ebook-shell");
+    if (!shell) throw new Error("The ebook shell is missing");
+    const observer = new MutationObserver(() => {
+      const toolbar = document.querySelector(".ebook-toolbar");
+      if (toolbar && getComputedStyle(toolbar).display !== "none") {
+        sessionStorage.setItem(
+          "private-fiction-toolbar-flashes",
+          `${sessionStorage.getItem("private-fiction-toolbar-flashes")}1`,
+        );
+      }
+    });
+    observer.observe(shell, { childList: true, subtree: true });
+    window.setTimeout(() => observer.disconnect(), 3000);
+  });
   await contents.getByRole("button", { name: /2화\. 다음 장면/ }).click();
   await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=2$/);
   await expect(page.getByRole("heading", { name: "다음 장면" })).toBeVisible();
+  await expect(viewport).toHaveAttribute("data-layout-ready", "true");
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("private-fiction-toolbar-flashes"),
+    ),
+  ).toBe("");
+
+  await page.evaluate(() => {
+    const spacer = document.createElement("div");
+    spacer.dataset.testScrollSpacer = "true";
+    Object.assign(spacer.style, {
+      height: "200vh",
+      left: "0",
+      pointerEvents: "none",
+      position: "absolute",
+      top: "0",
+      width: "1px",
+    });
+    document.documentElement.style.scrollBehavior = "auto";
+    document.body.append(spacer);
+    window.scrollTo(0, 250);
+  });
+  expect(await page.evaluate(() => window.scrollY)).toBe(250);
   await page.getByRole("region", { name: /소설 본문/ }).focus();
   await page.keyboard.press("ArrowLeft");
   await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=1$/);
   await expect(
     page.getByRole("heading", { name: "첫 번째 장면" }),
   ).toBeVisible();
+  expect(await page.evaluate(() => window.scrollY)).toBe(250);
+  await page.evaluate(() => {
+    document.querySelector("[data-test-scroll-spacer]")?.remove();
+    document.documentElement.style.removeProperty("scroll-behavior");
+    window.scrollTo(0, 0);
+  });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator(".private-fiction-book")).toBeVisible();
   const mobileViewport = page.locator(".private-fiction-book-viewport");

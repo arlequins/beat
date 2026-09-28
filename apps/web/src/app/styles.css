@@ -613,6 +613,12 @@
   height: 100dvh;
   overflow: hidden;
 }
+.private-fiction-route-pending {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  background: var(--private-fiction-reader-background, #000);
+}
 .dark .ebook-shell {
   background: #202020;
   color: #dedbd4;
@@ -793,6 +799,9 @@
   }
 }
 .ebook-shell:has(.private-fiction-book) .ebook-toolbar {
+  display: none;
+}
+.ebook-shell:has(.private-fiction-route-pending) .ebook-toolbar {
   display: none;
 }
 @media (max-width: 390px) {
@@ -3189,6 +3198,9 @@
 .private-fiction-book-viewport {
   margin: 0;
   cursor: pointer;
+}
+.private-fiction-book-viewport[data-layout-ready="false"] .book-track {
+  visibility: hidden;
 }
 .private-fiction-book-viewport .book-flow {
   box-sizing: border-box;
