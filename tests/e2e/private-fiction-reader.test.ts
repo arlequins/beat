@@ -87,12 +87,14 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   expect(
     await viewport.evaluate((element) => ({
       overflowX: getComputedStyle(element).overflowX,
+      touchAction: getComputedStyle(element).touchAction,
       top: element.getBoundingClientRect().top,
       height: element.clientHeight,
       margin: getComputedStyle(element).margin,
     })),
   ).toEqual({
     overflowX: "hidden",
+    touchAction: "pinch-zoom",
     top: 0,
     height: await page.evaluate(() => window.innerHeight),
     margin: "0px",
