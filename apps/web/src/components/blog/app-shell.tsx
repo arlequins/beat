@@ -7,7 +7,6 @@ import { useEffect, useRef } from "react";
 import { LanguageSwitcher } from "~/components/blog/language-switcher";
 import { ThemeToggle } from "~/components/blog/theme-toggle";
 import { siteConfig } from "~/config/site";
-import { BeatChatEntry } from "~/features/beat-handoff/ui/beat-chat-entry";
 import { copy, isLocale, type Locale, localePath } from "~/lib/i18n";
 
 export function AppShell(props: { children: React.ReactNode }) {
@@ -15,7 +14,6 @@ export function AppShell(props: { children: React.ReactNode }) {
   const segment = pathname.split("/")[1] ?? "";
   const locale: Locale = isLocale(segment) ? segment : "en";
   const text = copy[locale];
-  const isPostDetail = /^\/(?:(?:ko|en|ja)\/)?posts\/[^/]+\/?$/.test(pathname);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -29,6 +27,7 @@ export function AppShell(props: { children: React.ReactNode }) {
         : "Menu and settings";
   const route =
     (isLocale(segment) ? pathname.slice(segment.length + 1) : pathname) || "/";
+  const isPrivateFiction = route.startsWith("/private/fictions");
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -60,6 +59,36 @@ export function AppShell(props: { children: React.ReactNode }) {
             <Link href={localePath(locale, "/gourmet/")}>{text.gourmet}</Link>
             <Link href={localePath(locale, "/fiction/")} aria-current="page">
               {text.fiction}
+            </Link>
+          </nav>
+          <ThemeToggle />
+        </header>
+        <main>{props.children}</main>
+      </div>
+    );
+  }
+
+  if (isPrivateFiction) {
+    return (
+      <div className="ebook-shell">
+        <header className="ebook-toolbar">
+          <nav
+            aria-label={
+              locale === "ko"
+                ? "주요 메뉴"
+                : locale === "ja"
+                  ? "メインメニュー"
+                  : "Primary navigation"
+            }
+          >
+            <Link href={localePath(locale)}>Beat</Link>
+            <Link href={localePath(locale, "/fiction/")}>{text.fiction}</Link>
+            <Link href="/admin/">
+              {locale === "ko"
+                ? "관리자 로그인"
+                : locale === "ja"
+                  ? "管理者ログイン"
+                  : "Admin login"}
             </Link>
           </nav>
           <ThemeToggle />
@@ -207,6 +236,17 @@ export function AppShell(props: { children: React.ReactNode }) {
           >
             {text.characters}
           </Link>
+          <Link
+            onClick={() => menuRef.current?.hidePopover()}
+            href="/admin/"
+            aria-current={route.startsWith("/admin") ? "page" : undefined}
+          >
+            {locale === "ko"
+              ? "관리자 로그인"
+              : locale === "ja"
+                ? "管理者ログイン"
+                : "Admin login"}
+          </Link>
         </nav>
         <div className="site-menu-settings">
           <div>
@@ -240,11 +280,6 @@ export function AppShell(props: { children: React.ReactNode }) {
         </span>
         <a href={`mailto:${siteConfig.email}`}>{text.email}</a>
       </footer>
-      {isPostDetail ? null : (
-        <div className="shell-handoff">
-          <BeatChatEntry />
-        </div>
-      )}
     </div>
   );
 }

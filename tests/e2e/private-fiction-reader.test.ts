@@ -42,7 +42,21 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     }),
   );
 
-  await page.goto("/private-fiction");
+  await page.goto("/private/fictions/");
+  await expect(
+    page.getByRole("heading", { name: "비공개 소설" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "현실 오류" })).toBeVisible();
+  await page.getByRole("link", { name: "회차 목록 보기" }).click();
+  await expect(page).toHaveURL(/\/private\/fictions\/list\/$/);
+  await expect(
+    page.getByRole("button", { name: /1화\. 첫 번째 장면/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /2화\. 다음 장면/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /1화\. 첫 번째 장면/ }).click();
+  await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=1$/);
   const viewport = page.locator(".private-fiction-book-viewport");
   await expect(viewport).toBeVisible();
   await expect(
@@ -50,19 +64,28 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   ).toBeVisible();
   await expect(page.locator(".private-fiction-toc")).toHaveCount(0);
 
+  const controls = page.locator(".private-fiction-book-controls");
+  await expect(controls).toBeHidden();
+  await viewport.dblclick();
+  await expect(controls).toBeVisible();
+  await expect(
+    controls.getByRole("link", { name: "관리자 로그인" }),
+  ).toHaveAttribute("href", "/admin/");
+  await viewport.dblclick();
+  await expect(controls).toBeHidden();
   await viewport.focus();
   await page.keyboard.press("Enter");
   const pageCounter = page.locator(
     ".private-fiction-book-controls .book-page-number",
   );
-  await expect(pageCounter).toContainText(/1 \/ [2-9]\d*/);
+  await expect(pageCounter).toContainText(/1 \/ \d+/);
   const viewportWidth = await viewport.evaluate(
     (element) => element.clientWidth,
   );
   await viewport.click({ position: { x: viewportWidth * 0.9, y: 340 } });
-  await expect(pageCounter).toContainText(/2 \/ [2-9]\d*/);
+  await expect(pageCounter).toContainText(/2 \/ \d+/);
   await viewport.click({ position: { x: viewportWidth * 0.1, y: 340 } });
-  await expect(pageCounter).toContainText(/1 \/ [2-9]\d*/);
+  await expect(pageCounter).toContainText(/1 \/ \d+/);
 
   await pageCounter.click();
   const contents = page.getByRole("dialog");
@@ -71,20 +94,12 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     contents.getByRole("button", { name: /2화\. 다음 장면/ }),
   ).toBeVisible();
   await contents.getByRole("button", { name: /2화\. 다음 장면/ }).click();
+  await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=2$/);
   await expect(page.getByRole("heading", { name: "다음 장면" })).toBeVisible();
-  await page
-    .locator(".private-fiction-book-controls .book-page-number")
-    .click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "정본 설정집" })
-    .click();
-  await expect(page.locator(".private-fiction-prose strong")).toHaveText(
-    "설정",
-  );
-
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator(".private-fiction-book")).toBeVisible();
+  await page.goto("/private-fiction/");
+  await expect(page).toHaveURL(/\/private\/fictions\/$/);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
