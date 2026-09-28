@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.74.2](https://github.com/arlequins/beat/compare/beat-v1.74.1...beat-v1.74.2) (2026-09-28)
+
+
+### Bug Fixes
+
+* **web:** make private fiction reader immersive ([#325](https://github.com/arlequins/beat/issues/325)) ([ada7f6f](https://github.com/arlequins/beat/commit/ada7f6f7203ef23fe1a9f77baa061d0e087c4b0d))
+
 ## [1.74.1](https://github.com/arlequins/beat/compare/beat-v1.74.0...beat-v1.74.1) (2026-09-28)
 
 
