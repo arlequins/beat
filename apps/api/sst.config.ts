@@ -153,6 +153,26 @@ export default $config({
       ],
     });
     const privateFictionBucket = createPrivateBucket("PrivateFiction");
+    const privateFictionPermissions = [
+      {
+        actions: ["s3:ListBucket"],
+        conditions: [
+          {
+            test: "StringEquals",
+            variable: "s3:prefix",
+            values: ["author-vault/reality-error/outline.md"],
+          },
+        ],
+        resources: [privateFictionBucket.arn],
+      },
+      {
+        actions: ["s3:GetObject", "s3:PutObject"],
+        resources: [
+          $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/outline.md`,
+          $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/annotations.json`,
+        ],
+      },
+    ];
     const handler = {
       handler: "src/lambda.handler",
       memory: "1024 MB",
@@ -207,24 +227,6 @@ export default $config({
             $interpolate`${uploadBucket.arn}/${$app.name}/${$app.stage}/*`,
           ],
         },
-        {
-          actions: ["s3:ListBucket"],
-          conditions: [
-            {
-              test: "StringEquals",
-              variable: "s3:prefix",
-              values: ["author-vault/reality-error/outline.md"],
-            },
-          ],
-          resources: [privateFictionBucket.arn],
-        },
-        {
-          actions: ["s3:GetObject", "s3:PutObject"],
-          resources: [
-            $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/outline.md`,
-            $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/annotations.json`,
-          ],
-        },
         ...(serverEnv.BEAT_RUNTIME_SECRET_ARN
           ? [
               {
@@ -255,9 +257,16 @@ export default $config({
         S3_CACHE_PREFIX: `${$app.name}/${$app.stage}`,
         S3_UPLOAD_BUCKET: uploadBucket.name,
         S3_UPLOAD_PREFIX: `${$app.name}/${$app.stage}`,
-        PRIVATE_FICTION_BUCKET: privateFictionBucket.name,
         SST_STAGE: $app.stage,
       },
+    };
+    const apiHandler = {
+      ...handler,
+      environment: {
+        ...handler.environment,
+        PRIVATE_FICTION_BUCKET: privateFictionBucket.name,
+      },
+      permissions: [...handler.permissions, ...privateFictionPermissions],
     };
     const alarmActions = serverEnv.ALERT_TOPIC_ARN
       ? [serverEnv.ALERT_TOPIC_ARN]
@@ -374,7 +383,7 @@ export default $config({
         },
       });
 
-      api.route("$default", handler);
+      api.route("$default", apiHandler);
 
       return {
         apiUrl: api.url,
@@ -393,7 +402,7 @@ export default $config({
       : undefined;
 
     const api = new sst.aws.Function("Api", {
-      ...handler,
+      ...apiHandler,
       // Hono is the single CORS boundary for direct Function URLs. Configuring
       // AWS Function URL CORS as well would append a duplicate header.
       url: router ? { router: { instance: router } } : { cors: false },
