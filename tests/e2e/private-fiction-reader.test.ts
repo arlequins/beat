@@ -132,21 +132,27 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
 
   const controls = page.locator(".private-fiction-book-controls");
   await expect(controls).toBeHidden();
+  await expect(controls).toHaveCSS("display", "none");
+  await expect(viewport.locator(".book-flow")).toHaveCSS("padding-top", "24px");
   await viewport.dblclick();
   await expect(controls).toBeVisible();
+  await expect(controls).toHaveCSS("display", "flex");
+  await expect(viewport.locator(".book-flow")).toHaveCSS("padding-top", "24px");
   const controlsBox = await controls.boundingBox();
   const titleBox = await page
     .getByRole("heading", { name: "첫 번째 장면" })
     .boundingBox();
   expect(controlsBox).not.toBeNull();
   expect(titleBox).not.toBeNull();
-  expect(titleBox!.y + titleBox!.height).toBeLessThanOrEqual(controlsBox!.y);
+  expect(controlsBox!.y).toBeLessThan(16);
+  expect(titleBox!.y).toBeGreaterThanOrEqual(24);
   await expect(controls.getByRole("link", { name: "Admin" })).toHaveAttribute(
     "href",
     "/admin/",
   );
   await viewport.dblclick();
   await expect(controls).toBeHidden();
+  await expect(viewport.locator(".book-flow")).toHaveCSS("padding-top", "24px");
   await viewport.focus();
   await page.keyboard.press("Enter");
   const pageCounter = page.locator(
