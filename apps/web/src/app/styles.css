@@ -1542,7 +1542,7 @@
 .book-viewport--immersive {
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pinch-zoom;
 }
 .book-track {
   height: 100%;
