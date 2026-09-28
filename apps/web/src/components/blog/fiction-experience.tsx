@@ -20,6 +20,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { BookReader } from "~/components/blog/book-reader";
 import { FictionComments } from "~/components/blog/fiction-comments";
 import type { Story } from "~/lib/fiction";
 import {
@@ -637,21 +638,10 @@ export function FictionViewer({
 }) {
   const t = fictionUi[locale];
   const [preferences, setPreferences] = useState(defaults);
-  const [page, setPage] = useState(0);
-  const [count, setCount] = useState(1);
-  const [controlsVisible, setControlsVisible] = useState(false);
-  const lastTouch = useRef(0);
-  const lastTap = useRef({ time: 0, x: 0, y: 0 });
-  const touchStart = useRef({ x: 0, y: 0 });
-  const [width, setWidth] = useState(0);
   const [panel, setPanel] = useState<"settings" | "episodes" | "comments">(
     "settings",
   );
   const dialog = useRef<HTMLDialogElement>(null);
-  const viewport = useRef<HTMLDivElement>(null);
-  const flow = useRef<HTMLDivElement>(null);
-  const position = useRef(0);
-  const ready = useRef(false);
   useEffect(() => {
     const stored = read<Preferences>("preferences", defaults);
     setPreferences({
@@ -662,11 +652,6 @@ export function FictionViewer({
         : "night",
       font: stored.font === "serif" ? "serif" : "sans",
     });
-    position.current = Math.max(
-      0,
-      Math.min(1, Number(read(`book-position-${story.slug}`, 0)) || 0),
-    );
-    ready.current = true;
     save("last", story.slug);
   }, [story.slug]);
   useLayoutEffect(() => {
@@ -699,64 +684,6 @@ export function FictionViewer({
       delete html.dataset.siteThemeColor;
     };
   }, [preferences.theme]);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Font settings change column pagination after rendering.
-  useEffect(() => {
-    const el = viewport.current;
-    const text = flow.current;
-    if (!el || !text) return;
-    let frame = 0;
-    let restoreFrame = 0;
-    let active = true;
-    const measure = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const w = el.clientWidth;
-        if (!w || !el.clientHeight) return;
-        // Safari can leave percentage heights unresolved inside the flex viewport.
-        // Give the column container a definite height before measuring overflow.
-        text.style.height = `${el.clientHeight}px`;
-        text.style.width = `${w - 48}px`;
-        text.style.columnWidth = `${w - 48}px`;
-        const pages = Math.max(1, Math.ceil((text.scrollWidth + 48) / w));
-        const target = Math.min(
-          pages - 1,
-          Math.round(position.current * (pages - 1)),
-        );
-        setWidth(w);
-        setCount(pages);
-        setPage(target);
-        cancelAnimationFrame(restoreFrame);
-        restoreFrame = requestAnimationFrame(() => {
-          el.scrollLeft = target * w;
-        });
-      });
-    };
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    const contentObserver = new MutationObserver(measure);
-    contentObserver.observe(text, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-    window.addEventListener("pageshow", measure);
-    window.visualViewport?.addEventListener("resize", measure);
-    document.fonts.addEventListener("loadingdone", measure);
-    measure();
-    document.fonts.ready.then(() => {
-      if (active && el.isConnected) measure();
-    });
-    return () => {
-      active = false;
-      observer.disconnect();
-      contentObserver.disconnect();
-      window.removeEventListener("pageshow", measure);
-      window.visualViewport?.removeEventListener("resize", measure);
-      document.fonts.removeEventListener("loadingdone", measure);
-      cancelAnimationFrame(frame);
-      cancelAnimationFrame(restoreFrame);
-    };
-  }, [preferences.size, preferences.line, preferences.font]);
   const change = (next: Partial<Preferences>) => {
     const value = { ...preferences, ...next };
     if (next.theme) {
@@ -775,16 +702,6 @@ export function FictionViewer({
   const open = (next: "settings" | "episodes" | "comments") => {
     setPanel(next);
     dialog.current?.showModal();
-  };
-  const turn = (delta: number) => {
-    const el = viewport.current;
-    if (!el || !width) return;
-    const target = Math.max(0, Math.min(count - 1, page + delta));
-    // Immediate scrolling avoids interrupted smooth scroll/snap on mobile Safari.
-    el.scrollLeft = target * width;
-    setPage(target);
-    position.current = count > 1 ? target / (count - 1) : 0;
-    save(`book-position-${story.slug}`, position.current);
   };
   const novelStories = stories.filter((item) => item.series === story.series);
   const novel = getNovelCollections(stories).find(
@@ -810,199 +727,143 @@ export function FictionViewer({
         } as CSSProperties
       }
     >
-      <div
-        className="book-viewport"
-        ref={viewport}
-        role="region"
-        aria-label={t.viewport}
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard-accessible scroll and paging region.
-        tabIndex={0}
-        onDoubleClick={(event) => {
-          if (performance.now() - lastTouch.current < 600) return;
-          if ((event.target as Element).closest("a, button")) return;
-          setControlsVisible((value) => !value);
-        }}
-        onPointerDown={(event) => {
-          if (event.pointerType === "touch")
-            touchStart.current = { x: event.clientX, y: event.clientY };
-        }}
-        onPointerUp={(event) => {
-          if (
-            event.pointerType !== "touch" ||
-            !event.isPrimary ||
-            (event.target as Element).closest("a, button")
-          )
-            return;
-          lastTouch.current = performance.now();
-          const x = event.clientX;
-          const y = event.clientY;
-          if (
-            Math.hypot(x - touchStart.current.x, y - touchStart.current.y) > 12
-          ) {
-            lastTap.current.time = 0;
-            return;
-          }
-          const now = performance.now();
-          const previous = lastTap.current;
-          if (
-            now - previous.time < 350 &&
-            Math.hypot(x - previous.x, y - previous.y) < 30
-          ) {
-            event.preventDefault();
-            setControlsVisible((value) => !value);
-            lastTap.current = { time: 0, x, y };
-          } else lastTap.current = { time: now, x, y };
-        }}
-        onKeyDown={(event) => {
-          if (event.target !== event.currentTarget) return;
-          if (event.key === "Enter") {
-            event.preventDefault();
-            setControlsVisible((value) => !value);
-          }
-          if (event.key === "Escape") setControlsVisible(false);
-          if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-            event.preventDefault();
-            turn(event.key === "ArrowRight" ? 1 : -1);
-          }
-        }}
-        onScroll={() => {
-          const el = viewport.current;
-          if (!el || !width) return;
-          const current = Math.min(
-            count - 1,
-            Math.round(el.scrollLeft / width),
-          );
-          setPage(current);
-          if (ready.current) {
-            position.current = count > 1 ? current / (count - 1) : 0;
-            save(`book-position-${story.slug}`, position.current);
-          }
-        }}
+      <BookReader
+        label={t.viewport}
+        layoutKey={`${story.slug}:${preferences.size}:${preferences.line}:${preferences.font}`}
+        positionKey={story.slug}
       >
-        <div
-          className="book-track"
-          style={{ width: width ? `${count * width}px` : "100%" }}
-        >
-          <article
-            className="book-flow viewer-prose"
-            ref={flow}
-            itemScope
-            itemType="https://schema.org/Article"
-          >
-            <meta itemProp="datePublished" content={story.publishedAt} />
-            <meta itemProp="inLanguage" content="ko" />
-            <header className="book-title" lang="ko">
-              <p>
-                {story.series} · {Number(story.episode)}
-                {unit}
-              </p>
-              <h1 itemProp="headline" data-beat-context-title>
-                {story.title}
-              </h1>
-            </header>
-            <div className="book-article-body" itemProp="articleBody" lang="ko">
-              {children}
-            </div>
-            <div className="book-end">
-              <p>{t.finish}</p>
-              {next ? (
-                <Link href={localePath(locale, `/fiction/${next.slug}/`)}>
-                  {t.nextStory}
-                </Link>
-              ) : (
-                <Link href={localePath(locale, "/fiction/")}>
-                  {t.storyList}
-                </Link>
-              )}
-            </div>
-          </article>
-          <div className="book-snaps" aria-hidden="true">
-            {Array.from({ length: count }, (_, index) => (
-              <span
-                key={`page-${index + 1}`}
-                style={{ left: index * width, width }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-      <nav
-        className="book-controls"
-        aria-label={t.nav}
-        data-visible={controlsVisible}
-        inert={!controlsVisible}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            setControlsVisible(false);
-            viewport.current?.focus();
-          }
-        }}
-      >
-        <button
-          type="button"
-          aria-label={t.hideNav}
-          onClick={() => {
-            setControlsVisible(false);
-            viewport.current?.focus();
-          }}
-        >
-          <X size={18} />
-        </button>
-        <Link href={localePath(locale, "/fiction/")} aria-label={t.storyList}>
-          <ArrowLeft size={18} />
-        </Link>
-        <button
-          type="button"
-          aria-label={t.prevPage}
-          disabled={page === 0}
-          onClick={() => turn(-1)}
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <button
-          className="book-page-number"
-          type="button"
-          aria-label={`${t.total} ${count} · ${page + 1}, ${t.openEpisodes}`}
-          onClick={() => open("episodes")}
-        >
-          {page + 1} / {count}
-        </button>
-        <button
-          type="button"
-          aria-label={t.nextPage}
-          disabled={page === count - 1}
-          onClick={() => turn(1)}
-        >
-          <ChevronRight size={18} />
-        </button>
-        <button
-          type="button"
-          aria-label={t.commentAction}
-          onClick={() => open("comments")}
-        >
-          <MessageCircle size={18} />
-        </button>
-        <button
-          type="button"
-          aria-label={preferences.theme === "night" ? t.light : t.dark}
-          onClick={() =>
-            change({ theme: preferences.theme === "night" ? "paper" : "night" })
-          }
-        >
-          {preferences.theme === "night" ? (
-            <Sun size={18} />
-          ) : (
-            <Moon size={18} />
-          )}
-        </button>
-        <button
-          type="button"
-          aria-label={t.settings}
-          onClick={() => open("settings")}
-        >
-          <Settings2 size={18} />
-        </button>
-      </nav>
+        {({
+          flowRef,
+          page,
+          pageCount,
+          controlsVisible,
+          setControlsVisible,
+          turn,
+          viewportRef,
+        }) => (
+          <>
+            <article
+              className="book-flow viewer-prose"
+              ref={flowRef}
+              itemScope
+              itemType="https://schema.org/Article"
+            >
+              <meta itemProp="datePublished" content={story.publishedAt} />
+              <meta itemProp="inLanguage" content="ko" />
+              <header className="book-title" lang="ko">
+                <p>
+                  {story.series} · {Number(story.episode)}
+                  {unit}
+                </p>
+                <h1 itemProp="headline" data-beat-context-title>
+                  {story.title}
+                </h1>
+              </header>
+              <div
+                className="book-article-body"
+                itemProp="articleBody"
+                lang="ko"
+              >
+                {children}
+              </div>
+              <div className="book-end">
+                <p>{t.finish}</p>
+                {next ? (
+                  <Link href={localePath(locale, `/fiction/${next.slug}/`)}>
+                    {t.nextStory}
+                  </Link>
+                ) : (
+                  <Link href={localePath(locale, "/fiction/")}>
+                    {t.storyList}
+                  </Link>
+                )}
+              </div>
+            </article>
+            <nav
+              className="book-controls"
+              aria-label={t.nav}
+              data-visible={controlsVisible}
+              inert={!controlsVisible}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setControlsVisible(false);
+                  viewportRef.current?.focus();
+                }
+              }}
+            >
+              <button
+                type="button"
+                aria-label={t.hideNav}
+                onClick={() => {
+                  setControlsVisible(false);
+                  viewportRef.current?.focus();
+                }}
+              >
+                <X size={18} />
+              </button>
+              <Link
+                href={localePath(locale, "/fiction/")}
+                aria-label={t.storyList}
+              >
+                <ArrowLeft size={18} />
+              </Link>
+              <button
+                type="button"
+                aria-label={t.prevPage}
+                disabled={page === 0}
+                onClick={() => turn(-1)}
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                className="book-page-number"
+                type="button"
+                aria-label={`${t.total} ${pageCount} · ${page + 1}, ${t.openEpisodes}`}
+                onClick={() => open("episodes")}
+              >
+                {page + 1} / {pageCount}
+              </button>
+              <button
+                type="button"
+                aria-label={t.nextPage}
+                disabled={page === pageCount - 1}
+                onClick={() => turn(1)}
+              >
+                <ChevronRight size={18} />
+              </button>
+              <button
+                type="button"
+                aria-label={t.commentAction}
+                onClick={() => open("comments")}
+              >
+                <MessageCircle size={18} />
+              </button>
+              <button
+                type="button"
+                aria-label={preferences.theme === "night" ? t.light : t.dark}
+                onClick={() =>
+                  change({
+                    theme: preferences.theme === "night" ? "paper" : "night",
+                  })
+                }
+              >
+                {preferences.theme === "night" ? (
+                  <Sun size={18} />
+                ) : (
+                  <Moon size={18} />
+                )}
+              </button>
+              <button
+                type="button"
+                aria-label={t.settings}
+                onClick={() => open("settings")}
+              >
+                <Settings2 size={18} />
+              </button>
+            </nav>
+          </>
+        )}
+      </BookReader>
       <dialog ref={dialog} className="viewer-dialog">
         <header>
           <h2>

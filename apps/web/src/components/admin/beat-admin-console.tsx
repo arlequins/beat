@@ -727,12 +727,13 @@ export function BeatAdminConsole() {
           ) : null}
           <button
             aria-label="로그아웃"
-            className="grid size-9 place-items-center rounded-xl border border-[var(--line)] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--background)] hover:text-[var(--foreground)]"
+            className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--line)] px-3 text-sm font-bold text-[var(--muted-foreground)] transition-colors hover:bg-[var(--background)] hover:text-[var(--foreground)]"
             onClick={() => void logoutBeatAdmin()}
             title="로그아웃"
             type="button"
           >
             <LogOut className="size-4" />
+            로그아웃
           </button>
         </div>
       </header>

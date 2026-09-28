@@ -68,6 +68,27 @@ export function AppShell(props: { children: React.ReactNode }) {
     );
   }
 
+  if (route.startsWith("/admin")) {
+    return (
+      <div className="brand-shell admin-shell">
+        <Link
+          aria-label={
+            locale === "ko"
+              ? "Beat 홈"
+              : locale === "ja"
+                ? "Beat ホーム"
+                : "Beat home"
+          }
+          className="site-home-mark"
+          href={localePath(locale)}
+        >
+          Beat
+        </Link>
+        <main className="site-main">{props.children}</main>
+      </div>
+    );
+  }
+
   if (isPrivateFiction) {
     return (
       <div className="ebook-shell">
@@ -85,10 +106,10 @@ export function AppShell(props: { children: React.ReactNode }) {
             <Link href={localePath(locale, "/fiction/")}>{text.fiction}</Link>
             <Link href="/admin/">
               {locale === "ko"
-                ? "관리자 로그인"
+                ? "관리자"
                 : locale === "ja"
-                  ? "管理者ログイン"
-                  : "Admin login"}
+                  ? "管理者"
+                  : "Admin"}
             </Link>
           </nav>
           <ThemeToggle />
@@ -241,11 +262,7 @@ export function AppShell(props: { children: React.ReactNode }) {
             href="/admin/"
             aria-current={route.startsWith("/admin") ? "page" : undefined}
           >
-            {locale === "ko"
-              ? "관리자 로그인"
-              : locale === "ja"
-                ? "管理者ログイン"
-                : "Admin login"}
+            {locale === "ko" ? "관리자" : locale === "ja" ? "管理者" : "Admin"}
           </Link>
         </nav>
         <div className="site-menu-settings">

@@ -46,6 +46,11 @@ test("keeps the admin task list separate from article and Gourmet workspaces", a
   );
 
   await page.goto("/admin/");
+  await expect(page.locator(".site-menu-trigger")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Beat home" })).toHaveAttribute(
+    "href",
+    "/",
+  );
   await expect(page.getByRole("link", { name: "비공개 소설" })).toHaveAttribute(
     "href",
     "/private/fictions/",
@@ -59,6 +64,7 @@ test("keeps the admin task list separate from article and Gourmet workspaces", a
   await expect(
     page.getByRole("heading", { name: "어떤 작업을 할까요?" }),
   ).toBeVisible();
+  await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
   await expect(
     page.getByRole("button", { name: /기사 작성·검토/ }),
   ).toContainText("기사 1개 · 검토 필요 1개");
