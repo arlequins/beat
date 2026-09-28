@@ -412,7 +412,11 @@ export function PrivateFictionReader() {
           "저장본이 바뀌었습니다. 새로고침한 뒤 다시 저장해 주세요.",
         );
       if (!response.ok) throw new Error("원고를 저장하지 못했습니다.");
-      setManuscript((await response.json()) as Manuscript);
+      const saved = (await response.json()) as Pick<
+        Manuscript,
+        "etag" | "updatedAt"
+      >;
+      setManuscript({ ...saved, source });
       setSelectedId(undefined);
       setMessage("원고를 비공개 보관함에 저장했습니다.");
     } catch (error) {
