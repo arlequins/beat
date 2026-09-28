@@ -50,6 +50,10 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   await page.getByRole("link", { name: "회차 목록 보기" }).click();
   await expect(page).toHaveURL(/\/private\/fictions\/list\/$/);
   await expect(
+    page.getByRole("link", { name: "작품으로 돌아가기" }),
+  ).toHaveAttribute("href", "/private/fictions/");
+  await expect(page.getByText("읽기 →")).toHaveCount(0);
+  await expect(
     page.getByRole("button", { name: /1화\. 첫 번째 장면/ }),
   ).toBeVisible();
   await expect(
@@ -63,14 +67,29 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     page.getByRole("heading", { name: "첫 번째 장면" }),
   ).toBeVisible();
   await expect(page.locator(".private-fiction-toc")).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollHeight <= window.innerHeight + 1,
+    ),
+  ).toBe(true);
 
   const controls = page.locator(".private-fiction-book-controls");
   await expect(controls).toBeHidden();
   await viewport.dblclick();
   await expect(controls).toBeVisible();
-  await expect(
-    controls.getByRole("link", { name: "관리자 로그인" }),
-  ).toHaveAttribute("href", "/admin/");
+  const controlsBox = await controls.boundingBox();
+  const titleBox = await page
+    .getByRole("heading", { name: "첫 번째 장면" })
+    .boundingBox();
+  expect(controlsBox).not.toBeNull();
+  expect(titleBox).not.toBeNull();
+  expect(titleBox!.y).toBeGreaterThanOrEqual(
+    controlsBox!.y + controlsBox!.height,
+  );
+  await expect(controls.getByRole("link", { name: "Admin" })).toHaveAttribute(
+    "href",
+    "/admin/",
+  );
   await viewport.dblclick();
   await expect(controls).toBeHidden();
   await viewport.focus();
@@ -96,8 +115,26 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   await contents.getByRole("button", { name: /2화\. 다음 장면/ }).click();
   await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=2$/);
   await expect(page.getByRole("heading", { name: "다음 장면" })).toBeVisible();
+  await page.getByRole("region", { name: /소설 본문/ }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=1$/);
+  await expect(
+    page.getByRole("heading", { name: "첫 번째 장면" }),
+  ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator(".private-fiction-book")).toBeVisible();
+  const mobileViewport = page.locator(".private-fiction-book-viewport");
+  if (test.info().project.name === "mobile-chrome") {
+    await page.evaluate(() => {
+      localStorage.setItem("beat-fiction-v1-book-position-section-2", "0");
+    });
+    await page.reload();
+    const bounds = await mobileViewport.boundingBox();
+    if (!bounds) throw new Error("Private fiction reader viewport is missing");
+    await page.touchscreen.tap(bounds.x + bounds.width / 2, bounds.y + 140);
+    await page.touchscreen.tap(bounds.x + bounds.width / 2, bounds.y + 140);
+    await expect(controls).toBeVisible();
+  }
   await page.goto("/private-fiction/");
   await expect(page).toHaveURL(/\/private\/fictions\/$/);
   expect(

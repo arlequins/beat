@@ -609,6 +609,10 @@
   background: #faf9f6;
   color: #292824;
 }
+.ebook-shell:has(.private-fiction-book) {
+  height: 100dvh;
+  overflow: hidden;
+}
 .dark .ebook-shell {
   background: #202020;
   color: #dedbd4;
@@ -1540,6 +1544,7 @@
   height: 100%;
   width: calc(100vw - 48px);
   margin-left: 24px;
+  padding-top: 64px;
   column-width: auto;
   column-count: auto;
   column-gap: 48px;
@@ -2557,7 +2562,7 @@
 
 /* Reader tools overlay the page without changing pagination. */
 .book-controls {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
@@ -3116,6 +3121,11 @@
   font-size: var(--reader-size);
   line-height: var(--reader-line);
 }
+.private-fiction-book {
+  --reader-size: 20px;
+  --reader-line: 1.9;
+  --reader-font: system-ui, "Apple SD Gothic Neo", sans-serif;
+}
 .private-fiction-prose h2,
 .private-fiction-prose h3 {
   margin: 2.25em 0 0.8em;
@@ -3168,18 +3178,9 @@
 .private-fiction-book-viewport {
   cursor: pointer;
 }
-.private-fiction-book .book-flow {
-  padding: 20px 24px 32px;
-}
-.private-fiction-book .book-title {
-  margin-bottom: 34px;
-}
 .private-fiction-book .book-title h1 {
   line-height: 1.55;
   word-break: keep-all;
-}
-.private-fiction-book .book-article-body {
-  max-width: 680px;
 }
 .private-fiction-book .private-fiction-prose h2,
 .private-fiction-book .private-fiction-prose h3 {
@@ -3272,7 +3273,8 @@
   gap: 16px;
   padding: 12px 0;
   text-align: left;
-  font-size: 14px;
+  font-size: 17px;
+  line-height: 1.55;
 }
 .private-fiction-contents-list button[aria-current="page"] {
   font-weight: 700;
@@ -3315,7 +3317,7 @@
     flex-direction: column;
     gap: 16px;
   }
-  .private-fiction-book .book-flow {
-    padding: 16px 24px 30px;
+  .private-fiction-contents-list button {
+    font-size: 16px;
   }
 }
