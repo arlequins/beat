@@ -3191,9 +3191,10 @@
   cursor: pointer;
 }
 .private-fiction-book-viewport .book-flow {
-  margin-left: 0;
-  padding-top: 0;
-  column-gap: 0;
+  box-sizing: border-box;
+  margin-left: 24px;
+  padding: 24px 0;
+  column-gap: 48px;
 }
 .private-fiction-book .book-title h1 {
   line-height: 1.55;

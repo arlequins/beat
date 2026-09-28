@@ -97,6 +97,36 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     height: await page.evaluate(() => window.innerHeight),
     margin: "0px",
   });
+  expect(
+    await viewport.locator(".book-flow").evaluate((element) => {
+      const style = getComputedStyle(element);
+      const box = element.getBoundingClientRect();
+      const viewport = document.querySelector(
+        ".private-fiction-book-viewport",
+      )!;
+      return {
+        left: box.left,
+        width: element.clientWidth,
+        viewportWidth: viewport.clientWidth,
+        marginLeft: style.marginLeft,
+        paddingTop: style.paddingTop,
+        paddingBottom: style.paddingBottom,
+        columnGap: style.columnGap,
+        scrollHeight: element.scrollHeight,
+        clientHeight: element.clientHeight,
+      };
+    }),
+  ).toEqual({
+    left: 24,
+    width: await viewport.evaluate((element) => element.clientWidth - 48),
+    viewportWidth: await viewport.evaluate((element) => element.clientWidth),
+    marginLeft: "24px",
+    paddingTop: "24px",
+    paddingBottom: "24px",
+    columnGap: "48px",
+    scrollHeight: await viewport.evaluate((element) => element.clientHeight),
+    clientHeight: await viewport.evaluate((element) => element.clientHeight),
+  });
 
   const controls = page.locator(".private-fiction-book-controls");
   await expect(controls).toBeHidden();

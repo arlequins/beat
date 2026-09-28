@@ -460,7 +460,7 @@ export function PrivateFictionReader() {
     >
       <BookReader
         className="private-fiction-book-viewport"
-        edgeToEdge
+        immersive
         label="소설 본문. 화면 좌우를 누르거나 밀어 페이지를 넘기세요. Enter 키를 누르면 메뉴가 열립니다."
         layoutKey={selected.id}
         onBoundaryTurn={(delta) => {

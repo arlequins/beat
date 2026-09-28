@@ -20,7 +20,7 @@ export type BookReaderRenderState = {
 export function BookReader({
   children,
   className = "",
-  edgeToEdge = false,
+  immersive = false,
   label,
   layoutKey,
   onBoundaryTurn,
@@ -30,7 +30,7 @@ export function BookReader({
 }: {
   children: (state: BookReaderRenderState) => ReactNode;
   className?: string;
-  edgeToEdge?: boolean;
+  immersive?: boolean;
   label: string;
   layoutKey: string;
   onBoundaryTurn?: (delta: number) => void;
@@ -90,7 +90,9 @@ export function BookReader({
         const width = el.clientWidth;
         if (!width || !el.clientHeight) return;
         text.style.height = `${el.clientHeight}px`;
-        const gutter = edgeToEdge ? 0 : 48;
+        // Keep the same reading gutter in every reader. Immersive mode only
+        // changes the viewport interaction, not the text's page geometry.
+        const gutter = 48;
         text.style.width = `${width - gutter}px`;
         text.style.columnWidth = `${width - gutter}px`;
         const count = Math.max(
@@ -135,7 +137,7 @@ export function BookReader({
       cancelAnimationFrame(frame);
       cancelAnimationFrame(restoreFrame);
     };
-  }, [edgeToEdge, layoutKey]);
+  }, [layoutKey]);
 
   const turn = useCallback(
     (delta: number) => {
@@ -194,7 +196,7 @@ export function BookReader({
 
   return (
     <div
-      className={`book-viewport ${className} ${edgeToEdge ? "book-viewport--immersive" : ""}`.trim()}
+      className={`book-viewport ${className} ${immersive ? "book-viewport--immersive" : ""}`.trim()}
       ref={viewport}
       role="region"
       aria-label={label}
@@ -255,7 +257,7 @@ export function BookReader({
           const deltaX = x - touchStart.current.x;
           const deltaY = y - touchStart.current.y;
           if (
-            edgeToEdge &&
+            immersive &&
             Math.abs(deltaX) >= 36 &&
             Math.abs(deltaX) > Math.abs(deltaY) * 1.15
           ) {
