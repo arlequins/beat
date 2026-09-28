@@ -1,6 +1,8 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CSSProperties } from "react";
 import {
   useCallback,
@@ -193,6 +195,16 @@ function MarkdownBlocks({ source }: { source: string }) {
 }
 
 export function PrivateFictionReader() {
+  const pathname = usePathname() ?? "/private/fictions/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const routePart = pathname
+    .replace(/^.*\/private\/fictions\/?/, "")
+    .replace(/\/+$/, "");
+  const requestedEpisode = searchParams.get("episode");
+  const routeEpisode = requestedEpisode ? Number(requestedEpisode) : undefined;
+  const isEpisodeRoute = routeEpisode !== undefined;
+  const isListRoute = routePart === "list";
   const [authenticated, setAuthenticated] = useState(false);
   const [manuscript, setManuscript] = useState<Manuscript>();
   const [message, setMessage] = useState("로그인 상태를 확인하고 있습니다.");
@@ -209,6 +221,14 @@ export function PrivateFictionReader() {
   const lastTouch = useRef(0);
   const lastTap = useRef({ time: 0, x: 0, y: 0 });
   const touchStart = useRef({ x: 0, y: 0 });
+  const turnDelay = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (turnDelay.current) clearTimeout(turnDelay.current);
+    },
+    [],
+  );
 
   const load = useCallback(async () => {
     if (!hasPersistentBeatAdminSession()) {
@@ -271,12 +291,16 @@ export function PrivateFictionReader() {
   const readingOrder = sections.filter(
     (section) => section.kind === "guide" || section.kind === "episode",
   );
+  const episodes = readingOrder.filter((section) => section.kind === "episode");
+  const routedSection = readingOrder.find(
+    (section) => section.kind === "episode" && section.episode === routeEpisode,
+  );
   const selected =
     sections.find((section) => section.id === selectedId) ??
-    readingOrder.find((section) => section.kind === "episode") ??
-    readingOrder[0];
+    (isEpisodeRoute ? routedSection : (episodes[0] ?? readingOrder[0]));
 
   useEffect(() => {
+    if (isEpisodeRoute || isListRoute) return;
     if (!readingOrder.length) return;
     const savedId = window.localStorage.getItem("private-fiction-book-section");
     const savedSection = readingOrder.find((section) => section.id === savedId);
@@ -287,7 +311,7 @@ export function PrivateFictionReader() {
           readingOrder[0]?.id,
       );
     }
-  }, [readingOrder, sections, selectedId]);
+  }, [isEpisodeRoute, isListRoute, readingOrder, sections, selectedId]);
 
   useEffect(() => {
     if (selected) {
@@ -351,7 +375,13 @@ export function PrivateFictionReader() {
   const nextSection = readingOrder[selectedOrderIndex + 1];
 
   const chooseSection = (id: string) => {
-    setSelectedId(id);
+    const section = sections.find((item) => item.id === id);
+    if (section?.kind === "episode" && section.episode) {
+      setSelectedId(undefined);
+      router.push(`/private/fictions/?episode=${section.episode}`);
+    } else {
+      setSelectedId(id);
+    }
     setPage(0);
     setTocOpen(false);
     dialog.current?.close();
@@ -433,7 +463,7 @@ export function PrivateFictionReader() {
   }
 
   const viewerContent = authenticated && manuscript && parsed && selected;
-  if (!viewerContent) {
+  if (!authenticated || !manuscript || !parsed) {
     return (
       <section className="private-fiction-shell">
         <header className="private-fiction-header">
@@ -444,12 +474,79 @@ export function PrivateFictionReader() {
               {message}
             </p>
           </div>
-          {!authenticated && <a href="/admin/">관리자 로그인</a>}
+          {!authenticated && <Link href="/admin/">관리자 로그인</Link>}
           {authenticated && (
             <button disabled={busy} onClick={() => void load()} type="button">
               새로고침
             </button>
           )}
+        </header>
+      </section>
+    );
+  }
+
+  if (!isEpisodeRoute) {
+    return (
+      <section className="private-fiction-shell">
+        <header className="private-fiction-header">
+          <div>
+            <p className="private-fiction-eyebrow">개인 열람 · 검색 비노출</p>
+            <h1>비공개 소설</h1>
+            <p className="private-fiction-status" role="status">
+              {message}
+            </p>
+          </div>
+          <button disabled={busy} onClick={() => void load()} type="button">
+            새로고침
+          </button>
+        </header>
+        {isListRoute ? (
+          <div className="private-fiction-library">
+            <p className="private-fiction-eyebrow">현실 오류 · 회차 목록</p>
+            <ol className="viewer-episode-list private-fiction-contents-list">
+              {episodes.map((section) => (
+                <li key={section.id}>
+                  <button
+                    onClick={() => chooseSection(section.id)}
+                    type="button"
+                  >
+                    <span>
+                      {section.episode}화. {section.title}
+                    </span>
+                    <span>읽기 →</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : (
+          <div className="private-fiction-library-intro">
+            <p>개인 보관 작품</p>
+            <h2>현실 오류</h2>
+            <p>회차를 골라 이어 읽을 수 있습니다.</p>
+            <div className="private-fiction-library-actions">
+              <Link href="/private/fictions/list/">회차 목록 보기</Link>
+              {episodes[0] ? (
+                <button
+                  onClick={() => chooseSection(episodes[0]!.id)}
+                  type="button"
+                >
+                  1화부터 읽기
+                </button>
+              ) : null}
+            </div>
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  if (!viewerContent) {
+    return (
+      <section className="private-fiction-shell">
+        <header className="private-fiction-header">
+          <h1>요청한 회차를 찾을 수 없습니다.</h1>
+          <Link href="/private/fictions/list/">회차 목록으로 돌아가기</Link>
         </header>
       </section>
     );
@@ -482,13 +579,29 @@ export function PrivateFictionReader() {
         onClick={(event) => {
           if ((event.target as Element).closest("a, button, input, label"))
             return;
+          if (
+            lastTouch.current > 0 &&
+            performance.now() - lastTouch.current < 600
+          )
+            return;
+          if (event.detail > 1) {
+            if (turnDelay.current) clearTimeout(turnDelay.current);
+            turnDelay.current = null;
+            return;
+          }
           const bounds = event.currentTarget.getBoundingClientRect();
           const x = event.clientX - bounds.left;
-          if (x < bounds.width * 0.2) turn(-1);
-          else if (x > bounds.width * 0.8) turn(1);
+          const delta =
+            x < bounds.width * 0.2 ? -1 : x > bounds.width * 0.8 ? 1 : 0;
+          if (delta) {
+            if (turnDelay.current) clearTimeout(turnDelay.current);
+            turnDelay.current = setTimeout(() => turn(delta), 260);
+          }
         }}
         onDoubleClick={(event) => {
           if ((event.target as Element).closest("a, button")) return;
+          if (turnDelay.current) clearTimeout(turnDelay.current);
+          turnDelay.current = null;
           setControlsVisible((visible) => !visible);
         }}
         onPointerDown={(event) => {
@@ -518,9 +631,25 @@ export function PrivateFictionReader() {
             Math.hypot(x - previous.x, y - previous.y) < 30
           ) {
             event.preventDefault();
+            if (turnDelay.current) clearTimeout(turnDelay.current);
+            turnDelay.current = null;
             setControlsVisible((visible) => !visible);
             lastTap.current = { time: 0, x, y };
-          } else lastTap.current = { time: now, x, y };
+          } else {
+            lastTap.current = { time: now, x, y };
+            const bounds = viewport.current?.getBoundingClientRect();
+            const delta = bounds
+              ? x < bounds.left + bounds.width * 0.2
+                ? -1
+                : x > bounds.left + bounds.width * 0.8
+                  ? 1
+                  : 0
+              : 0;
+            if (delta) {
+              if (turnDelay.current) clearTimeout(turnDelay.current);
+              turnDelay.current = setTimeout(() => turn(delta), 350);
+            }
+          }
         }}
         onKeyDown={(event) => {
           if (event.target !== event.currentTarget) return;
@@ -598,6 +727,8 @@ export function PrivateFictionReader() {
         <button type="button" aria-label="목차 열기" onClick={showContents}>
           목차
         </button>
+        <Link href="/private/fictions/list/">회차 목록</Link>
+        <Link href="/admin/">관리자 로그인</Link>
         <button type="button" aria-label="이전 페이지" onClick={() => turn(-1)}>
           <ChevronLeft size={18} />
         </button>

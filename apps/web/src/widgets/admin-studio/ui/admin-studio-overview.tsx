@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowRight, FileText, Utensils } from "lucide-react";
+import {
+  ArrowRight,
+  BotMessageSquare,
+  FileText,
+  LockKeyhole,
+  Utensils,
+} from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { type GourmetList, gourmetApiUrl } from "~/entities/gourmet";
 
@@ -52,6 +59,48 @@ export function AdminStudioOverview({
       </div>
 
       <div className="grid gap-3">
+        <Link
+          className="group flex w-full items-center gap-4 rounded-2xl border border-[var(--line)] bg-[var(--background)] p-4 text-left transition-colors hover:border-[var(--accent-foreground)] hover:bg-[var(--accent-foreground)]/5 sm:px-5"
+          href="/private/fictions/"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--coral)]/15 text-[var(--coral)]">
+            <LockKeyhole aria-hidden="true" className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-bold">비공개 소설</span>
+            <span className="mt-1 block text-sm text-[var(--muted-foreground)]">
+              관리자 인증이 필요한 개인 원고와 회차 목록
+            </span>
+          </span>
+          <ArrowRight
+            aria-hidden="true"
+            className="size-5 shrink-0 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--foreground)]"
+          />
+        </Link>
+
+        {process.env.NEXT_PUBLIC_BEAT_APP_URL?.trim() ? (
+          <a
+            className="group flex w-full items-center gap-4 rounded-2xl border border-[var(--line)] bg-[var(--background)] p-4 text-left transition-colors hover:border-[var(--accent-foreground)] hover:bg-[var(--accent-foreground)]/5 sm:px-5"
+            href={process.env.NEXT_PUBLIC_BEAT_APP_URL.trim()}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--cyan)]/15 text-[var(--cyan)]">
+              <BotMessageSquare aria-hidden="true" className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold">비트 채팅</span>
+              <span className="mt-1 block text-sm text-[var(--muted-foreground)]">
+                별도 Beat 앱에서 대화 이어가기
+              </span>
+            </span>
+            <ArrowRight
+              aria-hidden="true"
+              className="size-5 shrink-0 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--foreground)]"
+            />
+          </a>
+        ) : null}
+
         <button
           className="group flex w-full items-center gap-4 rounded-2xl border border-[var(--line)] bg-[var(--background)] p-4 text-left transition-colors hover:border-[var(--accent-foreground)] hover:bg-[var(--accent-foreground)]/5 sm:px-5"
           onClick={onOpenArticles}

@@ -46,6 +46,16 @@ test("keeps the admin task list separate from article and Gourmet workspaces", a
   );
 
   await page.goto("/admin/");
+  await expect(page.getByRole("link", { name: "비공개 소설" })).toHaveAttribute(
+    "href",
+    "/private/fictions/",
+  );
+  if (process.env.NEXT_PUBLIC_BEAT_APP_URL) {
+    await expect(page.getByRole("link", { name: "비트 채팅" })).toHaveAttribute(
+      "href",
+      process.env.NEXT_PUBLIC_BEAT_APP_URL,
+    );
+  }
   await expect(
     page.getByRole("heading", { name: "어떤 작업을 할까요?" }),
   ).toBeVisible();

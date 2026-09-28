@@ -3194,6 +3194,58 @@
   border: 1px solid #8883;
   border-radius: 999px;
 }
+.private-fiction-book-controls > a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.private-fiction-book-controls > a:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.private-fiction-library {
+  max-width: 720px;
+  margin: 52px auto 0;
+}
+.private-fiction-library-intro {
+  max-width: 720px;
+  margin: 72px auto 0;
+  text-align: center;
+}
+.private-fiction-library-intro h2 {
+  margin: 8px 0;
+  font-family: "Iowan Old Style", "AppleMyungjo", "Batang", serif;
+  font-size: clamp(2rem, 8vw, 3rem);
+  font-weight: 400;
+}
+.private-fiction-library-intro > p {
+  color: var(--muted-foreground);
+  line-height: 1.8;
+}
+.private-fiction-library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+.private-fiction-library-actions :is(a, button) {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #8885;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.85rem;
+}
+.private-fiction-library-actions :is(a, button):hover {
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+}
 .private-fiction-contents-dialog > header button {
   display: grid;
   min-width: 40px;
