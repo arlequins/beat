@@ -20,6 +20,7 @@ export type BookReaderRenderState = {
 export function BookReader({
   children,
   className = "",
+  edgeToEdge = false,
   label,
   layoutKey,
   onBoundaryTurn,
@@ -29,6 +30,7 @@ export function BookReader({
 }: {
   children: (state: BookReaderRenderState) => ReactNode;
   className?: string;
+  edgeToEdge?: boolean;
   label: string;
   layoutKey: string;
   onBoundaryTurn?: (delta: number) => void;
@@ -88,9 +90,13 @@ export function BookReader({
         const width = el.clientWidth;
         if (!width || !el.clientHeight) return;
         text.style.height = `${el.clientHeight}px`;
-        text.style.width = `${width - 48}px`;
-        text.style.columnWidth = `${width - 48}px`;
-        const count = Math.max(1, Math.ceil((text.scrollWidth + 48) / width));
+        const gutter = edgeToEdge ? 0 : 48;
+        text.style.width = `${width - gutter}px`;
+        text.style.columnWidth = `${width - gutter}px`;
+        const count = Math.max(
+          1,
+          Math.ceil((text.scrollWidth + gutter) / width),
+        );
         const target = Math.min(
           count - 1,
           Math.round(progress.current * (count - 1)),
@@ -129,7 +135,7 @@ export function BookReader({
       cancelAnimationFrame(frame);
       cancelAnimationFrame(restoreFrame);
     };
-  }, [layoutKey]);
+  }, [edgeToEdge, layoutKey]);
 
   const turn = useCallback(
     (delta: number) => {
@@ -188,7 +194,7 @@ export function BookReader({
 
   return (
     <div
-      className={`book-viewport ${className}`.trim()}
+      className={`book-viewport ${className} ${edgeToEdge ? "book-viewport--immersive" : ""}`.trim()}
       ref={viewport}
       role="region"
       aria-label={label}
@@ -246,6 +252,15 @@ export function BookReader({
           Math.hypot(x - touchStart.current.x, y - touchStart.current.y) > 12
         ) {
           lastTap.current.time = 0;
+          const deltaX = x - touchStart.current.x;
+          const deltaY = y - touchStart.current.y;
+          if (
+            edgeToEdge &&
+            Math.abs(deltaX) >= 36 &&
+            Math.abs(deltaX) > Math.abs(deltaY) * 1.15
+          ) {
+            turn(deltaX < 0 ? 1 : -1);
+          }
           return;
         }
         const now = performance.now();
