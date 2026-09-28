@@ -3138,6 +3138,120 @@
   font-size: var(--reader-size);
   line-height: var(--reader-line);
 }
+.private-fiction-highlight {
+  color: inherit;
+  border-radius: 0.18em;
+  background: color-mix(in srgb, #ffd76a 62%, transparent);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.private-fiction-feedback-composer {
+  position: fixed;
+  z-index: 20;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  width: min(520px, calc(100vw - 24px));
+  max-height: 44vh;
+  overflow: auto;
+  transform: translateX(-50%);
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--viewer-ink) 18%, transparent);
+  border-radius: 14px;
+  background: var(--viewer-bg);
+  color: var(--viewer-ink);
+  box-shadow: 0 12px 40px #0005;
+}
+.private-fiction-feedback-heading {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.72;
+}
+.private-fiction-feedback-composer blockquote {
+  max-height: 5.5em;
+  overflow: auto;
+  margin: 0 0 12px;
+  padding-left: 10px;
+  border-left: 2px solid #d7a42a;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.private-fiction-feedback-composer label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.private-fiction-feedback-composer textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 76px;
+  resize: vertical;
+  padding: 9px 11px;
+  border: 1px solid color-mix(in srgb, var(--viewer-ink) 24%, transparent);
+  border-radius: 8px;
+  background: var(--viewer-bg);
+  color: var(--viewer-ink);
+  font: inherit;
+  font-size: 14px;
+}
+.private-fiction-feedback-composer > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+.private-fiction-feedback-composer button,
+.private-fiction-feedback-list button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--viewer-ink) 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--viewer-ink) 7%, var(--viewer-bg));
+  color: inherit;
+  cursor: pointer;
+}
+.private-fiction-feedback-composer button:disabled,
+.private-fiction-feedback-list button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.private-fiction-feedback-status {
+  margin: 8px 0 0;
+  font-size: 12px;
+  opacity: 0.72;
+}
+.private-fiction-feedback-list {
+  max-height: min(68vh, 620px);
+  overflow: auto;
+}
+.private-fiction-feedback-list ol {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+.private-fiction-book .private-fiction-feedback-list li {
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 10px;
+}
+.private-fiction-feedback-list blockquote {
+  margin: 0 0 8px;
+  padding-left: 10px;
+  border-left: 2px solid #d7a42a;
+  font-size: 14px;
+}
+.private-fiction-feedback-list li > p {
+  margin: 0 0 8px;
+  white-space: pre-wrap;
+}
+.private-fiction-feedback-list time {
+  margin-right: 12px;
+  font-size: 11px;
+  opacity: 0.68;
+}
 .private-fiction-book {
   --reader-size: 20px;
   --reader-line: 1.9;
@@ -3242,6 +3356,20 @@
 }
 .private-fiction-book-controls > a:hover {
   background: color-mix(in srgb, currentColor 8%, transparent);
+}
+@media (max-width: 560px) {
+  .private-fiction-book-controls {
+    gap: 1px;
+    padding-inline: 8px;
+  }
+  .private-fiction-book-controls > button,
+  .private-fiction-book-controls > a {
+    min-width: 36px;
+    padding-inline: 6px;
+  }
+  .private-fiction-book-controls .book-page-number {
+    min-width: 48px;
+  }
 }
 .private-fiction-library {
   max-width: 720px;

@@ -222,6 +222,7 @@ export default $config({
           actions: ["s3:GetObject", "s3:PutObject"],
           resources: [
             $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/outline.md`,
+            $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/annotations.json`,
           ],
         },
         ...(serverEnv.BEAT_RUNTIME_SECRET_ARN

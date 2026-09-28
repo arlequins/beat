@@ -6,7 +6,28 @@ import {
 } from "@aws-sdk/client-s3";
 
 const OBJECT_KEY = "author-vault/reality-error/outline.md";
+const ANNOTATIONS_OBJECT_KEY = "author-vault/reality-error/annotations.json";
 export const MAX_PRIVATE_FICTION_SOURCE_BYTES = 4_000_000;
+export const MAX_PRIVATE_FICTION_ANNOTATION_BYTES = 2_000_000;
+
+export type PrivateFictionAnnotation = {
+  id: string;
+  episode: number;
+  blockIndex: number;
+  startOffset: number;
+  endOffset: number;
+  quote: string;
+  prefix: string;
+  suffix: string;
+  comment: string;
+  createdAt: string;
+};
+
+export type PrivateFictionAnnotationsDocument = {
+  etag: string;
+  annotations: PrivateFictionAnnotation[];
+  updatedAt: string;
+};
 
 export type PrivateFictionDocument = {
   etag: string;
@@ -104,6 +125,77 @@ export async function savePrivateFictionDocument(
     if (!response.ETag)
       throw new PrivateFictionStorageError("storage_unavailable");
     return { etag: response.ETag, updatedAt: new Date().toISOString() };
+  } catch (error) {
+    if (error instanceof PrivateFictionStorageError) throw error;
+    if (isConflict(error)) throw new PrivateFictionStorageError("conflict");
+    throw new PrivateFictionStorageError("storage_unavailable");
+  }
+}
+
+export async function getPrivateFictionAnnotations(
+  client = new S3Client({}),
+): Promise<PrivateFictionAnnotationsDocument | undefined> {
+  try {
+    const response = await client.send(
+      new GetObjectCommand({
+        Bucket: bucketName(),
+        Key: ANNOTATIONS_OBJECT_KEY,
+      }),
+    );
+    if (!response.ETag || !response.LastModified)
+      throw new PrivateFictionStorageError("storage_unavailable");
+    const parsed: unknown = JSON.parse(await bodyText(response.Body));
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      !Array.isArray((parsed as { annotations?: unknown }).annotations)
+    )
+      throw new PrivateFictionStorageError("storage_unavailable");
+    return {
+      etag: response.ETag,
+      annotations: (parsed as { annotations: PrivateFictionAnnotation[] })
+        .annotations,
+      updatedAt: response.LastModified.toISOString(),
+    };
+  } catch (error) {
+    if (error instanceof PrivateFictionStorageError) throw error;
+    if (isMissing(error)) return undefined;
+    throw new PrivateFictionStorageError("storage_unavailable");
+  }
+}
+
+export async function savePrivateFictionAnnotations(
+  input: {
+    expectedEtag: string | null;
+    annotations: PrivateFictionAnnotation[];
+  },
+  client = new S3Client({}),
+) {
+  const body = JSON.stringify({ annotations: input.annotations });
+  if (
+    new TextEncoder().encode(body).byteLength >
+    MAX_PRIVATE_FICTION_ANNOTATION_BYTES
+  )
+    throw new PrivateFictionStorageError("storage_unavailable");
+  try {
+    const response = await client.send(
+      new PutObjectCommand({
+        Body: body,
+        Bucket: bucketName(),
+        CacheControl: "private, no-store, max-age=0",
+        ContentType: "application/json; charset=utf-8",
+        IfMatch: input.expectedEtag ?? undefined,
+        IfNoneMatch: input.expectedEtag === null ? "*" : undefined,
+        Key: ANNOTATIONS_OBJECT_KEY,
+      }),
+    );
+    if (!response.ETag)
+      throw new PrivateFictionStorageError("storage_unavailable");
+    return {
+      etag: response.ETag,
+      annotations: input.annotations,
+      updatedAt: new Date().toISOString(),
+    };
   } catch (error) {
     if (error instanceof PrivateFictionStorageError) throw error;
     if (isConflict(error)) throw new PrivateFictionStorageError("conflict");

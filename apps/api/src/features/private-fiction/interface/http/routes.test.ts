@@ -107,6 +107,96 @@ describe("private fiction routes", () => {
     });
   });
 
+  it("keeps private episode feedback owner-only and saves it conditionally", async () => {
+    const feedback = {
+      etag: '"feedback-1"',
+      annotations: [
+        {
+          id: "6c87c47a-d0f6-4425-a017-872b7deabc02",
+          episode: 1,
+          blockIndex: 0,
+          startOffset: 0,
+          endOffset: 4,
+          quote: "첫 문장",
+          prefix: "",
+          suffix: " 뒤 문장",
+          comment: "이 부분을 조금 다듬어 주세요.",
+          createdAt: "2026-09-29T00:00:00.000Z",
+        },
+      ],
+      updatedAt: "2026-09-29T00:00:00.000Z",
+    };
+    const store = {
+      get: vi.fn(),
+      save: vi.fn(),
+      getAnnotations: vi.fn(async () => feedback),
+      saveAnnotations: vi.fn(async () => feedback),
+    };
+    const app = createApiApp({
+      corsOrigins: [],
+      logger: createLogger({ service: "api", sink: () => {} }),
+      privateFiction: store,
+      rateLimiter: false,
+      beatAuth: {
+        authenticate: vi.fn(),
+        issueTokenPair: vi.fn(),
+        jwks: vi.fn(async () => ({ keys: [] })),
+        refreshTokenPair: vi.fn(),
+        revokeRefreshToken: vi.fn(),
+        verifyAccessToken: vi.fn(async (token) => {
+          if (token === "other")
+            return { email: "other@example.com", subject: "account-2" };
+          return { email: GOOGLE_ALLOWED_EMAIL, subject: "account-1" };
+        }),
+      },
+    });
+    const headers = {
+      Authorization: "Bearer owner",
+      "Content-Type": "application/json",
+    };
+
+    const anonymous = await app.request("/admin/private-fiction/annotations");
+    const otherAccount = await app.request(
+      "/admin/private-fiction/annotations",
+      { headers: { Authorization: "Bearer other" } },
+    );
+    expect(anonymous.status).toBe(401);
+    expect(otherAccount.status).toBe(404);
+    expect(store.getAnnotations).not.toHaveBeenCalled();
+    expect(store.saveAnnotations).not.toHaveBeenCalled();
+
+    const read = await app.request("/admin/private-fiction/annotations", {
+      headers,
+    });
+    expect(read.status).toBe(200);
+    expect(read.headers.get("cache-control")).toContain("no-store");
+    await expect(read.json()).resolves.toEqual(feedback);
+
+    const saved = await app.request("/admin/private-fiction/annotations", {
+      body: JSON.stringify({
+        expectedEtag: feedback.etag,
+        annotations: feedback.annotations,
+      }),
+      headers,
+      method: "PUT",
+    });
+    expect(saved.status).toBe(200);
+    expect(store.saveAnnotations).toHaveBeenCalledWith({
+      expectedEtag: feedback.etag,
+      annotations: feedback.annotations,
+    });
+
+    const malformed = await app.request("/admin/private-fiction/annotations", {
+      body: JSON.stringify({
+        expectedEtag: null,
+        annotations: [{ ...feedback.annotations[0], episode: 0 }],
+      }),
+      headers,
+      method: "PUT",
+    });
+    expect(malformed.status).toBe(400);
+  });
+
   it("handles missing objects, malformed writes, conflicts, and storage failures", async () => {
     const store = {
       get: vi.fn(

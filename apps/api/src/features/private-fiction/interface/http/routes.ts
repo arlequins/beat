@@ -4,7 +4,10 @@ import type { ApiBindings } from "../../../../app";
 import type { ActiveAdmin } from "../../../../beat-auth";
 import { GOOGLE_ALLOWED_EMAIL } from "../../../../beat-google";
 import {
+  MAX_PRIVATE_FICTION_ANNOTATION_BYTES,
   MAX_PRIVATE_FICTION_SOURCE_BYTES,
+  type PrivateFictionAnnotation,
+  type PrivateFictionAnnotationsDocument,
   type PrivateFictionDocument,
   PrivateFictionStorageError,
 } from "../../s3-private-fiction-repository";
@@ -14,12 +17,37 @@ const saveSchema = z.object({
   source: z.string().min(1).max(MAX_PRIVATE_FICTION_SOURCE_BYTES),
 });
 
+const annotationSchema = z
+  .object({
+    id: z.string().uuid(),
+    episode: z.number().int().min(1).max(500),
+    blockIndex: z.number().int().min(0).max(100_000),
+    startOffset: z.number().int().min(0).max(1_000_000),
+    endOffset: z.number().int().min(1).max(1_000_000),
+    quote: z.string().min(1).max(2_000),
+    prefix: z.string().max(100),
+    suffix: z.string().max(100),
+    comment: z.string().trim().min(1).max(5_000),
+    createdAt: z.string().datetime(),
+  })
+  .refine((annotation) => annotation.endOffset > annotation.startOffset);
+
+const saveAnnotationsSchema = z.object({
+  expectedEtag: z.string().max(256).nullable(),
+  annotations: z.array(annotationSchema).max(2_000),
+});
+
 export type PrivateFictionPort = {
   get: () => Promise<PrivateFictionDocument | undefined>;
   save: (input: { expectedEtag: string | null; source: string }) => Promise<{
     etag: string;
     updatedAt: string;
   }>;
+  getAnnotations: () => Promise<PrivateFictionAnnotationsDocument | undefined>;
+  saveAnnotations: (input: {
+    expectedEtag: string | null;
+    annotations: PrivateFictionAnnotation[];
+  }) => Promise<PrivateFictionAnnotationsDocument>;
 };
 
 function bearer(value: string | undefined) {
@@ -96,6 +124,51 @@ export function registerPrivateFictionRoutes(
           409,
         );
       return context.json({ error: "Private manuscript unavailable" }, 503);
+    }
+  });
+
+  app.get("/admin/private-fiction/annotations", async (context) => {
+    context.header("Cache-Control", "private, no-store, max-age=0");
+    context.header("Vary", "Authorization");
+    const access = await owner(context);
+    if (access.response) return access.response;
+    try {
+      const document = await options.store.getAnnotations();
+      return context.json(
+        document ?? { etag: null, annotations: [], updatedAt: null },
+      );
+    } catch {
+      return context.json({ error: "Private feedback unavailable" }, 503);
+    }
+  });
+
+  app.put("/admin/private-fiction/annotations", async (context) => {
+    context.header("Cache-Control", "private, no-store, max-age=0");
+    context.header("Vary", "Authorization");
+    const access = await owner(context);
+    if (access.response) return access.response;
+    const parsed = saveAnnotationsSchema.safeParse(
+      await context.req.json().catch(() => null),
+    );
+    if (!parsed.success)
+      return context.json({ error: "Invalid private feedback" }, 400);
+    if (
+      new TextEncoder().encode(JSON.stringify(parsed.data.annotations))
+        .byteLength > MAX_PRIVATE_FICTION_ANNOTATION_BYTES
+    )
+      return context.json({ error: "Invalid private feedback" }, 400);
+    try {
+      return context.json(await options.store.saveAnnotations(parsed.data));
+    } catch (error) {
+      if (
+        error instanceof PrivateFictionStorageError &&
+        error.code === "conflict"
+      )
+        return context.json(
+          { error: "Feedback changed; reload before saving" },
+          409,
+        );
+      return context.json({ error: "Private feedback unavailable" }, 503);
     }
   });
 }

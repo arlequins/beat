@@ -41,6 +41,12 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
       }),
     }),
   );
+  await page.route("**/admin/private-fiction/annotations", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+    }),
+  );
 
   await page.goto("/private/fictions/");
   await expect(
@@ -299,4 +305,102 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+});
+
+test("anchors private reader feedback to highlighted prose and reloads it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "beat-admin-session",
+      JSON.stringify({
+        accessExpiresAt: Date.now() + 60 * 60 * 1000,
+        accessToken: "private-fiction-test-token",
+        refreshExpiresAt: Date.now() + 2 * 60 * 60 * 1000,
+        refreshToken: "private-fiction-test-refresh-token",
+      }),
+    );
+  });
+  await page.route("**/admin/private-fiction", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        etag: "test-etag",
+        source:
+          "# 1화 — 첫 번째 장면\n\n터널 바깥의 비는 그치지 않았다. 도윤은 기록을 다시 읽었다.",
+        updatedAt: "2026-09-27T12:00:00.000Z",
+      }),
+    }),
+  );
+
+  let etag: string | null = null;
+  let annotations: unknown[] = [];
+  await page.route("**/admin/private-fiction/annotations", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ etag, annotations, updatedAt: null }),
+      });
+      return;
+    }
+    const body = route.request().postDataJSON() as {
+      annotations: unknown[];
+    };
+    annotations = body.annotations;
+    etag = '"feedback-1"';
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        etag,
+        annotations,
+        updatedAt: "2026-09-29T00:00:00.000Z",
+      }),
+    });
+  });
+
+  await page.goto("/private/fictions/?episode=1");
+  await expect(
+    page.getByRole("heading", { name: "첫 번째 장면" }),
+  ).toBeVisible();
+  const paragraph = page.locator(
+    ".book-article-body [data-feedback-block-index]",
+  );
+  await paragraph.first().evaluate((element) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    const text = walker.nextNode();
+    if (!text) throw new Error("Paragraph text node is missing");
+    const range = document.createRange();
+    range.setStart(text, 0);
+    range.setEnd(text, 6);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    element.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+  });
+
+  await expect(
+    page.getByRole("region", { name: "선택한 원고에 의견 남기기" }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".private-fiction-feedback-composer blockquote"),
+  ).toHaveText("터널 바깥의");
+  await page
+    .getByRole("textbox", { name: "코멘트" })
+    .fill("이 문장을 더 구체적으로 다듬어 주세요.");
+  await page.getByRole("button", { name: "피드백 저장" }).click();
+  await expect(page.locator("mark[data-feedback-highlight]")).toHaveText(
+    "터널 바깥의",
+  );
+  expect(annotations).toHaveLength(1);
+
+  await page.reload();
+  await expect(page.locator("mark[data-feedback-highlight]")).toHaveText(
+    "터널 바깥의",
+  );
+  await page.locator(".private-fiction-book-viewport").dblclick();
+  await page.getByRole("button", { name: "회차 피드백 1개" }).click();
+  const feedback = page.getByRole("dialog");
+  await expect(
+    feedback.getByText("이 문장을 더 구체적으로 다듬어 주세요."),
+  ).toBeVisible();
 });
