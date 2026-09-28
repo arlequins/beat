@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.74.4](https://github.com/arlequins/beat/compare/beat-v1.74.3...beat-v1.74.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* **private-fiction:** prevent vertical reader panning ([#329](https://github.com/arlequins/beat/issues/329)) ([5150e17](https://github.com/arlequins/beat/commit/5150e17cea827fe9c626ac6c5338d6022940700b))
+
 ## [1.74.3](https://github.com/arlequins/beat/compare/beat-v1.74.2...beat-v1.74.3) (2026-09-28)
 
 
