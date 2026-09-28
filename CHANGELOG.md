@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.74.0](https://github.com/arlequins/beat/compare/beat-v1.73.1...beat-v1.74.0) (2026-09-28)
+
+
+### Features
+
+* **web:** add private fiction navigation and admin links ([#321](https://github.com/arlequins/beat/issues/321)) ([758e08f](https://github.com/arlequins/beat/commit/758e08f942c8151f6e4ebd0a22c7d761e228e9d6))
+
 ## [1.73.1](https://github.com/arlequins/beat/compare/beat-v1.73.0...beat-v1.73.1) (2026-09-27)
 
 
