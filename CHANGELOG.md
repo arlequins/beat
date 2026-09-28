@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.75.1](https://github.com/arlequins/beat/compare/beat-v1.75.0...beat-v1.75.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* **private-fiction:** keep episode transitions stable ([#335](https://github.com/arlequins/beat/issues/335)) ([1f9aa86](https://github.com/arlequins/beat/commit/1f9aa8676351e9a2da2cb4838569dd6d1b24a2a6))
+
 ## [1.75.0](https://github.com/arlequins/beat/compare/beat-v1.74.5...beat-v1.75.0) (2026-09-28)
 
 
