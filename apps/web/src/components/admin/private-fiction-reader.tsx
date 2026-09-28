@@ -221,6 +221,17 @@ export function PrivateFictionReader() {
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
+    const shell = document.querySelector<HTMLElement>(".ebook-shell");
+    const background =
+      preferences.theme === "white"
+        ? "#fff"
+        : preferences.theme === "paper"
+          ? "#f5f0e6"
+          : "#000";
+    shell?.style.setProperty("--private-fiction-reader-background", background);
+  }, [preferences.theme]);
+
+  useEffect(() => {
     try {
       const stored = JSON.parse(
         localStorage.getItem("beat-fiction-v1-preferences") ?? "null",
@@ -346,7 +357,9 @@ export function PrivateFictionReader() {
     }
     if (section?.kind === "episode" && section.episode) {
       setSelectedId(undefined);
-      router.push(`/private/fictions/?episode=${section.episode}`);
+      router.push(`/private/fictions/?episode=${section.episode}`, {
+        scroll: false,
+      });
     } else {
       setSelectedId(id);
     }
@@ -531,6 +544,7 @@ export function PrivateFictionReader() {
           if (target) chooseSection(target.id, delta < 0);
         }}
         positionKey={selected.id}
+        waitForLayout
       >
         {({
           flowRef,

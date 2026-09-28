@@ -12,7 +12,11 @@ export const metadata: Metadata = {
 export default function PrivateFictionListPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <Suspense fallback={<div className="min-h-[70vh]" />}>
+      <Suspense
+        fallback={
+          <div aria-hidden="true" className="private-fiction-route-pending" />
+        }
+      >
         <PrivateFictionReader />
       </Suspense>
     </div>

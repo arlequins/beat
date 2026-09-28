@@ -26,6 +26,7 @@ export function BookReader({
   onBoundaryTurn,
   onProgressChange,
   positionKey,
+  waitForLayout = false,
   viewportStyle,
 }: {
   children: (state: BookReaderRenderState) => ReactNode;
@@ -36,6 +37,7 @@ export function BookReader({
   onBoundaryTurn?: (delta: number) => void;
   onProgressChange?: (progress: number) => void;
   positionKey?: string;
+  waitForLayout?: boolean;
   viewportStyle?: CSSProperties;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
@@ -55,6 +57,7 @@ export function BookReader({
   const [pageCount, setPageCount] = useState(1);
   const [pageWidth, setPageWidth] = useState(0);
   const [controlsVisible, setControlsVisible] = useState(false);
+  const [layoutReady, setLayoutReady] = useState(!waitForLayout);
 
   progressCallback.current = onProgressChange;
   boundaryCallback.current = onBoundaryTurn;
@@ -78,6 +81,7 @@ export function BookReader({
 
   useLayoutEffect(() => {
     void layoutKey;
+    if (waitForLayout) setLayoutReady(false);
     const el = viewport.current;
     const text = flow.current;
     if (!el || !text) return;
@@ -109,6 +113,7 @@ export function BookReader({
         cancelAnimationFrame(restoreFrame);
         restoreFrame = requestAnimationFrame(() => {
           el.scrollLeft = target * width;
+          if (waitForLayout) setLayoutReady(true);
         });
       });
     };
@@ -137,7 +142,7 @@ export function BookReader({
       cancelAnimationFrame(frame);
       cancelAnimationFrame(restoreFrame);
     };
-  }, [layoutKey]);
+  }, [layoutKey, waitForLayout]);
 
   const turn = useCallback(
     (delta: number) => {
@@ -197,6 +202,7 @@ export function BookReader({
   return (
     <div
       className={`book-viewport ${className} ${immersive ? "book-viewport--immersive" : ""}`.trim()}
+      data-layout-ready={waitForLayout ? layoutReady : undefined}
       ref={viewport}
       role="region"
       aria-label={label}
