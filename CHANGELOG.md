@@ -2,6 +2,18 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.76.0](https://github.com/arlequins/beat/compare/beat-v1.75.1...beat-v1.76.0) (2026-09-29)
+
+
+### Features
+
+* **api:** allow large private fiction uploads ([32643db](https://github.com/arlequins/beat/commit/32643dbc80b42f0b0a9800afe7051d3a5f2b2d5a))
+
+
+### Bug Fixes
+
+* **web:** preserve uploaded manuscript after save ([c5da022](https://github.com/arlequins/beat/commit/c5da02206ed4f62080168557a1a21f6e1ffcde96))
+
 ## [1.75.1](https://github.com/arlequins/beat/compare/beat-v1.75.0...beat-v1.75.1) (2026-09-28)
 
 
