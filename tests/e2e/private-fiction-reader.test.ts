@@ -63,13 +63,13 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   await expect(page.getByText("읽기 →")).toHaveCount(0);
   await expect(
     page.getByRole("button", {
-      name: "편의점의 두 손님 1",
+      name: "1화. 편의점의 두 손님 1",
       exact: true,
     }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", {
-      name: "편의점의 두 손님 2",
+      name: "2화. 편의점의 두 손님 2",
       exact: true,
     }),
   ).toBeVisible();
@@ -77,7 +77,10 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     page.getByRole("button", { name: "3화. 세 번째 장면" }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "편의점의 두 손님 1", exact: true })
+    .getByRole("button", {
+      name: "1화. 편의점의 두 손님 1",
+      exact: true,
+    })
     .click();
   await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=1$/);
   const viewport = page.locator(".private-fiction-book-viewport");
@@ -220,7 +223,7 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   await expect(contents.getByRole("heading", { name: "목차" })).toBeVisible();
   await expect(
     contents.getByRole("button", {
-      name: "편의점의 두 손님 2",
+      name: "2화. 편의점의 두 손님 2",
       exact: true,
     }),
   ).toBeVisible();
@@ -244,7 +247,10 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     window.setTimeout(() => observer.disconnect(), 3000);
   });
   await contents
-    .getByRole("button", { name: "편의점의 두 손님 2", exact: true })
+    .getByRole("button", {
+      name: "2화. 편의점의 두 손님 2",
+      exact: true,
+    })
     .click();
   await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=2$/);
   await expect(
