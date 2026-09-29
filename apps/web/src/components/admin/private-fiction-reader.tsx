@@ -128,9 +128,6 @@ function parseManuscript(source: string) {
 }
 
 function contentsEntryTitle(section: ManuscriptSection) {
-  if (section.kind === "episode" && /\s+\d+$/.test(section.title)) {
-    return section.title;
-  }
   return section.kind === "episode" && section.episode !== undefined
     ? `${section.episode}화. ${section.title}`
     : section.title;
