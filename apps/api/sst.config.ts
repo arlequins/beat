@@ -102,7 +102,7 @@ export default $config({
     const authStateBucket = createPrivateBucket("AuthState", {
       lifecycle: [
         {
-          expiresIn: "31 days",
+          expiresIn: "91 days",
           id: "expire-refresh-sessions",
           prefix: `${statePrefix}/oauth/sessions/`,
         },
