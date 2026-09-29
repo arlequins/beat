@@ -19,7 +19,7 @@ import { decodeJwt, importJWK, jwtVerify, SignJWT } from "jose";
 import { GOOGLE_ALLOWED_EMAIL } from "./beat-google";
 
 const ACCESS_TOKEN_TTL_SECONDS = 10 * 60;
-const DEFAULT_REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
+const DEFAULT_REFRESH_TOKEN_TTL_SECONDS = 90 * 24 * 60 * 60;
 const DEFAULT_AUTHORIZATION_CODE_TTL_SECONDS = 60;
 
 export type ActiveAdmin = {

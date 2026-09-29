@@ -82,7 +82,7 @@ function s3Harness() {
   };
 }
 
-async function loadAuth() {
+async function loadAuth(refreshTokenTtlSeconds: string | null = "2592000") {
   const { privateKey, publicKey } = await generateKeyPair("ES256", {
     extractable: true,
   });
@@ -94,7 +94,10 @@ async function loadAuth() {
     "test-lookup-secret-that-is-at-least-32-characters",
   );
   vi.stubEnv("BEAT_AUTH_LEDGER_RETENTION_DAYS", "365");
-  vi.stubEnv("BEAT_AUTH_REFRESH_TOKEN_TTL_SECONDS", "2592000");
+  if (refreshTokenTtlSeconds === null)
+    vi.stubEnv("BEAT_AUTH_REFRESH_TOKEN_TTL_SECONDS", undefined);
+  else
+    vi.stubEnv("BEAT_AUTH_REFRESH_TOKEN_TTL_SECONDS", refreshTokenTtlSeconds);
   vi.stubEnv("BEAT_AUTH_ISSUER_URL", "https://api.example.com/auth");
   vi.stubEnv("BEAT_AUTH_AUDIENCE", "beat-agent");
   vi.stubEnv(
@@ -125,6 +128,29 @@ afterEach(() => {
 });
 
 describe("Beat S3 authentication", () => {
+  it("keeps a remembered device signed in for 90 days by default", async () => {
+    const harness = s3Harness();
+    const { auth } = await loadAuth(null);
+    await auth.createBeatAdmin(
+      "admin@example.com",
+      "correct horse battery staple",
+      harness.client,
+    );
+    const administrator = await auth.authenticateBeatAdmin(
+      "admin@example.com",
+      "correct horse battery staple",
+      harness.client,
+    );
+
+    const tokens = await auth.issueBeatTokenPair(
+      administrator!,
+      "beat-agent",
+      harness.client,
+    );
+
+    expect(tokens.refresh_expires_in).toBe(90 * 24 * 60 * 60);
+  });
+
   it("creates a deterministic administrator state and rejects duplicates", async () => {
     const harness = s3Harness();
     const { auth } = await loadAuth();

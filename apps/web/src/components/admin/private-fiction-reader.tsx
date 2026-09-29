@@ -24,6 +24,44 @@ import {
 } from "~/lib/beat-admin-session";
 
 type Manuscript = { etag: string; source: string; updatedAt: string };
+const privateFictionManuscriptCacheKey = "beat-private-fiction-manuscript-v1";
+
+function readCachedPrivateManuscript(): Manuscript | undefined {
+  try {
+    const raw = window.localStorage.getItem(privateFictionManuscriptCacheKey);
+    if (!raw) return undefined;
+    const value = JSON.parse(raw) as Partial<Manuscript>;
+    if (
+      typeof value.etag !== "string" ||
+      typeof value.source !== "string" ||
+      typeof value.updatedAt !== "string"
+    )
+      return undefined;
+    return value as Manuscript;
+  } catch {
+    return undefined;
+  }
+}
+
+function cachePrivateManuscript(manuscript: Manuscript) {
+  try {
+    window.localStorage.setItem(
+      privateFictionManuscriptCacheKey,
+      JSON.stringify(manuscript),
+    );
+  } catch {
+    // Keep the server copy readable if browser storage is unavailable or full.
+  }
+}
+
+function clearCachedPrivateManuscript() {
+  try {
+    window.localStorage.removeItem(privateFictionManuscriptCacheKey);
+  } catch {
+    // The server remains the source of truth when browser storage is unavailable.
+  }
+}
+
 type FictionAnnotation = {
   id: string;
   episode: number;
@@ -463,6 +501,14 @@ export function PrivateFictionReader() {
       );
       return;
     }
+    const cached = readCachedPrivateManuscript();
+    if (cached) {
+      setManuscript(cached);
+      setAuthenticated(true);
+      setMessage(
+        "이 기기에 저장된 원고를 표시하며 최신본을 확인하고 있습니다.",
+      );
+    }
     setBusy(true);
     try {
       const response = await authorizedBeatAdminRequest(
@@ -471,6 +517,8 @@ export function PrivateFictionReader() {
       );
       if (response.status === 401) {
         setAuthenticated(false);
+        setManuscript(undefined);
+        clearCachedPrivateManuscript();
         setMessage("로그인이 만료되었습니다. 다시 로그인해 주세요.");
         return;
       }
@@ -480,16 +528,29 @@ export function PrivateFictionReader() {
           "아직 보관된 원고가 없습니다. 로컬 파일을 선택해 처음 저장할 수 있습니다.",
         );
         setManuscript(undefined);
+        clearCachedPrivateManuscript();
         return;
       }
       if (!response.ok) throw new Error("비공개 원고를 불러오지 못했습니다.");
-      setManuscript((await response.json()) as Manuscript);
+      const latest = (await response.json()) as Manuscript;
+      cachePrivateManuscript(latest);
+      setManuscript(latest);
       setAuthenticated(true);
-      setMessage("비공개 원고를 안전하게 불러왔습니다.");
+      setMessage("최신 원고를 불러와 이 기기에 저장했습니다.");
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "원고를 불러오지 못했습니다.",
-      );
+      if (cached && hasPersistentBeatAdminSession()) {
+        setAuthenticated(true);
+        setMessage(
+          "서버에 연결하지 못해 이 기기에 저장된 원고를 표시하고 있습니다.",
+        );
+      } else {
+        setAuthenticated(false);
+        setMessage(
+          error instanceof Error
+            ? error.message
+            : "원고를 불러오지 못했습니다.",
+        );
+      }
     } finally {
       setBusy(false);
     }
@@ -686,7 +747,9 @@ export function PrivateFictionReader() {
         Manuscript,
         "etag" | "updatedAt"
       >;
-      setManuscript({ ...saved, source });
+      const updated = { ...saved, source };
+      cachePrivateManuscript(updated);
+      setManuscript(updated);
       setSelectedId(undefined);
       setMessage("원고를 비공개 보관함에 저장했습니다.");
     } catch (error) {
@@ -914,7 +977,6 @@ export function PrivateFictionReader() {
                 />
               </section>
               <div className="book-end">
-                <p>― 여기까지 읽었습니다 ―</p>
                 {nextSection ? (
                   <button
                     className="private-fiction-next-episode"
