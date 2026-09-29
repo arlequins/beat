@@ -89,6 +89,20 @@ function parseManuscript(source: string) {
   return { introduction, sections };
 }
 
+function contentsEntryTitle(section: ManuscriptSection) {
+  if (
+    section.kind === "episode" &&
+    section.episode !== undefined &&
+    section.episode <= 5 &&
+    section.title === `편의점의 두 손님 ${section.episode}`
+  ) {
+    return section.title;
+  }
+  return section.kind === "episode" && section.episode !== undefined
+    ? `${section.episode}화. ${section.title}`
+    : section.title;
+}
+
 function annotationRange(text: string, annotation: FictionAnnotation) {
   const { startOffset, endOffset, quote } = annotation;
   if (
@@ -805,7 +819,7 @@ export function PrivateFictionReader() {
                     onClick={() => chooseSection(section.id)}
                     type="button"
                   >
-                    {section.episode}화. {section.title}
+                    {contentsEntryTitle(section)}
                   </button>
                 </li>
               ))}
@@ -1132,9 +1146,7 @@ export function PrivateFictionReader() {
                     onClick={() => chooseSection(section.id)}
                     type="button"
                   >
-                    {section.kind === "episode" && section.episode
-                      ? `${section.episode}화. ${section.title}`
-                      : section.title}
+                    {contentsEntryTitle(section)}
                     {section.id === selected.id && <span>읽는 중</span>}
                   </button>
                 </li>
