@@ -662,13 +662,20 @@ export function PrivateFictionReader() {
       setFeedbackMessage("한 문단 안에서 의견을 남길 문장을 선택해 주세요.");
   }
 
-  const chooseSection = (id: string, atEnd = false) => {
+  const chooseSection = (
+    id: string,
+    position: "start" | "end" | "saved" = "saved",
+  ) => {
     const section = sections.find((item) => item.id === id);
-    if (atEnd && section) {
+    if (position !== "saved" && section) {
+      const positionKey =
+        section.kind === "episode" && section.episode
+          ? `private-fiction-episode-${section.episode}`
+          : section.id;
       try {
         localStorage.setItem(
-          `beat-fiction-v1-book-position-${section.id}`,
-          "1",
+          `beat-fiction-v1-book-position-${positionKey}`,
+          position === "end" ? "1" : "0",
         );
       } catch {
         // Reading remains available when browser storage is disabled.
@@ -941,7 +948,7 @@ export function PrivateFictionReader() {
         layoutKey={`${selected.id}:${preferences.size}:${preferences.line}:${preferences.font}`}
         onBoundaryTurn={(delta) => {
           const target = readingOrder[selectedOrderIndex + delta];
-          if (target) chooseSection(target.id, delta < 0);
+          if (target) chooseSection(target.id, delta < 0 ? "end" : "start");
         }}
         positionKey={
           selected.kind === "episode" && selected.episode
@@ -982,7 +989,7 @@ export function PrivateFictionReader() {
                 {nextSection ? (
                   <button
                     className="private-fiction-next-episode"
-                    onClick={() => chooseSection(nextSection.id)}
+                    onClick={() => chooseSection(nextSection.id, "start")}
                     type="button"
                   >
                     {nextSection.kind === "episode" && nextSection.episode

@@ -34,7 +34,12 @@ test("starts the next private episode at its first page", async ({ page }) => {
         refreshToken: "private-fiction-test-refresh-token",
       }),
     );
-    localStorage.setItem("beat-fiction-v1-book-position-section-6", "1");
+    // A saved position at the end of episode 5 must not skip its opening when
+    // continuing forward from episode 4.
+    localStorage.setItem(
+      "beat-fiction-v1-book-position-private-fiction-episode-5",
+      "1",
+    );
   });
   await page.route("**/admin/private-fiction", (route) =>
     route.fulfill({
