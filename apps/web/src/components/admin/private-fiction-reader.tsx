@@ -936,13 +936,18 @@ export function PrivateFictionReader() {
       <BookReader
         className="private-fiction-book-viewport"
         immersive
+        key={selected.id}
         label="소설 본문. 화면 좌우를 누르거나 밀어 페이지를 넘기세요. Enter 키를 누르면 메뉴가 열립니다."
         layoutKey={`${selected.id}:${preferences.size}:${preferences.line}:${preferences.font}`}
         onBoundaryTurn={(delta) => {
           const target = readingOrder[selectedOrderIndex + delta];
           if (target) chooseSection(target.id, delta < 0);
         }}
-        positionKey={selected.id}
+        positionKey={
+          selected.kind === "episode" && selected.episode
+            ? `private-fiction-episode-${selected.episode}`
+            : selected.id
+        }
         waitForLayout
       >
         {({
