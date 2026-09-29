@@ -2601,6 +2601,12 @@
 .private-fiction-book-viewport:focus-visible {
   outline: none;
 }
+.private-fiction-shell :is(a, button, input, select, summary):focus-visible {
+  outline-color: var(--foreground);
+}
+.private-fiction-book :is(a, button, input, select, summary):focus-visible {
+  outline-color: var(--viewer-ink);
+}
 
 .fiction-guide {
   max-width: 780px;
