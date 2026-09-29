@@ -11,10 +11,12 @@ const manuscript = [
   "# 《현실 오류》 정본 설정집",
   "## 세계의 기준",
   "이 문서는 **설정**을 읽기 좋게 보여 줍니다.",
-  "# 1화 — 첫 번째 장면",
+  "# 1화 — 편의점의 두 손님 1",
   longChapter,
-  "# 2화 — 다음 장면",
+  "# 2화 — 편의점의 두 손님 2",
   "두 번째 회차 본문입니다.",
+  "# 3화 — 세 번째 장면",
+  "세 번째 회차 본문입니다.",
 ].join("\n\n");
 
 test("reads private Markdown in the public book-style page-turn viewer", async ({
@@ -60,18 +62,32 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   ).toHaveAttribute("href", "/private/fictions/");
   await expect(page.getByText("읽기 →")).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: /1화\. 첫 번째 장면/ }),
+    page.getByRole("button", {
+      name: "편의점의 두 손님 1",
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: /2화\. 다음 장면/ }),
+    page.getByRole("button", {
+      name: "편의점의 두 손님 2",
+      exact: true,
+    }),
   ).toBeVisible();
-  await page.getByRole("button", { name: /1화\. 첫 번째 장면/ }).click();
+  await expect(
+    page.getByRole("button", { name: "3화. 세 번째 장면" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "편의점의 두 손님 1", exact: true })
+    .click();
   await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=1$/);
   const viewport = page.locator(".private-fiction-book-viewport");
   await expect(viewport).toBeVisible();
   await expect(viewport).toHaveAttribute("data-layout-ready", "true");
   await expect(
-    page.getByRole("heading", { name: "첫 번째 장면" }),
+    page.getByRole("heading", {
+      name: "편의점의 두 손님 1",
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(page.locator(".private-fiction-toc")).toHaveCount(0);
   expect(
@@ -147,7 +163,10 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   await expect(viewport.locator(".book-flow")).toHaveCSS("padding-top", "24px");
   const controlsBox = await controls.boundingBox();
   const titleBox = await page
-    .getByRole("heading", { name: "첫 번째 장면" })
+    .getByRole("heading", {
+      name: "편의점의 두 손님 1",
+      exact: true,
+    })
     .boundingBox();
   expect(controlsBox).not.toBeNull();
   expect(titleBox).not.toBeNull();
@@ -200,7 +219,13 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   const contents = page.getByRole("dialog");
   await expect(contents.getByRole("heading", { name: "목차" })).toBeVisible();
   await expect(
-    contents.getByRole("button", { name: /2화\. 다음 장면/ }),
+    contents.getByRole("button", {
+      name: "편의점의 두 손님 2",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    contents.getByRole("button", { name: "3화. 세 번째 장면" }),
   ).toBeVisible();
   await page.evaluate(() => {
     sessionStorage.setItem("private-fiction-toolbar-flashes", "");
@@ -218,9 +243,13 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
     observer.observe(shell, { childList: true, subtree: true });
     window.setTimeout(() => observer.disconnect(), 3000);
   });
-  await contents.getByRole("button", { name: /2화\. 다음 장면/ }).click();
+  await contents
+    .getByRole("button", { name: "편의점의 두 손님 2", exact: true })
+    .click();
   await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=2$/);
-  await expect(page.getByRole("heading", { name: "다음 장면" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "편의점의 두 손님 2" }),
+  ).toBeVisible();
   await expect(viewport).toHaveAttribute("data-layout-ready", "true");
   expect(
     await page.evaluate(() =>
@@ -248,7 +277,10 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   await page.keyboard.press("ArrowLeft");
   await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=1$/);
   await expect(
-    page.getByRole("heading", { name: "첫 번째 장면" }),
+    page.getByRole("heading", {
+      name: "편의점의 두 손님 1",
+      exact: true,
+    }),
   ).toBeVisible();
   expect(await page.evaluate(() => window.scrollY)).toBe(250);
   await page.evaluate(() => {
