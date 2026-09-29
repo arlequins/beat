@@ -2,6 +2,19 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.77.0](https://github.com/arlequins/beat/compare/beat-v1.76.1...beat-v1.77.0) (2026-09-29)
+
+
+### Features
+
+* **web:** prefix private fiction list chapters ([#350](https://github.com/arlequins/beat/issues/350)) ([c11e235](https://github.com/arlequins/beat/commit/c11e235a5d6e72c4dbd0142d81b9ffd24609ffe8))
+
+
+### Bug Fixes
+
+* **web:** keep private fiction chapter positions stable ([#351](https://github.com/arlequins/beat/issues/351)) ([4155fb1](https://github.com/arlequins/beat/commit/4155fb1ccbb9fbaeed4001ab8e190c56dfed6004))
+* **web:** use neutral focus rings in private fiction ([d4dd915](https://github.com/arlequins/beat/commit/d4dd915fe599f3addf41b8b3f94356b8f098e5fa))
+
 ## [1.76.1](https://github.com/arlequins/beat/compare/beat-v1.76.0...beat-v1.76.1) (2026-09-29)
 
 
