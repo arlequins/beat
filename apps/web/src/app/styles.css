@@ -2598,6 +2598,9 @@
   outline: 2px solid var(--coral);
   outline-offset: -2px;
 }
+.private-fiction-book-viewport:focus-visible {
+  outline: none;
+}
 
 .fiction-guide {
   max-width: 780px;
