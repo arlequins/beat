@@ -2,6 +2,14 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.76.1](https://github.com/arlequins/beat/compare/beat-v1.76.0...beat-v1.76.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* **web:** show linked opening titles in contents ([#343](https://github.com/arlequins/beat/issues/343)) ([7d52324](https://github.com/arlequins/beat/commit/7d5232496ff01d231e34c3743e230b9b4cbf3f7e))
+* **web:** show linked titles for every private episode ([088e8a1](https://github.com/arlequins/beat/commit/088e8a1e96fe399c4ce997e20dd973af87a890ea))
+
 ## [1.76.0](https://github.com/arlequins/beat/compare/beat-v1.75.1...beat-v1.76.0) (2026-09-29)
 
 
