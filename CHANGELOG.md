@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.77.2](https://github.com/arlequins/beat/compare/beat-v1.77.1...beat-v1.77.2) (2026-09-30)
+
+
+### Bug Fixes
+
+* **web:** start next private episode at page one from contents ([2c0ec1c](https://github.com/arlequins/beat/commit/2c0ec1c8e23ed446d09d20bbbafa81b5f74d3ba0))
+
 ## [1.77.1](https://github.com/arlequins/beat/compare/beat-v1.77.0...beat-v1.77.1) (2026-09-29)
 
 
