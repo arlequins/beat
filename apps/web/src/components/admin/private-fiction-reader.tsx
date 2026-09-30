@@ -667,7 +667,15 @@ export function PrivateFictionReader() {
     position: "start" | "end" | "saved" = "saved",
   ) => {
     const section = sections.find((item) => item.id === id);
-    if (position !== "saved" && section) {
+    const selectingNextEpisode =
+      section?.kind === "episode" &&
+      section.episode !== undefined &&
+      selected?.kind === "episode" &&
+      selected.episode !== undefined &&
+      section.episode === selected.episode + 1;
+    const destinationPosition =
+      position === "saved" && selectingNextEpisode ? "start" : position;
+    if (destinationPosition !== "saved" && section) {
       const positionKey =
         section.kind === "episode" && section.episode
           ? `private-fiction-episode-${section.episode}`
@@ -675,7 +683,7 @@ export function PrivateFictionReader() {
       try {
         localStorage.setItem(
           `beat-fiction-v1-book-position-${positionKey}`,
-          position === "end" ? "1" : "0",
+          destinationPosition === "end" ? "1" : "0",
         );
       } catch {
         // Reading remains available when browser storage is disabled.
