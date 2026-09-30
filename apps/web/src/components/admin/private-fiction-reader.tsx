@@ -460,6 +460,9 @@ export function PrivateFictionReader() {
   const [feedbackComment, setFeedbackComment] = useState("");
   const [preferences, setPreferences] = useState(defaultReaderPreferences);
   const dialog = useRef<HTMLDialogElement>(null);
+  const sectionPositionOverride = useRef<
+    { sectionId: string; position: "start" | "end" } | undefined
+  >(undefined);
 
   useEffect(() => {
     const shell = document.querySelector<HTMLElement>(".ebook-shell");
@@ -612,6 +615,14 @@ export function PrivateFictionReader() {
   const selected =
     sections.find((section) => section.id === selectedId) ??
     (isEpisodeRoute ? routedSection : (episodes[0] ?? readingOrder[0]));
+  const initialPositionOverride =
+    selected && sectionPositionOverride.current?.sectionId === selected.id
+      ? sectionPositionOverride.current.position
+      : "saved";
+  const clearInitialPositionOverride = useCallback(() => {
+    if (sectionPositionOverride.current?.sectionId === selected?.id)
+      sectionPositionOverride.current = undefined;
+  }, [selected?.id]);
 
   useEffect(() => {
     if (isEpisodeRoute || isListRoute) return;
@@ -687,6 +698,15 @@ export function PrivateFictionReader() {
       section.episode === previousSection.episode + 1;
     const destinationPosition =
       position === "saved" && selectingNextEpisode ? "start" : position;
+    // The explicit override still works if localStorage cannot save the reset.
+    if (section && destinationPosition !== "saved") {
+      sectionPositionOverride.current = {
+        sectionId: section.id,
+        position: destinationPosition,
+      };
+    } else {
+      sectionPositionOverride.current = undefined;
+    }
     if (destinationPosition !== "saved" && section) {
       const positionKey =
         section.kind === "episode" && section.episode
@@ -964,8 +984,10 @@ export function PrivateFictionReader() {
         className="private-fiction-book-viewport"
         immersive
         key={selected.id}
+        initialPosition={initialPositionOverride}
         label="소설 본문. 화면 좌우를 누르거나 밀어 페이지를 넘기세요. Enter 키를 누르면 메뉴가 열립니다."
         layoutKey={`${selected.id}:${preferences.size}:${preferences.line}:${preferences.font}`}
+        onInitialPositionApplied={clearInitialPositionOverride}
         onBoundaryTurn={(delta) => {
           const target = readingOrder[selectedOrderIndex + delta];
           if (target) chooseSection(target.id, delta < 0 ? "end" : "start");

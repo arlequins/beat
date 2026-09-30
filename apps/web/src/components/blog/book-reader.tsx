@@ -24,7 +24,9 @@ export function BookReader({
   label,
   layoutKey,
   onBoundaryTurn,
+  onInitialPositionApplied,
   onProgressChange,
+  initialPosition = "saved",
   positionKey,
   waitForLayout = false,
   viewportStyle,
@@ -35,7 +37,9 @@ export function BookReader({
   label: string;
   layoutKey: string;
   onBoundaryTurn?: (delta: number) => void;
+  onInitialPositionApplied?: () => void;
   onProgressChange?: (progress: number) => void;
+  initialPosition?: "saved" | "start" | "end";
   positionKey?: string;
   waitForLayout?: boolean;
   viewportStyle?: CSSProperties;
@@ -50,6 +54,9 @@ export function BookReader({
   const touchStart = useRef({ x: 0, y: 0 });
   const pendingTurn = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressNativeDoubleClick = useRef(false);
+  // Keep the one-shot navigation intent stable if the parent clears its ref after mount.
+  const initialPositionRef = useRef(initialPosition);
+  const initialPositionAppliedCallback = useRef(onInitialPositionApplied);
   const doubleClickGuardTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -61,22 +68,33 @@ export function BookReader({
 
   progressCallback.current = onProgressChange;
   boundaryCallback.current = onBoundaryTurn;
+  initialPositionRef.current = initialPosition;
+  initialPositionAppliedCallback.current = onInitialPositionApplied;
 
   useLayoutEffect(() => {
+    const initialPosition = initialPositionRef.current;
     if (!positionKey) {
-      progress.current = 0;
+      progress.current = initialPosition === "end" ? 1 : 0;
+      initialPositionAppliedCallback.current?.();
       return;
     }
-    try {
-      const stored = Number(
-        localStorage.getItem(`beat-fiction-v1-book-position-${positionKey}`),
-      );
-      progress.current = Number.isFinite(stored)
-        ? Math.max(0, Math.min(1, stored))
-        : 0;
-    } catch {
+    if (initialPosition === "start") {
       progress.current = 0;
+    } else if (initialPosition === "end") {
+      progress.current = 1;
+    } else {
+      try {
+        const stored = Number(
+          localStorage.getItem(`beat-fiction-v1-book-position-${positionKey}`),
+        );
+        progress.current = Number.isFinite(stored)
+          ? Math.max(0, Math.min(1, stored))
+          : 0;
+      } catch {
+        progress.current = 0;
+      }
     }
+    initialPositionAppliedCallback.current?.();
   }, [positionKey]);
 
   useLayoutEffect(() => {

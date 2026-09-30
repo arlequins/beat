@@ -40,6 +40,13 @@ test("starts the next private episode at its first page", async ({ page }) => {
       "beat-fiction-v1-book-position-private-fiction-episode-5",
       "1",
     );
+    // Simulate a full store: the stale end position cannot be overwritten.
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "beat-fiction-v1-book-position-private-fiction-episode-5")
+        return;
+      originalSetItem.call(this, key, value);
+    };
   });
   await page.route("**/admin/private-fiction", (route) =>
     route.fulfill({
@@ -84,6 +91,9 @@ test("starts the next private episode at its first page", async ({ page }) => {
   ).toBeVisible();
   await expect(viewport).toHaveAttribute("data-layout-ready", "true");
   await expect(pageCounter).toContainText(/^1 \/ \d+$/);
+  await expect(
+    page.getByText(/터널 바깥의 비는 그치지 않았다\. 1번째 기록/),
+  ).toBeInViewport();
 });
 
 test("selecting the next episode from the contents starts at its first page", async ({
