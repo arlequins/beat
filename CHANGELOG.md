@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.77.5](https://github.com/arlequins/beat/compare/beat-v1.77.4...beat-v1.77.5) (2026-09-30)
+
+
+### Bug Fixes
+
+* **web:** preserve episode start across reader routes ([#360](https://github.com/arlequins/beat/issues/360)) ([d067c4b](https://github.com/arlequins/beat/commit/d067c4be089232ada02a17d3b05f2b8d21167088))
+
 ## [1.77.4](https://github.com/arlequins/beat/compare/beat-v1.77.3...beat-v1.77.4) (2026-09-30)
 
 
