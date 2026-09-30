@@ -113,6 +113,13 @@ test("selecting the next episode from the contents starts at its first page", as
       "beat-fiction-v1-book-position-private-fiction-episode-5",
       "1",
     );
+    // The one-shot start intent must win if stale progress cannot be updated.
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "beat-fiction-v1-book-position-private-fiction-episode-5")
+        return;
+      originalSetItem.call(this, key, value);
+    };
   });
   await page.route("**/admin/private-fiction", (route) =>
     route.fulfill({
@@ -156,6 +163,9 @@ test("selecting the next episode from the contents starts at its first page", as
   await expect(
     page.locator(".private-fiction-book-controls .book-page-number"),
   ).toContainText(/^1 \/ \d+$/);
+  await expect(
+    page.getByText(/터널 바깥의 비는 그치지 않았다\. 1번째 기록/),
+  ).toBeInViewport();
 });
 
 test("selecting the next episode from the episode list starts at its first page", async ({
@@ -175,6 +185,14 @@ test("selecting the next episode from the episode list starts at its first page"
       "beat-fiction-v1-book-position-private-fiction-episode-5",
       "1",
     );
+    // The list and reader are separate routes; the intent must survive the
+    // remount even when stale progress cannot be overwritten.
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "beat-fiction-v1-book-position-private-fiction-episode-5")
+        return;
+      originalSetItem.call(this, key, value);
+    };
   });
   await page.route("**/admin/private-fiction", (route) =>
     route.fulfill({
@@ -224,6 +242,9 @@ test("selecting the next episode from the episode list starts at its first page"
   await expect(
     page.locator(".private-fiction-book-controls .book-page-number"),
   ).toContainText(/^1 \/ \d+$/);
+  await expect(
+    page.getByText(/터널 바깥의 비는 그치지 않았다\. 1번째 기록/),
+  ).toBeInViewport();
 });
 
 test("reads private Markdown in the public book-style page-turn viewer", async ({

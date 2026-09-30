@@ -436,6 +436,12 @@ export function PrivateFictionReader() {
     .replace(/^.*\/private\/fictions\/?/, "")
     .replace(/\/+$/, "");
   const requestedEpisode = searchParams.get("episode");
+  const requestedPosition = searchParams.get("position");
+  const routePositionOverride =
+    requestedPosition === "start" || requestedPosition === "end"
+      ? requestedPosition
+      : undefined;
+  const searchQuery = searchParams.toString();
   const routeEpisode = requestedEpisode ? Number(requestedEpisode) : undefined;
   const isEpisodeRoute = routeEpisode !== undefined;
   const isListRoute = routePart === "list";
@@ -618,11 +624,29 @@ export function PrivateFictionReader() {
   const initialPositionOverride =
     selected && sectionPositionOverride.current?.sectionId === selected.id
       ? sectionPositionOverride.current.position
-      : "saved";
+      : routePositionOverride && selected?.episode === routeEpisode
+        ? routePositionOverride
+        : "saved";
   const clearInitialPositionOverride = useCallback(() => {
     if (sectionPositionOverride.current?.sectionId === selected?.id)
       sectionPositionOverride.current = undefined;
-  }, [selected?.id]);
+    if (!routePositionOverride || selected?.episode !== routeEpisode) return;
+    const nextQuery = new URLSearchParams(searchQuery);
+    if (nextQuery.get("position") !== routePositionOverride) return;
+    nextQuery.delete("position");
+    const query = nextQuery.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  }, [
+    pathname,
+    routeEpisode,
+    routePositionOverride,
+    router,
+    searchQuery,
+    selected?.episode,
+    selected?.id,
+  ]);
 
   useEffect(() => {
     if (isEpisodeRoute || isListRoute) return;
@@ -723,7 +747,12 @@ export function PrivateFictionReader() {
     }
     if (section?.kind === "episode" && section.episode) {
       setSelectedId(undefined);
-      router.push(`/private/fictions/?episode=${section.episode}`, {
+      const destination = new URLSearchParams({
+        episode: String(section.episode),
+      });
+      if (destinationPosition !== "saved")
+        destination.set("position", destinationPosition);
+      router.push(`/private/fictions/?${destination.toString()}`, {
         scroll: false,
       });
     } else {
