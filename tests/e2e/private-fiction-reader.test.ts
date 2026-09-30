@@ -47,6 +47,14 @@ test("starts the next private episode at its first page", async ({ page }) => {
         return;
       originalSetItem.call(this, key, value);
     };
+    const originalRequestAnimationFrame =
+      window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = (callback) =>
+      originalRequestAnimationFrame((time) => {
+        if (new URLSearchParams(window.location.search).get("episode") === "5")
+          window.setTimeout(() => callback(time), 1_500);
+        else callback(time);
+      });
   });
   await page.route("**/admin/private-fiction", (route) =>
     route.fulfill({
@@ -85,11 +93,21 @@ test("starts the next private episode at its first page", async ({ page }) => {
   }
   await page.getByRole("button", { name: "다음 페이지" }).click();
 
-  await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=5$/);
+  await expect(page).toHaveURL(
+    /\/private\/fictions\/?\?episode=5&position=start$/,
+  );
+  await expect
+    .poll(async () => {
+      const ready = await viewport.getAttribute("data-layout-ready");
+      const position = new URL(page.url()).searchParams.get("position");
+      return `${ready}:${position}`;
+    })
+    .toBe("false:start");
   await expect(
     page.getByRole("heading", { name: "다섯 번째 장면", exact: true }),
   ).toBeVisible();
   await expect(viewport).toHaveAttribute("data-layout-ready", "true");
+  await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=5$/);
   await expect(pageCounter).toContainText(/^1 \/ \d+$/);
   await expect(
     page.getByText(/터널 바깥의 비는 그치지 않았다\. 1번째 기록/),
