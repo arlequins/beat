@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.77.4](https://github.com/arlequins/beat/compare/beat-v1.77.3...beat-v1.77.4) (2026-09-30)
+
+
+### Bug Fixes
+
+* **web:** keep next episode at start if storage fails ([#358](https://github.com/arlequins/beat/issues/358)) ([7b4d2a0](https://github.com/arlequins/beat/commit/7b4d2a042795d4d0d4b5832ba5c890c838ac2b9e))
+
 ## [1.77.3](https://github.com/arlequins/beat/compare/beat-v1.77.2...beat-v1.77.3) (2026-09-30)
 
 
