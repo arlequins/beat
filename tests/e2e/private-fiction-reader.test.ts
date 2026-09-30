@@ -148,6 +148,74 @@ test("selecting the next episode from the contents starts at its first page", as
   ).toContainText(/^1 \/ \d+$/);
 });
 
+test("selecting the next episode from the episode list starts at its first page", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "beat-admin-session",
+      JSON.stringify({
+        accessExpiresAt: Date.now() + 60 * 60 * 1000,
+        accessToken: "private-fiction-test-token",
+        refreshExpiresAt: Date.now() + 2 * 60 * 60 * 1000,
+        refreshToken: "private-fiction-test-refresh-token",
+      }),
+    );
+    localStorage.setItem(
+      "beat-fiction-v1-book-position-private-fiction-episode-5",
+      "1",
+    );
+  });
+  await page.route("**/admin/private-fiction", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        etag: "test-etag",
+        source: manuscript,
+        updatedAt: "2026-09-27T12:00:00.000Z",
+      }),
+    }),
+  );
+  await page.route("**/admin/private-fiction/annotations", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+    }),
+  );
+
+  await page.goto("/private/fictions/?episode=4");
+  const viewport = page.locator(".private-fiction-book-viewport");
+  await expect(
+    page.getByRole("heading", { name: "네 번째 장면", exact: true }),
+  ).toBeVisible();
+  await expect(viewport).toHaveAttribute("data-layout-ready", "true");
+  const lastReadSectionId = await page.evaluate(() =>
+    localStorage.getItem("private-fiction-book-section"),
+  );
+  expect(lastReadSectionId).not.toBeNull();
+  await viewport.dblclick();
+  await page.getByRole("link", { name: "회차 목록", exact: true }).click();
+  await expect(page).toHaveURL(/\/private\/fictions\/list\/?$/);
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("private-fiction-book-section")),
+    )
+    .toBe(lastReadSectionId);
+  await page
+    .getByRole("button", { name: "5화. 다섯 번째 장면", exact: true })
+    .click();
+
+  await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=5$/);
+  await expect(
+    page.getByRole("heading", { name: "다섯 번째 장면", exact: true }),
+  ).toBeVisible();
+  await expect(viewport).toHaveAttribute("data-layout-ready", "true");
+  await viewport.dblclick();
+  await expect(
+    page.locator(".private-fiction-book-controls .book-page-number"),
+  ).toContainText(/^1 \/ \d+$/);
+});
+
 test("reads private Markdown in the public book-style page-turn viewer", async ({
   page,
 }) => {

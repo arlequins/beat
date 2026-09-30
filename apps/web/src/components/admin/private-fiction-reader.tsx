@@ -628,10 +628,10 @@ export function PrivateFictionReader() {
   }, [isEpisodeRoute, isListRoute, readingOrder, sections, selectedId]);
 
   useEffect(() => {
-    if (selected) {
+    if (selected && isEpisodeRoute) {
       window.localStorage.setItem("private-fiction-book-section", selected.id);
     }
-  }, [selected]);
+  }, [isEpisodeRoute, selected]);
 
   useEffect(() => {
     if (!selected?.id) return;
@@ -667,12 +667,24 @@ export function PrivateFictionReader() {
     position: "start" | "end" | "saved" = "saved",
   ) => {
     const section = sections.find((item) => item.id === id);
+    let previousSection = selected;
+    if (!isEpisodeRoute) {
+      try {
+        const lastReadId = window.localStorage.getItem(
+          "private-fiction-book-section",
+        );
+        previousSection =
+          readingOrder.find((item) => item.id === lastReadId) ?? selected;
+      } catch {
+        // Selecting a section remains available when browser storage is disabled.
+      }
+    }
     const selectingNextEpisode =
       section?.kind === "episode" &&
       section.episode !== undefined &&
-      selected?.kind === "episode" &&
-      selected.episode !== undefined &&
-      section.episode === selected.episode + 1;
+      previousSection?.kind === "episode" &&
+      previousSection.episode !== undefined &&
+      section.episode === previousSection.episode + 1;
     const destinationPosition =
       position === "saved" && selectingNextEpisode ? "start" : position;
     if (destinationPosition !== "saved" && section) {
@@ -904,7 +916,7 @@ export function PrivateFictionReader() {
               <Link href="/private/fictions/list/">회차 목록 보기</Link>
               {episodes[0] ? (
                 <button
-                  onClick={() => chooseSection(episodes[0]!.id)}
+                  onClick={() => chooseSection(episodes[0]!.id, "start")}
                   type="button"
                 >
                   1화부터 읽기
