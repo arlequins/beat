@@ -57,6 +57,7 @@ export function BookReader({
   // Keep the one-shot navigation intent stable if the parent clears its ref after mount.
   const initialPositionRef = useRef(initialPosition);
   const initialPositionAppliedCallback = useRef(onInitialPositionApplied);
+  const initialPositionApplied = useRef(false);
   const doubleClickGuardTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -73,9 +74,9 @@ export function BookReader({
 
   useLayoutEffect(() => {
     const initialPosition = initialPositionRef.current;
+    initialPositionApplied.current = false;
     if (!positionKey) {
       progress.current = initialPosition === "end" ? 1 : 0;
-      initialPositionAppliedCallback.current?.();
       return;
     }
     if (initialPosition === "start") {
@@ -94,7 +95,6 @@ export function BookReader({
         progress.current = 0;
       }
     }
-    initialPositionAppliedCallback.current?.();
   }, [positionKey]);
 
   useLayoutEffect(() => {
@@ -132,6 +132,10 @@ export function BookReader({
         restoreFrame = requestAnimationFrame(() => {
           el.scrollLeft = target * width;
           if (waitForLayout) setLayoutReady(true);
+          if (!initialPositionApplied.current) {
+            initialPositionApplied.current = true;
+            initialPositionAppliedCallback.current?.();
+          }
         });
       });
     };
