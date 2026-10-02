@@ -447,6 +447,7 @@ export function PrivateFictionReader() {
   const isListRoute = routePart === "list";
   const [authenticated, setAuthenticated] = useState(false);
   const [manuscript, setManuscript] = useState<Manuscript>();
+  const [lastReadSectionId, setLastReadSectionId] = useState<string>();
   const [message, setMessage] = useState("로그인 상태를 확인하고 있습니다.");
   const [busy, setBusy] = useState(false);
   const [selectedId, setSelectedId] = useState<string>();
@@ -615,6 +616,9 @@ export function PrivateFictionReader() {
     (section) => section.kind === "guide" || section.kind === "episode",
   );
   const episodes = readingOrder.filter((section) => section.kind === "episode");
+  const lastReadSection = episodes.find(
+    (section) => section.id === lastReadSectionId,
+  );
   const routedSection = readingOrder.find(
     (section) => section.kind === "episode" && section.episode === routeEpisode,
   );
@@ -663,10 +667,28 @@ export function PrivateFictionReader() {
   }, [isEpisodeRoute, isListRoute, readingOrder, sections, selectedId]);
 
   useEffect(() => {
-    if (selected && isEpisodeRoute) {
-      window.localStorage.setItem("private-fiction-book-section", selected.id);
+    if (isEpisodeRoute && selected?.kind === "episode") {
+      try {
+        window.localStorage.setItem(
+          "private-fiction-book-section",
+          selected.id,
+        );
+      } catch {
+        // The current episode remains available when browser storage is disabled.
+      }
+      setLastReadSectionId(selected.id);
+      return;
     }
-  }, [isEpisodeRoute, selected]);
+    if (isListRoute) return;
+    try {
+      setLastReadSectionId(
+        window.localStorage.getItem("private-fiction-book-section") ??
+          undefined,
+      );
+    } catch {
+      setLastReadSectionId(undefined);
+    }
+  }, [isEpisodeRoute, isListRoute, selected?.id, selected?.kind]);
 
   useEffect(() => {
     if (!selected?.id) return;
@@ -969,6 +991,14 @@ export function PrivateFictionReader() {
                   type="button"
                 >
                   1화부터 읽기
+                </button>
+              ) : null}
+              {lastReadSection ? (
+                <button
+                  onClick={() => chooseSection(lastReadSection.id)}
+                  type="button"
+                >
+                  계속해서 읽기
                 </button>
               ) : null}
             </div>
