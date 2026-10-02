@@ -688,3 +688,77 @@ test("anchors private reader feedback to highlighted prose and reloads it", asyn
     feedback.getByText("이 문장을 더 구체적으로 다듬어 주세요."),
   ).toBeVisible();
 });
+
+test("continues from the last private episode and saved page", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "beat-admin-session",
+      JSON.stringify({
+        accessExpiresAt: Date.now() + 60 * 60 * 1000,
+        accessToken: "private-fiction-test-token",
+        refreshExpiresAt: Date.now() + 2 * 60 * 60 * 1000,
+        refreshToken: "private-fiction-test-refresh-token",
+      }),
+    );
+  });
+  await page.route("**/admin/private-fiction", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        etag: "test-etag",
+        source: manuscript,
+        updatedAt: "2026-09-27T12:00:00.000Z",
+      }),
+    }),
+  );
+  await page.route("**/admin/private-fiction/annotations", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+    }),
+  );
+
+  await page.goto("/private/fictions/?episode=4");
+  await expect(
+    page.getByRole("heading", { name: "네 번째 장면", exact: true }),
+  ).toBeVisible();
+  const viewport = page.locator(".private-fiction-book-viewport");
+  await expect(viewport).toHaveAttribute("data-layout-ready", "true");
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("private-fiction-book-section")),
+    )
+    .not.toBeNull();
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "beat-fiction-v1-book-position-private-fiction-episode-4",
+      "0.5",
+    );
+  });
+
+  await page.goto("/private/fictions/");
+  await expect(
+    page.getByRole("button", { name: "1화부터 읽기", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "계속해서 읽기", exact: true })
+    .click();
+
+  await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=4$/);
+  await expect(
+    page.getByRole("heading", { name: "네 번째 장면", exact: true }),
+  ).toBeVisible();
+  await expect(viewport).toHaveAttribute("data-layout-ready", "true");
+  await viewport.dblclick();
+  const pageCounter = page.locator(
+    ".private-fiction-book-controls .book-page-number",
+  );
+  const [currentPage, totalPages] = (await pageCounter.innerText())
+    .split(" /")
+    .map(Number);
+  if (!currentPage || !totalPages || totalPages < 2)
+    throw new Error("Private fiction test chapter must span multiple pages");
+  expect(currentPage).toBe(Math.round(0.5 * (totalPages - 1)) + 1);
+});
