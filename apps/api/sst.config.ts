@@ -1,7 +1,5 @@
 /// <reference path="./sst-globals.d.ts" />
 
-import { privateFictionStoragePermissions } from "./src/features/private-fiction/storage-permissions";
-
 /** Hono API deployed through the endpoint selected by `API_DEPLOYMENT_PRESET`. */
 export default $config({
   async app(input) {
@@ -23,6 +21,9 @@ export default $config({
     };
   },
   async run() {
+    const { privateFictionStoragePermissions } = await import(
+      "./src/features/private-fiction/storage-permissions"
+    );
     const { DEFAULT_LOCALHOST_SITE_URL } = await import(
       "@arlequins/env/public-defaults"
     );
