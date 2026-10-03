@@ -33,8 +33,9 @@ fail rather than silently overwriting a newer version.
 The manuscript stays in a dedicated private S3 bucket at
 author-vault/reality-error/outline.md. The bucket has versioning,
 server-side encryption, enforced TLS, ownership controls, and S3 Block Public
-Access. The Lambda role can read and write only this object and cannot delete
-it. HTTP and S3 responses use private, no-store cache controls. The reader API
+Access. The API Lambda role can read and write only this outline and the
+separate annotation object; it cannot list the bucket or delete either object.
+HTTP and S3 responses use private, no-store cache controls. The reader API
 still requires the configured Beat owner account.
 
 The API accepts at most 4,000,000 UTF-8 bytes, enough for the current
