@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.77.6](https://github.com/arlequins/beat/compare/beat-v1.77.5...beat-v1.77.6) (2026-10-03)
+
+
+### Bug Fixes
+
+* **api:** load private fiction permissions at runtime ([#367](https://github.com/arlequins/beat/issues/367)) ([75c2c43](https://github.com/arlequins/beat/commit/75c2c43c13517b89a055f8a99440d9c3e385f4da))
+
 ## [1.77.5](https://github.com/arlequins/beat/compare/beat-v1.77.4...beat-v1.77.5) (2026-09-30)
 
 
