@@ -107,6 +107,86 @@ describe("private fiction routes", () => {
     });
   });
 
+  it("accepts private-vault GitHub Actions sync only after identity verification", async () => {
+    const existing = {
+      etag: '"revision-4"',
+      source: "# previous private copy",
+      updatedAt: "2026-09-29T00:00:00.000Z",
+    };
+    const saved = {
+      etag: '"revision-5"',
+      updatedAt: "2026-10-03T00:00:00.000Z",
+    };
+    const readback = {
+      ...saved,
+      source: "# 최신 비공개 원고",
+    };
+    const store = {
+      get: vi
+        .fn()
+        .mockResolvedValueOnce(existing)
+        .mockResolvedValueOnce(readback),
+      save: vi.fn(async () => saved),
+    };
+    const verifyToken = vi.fn(async (token: string) => {
+      if (token !== "trusted-github-actions-token")
+        throw new Error("untrusted workflow");
+      return {
+        repository: "arlequins/vaults-reality-error",
+        ref: "refs/heads/main",
+        workflowRef:
+          "arlequins/vaults-reality-error/.github/workflows/sync-private-fiction.yml@refs/heads/main",
+        eventName: "workflow_dispatch",
+      };
+    });
+    const app = createApiApp({
+      corsOrigins: [],
+      logger: createLogger({ service: "api", sink: () => {} }),
+      privateFiction: store,
+      privateFictionGitHubActions: { verifyToken },
+      rateLimiter: false,
+      beatAuth: {
+        authenticate: vi.fn(),
+        issueTokenPair: vi.fn(),
+        jwks: vi.fn(async () => ({ keys: [] })),
+        refreshTokenPair: vi.fn(),
+        revokeRefreshToken: vi.fn(),
+        verifyAccessToken: vi.fn(),
+      },
+    });
+    const upload = (token?: string) =>
+      app.request("/admin/private-fiction/github-sync", {
+        body: JSON.stringify({ source: "# 최신 비공개 원고" }),
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+
+    expect((await upload()).status).toBe(401);
+    expect((await upload("other-token")).status).toBe(401);
+    expect(store.get).not.toHaveBeenCalled();
+    expect(store.save).not.toHaveBeenCalled();
+
+    const response = await upload("trusted-github-actions-token");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    expect(verifyToken).toHaveBeenCalledWith("trusted-github-actions-token");
+    expect(store.save).toHaveBeenCalledWith({
+      expectedEtag: existing.etag,
+      source: "# 최신 비공개 원고",
+    });
+    const responseBody = await response.json();
+    expect(responseBody).toMatchObject({
+      ...saved,
+      sourceBytes: new TextEncoder().encode("# 최신 비공개 원고").byteLength,
+      unchanged: false,
+    });
+    expect(store.get).toHaveBeenCalledTimes(2);
+    expect(responseBody.sha256).toMatch(/^[a-f0-9]{64}$/);
+  });
+
   it("keeps private episode feedback owner-only and saves it conditionally", async () => {
     const feedback = {
       etag: '"feedback-1"',
