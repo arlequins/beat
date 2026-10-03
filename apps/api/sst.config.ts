@@ -1,5 +1,7 @@
 /// <reference path="./sst-globals.d.ts" />
 
+import { privateFictionStoragePermissions } from "./src/features/private-fiction/storage-permissions";
+
 /** Hono API deployed through the endpoint selected by `API_DEPLOYMENT_PRESET`. */
 export default $config({
   async app(input) {
@@ -153,26 +155,9 @@ export default $config({
       ],
     });
     const privateFictionBucket = createPrivateBucket("PrivateFiction");
-    const privateFictionPermissions = [
-      {
-        actions: ["s3:ListBucket"],
-        conditions: [
-          {
-            test: "StringEquals",
-            variable: "s3:prefix",
-            values: ["author-vault/reality-error/outline.md"],
-          },
-        ],
-        resources: [privateFictionBucket.arn],
-      },
-      {
-        actions: ["s3:GetObject", "s3:PutObject"],
-        resources: [
-          $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/outline.md`,
-          $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/annotations.json`,
-        ],
-      },
-    ];
+    const privateFictionPermissions = privateFictionStoragePermissions(
+      (key) => $interpolate`${privateFictionBucket.arn}/${key}`,
+    );
     const handler = {
       handler: "src/lambda.handler",
       memory: "1024 MB",
