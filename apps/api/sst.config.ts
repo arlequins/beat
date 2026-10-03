@@ -22,7 +22,7 @@ export default $config({
   },
   async run() {
     const { privateFictionStoragePermissions } = await import(
-      "./src/features/private-fiction/storage-permissions",
+      "./src/features/private-fiction/storage-permissions"
     );
     const { DEFAULT_LOCALHOST_SITE_URL } = await import(
       "@arlequins/env/public-defaults"
