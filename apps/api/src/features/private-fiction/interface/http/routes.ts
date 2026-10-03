@@ -1,8 +1,10 @@
+import { createHash } from "node:crypto";
 import { type OpenAPIHono, z } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import type { ApiBindings } from "../../../../app";
 import type { ActiveAdmin } from "../../../../beat-auth";
 import { GOOGLE_ALLOWED_EMAIL } from "../../../../beat-google";
+import type { PrivateFictionGitHubActionsIdentity } from "../../github-actions-identity";
 import {
   MAX_PRIVATE_FICTION_ANNOTATION_BYTES,
   MAX_PRIVATE_FICTION_SOURCE_BYTES,
@@ -14,6 +16,10 @@ import {
 
 const saveSchema = z.object({
   expectedEtag: z.string().max(256).nullable(),
+  source: z.string().min(1).max(MAX_PRIVATE_FICTION_SOURCE_BYTES),
+});
+
+const githubSyncSchema = z.object({
   source: z.string().min(1).max(MAX_PRIVATE_FICTION_SOURCE_BYTES),
 });
 
@@ -62,6 +68,9 @@ export function registerPrivateFictionRoutes(
     verifyAccessToken: (
       token: string,
     ) => Promise<Pick<ActiveAdmin, "email" | "subject">>;
+    verifyGitHubActionsToken: (
+      token: string,
+    ) => Promise<PrivateFictionGitHubActionsIdentity>;
   },
 ) {
   async function owner(context: Context<ApiBindings>) {
@@ -121,6 +130,76 @@ export function registerPrivateFictionRoutes(
       )
         return context.json(
           { error: "Manuscript changed; reload before saving" },
+          409,
+        );
+      return context.json({ error: "Private manuscript unavailable" }, 503);
+    }
+  });
+
+  app.post("/admin/private-fiction/github-sync", async (context) => {
+    context.header("Cache-Control", "private, no-store, max-age=0");
+    context.header("Vary", "Authorization");
+    const token = bearer(context.req.header("authorization"));
+    if (!token) return context.json({ error: "Unauthorized" }, 401);
+    try {
+      await options.verifyGitHubActionsToken(token);
+    } catch {
+      return context.json({ error: "Unauthorized" }, 401);
+    }
+
+    const parsed = githubSyncSchema.safeParse(
+      await context.req.json().catch(() => null),
+    );
+    if (!parsed.success)
+      return context.json({ error: "Invalid private manuscript" }, 400);
+    const sourceBytes = new TextEncoder().encode(parsed.data.source).byteLength;
+    if (sourceBytes > MAX_PRIVATE_FICTION_SOURCE_BYTES)
+      return context.json({ error: "Invalid private manuscript" }, 400);
+
+    try {
+      const current = await options.store.get();
+      if (current?.source === parsed.data.source)
+        return context.json({
+          etag: current.etag,
+          updatedAt: current.updatedAt,
+          sha256: createHash("sha256")
+            .update(current.source, "utf8")
+            .digest("hex"),
+          sourceBytes,
+          unchanged: true,
+        });
+      const saved = await options.store.save({
+        expectedEtag: current?.etag ?? null,
+        source: parsed.data.source,
+      });
+      const readback = await options.store.get();
+      if (
+        !readback ||
+        readback.etag !== saved.etag ||
+        readback.source !== parsed.data.source
+      )
+        return context.json(
+          { error: "Private manuscript readback did not match the upload" },
+          503,
+        );
+      return context.json({
+        etag: readback.etag,
+        updatedAt: readback.updatedAt,
+        sha256: createHash("sha256")
+          .update(readback.source, "utf8")
+          .digest("hex"),
+        sourceBytes,
+        unchanged: false,
+      });
+    } catch (error) {
+      if (
+        error instanceof PrivateFictionStorageError &&
+        error.code === "conflict"
+      )
+        return context.json(
+          {
+            error: "Manuscript changed during GitHub sync; retry the workflow",
+          },
           409,
         );
       return context.json({ error: "Private manuscript unavailable" }, 503);
