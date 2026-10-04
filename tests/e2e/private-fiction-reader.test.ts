@@ -23,6 +23,68 @@ const manuscript = [
   longChapter,
 ].join("\n\n");
 
+const authorDraftManuscript = [
+  "# 1화. 두 사람의 집 1",
+  "첫 화 초고 본문입니다.",
+  "# 75화. 같은 재난, 다른 구 16",
+  "마지막 화 초고 본문입니다.",
+].join("\n\n");
+
+test("recognizes author-draft episode headings and routes to episode 75", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "beat-admin-session",
+      JSON.stringify({
+        accessExpiresAt: Date.now() + 60 * 60 * 1000,
+        accessToken: "private-fiction-test-token",
+        refreshExpiresAt: Date.now() + 2 * 60 * 60 * 1000,
+        refreshToken: "private-fiction-test-refresh-token",
+      }),
+    );
+  });
+  await page.route("**/admin/private-fiction", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        etag: "test-etag",
+        source: authorDraftManuscript,
+        updatedAt: "2026-10-04T12:00:00.000Z",
+      }),
+    }),
+  );
+  await page.route("**/admin/private-fiction/annotations", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+    }),
+  );
+
+  await page.goto("/private/fictions/list/");
+  await expect(
+    page.getByRole("button", { name: "1화. 두 사람의 집 1", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "75화. 같은 재난, 다른 구 16",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "75화. 같은 재난, 다른 구 16",
+      exact: true,
+    })
+    .click();
+
+  await expect(page).toHaveURL(/\/private\/fictions\/?\?episode=75$/);
+  await expect(
+    page.getByRole("heading", { name: "같은 재난, 다른 구 16", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("마지막 화 초고 본문입니다.")).toBeVisible();
+});
+
 test("starts the next private episode at its first page", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
