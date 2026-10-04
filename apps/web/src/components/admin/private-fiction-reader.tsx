@@ -108,7 +108,7 @@ function parseManuscript(source: string) {
     }
     if (!content) continue;
 
-    const episodeMatch = title.match(/^(\d+)\s*화(?:\s*[—–:-]\s*(.+))?$/);
+    const episodeMatch = title.match(/^(\d+)\s*화(?:\s*[.．—–:-]\s*(.+))?$/);
     const kind = title.includes("설정집")
       ? "guide"
       : episodeMatch
