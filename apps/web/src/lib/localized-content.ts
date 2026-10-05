@@ -509,6 +509,23 @@ const english: Record<string, LocalizedArticle> = {
       },
     ],
   },
+  "weekly-it-brief-2026-10-05": {
+    title: "Weekly IT Brief — When agent access expands to screens and files",
+    excerpt:
+      "A developer's view of GPT-6.1 Sol, Copilot desktop control, and Apple's Full Disk Access plans through cost and permission design.",
+    intro:
+      "This week, agents are moving beyond code and APIs toward desktop screens and private files. Lower model costs make broader automation easier to justify, while GUI control brings workflows without APIs within reach. Teams need to define which screens and data an agent may access before expanding its capabilities.",
+    sections: [
+      {
+        heading: "Three boundaries to set before expanding agent access",
+        paragraphs: [
+          "OpenAI introduced GPT-6.1 Sol on September 29, with standard API input and output prices at one-fifth of GPT-6 Astra and cached input at $0.10 per million tokens. OpenAI reports improvements on coding and computer-use evaluations, but those results do not establish quality in your own application. Compare accuracy, correction rate, p95 latency, cache hits, and cost on a fixed task set before switching models; constrain tools and sites by task.",
+          "GitHub's October 1 public preview lets Copilot CLI and its macOS and Windows app inspect accessible desktop content, click controls, enter text, and navigate between applications. Pilot in a disposable development environment, allow only necessary apps, require confirmation for consequential actions, and log the app, action, outcome, and approver.",
+          "Apple's October 2 notice says Full Disk Access can expose files, mail, messages, and browsing history, and promises additional controls for explicit consent. The announcement does not yet specify a rollout date or API change. Inventory apps and SDKs that rely on this permission, prefer narrower access where possible, and assign an owner to review Apple's follow-up guidance.",
+        ],
+      },
+    ],
+  },
   "prompt-log-001-arlequin-lumen": {
     title:
       "Prompt Footage 001 — The conversation that named Arlequin and Lumen",
@@ -1266,6 +1283,23 @@ const japanese: Record<string, LocalizedArticle> = {
           "公開ベータの Agents API は、管理された Codex ハーネス、ホスト型サンドボックス、長時間セッションのコンテキスト管理、ツールのオーケストレーションを提供します。まず読み取り専用のツールとテストデータから始め、許可するファイル、通信先、シークレット、時間制限、承認、ジョブ ID を実行ごとに記録します。",
           "GitHub Actions の実行保護は、実行者とイベントの allowlist、ワークフローファイル単位の対象指定、REST 管理、評価モードとともに一般提供されました。pull_request_target の経路を棚卸しし、強制前にシャドー結果を確認し、例外は必要なワークフローとイベントだけに絞ります。",
           "Apple の iPhone Duo 向け資料は、ベータ SDK の対応と、動的リサイズ、適応レイアウト、複数ディスプレイ、シーンのガイダンスを組み合わせています。単一の展開スクリーンショットだけでなく、ウィンドウのサイズや向きが変わる間に状態、フォーカス、安全領域、進行中の作業が保たれるかを確認します。",
+        ],
+      },
+    ],
+  },
+  "weekly-it-brief-2026-10-05": {
+    title: "週刊 IT ブリーフ — エージェントの権限が画面とファイルへ広がる",
+    excerpt:
+      "GPT-6.1 Sol、デスクトップを操作する Copilot、Apple の Full Disk Access 変更予告を、コストと権限設計から整理します。",
+    intro:
+      "今週は、エージェントがコードや API を越えて、デスクトップ画面や個人ファイルへ近づいています。モデルのコスト低下で自動化を広げやすくなる一方、GUI 操作によって API のない業務も対象になります。機能を広げる前に、どの画面とデータへのアクセスを許すのか決める必要があります。",
+    sections: [
+      {
+        heading: "エージェントのアクセスを広げる前に決める三つの境界",
+        paragraphs: [
+          "OpenAI は9月29日に GPT-6.1 Sol を発表しました。標準 API の入出力価格は GPT-6 Astra の5分の1で、キャッシュ入力は100万トークンあたり0.10ドルです。OpenAI はコーディングとコンピューター操作の評価で改善を報告していますが、自社アプリでの品質を保証するものではありません。固定タスクで正確さ、修正率、p95 レイテンシ、キャッシュヒット率、費用を比較してから切り替え、タスクごとにツールとアクセス先を絞ります。",
+          "10月1日の GitHub 公開プレビューでは、Copilot CLI と macOS・Windows 用アプリが画面の内容を読み、クリックや入力、アプリ間の操作を行えます。使い捨ての開発環境で試し、必要なアプリだけを許可し、重要な操作には確認を求め、対象アプリ、操作、結果、承認者を記録します。",
+          "Apple は10月2日、Full Disk Access がファイル、メール、メッセージ、閲覧履歴を露出させる可能性を指摘し、明示的な許可に向けた追加の制御を導入すると発表しました。現時点で適用時期や API 変更は示されていません。この権限に依存するアプリや SDK を棚卸しし、狭いアクセスに置き換えられるか確認したうえで、追加発表を追う担当者を決めます。",
         ],
       },
     ],
