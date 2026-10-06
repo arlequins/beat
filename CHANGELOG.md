@@ -2,6 +2,14 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.77.7](https://github.com/arlequins/beat/compare/beat-v1.77.6...beat-v1.77.7) (2026-10-06)
+
+
+### Bug Fixes
+
+* **api:** initialize private feedback without overwriting existing data ([#375](https://github.com/arlequins/beat/issues/375)) ([5c2540c](https://github.com/arlequins/beat/commit/5c2540ca7d2266c01875d898193968fd9b0fe541))
+* **web:** improve private reader titles, reading reset and passage feedback ([#373](https://github.com/arlequins/beat/issues/373)) ([66584c5](https://github.com/arlequins/beat/commit/66584c5c23bb6ca671619778a51458072b345c4f))
+
 ## [1.77.6](https://github.com/arlequins/beat/compare/beat-v1.77.5...beat-v1.77.6) (2026-10-05)
 
 
