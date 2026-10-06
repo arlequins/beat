@@ -28,6 +28,7 @@ export function BookReader({
   onProgressChange,
   initialPosition = "saved",
   positionKey,
+  selectionMode = false,
   waitForLayout = false,
   viewportStyle,
 }: {
@@ -41,6 +42,7 @@ export function BookReader({
   onProgressChange?: (progress: number) => void;
   initialPosition?: "saved" | "start" | "end";
   positionKey?: string;
+  selectionMode?: boolean;
   waitForLayout?: boolean;
   viewportStyle?: CSSProperties;
 }) {
@@ -206,8 +208,18 @@ export function BookReader({
     if (pendingTurn.current) clearTimeout(pendingTurn.current);
     pendingTurn.current = setTimeout(() => {
       pendingTurn.current = null;
-      turn(delta);
+      if (!selectionMode && !hasTextSelection()) turn(delta);
     }, delay);
+  };
+
+  const hasTextSelection = () => {
+    const selection = window.getSelection();
+    return Boolean(
+      selection &&
+        !selection.isCollapsed &&
+        selection.rangeCount &&
+        flow.current?.contains(selection.getRangeAt(0).commonAncestorContainer),
+    );
   };
 
   const renderState: BookReaderRenderState = {
@@ -225,6 +237,7 @@ export function BookReader({
     <div
       className={`book-viewport ${className} ${immersive ? "book-viewport--immersive" : ""}`.trim()}
       data-layout-ready={waitForLayout ? layoutReady : undefined}
+      data-selection-mode={selectionMode || undefined}
       ref={viewport}
       role="region"
       aria-label={label}
@@ -232,6 +245,7 @@ export function BookReader({
       tabIndex={0}
       style={viewportStyle}
       onClick={(event) => {
+        if (selectionMode || hasTextSelection()) return;
         if ((event.target as Element).closest("a, button, input, label"))
           return;
         if (
@@ -251,8 +265,11 @@ export function BookReader({
         if (delta) scheduleTurn(delta);
       }}
       onDoubleClick={(event) => {
+        if (selectionMode) return;
         if ((event.target as Element).closest("a, button, input, label"))
           return;
+        event.preventDefault();
+        window.getSelection()?.removeAllRanges();
         if (suppressNativeDoubleClick.current) {
           suppressNativeDoubleClick.current = false;
           if (doubleClickGuardTimer.current)
@@ -269,6 +286,7 @@ export function BookReader({
           touchStart.current = { x: event.clientX, y: event.clientY };
       }}
       onPointerUp={(event) => {
+        if (selectionMode || hasTextSelection()) return;
         if (
           event.pointerType !== "touch" ||
           !event.isPrimary ||

@@ -79,7 +79,12 @@ type FeedbackDocument = {
   annotations: FictionAnnotation[];
   updatedAt: string | null;
 };
-type PendingFeedback = Omit<FictionAnnotation, "id" | "comment" | "createdAt">;
+type FeedbackAnchor = Omit<FictionAnnotation, "id" | "comment" | "createdAt">;
+type PendingFeedback = {
+  episode: number;
+  quote: string;
+  anchors: FeedbackAnchor[];
+};
 type ManuscriptSection = {
   id: string;
   title: string;
@@ -92,6 +97,8 @@ function parseManuscript(source: string) {
   const headings = [...source.matchAll(/^#\s+(.+?)\s*$/gm)];
   const sections: ManuscriptSection[] = [];
   let introduction = "";
+  let arcTitle = "";
+  let arcPart = 0;
 
   for (let index = 0; index < headings.length; index += 1) {
     const heading = headings[index];
@@ -114,10 +121,30 @@ function parseManuscript(source: string) {
       : episodeMatch
         ? "episode"
         : "document";
+    let sectionTitle = title.replace(/^《현실 오류》\s*/, "");
+    if (episodeMatch) {
+      const explicitTitle = episodeMatch[2]?.trim();
+      const numberedTitle = explicitTitle?.match(/^(.+?)\s+(?:-\s*)?(\d+)$/);
+      const coverTitle = content.includes("<!-- PAGE_BREAK -->")
+        ? content
+            .split("<!-- PAGE_BREAK -->")[0]
+            ?.match(/^##\s+(.+)$/m)?.[1]
+            ?.trim()
+        : undefined;
+      if (numberedTitle) {
+        arcTitle = numberedTitle[1]!.trim();
+        arcPart = Number(numberedTitle[2]);
+      } else if (explicitTitle || coverTitle) {
+        arcTitle = explicitTitle ?? coverTitle!;
+        arcPart = 1;
+      } else {
+        arcPart += 1;
+      }
+      sectionTitle = arcTitle ? `${arcTitle} - ${arcPart}` : "";
+    }
     sections.push({
       id: `section-${sections.length + 1}`,
-      title:
-        episodeMatch?.[2]?.trim() ?? title.replace(/^《현실 오류》\s*/, ""),
+      title: sectionTitle,
       content,
       ...(episodeMatch ? { episode: Number(episodeMatch[1]) } : {}),
       kind,
@@ -408,37 +435,44 @@ function selectionAnchor(
   const selection = window.getSelection();
   if (!selection || selection.isCollapsed || !selection.rangeCount) return;
   const range = selection.getRangeAt(0);
-  const blockFor = (node: Node) => {
-    const element =
-      node.nodeType === Node.ELEMENT_NODE
-        ? (node as Element)
-        : node.parentElement;
-    return element?.closest<HTMLElement>("[data-feedback-block-index]");
-  };
-  const startBlock = blockFor(range.startContainer);
-  const endBlock = blockFor(range.endContainer);
-  if (!startBlock || startBlock !== endBlock || !root.contains(startBlock))
+  if (
+    !root.contains(range.startContainer) ||
+    !root.contains(range.endContainer)
+  )
     return;
-
-  const quote = range.toString();
-  if (!quote.trim() || quote.length > 2_000) return;
-  const before = range.cloneRange();
-  before.selectNodeContents(startBlock);
-  before.setEnd(range.startContainer, range.startOffset);
-  const startOffset = before.toString().length;
-  const endOffset = startOffset + quote.length;
-  const blockText = startBlock.textContent ?? "";
-  if (blockText.slice(startOffset, endOffset) !== quote) return;
-
-  return {
-    episode,
-    blockIndex: Number(startBlock.dataset.feedbackBlockIndex),
-    startOffset,
-    endOffset,
-    quote,
-    prefix: blockText.slice(Math.max(0, startOffset - 100), startOffset),
-    suffix: blockText.slice(endOffset, endOffset + 100),
-  };
+  const anchors: FeedbackAnchor[] = [];
+  for (const block of root.querySelectorAll<HTMLElement>(
+    "[data-feedback-block-index]",
+  )) {
+    if (!range.intersectsNode(block)) continue;
+    const clipped = document.createRange();
+    clipped.selectNodeContents(block);
+    if (clipped.compareBoundaryPoints(Range.START_TO_START, range) < 0)
+      clipped.setStart(range.startContainer, range.startOffset);
+    if (clipped.compareBoundaryPoints(Range.END_TO_END, range) > 0)
+      clipped.setEnd(range.endContainer, range.endOffset);
+    const quote = clipped.toString();
+    if (!quote.trim()) continue;
+    const before = document.createRange();
+    before.selectNodeContents(block);
+    before.setEnd(clipped.startContainer, clipped.startOffset);
+    const startOffset = before.toString().length;
+    const endOffset = startOffset + quote.length;
+    const blockText = block.textContent ?? "";
+    if (blockText.slice(startOffset, endOffset) !== quote) return;
+    anchors.push({
+      episode,
+      blockIndex: Number(block.dataset.feedbackBlockIndex),
+      startOffset,
+      endOffset,
+      quote,
+      prefix: blockText.slice(Math.max(0, startOffset - 100), startOffset),
+      suffix: blockText.slice(endOffset, endOffset + 100),
+    });
+  }
+  const quote = anchors.map((anchor) => anchor.quote).join("\n\n");
+  if (!anchors.length || quote.length > 2_000) return;
+  return { episode, quote, anchors };
 }
 
 export function PrivateFictionReader() {
@@ -477,6 +511,10 @@ export function PrivateFictionReader() {
     "문장을 선택해 의견을 남길 수 있습니다.",
   );
   const [pendingFeedback, setPendingFeedback] = useState<PendingFeedback>();
+  const [selectionPreview, setSelectionPreview] = useState<PendingFeedback>();
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [readingReset, setReadingReset] = useState(0);
+  const bodyRef = useRef<HTMLElement>(null);
   const [feedbackComment, setFeedbackComment] = useState("");
   const [preferences, setPreferences] = useState(defaultReaderPreferences);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -635,9 +673,11 @@ export function PrivateFictionReader() {
   const routedSection = readingOrder.find(
     (section) => section.kind === "episode" && section.episode === routeEpisode,
   );
-  const selected =
-    sections.find((section) => section.id === selectedId) ??
-    (isEpisodeRoute ? routedSection : (episodes[0] ?? readingOrder[0]));
+  const selected = isEpisodeRoute
+    ? routedSection
+    : (sections.find((section) => section.id === selectedId) ??
+      episodes[0] ??
+      readingOrder[0]);
   const initialPositionOverride =
     selected && sectionPositionOverride.current?.sectionId === selected.id
       ? sectionPositionOverride.current.position
@@ -706,7 +746,9 @@ export function PrivateFictionReader() {
   useEffect(() => {
     if (!selected?.id) return;
     setPendingFeedback(undefined);
+    setSelectionPreview(undefined);
     setFeedbackComment("");
+    setSelectionMode(false);
   }, [selected?.id]);
 
   const selectedOrderIndex = selected
@@ -718,18 +760,86 @@ export function PrivateFictionReader() {
         (annotation) => annotation.episode === selected.episode,
       )
     : [];
+  // Anchors saved in one operation share a timestamp and comment. Keep their
+  // individual offsets for highlighting, but present one review to the reader.
+  const feedbackGroups = Array.from(
+    selectedFeedback
+      .reduce((groups, annotation) => {
+        const key = JSON.stringify([annotation.createdAt, annotation.comment]);
+        const group = groups.get(key);
+        if (group) {
+          group.ids.push(annotation.id);
+          group.quote += `\n\n${annotation.quote}`;
+        } else {
+          groups.set(key, { ...annotation, ids: [annotation.id] });
+        }
+        return groups;
+      }, new Map<string, FictionAnnotation & { ids: string[] }>())
+      .values(),
+  );
 
-  function beginFeedbackSelection(root: HTMLElement) {
-    if (!selected?.episode) return;
-    const anchor = selectionAnchor(root, selected.episode);
-    if (anchor) {
-      setPendingFeedback(anchor);
-      setFeedbackComment("");
-      setFeedbackMessage("선택한 문장에 코멘트를 작성해 주세요.");
+  const beginFeedbackSelection = useCallback(
+    (root: HTMLElement) => {
+      if (!selected?.episode || pendingFeedback) return;
+      const anchor = selectionAnchor(root, selected.episode);
+      if (anchor) {
+        setSelectionPreview((current) =>
+          current?.quote === anchor.quote &&
+          JSON.stringify(current.anchors) === JSON.stringify(anchor.anchors)
+            ? current
+            : anchor,
+        );
+        setFeedbackMessage("선택한 문장에 코멘트를 작성해 주세요.");
+        return;
+      }
+      setSelectionPreview(undefined);
+      if (window.getSelection()?.toString().trim())
+        setFeedbackMessage("본문에서 2,000자 이내의 부분을 선택해 주세요.");
+    },
+    [selected?.episode, pendingFeedback],
+  );
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const capture = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (bodyRef.current) beginFeedbackSelection(bodyRef.current);
+      }, 180);
+    };
+    document.addEventListener("selectionchange", capture);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("selectionchange", capture);
+    };
+  }, [beginFeedbackSelection]);
+
+  function resetReadingHistory() {
+    if (
+      !window.confirm(
+        "이 기기의 읽은 기록을 모두 초기화할까요? 로그인, 원고, 피드백과 읽기 설정은 유지됩니다.",
+      )
+    )
       return;
+    try {
+      const keys = Object.keys(localStorage).filter(
+        (key) =>
+          key.startsWith("beat-fiction-v1-book-position-") ||
+          key === "private-fiction-book-section" ||
+          key === "beat-fiction-v1-last",
+      );
+      for (const key of keys) localStorage.removeItem(key);
+      setLastReadSectionId(undefined);
+      setSelectedId(undefined);
+      setReadingReset((value) => value + 1);
+      setMessage("이 기기의 읽은 기록을 모두 초기화했습니다.");
+      dialog.current?.close();
+      if (isEpisodeRoute) router.push("/private/fictions/", { scroll: false });
+    } catch {
+      setMessage(
+        "읽은 기록을 초기화하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.",
+      );
     }
-    if (window.getSelection()?.toString().trim())
-      setFeedbackMessage("한 문단 안에서 의견을 남길 문장을 선택해 주세요.");
   }
 
   const chooseSection = (
@@ -910,14 +1020,15 @@ export function PrivateFictionReader() {
       setFeedbackMessage("코멘트를 입력해 주세요.");
       return;
     }
+    const createdAt = new Date().toISOString();
     const saved = await persistFeedback([
       ...feedbackDocument.annotations,
-      {
-        ...pendingFeedback,
+      ...pendingFeedback.anchors.map((anchor) => ({
+        ...anchor,
         id: crypto.randomUUID(),
         comment,
-        createdAt: new Date().toISOString(),
-      },
+        createdAt,
+      })),
     ]);
     if (saved) {
       setPendingFeedback(undefined);
@@ -926,10 +1037,10 @@ export function PrivateFictionReader() {
     }
   }
 
-  async function deleteFeedback(annotationId: string) {
+  async function deleteFeedback(annotationIds: string[]) {
     await persistFeedback(
       feedbackDocument.annotations.filter(
-        (annotation) => annotation.id !== annotationId,
+        (annotation) => !annotationIds.includes(annotation.id),
       ),
     );
   }
@@ -973,6 +1084,9 @@ export function PrivateFictionReader() {
           ) : null}
           <button disabled={busy} onClick={() => void load()} type="button">
             새로고침
+          </button>
+          <button onClick={resetReadingHistory} type="button">
+            읽은 기록 전부 리셋하기
           </button>
         </header>
         {isListRoute ? (
@@ -1053,9 +1167,12 @@ export function PrivateFictionReader() {
       }
     >
       <BookReader
+        key={`${selected.id}:${readingReset}`}
+        selectionMode={
+          selectionMode || Boolean(pendingFeedback || selectionPreview)
+        }
         className="private-fiction-book-viewport"
         immersive
-        key={selected.id}
         initialPosition={initialPositionOverride}
         label="소설 본문. 화면 좌우를 누르거나 밀어 페이지를 넘기세요. Enter 키를 누르면 메뉴가 열립니다."
         layoutKey={`${selected.id}:${preferences.size}:${preferences.line}:${preferences.font}`}
@@ -1084,13 +1201,15 @@ export function PrivateFictionReader() {
             <article className="book-flow viewer-prose" ref={flowRef}>
               <header className="book-title">
                 <p>{episodeLabel}</p>
-                {selected.title ? <h1>{selected.title}</h1> : null}
+                <h1>{contentsEntryTitle(selected)}</h1>
               </header>
               <section
                 aria-label={`${episodeLabel} 본문`}
                 className="book-article-body"
+                ref={bodyRef}
                 onKeyUp={(event) => beginFeedbackSelection(event.currentTarget)}
                 onMouseUp={(event) =>
+                  event.detail < 2 &&
                   beginFeedbackSelection(event.currentTarget)
                 }
               >
@@ -1140,7 +1259,7 @@ export function PrivateFictionReader() {
               <Link href="/admin/">Admin</Link>
               <button
                 type="button"
-                aria-label={`회차 피드백 ${selectedFeedback.length}개`}
+                aria-label={`회차 피드백 ${feedbackGroups.length}개`}
                 onClick={() => {
                   setControlsVisible(false);
                   showFeedback();
@@ -1184,6 +1303,50 @@ export function PrivateFictionReader() {
           </>
         )}
       </BookReader>
+      {selectionPreview && !pendingFeedback ? (
+        <section
+          className="private-fiction-selection-action"
+          aria-label="선택한 부분의 리뷰"
+        >
+          <button
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              setPendingFeedback(selectionPreview);
+              setSelectionPreview(undefined);
+              setFeedbackComment("");
+              setFeedbackMessage("선택한 부분에 코멘트를 작성해 주세요.");
+            }}
+            type="button"
+          >
+            선택한 부분에 리뷰 남기기
+          </button>
+          <button
+            onClick={() => {
+              setSelectionPreview(undefined);
+              setSelectionMode(false);
+              window.getSelection()?.removeAllRanges();
+            }}
+            type="button"
+          >
+            선택 취소
+          </button>
+        </section>
+      ) : null}
+      {selectionMode && !pendingFeedback && !selectionPreview ? (
+        <section
+          className="private-fiction-feedback-composer"
+          aria-label="본문 선택 안내"
+        >
+          <p>
+            리뷰할 부분을 드래그하거나 길게 눌러 선택하세요. 여러 문단도 선택할
+            수 있습니다.
+          </p>
+          <p role="status">{feedbackMessage}</p>
+          <button onClick={() => setSelectionMode(false)} type="button">
+            읽기로 돌아가기
+          </button>
+        </section>
+      ) : null}
       {pendingFeedback ? (
         <section
           className="private-fiction-feedback-composer"
@@ -1219,6 +1382,7 @@ export function PrivateFictionReader() {
               onClick={() => {
                 setPendingFeedback(undefined);
                 setFeedbackComment("");
+                setSelectionMode(false);
                 window.getSelection()?.removeAllRanges();
               }}
               type="button"
@@ -1256,31 +1420,49 @@ export function PrivateFictionReader() {
           </button>
         </header>
         {settingsOpen ? (
-          <ReaderSettingsPanel
-            labels={{
-              background: "배경색",
-              font: "글꼴",
-              size: "글자 크기",
-              line: "줄 간격",
-              reset: "기본 설정으로",
-              stored: "읽기 설정은 공개 소설과 함께 이 브라우저에 저장됩니다.",
-              white: "흰색",
-              paper: "종이",
-              night: "어둡게",
-              sans: "고딕",
-              serif: "명조",
-            }}
-            onChange={changePreferences}
-            preferences={preferences}
-          />
+          <>
+            <ReaderSettingsPanel
+              labels={{
+                background: "배경색",
+                font: "글꼴",
+                size: "글자 크기",
+                line: "줄 간격",
+                reset: "기본 설정으로",
+                stored:
+                  "읽기 설정은 공개 소설과 함께 이 브라우저에 저장됩니다.",
+                white: "흰색",
+                paper: "종이",
+                night: "어둡게",
+                sans: "고딕",
+                serif: "명조",
+              }}
+              onChange={changePreferences}
+              preferences={preferences}
+            />
+            <button onClick={resetReadingHistory} type="button">
+              읽은 기록 전부 리셋하기
+            </button>
+          </>
         ) : feedbackOpen ? (
           <section className="private-fiction-feedback-list">
+            <button
+              onClick={() => {
+                dialog.current?.close();
+                setSelectionMode(true);
+                setFeedbackMessage(
+                  "본문에서 2,000자 이내의 부분을 선택해 주세요.",
+                );
+              }}
+              type="button"
+            >
+              본문 선택해서 리뷰 남기기
+            </button>
             <p className="private-fiction-dialog-status" role="status">
               {feedbackMessage}
             </p>
-            {selectedFeedback.length ? (
+            {feedbackGroups.length ? (
               <ol>
-                {selectedFeedback.map((annotation) => (
+                {feedbackGroups.map((annotation) => (
                   <li key={annotation.id}>
                     <blockquote>{annotation.quote}</blockquote>
                     <p>{annotation.comment}</p>
@@ -1289,7 +1471,7 @@ export function PrivateFictionReader() {
                     </time>
                     <button
                       disabled={feedbackBusy}
-                      onClick={() => void deleteFeedback(annotation.id)}
+                      onClick={() => void deleteFeedback(annotation.ids)}
                       type="button"
                     >
                       삭제
