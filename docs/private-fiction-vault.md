@@ -59,6 +59,8 @@ and last-read pointers. It preserves authentication, cached manuscripts, reading
 preferences and server feedback. It does not reset another device's history.
 
 Readers can drag text or long-press it on mobile to leave an anchored comment.
+After adjusting the selection, choose `선택한 부분에 리뷰 남기기` to open the
+comment box; it does not obscure the text while selection handles are moving.
 The feedback menu also offers an explicit passage-selection mode. Selection
 disables page-turn gestures. Selections may cross paragraphs, up to 2,000
 characters; all paragraph anchors are saved together with the same comment using

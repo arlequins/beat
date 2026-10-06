@@ -3153,6 +3153,32 @@
 }
 .private-fiction-book-viewport[data-selection-mode] {
   touch-action: pan-y pinch-zoom;
+  cursor: text;
+}
+.private-fiction-selection-action {
+  position: fixed;
+  z-index: 20;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--viewer-bg);
+  color: var(--viewer-ink);
+  box-shadow: 0 4px 24px #0005;
+}
+.private-fiction-selection-action button {
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 10px;
+  font-size: 14px;
+  background: var(--viewer-bg);
+  color: inherit;
 }
 .private-fiction-highlight {
   color: inherit;
@@ -3184,6 +3210,7 @@
   opacity: 0.72;
 }
 .private-fiction-feedback-composer blockquote {
+  white-space: pre-wrap;
   max-height: 5.5em;
   overflow: auto;
   margin: 0 0 12px;

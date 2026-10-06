@@ -186,6 +186,8 @@ test("native multi-paragraph selection saves exact highlights after reload witho
     // Mobile selection handles emit selectionchange, not mouseup.
     document.dispatchEvent(new Event("selectionchange"));
   });
+  await expect(page.getByRole("textbox", { name: "코멘트" })).toHaveCount(0);
+  await page.getByRole("button", { name: "선택한 부분에 리뷰 남기기" }).click();
   await expect(
     page.locator(".private-fiction-feedback-composer blockquote"),
   ).toHaveText("문단의 강조된 텍스트.\n\n두 번째 ");
@@ -930,6 +932,8 @@ test("anchors private reader feedback to highlighted prose and reloads it", asyn
     selection?.addRange(range);
     element.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
   });
+
+  await page.getByRole("button", { name: "선택한 부분에 리뷰 남기기" }).click();
 
   await expect(
     page.getByRole("region", { name: "선택한 원고에 의견 남기기" }),

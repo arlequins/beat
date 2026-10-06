@@ -511,6 +511,7 @@ export function PrivateFictionReader() {
     "문장을 선택해 의견을 남길 수 있습니다.",
   );
   const [pendingFeedback, setPendingFeedback] = useState<PendingFeedback>();
+  const [selectionPreview, setSelectionPreview] = useState<PendingFeedback>();
   const [selectionMode, setSelectionMode] = useState(false);
   const [readingReset, setReadingReset] = useState(0);
   const bodyRef = useRef<HTMLElement>(null);
@@ -745,6 +746,7 @@ export function PrivateFictionReader() {
   useEffect(() => {
     if (!selected?.id) return;
     setPendingFeedback(undefined);
+    setSelectionPreview(undefined);
     setFeedbackComment("");
     setSelectionMode(false);
   }, [selected?.id]);
@@ -761,10 +763,10 @@ export function PrivateFictionReader() {
 
   const beginFeedbackSelection = useCallback(
     (root: HTMLElement) => {
-      if (!selected?.episode) return;
+      if (!selected?.episode || pendingFeedback) return;
       const anchor = selectionAnchor(root, selected.episode);
       if (anchor) {
-        setPendingFeedback((current) =>
+        setSelectionPreview((current) =>
           current?.quote === anchor.quote &&
           JSON.stringify(current.anchors) === JSON.stringify(anchor.anchors)
             ? current
@@ -773,10 +775,11 @@ export function PrivateFictionReader() {
         setFeedbackMessage("선택한 문장에 코멘트를 작성해 주세요.");
         return;
       }
+      setSelectionPreview(undefined);
       if (window.getSelection()?.toString().trim())
         setFeedbackMessage("본문에서 2,000자 이내의 부분을 선택해 주세요.");
     },
-    [selected?.episode],
+    [selected?.episode, pendingFeedback],
   );
 
   useEffect(() => {
@@ -1147,7 +1150,9 @@ export function PrivateFictionReader() {
     >
       <BookReader
         key={`${selected.id}:${readingReset}`}
-        selectionMode={selectionMode || Boolean(pendingFeedback)}
+        selectionMode={
+          selectionMode || Boolean(pendingFeedback || selectionPreview)
+        }
         className="private-fiction-book-viewport"
         immersive
         initialPosition={initialPositionOverride}
@@ -1280,7 +1285,36 @@ export function PrivateFictionReader() {
           </>
         )}
       </BookReader>
-      {selectionMode && !pendingFeedback ? (
+      {selectionPreview && !pendingFeedback ? (
+        <section
+          className="private-fiction-selection-action"
+          aria-label="선택한 부분의 리뷰"
+        >
+          <button
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              setPendingFeedback(selectionPreview);
+              setSelectionPreview(undefined);
+              setFeedbackComment("");
+              setFeedbackMessage("선택한 부분에 코멘트를 작성해 주세요.");
+            }}
+            type="button"
+          >
+            선택한 부분에 리뷰 남기기
+          </button>
+          <button
+            onClick={() => {
+              setSelectionPreview(undefined);
+              setSelectionMode(false);
+              window.getSelection()?.removeAllRanges();
+            }}
+            type="button"
+          >
+            선택 취소
+          </button>
+        </section>
+      ) : null}
+      {selectionMode && !pendingFeedback && !selectionPreview ? (
         <section
           className="private-fiction-feedback-composer"
           aria-label="본문 선택 안내"
