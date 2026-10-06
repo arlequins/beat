@@ -3339,6 +3339,13 @@
 .private-fiction-book .private-fiction-prose h3 {
   break-after: avoid;
 }
+.private-fiction-book .private-fiction-page-break {
+  break-before: column;
+  break-inside: avoid;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
 .private-fiction-book .book-end button {
   margin-top: 12px;
   text-decoration: underline;
