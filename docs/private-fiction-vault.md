@@ -66,6 +66,7 @@ disables page-turn gestures. Selections may cross paragraphs, up to 2,000
 characters; all paragraph anchors are saved together with the same comment using
 the existing owner-only annotation endpoint and its conditional-write ETag.
 Highlights are restored from that document when the reader is reopened.
+Anchors from the same save operation are shown as one review and deleted together.
 
 ## Security boundary
 

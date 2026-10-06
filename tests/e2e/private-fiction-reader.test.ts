@@ -200,10 +200,17 @@ test("native multi-paragraph selection saves exact highlights after reload witho
   await expect(page.locator("mark[data-feedback-highlight]")).toHaveCount(4);
   await viewport.focus();
   await page.keyboard.press("Enter");
-  await page.getByRole("button", { name: "회차 피드백 2개" }).click();
+  await page.getByRole("button", { name: "회차 피드백 1개" }).click();
   await expect(
     page.getByRole("dialog").getByText("두 문단 사이의 연결을 검토해 주세요."),
-  ).toHaveCount(2);
+  ).toHaveCount(1);
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "삭제", exact: true })
+    .click();
+  await expect(page.locator("mark[data-feedback-highlight]")).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator("mark[data-feedback-highlight]")).toHaveCount(0);
 });
 
 const longChapter = Array.from(

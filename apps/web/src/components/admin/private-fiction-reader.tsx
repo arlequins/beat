@@ -760,6 +760,23 @@ export function PrivateFictionReader() {
         (annotation) => annotation.episode === selected.episode,
       )
     : [];
+  // Anchors saved in one operation share a timestamp and comment. Keep their
+  // individual offsets for highlighting, but present one review to the reader.
+  const feedbackGroups = Array.from(
+    selectedFeedback
+      .reduce((groups, annotation) => {
+        const key = JSON.stringify([annotation.createdAt, annotation.comment]);
+        const group = groups.get(key);
+        if (group) {
+          group.ids.push(annotation.id);
+          group.quote += `\n\n${annotation.quote}`;
+        } else {
+          groups.set(key, { ...annotation, ids: [annotation.id] });
+        }
+        return groups;
+      }, new Map<string, FictionAnnotation & { ids: string[] }>())
+      .values(),
+  );
 
   const beginFeedbackSelection = useCallback(
     (root: HTMLElement) => {
@@ -1003,13 +1020,14 @@ export function PrivateFictionReader() {
       setFeedbackMessage("코멘트를 입력해 주세요.");
       return;
     }
+    const createdAt = new Date().toISOString();
     const saved = await persistFeedback([
       ...feedbackDocument.annotations,
       ...pendingFeedback.anchors.map((anchor) => ({
         ...anchor,
         id: crypto.randomUUID(),
         comment,
-        createdAt: new Date().toISOString(),
+        createdAt,
       })),
     ]);
     if (saved) {
@@ -1019,10 +1037,10 @@ export function PrivateFictionReader() {
     }
   }
 
-  async function deleteFeedback(annotationId: string) {
+  async function deleteFeedback(annotationIds: string[]) {
     await persistFeedback(
       feedbackDocument.annotations.filter(
-        (annotation) => annotation.id !== annotationId,
+        (annotation) => !annotationIds.includes(annotation.id),
       ),
     );
   }
@@ -1241,7 +1259,7 @@ export function PrivateFictionReader() {
               <Link href="/admin/">Admin</Link>
               <button
                 type="button"
-                aria-label={`회차 피드백 ${selectedFeedback.length}개`}
+                aria-label={`회차 피드백 ${feedbackGroups.length}개`}
                 onClick={() => {
                   setControlsVisible(false);
                   showFeedback();
@@ -1442,9 +1460,9 @@ export function PrivateFictionReader() {
             <p className="private-fiction-dialog-status" role="status">
               {feedbackMessage}
             </p>
-            {selectedFeedback.length ? (
+            {feedbackGroups.length ? (
               <ol>
-                {selectedFeedback.map((annotation) => (
+                {feedbackGroups.map((annotation) => (
                   <li key={annotation.id}>
                     <blockquote>{annotation.quote}</blockquote>
                     <p>{annotation.comment}</p>
@@ -1453,7 +1471,7 @@ export function PrivateFictionReader() {
                     </time>
                     <button
                       disabled={feedbackBusy}
-                      onClick={() => void deleteFeedback(annotation.id)}
+                      onClick={() => void deleteFeedback(annotation.ids)}
                       type="button"
                     >
                       삭제
