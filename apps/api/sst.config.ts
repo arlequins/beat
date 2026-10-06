@@ -21,6 +21,9 @@ export default $config({
     };
   },
   async run() {
+    const { privateFictionStoragePermissions } = await import(
+      "./src/features/private-fiction/storage-permissions"
+    );
     const { DEFAULT_LOCALHOST_SITE_URL } = await import(
       "@arlequins/env/public-defaults"
     );
@@ -102,7 +105,7 @@ export default $config({
     const authStateBucket = createPrivateBucket("AuthState", {
       lifecycle: [
         {
-          expiresIn: "31 days",
+          expiresIn: "91 days",
           id: "expire-refresh-sessions",
           prefix: `${statePrefix}/oauth/sessions/`,
         },
@@ -153,26 +156,9 @@ export default $config({
       ],
     });
     const privateFictionBucket = createPrivateBucket("PrivateFiction");
-    const privateFictionPermissions = [
-      {
-        actions: ["s3:ListBucket"],
-        conditions: [
-          {
-            test: "StringEquals",
-            variable: "s3:prefix",
-            values: ["author-vault/reality-error/outline.md"],
-          },
-        ],
-        resources: [privateFictionBucket.arn],
-      },
-      {
-        actions: ["s3:GetObject", "s3:PutObject"],
-        resources: [
-          $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/outline.md`,
-          $interpolate`${privateFictionBucket.arn}/author-vault/reality-error/annotations.json`,
-        ],
-      },
-    ];
+    const privateFictionPermissions = privateFictionStoragePermissions(
+      (key) => $interpolate`${privateFictionBucket.arn}/${key}`,
+    );
     const handler = {
       handler: "src/lambda.handler",
       memory: "1024 MB",

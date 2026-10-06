@@ -108,7 +108,7 @@ function parseManuscript(source: string) {
     }
     if (!content) continue;
 
-    const episodeMatch = title.match(/^(\d+)\s*화(?:\s*[—–:-]\s*(.+))?$/);
+    const episodeMatch = title.match(/^(\d+)\s*화(?:\s*[.．—–:-]\s*(.+))?$/);
     const kind = title.includes("설정집")
       ? "guide"
       : episodeMatch
@@ -128,11 +128,10 @@ function parseManuscript(source: string) {
 }
 
 function contentsEntryTitle(section: ManuscriptSection) {
-  if (section.kind === "episode" && /\s+\d+$/.test(section.title)) {
-    return section.title;
-  }
   return section.kind === "episode" && section.episode !== undefined
-    ? `${section.episode}화. ${section.title}`
+    ? section.title
+      ? `${section.episode}화. ${section.title}`
+      : `${section.episode}화`
     : section.title;
 }
 
@@ -334,6 +333,17 @@ function MarkdownBlocks({
   };
 
   for (const line of lines) {
+    if (line.trim() === "<!-- PAGE_BREAK -->") {
+      flushTextBlocks();
+      blocks.push(
+        <div
+          aria-hidden="true"
+          className="private-fiction-page-break"
+          key={`page-break-${blocks.length}`}
+        />,
+      );
+      continue;
+    }
     if (line.trimStart().startsWith("```")) {
       flushTextBlocks();
       if (inCode) flushCode();
@@ -439,11 +449,18 @@ export function PrivateFictionReader() {
     .replace(/^.*\/private\/fictions\/?/, "")
     .replace(/\/+$/, "");
   const requestedEpisode = searchParams.get("episode");
+  const requestedPosition = searchParams.get("position");
+  const routePositionOverride =
+    requestedPosition === "start" || requestedPosition === "end"
+      ? requestedPosition
+      : undefined;
+  const searchQuery = searchParams.toString();
   const routeEpisode = requestedEpisode ? Number(requestedEpisode) : undefined;
   const isEpisodeRoute = routeEpisode !== undefined;
   const isListRoute = routePart === "list";
   const [authenticated, setAuthenticated] = useState(false);
   const [manuscript, setManuscript] = useState<Manuscript>();
+  const [lastReadSectionId, setLastReadSectionId] = useState<string>();
   const [message, setMessage] = useState("로그인 상태를 확인하고 있습니다.");
   const [busy, setBusy] = useState(false);
   const [selectedId, setSelectedId] = useState<string>();
@@ -463,6 +480,9 @@ export function PrivateFictionReader() {
   const [feedbackComment, setFeedbackComment] = useState("");
   const [preferences, setPreferences] = useState(defaultReaderPreferences);
   const dialog = useRef<HTMLDialogElement>(null);
+  const sectionPositionOverride = useRef<
+    { sectionId: string; position: "start" | "end" } | undefined
+  >(undefined);
 
   useEffect(() => {
     const shell = document.querySelector<HTMLElement>(".ebook-shell");
@@ -609,12 +629,41 @@ export function PrivateFictionReader() {
     (section) => section.kind === "guide" || section.kind === "episode",
   );
   const episodes = readingOrder.filter((section) => section.kind === "episode");
+  const lastReadSection = episodes.find(
+    (section) => section.id === lastReadSectionId,
+  );
   const routedSection = readingOrder.find(
     (section) => section.kind === "episode" && section.episode === routeEpisode,
   );
   const selected =
     sections.find((section) => section.id === selectedId) ??
     (isEpisodeRoute ? routedSection : (episodes[0] ?? readingOrder[0]));
+  const initialPositionOverride =
+    selected && sectionPositionOverride.current?.sectionId === selected.id
+      ? sectionPositionOverride.current.position
+      : routePositionOverride && selected?.episode === routeEpisode
+        ? routePositionOverride
+        : "saved";
+  const clearInitialPositionOverride = useCallback(() => {
+    if (sectionPositionOverride.current?.sectionId === selected?.id)
+      sectionPositionOverride.current = undefined;
+    if (!routePositionOverride || selected?.episode !== routeEpisode) return;
+    const nextQuery = new URLSearchParams(searchQuery);
+    if (nextQuery.get("position") !== routePositionOverride) return;
+    nextQuery.delete("position");
+    const query = nextQuery.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  }, [
+    pathname,
+    routeEpisode,
+    routePositionOverride,
+    router,
+    searchQuery,
+    selected?.episode,
+    selected?.id,
+  ]);
 
   useEffect(() => {
     if (isEpisodeRoute || isListRoute) return;
@@ -631,10 +680,28 @@ export function PrivateFictionReader() {
   }, [isEpisodeRoute, isListRoute, readingOrder, sections, selectedId]);
 
   useEffect(() => {
-    if (selected) {
-      window.localStorage.setItem("private-fiction-book-section", selected.id);
+    if (isEpisodeRoute && selected?.kind === "episode") {
+      try {
+        window.localStorage.setItem(
+          "private-fiction-book-section",
+          selected.id,
+        );
+      } catch {
+        // The current episode remains available when browser storage is disabled.
+      }
+      setLastReadSectionId(selected.id);
+      return;
     }
-  }, [selected]);
+    if (isListRoute) return;
+    try {
+      setLastReadSectionId(
+        window.localStorage.getItem("private-fiction-book-section") ??
+          undefined,
+      );
+    } catch {
+      setLastReadSectionId(undefined);
+    }
+  }, [isEpisodeRoute, isListRoute, selected?.id, selected?.kind]);
 
   useEffect(() => {
     if (!selected?.id) return;
@@ -665,13 +732,49 @@ export function PrivateFictionReader() {
       setFeedbackMessage("한 문단 안에서 의견을 남길 문장을 선택해 주세요.");
   }
 
-  const chooseSection = (id: string, atEnd = false) => {
+  const chooseSection = (
+    id: string,
+    position: "start" | "end" | "saved" = "saved",
+  ) => {
     const section = sections.find((item) => item.id === id);
-    if (atEnd && section) {
+    let previousSection = selected;
+    if (!isEpisodeRoute) {
+      try {
+        const lastReadId = window.localStorage.getItem(
+          "private-fiction-book-section",
+        );
+        previousSection =
+          readingOrder.find((item) => item.id === lastReadId) ?? selected;
+      } catch {
+        // Selecting a section remains available when browser storage is disabled.
+      }
+    }
+    const selectingNextEpisode =
+      section?.kind === "episode" &&
+      section.episode !== undefined &&
+      previousSection?.kind === "episode" &&
+      previousSection.episode !== undefined &&
+      section.episode === previousSection.episode + 1;
+    const destinationPosition =
+      position === "saved" && selectingNextEpisode ? "start" : position;
+    // The explicit override still works if localStorage cannot save the reset.
+    if (section && destinationPosition !== "saved") {
+      sectionPositionOverride.current = {
+        sectionId: section.id,
+        position: destinationPosition,
+      };
+    } else {
+      sectionPositionOverride.current = undefined;
+    }
+    if (destinationPosition !== "saved" && section) {
+      const positionKey =
+        section.kind === "episode" && section.episode
+          ? `private-fiction-episode-${section.episode}`
+          : section.id;
       try {
         localStorage.setItem(
-          `beat-fiction-v1-book-position-${section.id}`,
-          "1",
+          `beat-fiction-v1-book-position-${positionKey}`,
+          destinationPosition === "end" ? "1" : "0",
         );
       } catch {
         // Reading remains available when browser storage is disabled.
@@ -679,7 +782,12 @@ export function PrivateFictionReader() {
     }
     if (section?.kind === "episode" && section.episode) {
       setSelectedId(undefined);
-      router.push(`/private/fictions/?episode=${section.episode}`, {
+      const destination = new URLSearchParams({
+        episode: String(section.episode),
+      });
+      if (destinationPosition !== "saved")
+        destination.set("position", destinationPosition);
+      router.push(`/private/fictions/?${destination.toString()}`, {
         scroll: false,
       });
     } else {
@@ -892,10 +1000,18 @@ export function PrivateFictionReader() {
               <Link href="/private/fictions/list/">회차 목록 보기</Link>
               {episodes[0] ? (
                 <button
-                  onClick={() => chooseSection(episodes[0]!.id)}
+                  onClick={() => chooseSection(episodes[0]!.id, "start")}
                   type="button"
                 >
                   1화부터 읽기
+                </button>
+              ) : null}
+              {lastReadSection ? (
+                <button
+                  onClick={() => chooseSection(lastReadSection.id)}
+                  type="button"
+                >
+                  계속해서 읽기
                 </button>
               ) : null}
             </div>
@@ -939,13 +1055,20 @@ export function PrivateFictionReader() {
       <BookReader
         className="private-fiction-book-viewport"
         immersive
+        key={selected.id}
+        initialPosition={initialPositionOverride}
         label="소설 본문. 화면 좌우를 누르거나 밀어 페이지를 넘기세요. Enter 키를 누르면 메뉴가 열립니다."
         layoutKey={`${selected.id}:${preferences.size}:${preferences.line}:${preferences.font}`}
+        onInitialPositionApplied={clearInitialPositionOverride}
         onBoundaryTurn={(delta) => {
           const target = readingOrder[selectedOrderIndex + delta];
-          if (target) chooseSection(target.id, delta < 0);
+          if (target) chooseSection(target.id, delta < 0 ? "end" : "start");
         }}
-        positionKey={selected.id}
+        positionKey={
+          selected.kind === "episode" && selected.episode
+            ? `private-fiction-episode-${selected.episode}`
+            : selected.id
+        }
         waitForLayout
       >
         {({
@@ -961,7 +1084,7 @@ export function PrivateFictionReader() {
             <article className="book-flow viewer-prose" ref={flowRef}>
               <header className="book-title">
                 <p>{episodeLabel}</p>
-                <h1>{selected.title}</h1>
+                {selected.title ? <h1>{selected.title}</h1> : null}
               </header>
               <section
                 aria-label={`${episodeLabel} 본문`}
@@ -980,7 +1103,7 @@ export function PrivateFictionReader() {
                 {nextSection ? (
                   <button
                     className="private-fiction-next-episode"
-                    onClick={() => chooseSection(nextSection.id)}
+                    onClick={() => chooseSection(nextSection.id, "start")}
                     type="button"
                   >
                     {nextSection.kind === "episode" && nextSection.episode

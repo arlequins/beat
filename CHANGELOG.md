@@ -2,6 +2,62 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.77.6](https://github.com/arlequins/beat/compare/beat-v1.77.5...beat-v1.77.6) (2026-10-05)
+
+
+### Bug Fixes
+
+* **api:** load private fiction permissions at runtime ([#367](https://github.com/arlequins/beat/issues/367)) ([75c2c43](https://github.com/arlequins/beat/commit/75c2c43c13517b89a055f8a99440d9c3e385f4da))
+* **web:** parse period-separated private episode titles ([#370](https://github.com/arlequins/beat/issues/370)) ([fe61a17](https://github.com/arlequins/beat/commit/fe61a1778f95379cb24578754ebaf2496cf468f4))
+
+## [1.77.5](https://github.com/arlequins/beat/compare/beat-v1.77.4...beat-v1.77.5) (2026-09-30)
+
+
+### Bug Fixes
+
+* **web:** preserve episode start across reader routes ([#360](https://github.com/arlequins/beat/issues/360)) ([d067c4b](https://github.com/arlequins/beat/commit/d067c4be089232ada02a17d3b05f2b8d21167088))
+
+## [1.77.4](https://github.com/arlequins/beat/compare/beat-v1.77.3...beat-v1.77.4) (2026-09-30)
+
+
+### Bug Fixes
+
+* **web:** keep next episode at start if storage fails ([#358](https://github.com/arlequins/beat/issues/358)) ([7b4d2a0](https://github.com/arlequins/beat/commit/7b4d2a042795d4d0d4b5832ba5c890c838ac2b9e))
+
+## [1.77.3](https://github.com/arlequins/beat/compare/beat-v1.77.2...beat-v1.77.3) (2026-09-30)
+
+
+### Bug Fixes
+
+* **web:** start next episode from list at page one ([6fe205d](https://github.com/arlequins/beat/commit/6fe205d63ae9804e659594d5ba37b7847c34a2e5))
+
+## [1.77.2](https://github.com/arlequins/beat/compare/beat-v1.77.1...beat-v1.77.2) (2026-09-30)
+
+
+### Bug Fixes
+
+* **web:** start next private episode at page one from contents ([2c0ec1c](https://github.com/arlequins/beat/commit/2c0ec1c8e23ed446d09d20bbbafa81b5f74d3ba0))
+
+## [1.77.1](https://github.com/arlequins/beat/compare/beat-v1.77.0...beat-v1.77.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* **web:** start next private episode at page one ([#352](https://github.com/arlequins/beat/issues/352)) ([6f23335](https://github.com/arlequins/beat/commit/6f23335084ff7fb4c8a5aa3be872a26f44961dc8))
+
+## [1.77.0](https://github.com/arlequins/beat/compare/beat-v1.76.1...beat-v1.77.0) (2026-09-29)
+
+
+### Features
+
+* **web:** prefix private fiction list chapters ([#350](https://github.com/arlequins/beat/issues/350)) ([c11e235](https://github.com/arlequins/beat/commit/c11e235a5d6e72c4dbd0142d81b9ffd24609ffe8))
+
+
+### Bug Fixes
+
+* **web:** keep private fiction chapter positions stable ([#351](https://github.com/arlequins/beat/issues/351)) ([4155fb1](https://github.com/arlequins/beat/commit/4155fb1ccbb9fbaeed4001ab8e190c56dfed6004))
+* **web:** use neutral focus rings in private fiction ([d4dd915](https://github.com/arlequins/beat/commit/d4dd915fe599f3addf41b8b3f94356b8f098e5fa))
+
 ## [1.76.1](https://github.com/arlequins/beat/compare/beat-v1.76.0...beat-v1.76.1) (2026-09-29)
 
 

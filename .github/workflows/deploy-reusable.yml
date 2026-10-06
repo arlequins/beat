@@ -50,6 +50,13 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./tooling/github/setup
 
+      - name: Verify private-fiction OIDC and S3 restrictions
+        if: inputs.application == 'api' && inputs.operation != 'remove'
+        run: >-
+          pnpm --filter @arlequins/api with-env vitest run
+          src/features/private-fiction/github-actions-identity.test.ts
+          src/features/private-fiction/storage-permissions.test.ts
+
       - name: Build application workspace dependencies
         run: pnpm turbo run build --filter="@arlequins/${{ inputs.application }}^..."
 

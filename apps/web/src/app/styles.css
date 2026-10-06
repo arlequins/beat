@@ -2598,6 +2598,15 @@
   outline: 2px solid var(--coral);
   outline-offset: -2px;
 }
+.private-fiction-book-viewport:focus-visible {
+  outline: none;
+}
+.private-fiction-shell :is(a, button, input, select, summary):focus-visible {
+  outline-color: var(--foreground);
+}
+.private-fiction-book :is(a, button, input, select, summary):focus-visible {
+  outline-color: var(--viewer-ink);
+}
 
 .fiction-guide {
   max-width: 780px;
@@ -3329,6 +3338,13 @@
 .private-fiction-book .private-fiction-prose h2,
 .private-fiction-book .private-fiction-prose h3 {
   break-after: avoid;
+}
+.private-fiction-book .private-fiction-page-break {
+  break-before: column;
+  break-inside: avoid;
+  height: 0;
+  margin: 0;
+  padding: 0;
 }
 .private-fiction-book .book-end button {
   margin-top: 12px;

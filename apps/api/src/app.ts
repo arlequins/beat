@@ -63,6 +63,7 @@ import {
 import type { GourmetPort } from "./features/gourmet/application/ports";
 import { createGourmetPort } from "./features/gourmet/composition";
 import { registerGourmetRoutes } from "./features/gourmet/interface/http/routes";
+import { verifyPrivateFictionGitHubActionsToken } from "./features/private-fiction/github-actions-identity";
 import {
   type PrivateFictionPort,
   registerPrivateFictionRoutes,
@@ -116,6 +117,9 @@ export type CreateApiAppOptions = {
   };
   gourmet?: Partial<GourmetPort>;
   privateFiction?: Partial<PrivateFictionPort>;
+  privateFictionGitHubActions?: {
+    verifyToken?: typeof verifyPrivateFictionGitHubActionsToken;
+  };
   mcp?: {
     issuer?: string;
     resource?: string;
@@ -300,6 +304,10 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     { path: "/admin/gourmet/*" },
     {
       path: "/admin/private-fiction",
+      bodyLimitBytes: MAX_PRIVATE_FICTION_SOURCE_BYTES + 1_024,
+    },
+    {
+      path: "/admin/private-fiction/*",
       bodyLimitBytes: MAX_PRIVATE_FICTION_SOURCE_BYTES + 1_024,
     },
     { path: "/api/gourmet/*" },
@@ -678,6 +686,9 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
         savePrivateFictionAnnotations,
     },
     verifyAccessToken: auth.verifyAccessToken,
+    verifyGitHubActionsToken:
+      options.privateFictionGitHubActions?.verifyToken ??
+      verifyPrivateFictionGitHubActionsToken,
   });
   registerMcpRoutes(app, {
     gourmet,
