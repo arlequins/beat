@@ -68,6 +68,13 @@ the existing owner-only annotation endpoint and its conditional-write ETag.
 Highlights are restored from that document when the reader is reopened.
 Anchors from the same save operation are shown as one review and deleted together.
 
+With the restricted S3 role, a missing annotation object can be reported as 403
+instead of 404 ([AWS GetObject documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html)).
+The repository initializes it using a conditional empty write (`If-None-Match: *`).
+An existing or concurrently created document is read back, never overwritten.
+Denied writes or unreadable existing documents remain storage errors; they are
+never silently reported as an empty feedback list. Bucket-list permissions are unchanged.
+
 ## Security boundary
 
 The private repository and its workflow logs must remain private. Protect the
