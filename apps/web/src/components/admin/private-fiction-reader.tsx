@@ -129,7 +129,9 @@ function parseManuscript(source: string) {
 
 function contentsEntryTitle(section: ManuscriptSection) {
   return section.kind === "episode" && section.episode !== undefined
-    ? `${section.episode}화. ${section.title}`
+    ? section.title
+      ? `${section.episode}화. ${section.title}`
+      : `${section.episode}화`
     : section.title;
 }
 
@@ -331,6 +333,17 @@ function MarkdownBlocks({
   };
 
   for (const line of lines) {
+    if (line.trim() === "<!-- PAGE_BREAK -->") {
+      flushTextBlocks();
+      blocks.push(
+        <div
+          aria-hidden="true"
+          className="private-fiction-page-break"
+          key={`page-break-${blocks.length}`}
+        />,
+      );
+      continue;
+    }
     if (line.trimStart().startsWith("```")) {
       flushTextBlocks();
       if (inCode) flushCode();
@@ -1071,7 +1084,7 @@ export function PrivateFictionReader() {
             <article className="book-flow viewer-prose" ref={flowRef}>
               <header className="book-title">
                 <p>{episodeLabel}</p>
-                <h1>{selected.title}</h1>
+                {selected.title ? <h1>{selected.title}</h1> : null}
               </header>
               <section
                 aria-label={`${episodeLabel} 본문`}
