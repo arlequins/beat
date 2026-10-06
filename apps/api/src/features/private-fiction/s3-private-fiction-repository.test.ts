@@ -8,6 +8,93 @@ function client(send: (command: unknown) => Promise<unknown>) {
 }
 
 describe("private fiction S3 repository", () => {
+  it("initializes absent feedback when least-privilege S3 reads report 403", async () => {
+    vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
+    const { getPrivateFictionAnnotations } = await import(
+      "./s3-private-fiction-repository"
+    );
+    let stored: string | undefined;
+    let writes = 0;
+    const send = async (command: unknown) => {
+      if (command instanceof GetObjectCommand) {
+        if (!stored)
+          throw { name: "AccessDenied", $metadata: { httpStatusCode: 403 } };
+        return {
+          Body: { transformToString: async () => stored! },
+          ETag: '"empty-feedback"',
+          LastModified: new Date("2026-10-07T00:00:00Z"),
+        };
+      }
+      if (!(command instanceof PutObjectCommand))
+        throw new Error("Unexpected S3 operation");
+      expect(command.input).toMatchObject({
+        Bucket: "private-vault-bucket",
+        Key: "author-vault/reality-error/annotations.json",
+        IfNoneMatch: "*",
+      });
+      if (stored) throw { $metadata: { httpStatusCode: 412 } };
+      stored = String(command.input.Body);
+      writes += 1;
+      return { ETag: '"empty-feedback"' };
+    };
+    await expect(
+      getPrivateFictionAnnotations(client(send)),
+    ).resolves.toMatchObject({ annotations: [], etag: '"empty-feedback"' });
+    await expect(
+      getPrivateFictionAnnotations(client(send)),
+    ).resolves.toMatchObject({ annotations: [], etag: '"empty-feedback"' });
+    expect(writes).toBe(1);
+  });
+
+  it("preserves feedback created by another request during initialization", async () => {
+    vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
+    const { getPrivateFictionAnnotations } = await import(
+      "./s3-private-fiction-repository"
+    );
+    const existing = {
+      annotations: [{ id: "original", comment: "Keep this feedback" }],
+    };
+    let reads = 0;
+    const send = async (command: unknown) => {
+      if (command instanceof GetObjectCommand) {
+        if (++reads === 1) throw { name: "AccessDenied" };
+        return {
+          Body: { transformToString: async () => JSON.stringify(existing) },
+          ETag: '"existing-feedback"',
+          LastModified: new Date("2026-10-07T00:00:00Z"),
+        };
+      }
+      expect(command).toBeInstanceOf(PutObjectCommand);
+      expect((command as PutObjectCommand).input.IfNoneMatch).toBe("*");
+      throw { $metadata: { httpStatusCode: 412 } };
+    };
+    await expect(
+      getPrivateFictionAnnotations(client(send)),
+    ).resolves.toMatchObject({
+      annotations: existing.annotations,
+      etag: '"existing-feedback"',
+    });
+  });
+
+  it.each([403, 412])(
+    "does not report unreadable existing feedback as empty after initialization status %s",
+    async (status) => {
+      vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
+      const { getPrivateFictionAnnotations } = await import(
+        "./s3-private-fiction-repository"
+      );
+      const send = async (command: unknown) => {
+        throw {
+          $metadata: {
+            httpStatusCode: command instanceof GetObjectCommand ? 403 : status,
+          },
+        };
+      };
+      await expect(
+        getPrivateFictionAnnotations(client(send)),
+      ).rejects.toMatchObject({ code: "storage_unavailable" });
+    },
+  );
   it("reads only the fixed private object and maps metadata", async () => {
     vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
     const { getPrivateFictionDocument } = await import(

@@ -77,6 +77,16 @@ function isConflict(error: unknown) {
   );
 }
 
+function isAccessDenied(error: unknown) {
+  const value = error as {
+    $metadata?: { httpStatusCode?: number };
+    name?: string;
+  };
+  return (
+    value?.$metadata?.httpStatusCode === 403 || value?.name === "AccessDenied"
+  );
+}
+
 export async function getPrivateFictionDocument(
   client = new S3Client({}),
 ): Promise<PrivateFictionDocument | undefined> {
@@ -132,34 +142,62 @@ export async function savePrivateFictionDocument(
   }
 }
 
+async function readPrivateFictionAnnotations(
+  client: S3Client,
+): Promise<PrivateFictionAnnotationsDocument> {
+  const response = await client.send(
+    new GetObjectCommand({
+      Bucket: bucketName(),
+      Key: ANNOTATIONS_OBJECT_KEY,
+    }),
+  );
+  if (!response.ETag || !response.LastModified)
+    throw new PrivateFictionStorageError("storage_unavailable");
+  const parsed: unknown = JSON.parse(await bodyText(response.Body));
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    !Array.isArray((parsed as { annotations?: unknown }).annotations)
+  )
+    throw new PrivateFictionStorageError("storage_unavailable");
+  return {
+    etag: response.ETag,
+    annotations: (parsed as { annotations: PrivateFictionAnnotation[] })
+      .annotations,
+    updatedAt: response.LastModified.toISOString(),
+  };
+}
+
 export async function getPrivateFictionAnnotations(
   client = new S3Client({}),
 ): Promise<PrivateFictionAnnotationsDocument | undefined> {
   try {
-    const response = await client.send(
-      new GetObjectCommand({
-        Bucket: bucketName(),
-        Key: ANNOTATIONS_OBJECT_KEY,
-      }),
-    );
-    if (!response.ETag || !response.LastModified)
-      throw new PrivateFictionStorageError("storage_unavailable");
-    const parsed: unknown = JSON.parse(await bodyText(response.Body));
-    if (
-      !parsed ||
-      typeof parsed !== "object" ||
-      !Array.isArray((parsed as { annotations?: unknown }).annotations)
-    )
-      throw new PrivateFictionStorageError("storage_unavailable");
-    return {
-      etag: response.ETag,
-      annotations: (parsed as { annotations: PrivateFictionAnnotation[] })
-        .annotations,
-      updatedAt: response.LastModified.toISOString(),
-    };
+    return await readPrivateFictionAnnotations(client);
   } catch (error) {
     if (error instanceof PrivateFictionStorageError) throw error;
     if (isMissing(error)) return undefined;
+    // Without ListBucket, S3 also returns 403 for a key that does not exist.
+    // A conditional create distinguishes that case without widening permissions
+    // or overwriting feedback. A competing/existing object must be read instead.
+    if (isAccessDenied(error)) {
+      try {
+        return await savePrivateFictionAnnotations(
+          { expectedEtag: null, annotations: [] },
+          client,
+        );
+      } catch (initializationError) {
+        if (
+          initializationError instanceof PrivateFictionStorageError &&
+          initializationError.code === "conflict"
+        ) {
+          try {
+            return await readPrivateFictionAnnotations(client);
+          } catch {
+            throw new PrivateFictionStorageError("storage_unavailable");
+          }
+        }
+      }
+    }
     throw new PrivateFictionStorageError("storage_unavailable");
   }
 }
