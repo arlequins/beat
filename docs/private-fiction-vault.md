@@ -45,6 +45,26 @@ will upload it and verify the S3 readback. The workflow can be manually
 rerun from GitHub Actions when needed. Refresh the private reader on the
 device to load the saved version.
 
+## Reading titles, progress and passage feedback
+
+The reader and contents use `1화. 아크 제목 - 1`: the first number is the
+episode and the last is its position in the arc. A cover heading before
+`<!-- PAGE_BREAK -->` starts an arc; subsequent bare episode headings inherit
+that arc. Legacy numbered episode titles remain supported. Location headings
+in the body do not restart an arc.
+
+The library, episode list and reading settings offer `읽은 기록 전부 리셋하기`.
+After confirmation it clears this device's public and private reading positions
+and last-read pointers. It preserves authentication, cached manuscripts, reading
+preferences and server feedback. It does not reset another device's history.
+
+Readers can drag text or long-press it on mobile to leave an anchored comment.
+The feedback menu also offers an explicit passage-selection mode. Selection
+disables page-turn gestures. Selections may cross paragraphs, up to 2,000
+characters; all paragraph anchors are saved together with the same comment using
+the existing owner-only annotation endpoint and its conditional-write ETag.
+Highlights are restored from that document when the reader is reopened.
+
 ## Security boundary
 
 The private repository and its workflow logs must remain private. Protect the

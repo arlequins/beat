@@ -3147,6 +3147,13 @@
   font-size: var(--reader-size);
   line-height: var(--reader-line);
 }
+.private-fiction-book .book-article-body {
+  user-select: text;
+  -webkit-user-select: text;
+}
+.private-fiction-book-viewport[data-selection-mode] {
+  touch-action: pan-y pinch-zoom;
+}
 .private-fiction-highlight {
   color: inherit;
   border-radius: 0.18em;
