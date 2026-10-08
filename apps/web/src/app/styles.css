@@ -3312,10 +3312,10 @@
   line-height: 1.55;
 }
 .private-fiction-prose h2 {
-  font-size: 22px;
+  font-size: 1.2em;
 }
 .private-fiction-prose h3 {
-  font-size: 19px;
+  font-size: 1.1em;
 }
 .private-fiction-prose :is(ul, ol) {
   margin: 0 0 1.2em;
