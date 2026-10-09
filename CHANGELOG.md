@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.77.8](https://github.com/arlequins/beat/compare/beat-v1.77.7...beat-v1.77.8) (2026-10-08)
+
+
+### Bug Fixes
+
+* **web:** scale private reader headings with text size ([#377](https://github.com/arlequins/beat/issues/377)) ([6adfbe5](https://github.com/arlequins/beat/commit/6adfbe51ad98d2b6210a4a2bd1f751d9f61ca7ab))
+
 ## [1.77.7](https://github.com/arlequins/beat/compare/beat-v1.77.6...beat-v1.77.7) (2026-10-06)
 
 
