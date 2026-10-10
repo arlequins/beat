@@ -817,7 +817,6 @@ function ScopedPrivateFictionReader() {
       query ? `${window.location.pathname}?${query}` : window.location.pathname,
     );
   }, [
-    pathname,
     routeEpisode,
     routePositionOverride,
     searchQuery,
