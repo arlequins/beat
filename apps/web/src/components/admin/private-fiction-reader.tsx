@@ -1035,7 +1035,8 @@ function ScopedPrivateFictionReader() {
       const destination = new URLSearchParams({
         episode: String(section.episode),
       });
-      destination.set("work", workId);
+      if (requestedWorkId || workId !== "reality-error")
+        destination.set("work", workId);
       if (workId !== "reality-error" || editionId !== "current")
         destination.set("edition", editionId);
       if (destinationPosition !== "saved")
