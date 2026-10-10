@@ -1,5 +1,26 @@
 import { expect, type Page, test } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  await page.route("**/admin/private-fictions", (route) =>
+    route.fulfill({
+      json: {
+        etag: "catalog-test",
+        works: [
+          {
+            id: "reality-error",
+            title: "현실 오류",
+            activeEditionId: "current",
+            editions: [{ id: "current", label: "현재 판본" }],
+            allowedSubjects: [],
+            createdAt: "now",
+            updatedAt: "now",
+          },
+        ],
+      },
+    }),
+  );
+});
+
 async function mockPrivateReader(
   page: Page,
   source: string,
@@ -16,23 +37,28 @@ async function mockPrivateReader(
       }),
     );
   });
-  await page.route("**/admin/private-fiction", (route) =>
-    route.fulfill({
-      json: {
-        etag: "reader-test",
-        source,
-        updatedAt: "2026-10-07T00:00:00.000Z",
-      },
-    }),
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current",
+    (route) =>
+      route.fulfill({
+        json: {
+          etag: "reader-test",
+          source,
+          updatedAt: "2026-10-07T00:00:00.000Z",
+        },
+      }),
   );
   let annotations = initialAnnotations;
-  await page.route("**/admin/private-fiction/annotations", (route) => {
-    if (route.request().method() === "PUT")
-      annotations = route.request().postDataJSON().annotations;
-    return route.fulfill({
-      json: { etag: "review-test", annotations, updatedAt: null },
-    });
-  });
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current/annotations",
+    (route) => {
+      if (route.request().method() === "PUT")
+        annotations = route.request().postDataJSON().annotations;
+      return route.fulfill({
+        json: { etag: "review-test", annotations, updatedAt: null },
+      });
+    },
+  );
 }
 
 test("keeps cover arc titles and resets numbering at the next arc", async ({
@@ -94,7 +120,7 @@ test("clears all progress while preserving login, manuscript, preferences and fe
       createdAt: "2026-10-07T00:00:00.000Z",
     },
   ]);
-  await page.goto("/private/fictions/");
+  await page.goto("/private/fictions/?work=reality-error");
   await expect(
     page.getByRole("button", { name: "1화부터 읽기", exact: true }),
   ).toBeVisible();
@@ -257,21 +283,25 @@ test("recognizes author-draft episode headings and routes to episode 75", async 
       }),
     );
   });
-  await page.route("**/admin/private-fiction", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        etag: "test-etag",
-        source: authorDraftManuscript,
-        updatedAt: "2026-10-04T12:00:00.000Z",
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          etag: "test-etag",
+          source: authorDraftManuscript,
+          updatedAt: "2026-10-04T12:00:00.000Z",
+        }),
       }),
-    }),
   );
-  await page.route("**/admin/private-fiction/annotations", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
-    }),
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current/annotations",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+      }),
   );
 
   await page.goto("/private/fictions/list/");
@@ -334,21 +364,25 @@ test("starts the next private episode at its first page", async ({ page }) => {
         else callback(time);
       });
   });
-  await page.route("**/admin/private-fiction", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        etag: "test-etag",
-        source: manuscript,
-        updatedAt: "2026-09-27T12:00:00.000Z",
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          etag: "test-etag",
+          source: manuscript,
+          updatedAt: "2026-09-27T12:00:00.000Z",
+        }),
       }),
-    }),
   );
-  await page.route("**/admin/private-fiction/annotations", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
-    }),
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current/annotations",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+      }),
   );
 
   await page.goto("/private/fictions/?episode=4");
@@ -417,21 +451,25 @@ test("selecting the next episode from the contents starts at its first page", as
       originalSetItem.call(this, key, value);
     };
   });
-  await page.route("**/admin/private-fiction", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        etag: "test-etag",
-        source: manuscript,
-        updatedAt: "2026-09-27T12:00:00.000Z",
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          etag: "test-etag",
+          source: manuscript,
+          updatedAt: "2026-09-27T12:00:00.000Z",
+        }),
       }),
-    }),
   );
-  await page.route("**/admin/private-fiction/annotations", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
-    }),
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current/annotations",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+      }),
   );
 
   await page.goto("/private/fictions/?episode=4");
@@ -490,21 +528,25 @@ test("selecting the next episode from the episode list starts at its first page"
       originalSetItem.call(this, key, value);
     };
   });
-  await page.route("**/admin/private-fiction", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        etag: "test-etag",
-        source: manuscript,
-        updatedAt: "2026-09-27T12:00:00.000Z",
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          etag: "test-etag",
+          source: manuscript,
+          updatedAt: "2026-09-27T12:00:00.000Z",
+        }),
       }),
-    }),
   );
-  await page.route("**/admin/private-fiction/annotations", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
-    }),
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current/annotations",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+      }),
   );
 
   await page.goto("/private/fictions/?episode=4");
@@ -557,24 +599,28 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
       }),
     );
   });
-  await page.route("**/admin/private-fiction", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        etag: "test-etag",
-        source: manuscript,
-        updatedAt: "2026-09-27T12:00:00.000Z",
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          etag: "test-etag",
+          source: manuscript,
+          updatedAt: "2026-09-27T12:00:00.000Z",
+        }),
       }),
-    }),
   );
-  await page.route("**/admin/private-fiction/annotations", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
-    }),
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current/annotations",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+      }),
   );
 
-  await page.goto("/private/fictions/");
+  await page.goto("/private/fictions/?work=reality-error");
   await expect(
     page.getByRole("heading", { name: "비공개 소설" }),
   ).toBeVisible();
@@ -583,7 +629,7 @@ test("reads private Markdown in the public book-style page-turn viewer", async (
   await expect(page).toHaveURL(/\/private\/fictions\/list\/$/);
   await expect(
     page.getByRole("link", { name: "작품으로 돌아가기" }),
-  ).toHaveAttribute("href", "/private/fictions/");
+  ).toHaveAttribute("href", "/private/fictions/?work=reality-error");
   await expect(page.getByText("읽기 →")).toHaveCount(0);
   await expect(
     page.getByRole("button", {
@@ -883,42 +929,47 @@ test("anchors private reader feedback to highlighted prose and reloads it", asyn
       }),
     );
   });
-  await page.route("**/admin/private-fiction", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        etag: "test-etag",
-        source:
-          "# 1화 — 첫 번째 장면\n\n터널 바깥의 비는 그치지 않았다. 도윤은 기록을 다시 읽었다.",
-        updatedAt: "2026-09-27T12:00:00.000Z",
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          etag: "test-etag",
+          source:
+            "# 1화 — 첫 번째 장면\n\n터널 바깥의 비는 그치지 않았다. 도윤은 기록을 다시 읽었다.",
+          updatedAt: "2026-09-27T12:00:00.000Z",
+        }),
       }),
-    }),
   );
 
   let etag: string | null = null;
   let annotations: unknown[] = [];
-  await page.route("**/admin/private-fiction/annotations", async (route) => {
-    if (route.request().method() === "GET") {
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current/annotations",
+    async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          contentType: "application/json",
+          body: JSON.stringify({ etag, annotations, updatedAt: null }),
+        });
+        return;
+      }
+      const body = route.request().postDataJSON() as {
+        annotations: unknown[];
+      };
+      annotations = body.annotations;
+      etag = '"feedback-1"';
       await route.fulfill({
         contentType: "application/json",
-        body: JSON.stringify({ etag, annotations, updatedAt: null }),
+        body: JSON.stringify({
+          etag,
+          annotations,
+          updatedAt: "2026-09-29T00:00:00.000Z",
+        }),
       });
-      return;
-    }
-    const body = route.request().postDataJSON() as {
-      annotations: unknown[];
-    };
-    annotations = body.annotations;
-    etag = '"feedback-1"';
-    await route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        etag,
-        annotations,
-        updatedAt: "2026-09-29T00:00:00.000Z",
-      }),
-    });
-  });
+    },
+  );
 
   await page.goto("/private/fictions/?episode=1");
   await expect(
@@ -983,21 +1034,25 @@ test("continues from the last private episode and saved page", async ({
       }),
     );
   });
-  await page.route("**/admin/private-fiction", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        etag: "test-etag",
-        source: manuscript,
-        updatedAt: "2026-09-27T12:00:00.000Z",
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          etag: "test-etag",
+          source: manuscript,
+          updatedAt: "2026-09-27T12:00:00.000Z",
+        }),
       }),
-    }),
   );
-  await page.route("**/admin/private-fiction/annotations", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
-    }),
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current/annotations",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ etag: null, annotations: [], updatedAt: null }),
+      }),
   );
 
   await page.goto("/private/fictions/?episode=4");
@@ -1018,7 +1073,7 @@ test("continues from the last private episode and saved page", async ({
     );
   });
 
-  await page.goto("/private/fictions/");
+  await page.goto("/private/fictions/?work=reality-error");
   await expect(
     page.getByRole("button", { name: "1화부터 읽기", exact: true }),
   ).toBeVisible();
@@ -1041,4 +1096,81 @@ test("continues from the last private episode and saved page", async ({
   if (!currentPage || !totalPages || totalPages < 2)
     throw new Error("Private fiction test chapter must span multiple pages");
   expect(currentPage).toBe(Math.round(0.5 * (totalPages - 1)) + 1);
+});
+
+test("opens two private works with separate text and reading positions", async ({
+  page,
+}) => {
+  await mockPrivateReader(page, "# 1화. New cast\n\nNew book body.");
+  await page.route("**/admin/private-fictions", (route) =>
+    route.fulfill({
+      json: {
+        etag: "catalog",
+        works: [
+          {
+            id: "reality-error",
+            title: "New book",
+            activeEditionId: "current",
+            editions: [{ id: "current", label: "First" }],
+          },
+          {
+            id: "book-zero",
+            title: "Old book",
+            activeEditionId: "v100",
+            editions: [{ id: "v100", label: "V100" }],
+          },
+        ],
+      },
+    }),
+  );
+  await page.route(
+    "**/admin/private-fictions/book-zero/editions/v100",
+    (route) =>
+      route.fulfill({
+        json: {
+          etag: "old",
+          source: "# 1화. Old cast\n\nOld book body.",
+          updatedAt: "now",
+        },
+      }),
+  );
+  await page.route(
+    "**/admin/private-fictions/book-zero/editions/v100/annotations",
+    (route) =>
+      route.fulfill({ json: { etag: null, annotations: [], updatedAt: null } }),
+  );
+  await page.goto("/private/fictions/");
+  await expect(
+    page.getByRole("heading", { name: "New book", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Old book", exact: true }),
+  ).toBeVisible();
+  await page
+    .locator(".private-fiction-work-card")
+    .filter({ hasText: "Old book" })
+    .getByRole("link", { name: "작품 열기" })
+    .click();
+  await page.getByRole("button", { name: "1화부터 읽기", exact: true }).click();
+  await expect(page.getByText("Old book body.", { exact: true })).toBeVisible();
+  await expect(page.getByText("New book body.", { exact: true })).toHaveCount(
+    0,
+  );
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("private-fiction-book-zero-v100-book-section"),
+    ),
+  ).toBe("section-1");
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("private-fiction-book-section"),
+    ),
+  ).toBeNull();
+  await page.goto(
+    "/private/fictions/?work=reality-error&edition=current&episode=1",
+  );
+  await expect(page.getByText("New book body.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Old book body.", { exact: true })).toHaveCount(
+    0,
+  );
 });

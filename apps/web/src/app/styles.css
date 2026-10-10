@@ -3441,6 +3441,84 @@
   color: var(--muted-foreground);
   line-height: 1.8;
 }
+.private-fiction-work-list {
+  display: grid;
+  gap: 1rem;
+  list-style: none;
+  margin: 0 0 2.5rem;
+  padding: 0;
+}
+.private-fiction-work-card,
+.private-fiction-new-work,
+.private-fiction-new-edition {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+.private-fiction-work-card {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+.private-fiction-work-card h2,
+.private-fiction-new-work h2,
+.private-fiction-new-edition h3,
+.private-fiction-editions > h3 {
+  margin: 0 0 0.5rem;
+}
+.private-fiction-work-card p:last-child {
+  color: var(--muted-foreground);
+  margin: 0;
+}
+.private-fiction-new-work,
+.private-fiction-new-edition {
+  display: grid;
+  gap: 1rem;
+  max-width: 42rem;
+}
+.private-fiction-new-work label,
+.private-fiction-new-edition label {
+  display: grid;
+  gap: 0.4rem;
+}
+.private-fiction-new-work input:not([type="file"]),
+.private-fiction-new-edition input:not([type="file"]) {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  color: var(--foreground);
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+}
+.private-fiction-work-card .private-fiction-library-actions {
+  margin: 0;
+}
+.private-fiction-editions {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+}
+.private-fiction-editions ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.private-fiction-editions li a {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: inline-block;
+  padding: 0.5rem 0.85rem;
+}
+.private-fiction-editions li a[aria-current="page"] {
+  border-color: var(--foreground);
+}
 .private-fiction-library-actions {
   display: flex;
   flex-wrap: wrap;

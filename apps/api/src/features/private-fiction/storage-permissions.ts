@@ -1,6 +1,8 @@
 export const PRIVATE_FICTION_OBJECT_KEYS = [
   "author-vault/reality-error/outline.md",
   "author-vault/reality-error/annotations.json",
+  "author-vault/catalog.json",
+  "author-vault/works/*",
 ] as const;
 
 export function privateFictionStoragePermissions<T>(

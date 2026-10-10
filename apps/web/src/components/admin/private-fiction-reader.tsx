@@ -23,12 +23,42 @@ import {
   hasPersistentBeatAdminSession,
 } from "~/lib/beat-admin-session";
 
-type Manuscript = { etag: string; source: string; updatedAt: string };
-const privateFictionManuscriptCacheKey = "beat-private-fiction-manuscript-v1";
+type Manuscript = {
+  etag: string;
+  source: string;
+  updatedAt: string;
+  workId?: string;
+  workTitle?: string;
+  editionId?: string;
+};
+type PrivateFictionWork = {
+  id: string;
+  title: string;
+  activeEditionId: string;
+  editions: Array<{ id: string; label: string }>;
+  allowedSubjects: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+type PrivateFictionCatalog = {
+  etag: string | null;
+  works: PrivateFictionWork[];
+};
+const privateFictionManuscriptCacheKey = (workId: string, editionId: string) =>
+  `beat-private-fiction-manuscript-v2-${workId}-${editionId}`;
 
-function readCachedPrivateManuscript(): Manuscript | undefined {
+function readCachedPrivateManuscript(
+  workId: string,
+  editionId: string,
+): Manuscript | undefined {
   try {
-    const raw = window.localStorage.getItem(privateFictionManuscriptCacheKey);
+    const raw =
+      window.localStorage.getItem(
+        privateFictionManuscriptCacheKey(workId, editionId),
+      ) ??
+      (workId === "reality-error" && editionId === "current"
+        ? window.localStorage.getItem("beat-private-fiction-manuscript-v1")
+        : null);
     if (!raw) return undefined;
     const value = JSON.parse(raw) as Partial<Manuscript>;
     if (
@@ -43,10 +73,14 @@ function readCachedPrivateManuscript(): Manuscript | undefined {
   }
 }
 
-function cachePrivateManuscript(manuscript: Manuscript) {
+function cachePrivateManuscript(
+  manuscript: Manuscript,
+  workId: string,
+  editionId: string,
+) {
   try {
     window.localStorage.setItem(
-      privateFictionManuscriptCacheKey,
+      privateFictionManuscriptCacheKey(workId, editionId),
       JSON.stringify(manuscript),
     );
   } catch {
@@ -54,9 +88,13 @@ function cachePrivateManuscript(manuscript: Manuscript) {
   }
 }
 
-function clearCachedPrivateManuscript() {
+function clearCachedPrivateManuscript(workId: string, editionId: string) {
   try {
-    window.localStorage.removeItem(privateFictionManuscriptCacheKey);
+    window.localStorage.removeItem(
+      privateFictionManuscriptCacheKey(workId, editionId),
+    );
+    if (workId === "reality-error" && editionId === "current")
+      window.localStorage.removeItem("beat-private-fiction-manuscript-v1");
   } catch {
     // The server remains the source of truth when browser storage is unavailable.
   }
@@ -160,6 +198,21 @@ function contentsEntryTitle(section: ManuscriptSection) {
       ? `${section.episode}화. ${section.title}`
       : `${section.episode}화`
     : section.title;
+}
+
+function workUrl(workId: string, editionId: string, list = false) {
+  const params = new URLSearchParams();
+  if (!list || workId !== "reality-error") params.set("work", workId);
+  if (workId !== "reality-error" || editionId !== "current")
+    params.set("edition", editionId);
+  const query = params.toString();
+  return `/private/fictions/${list ? "list/" : ""}${query ? `?${query}` : ""}`;
+}
+
+function sectionStorageKey(workId: string, editionId: string) {
+  return workId === "reality-error" && editionId === "current"
+    ? "private-fiction-book-section"
+    : `private-fiction-${workId}-${editionId}-book-section`;
 }
 
 function annotationRange(text: string, annotation: FictionAnnotation) {
@@ -476,6 +529,15 @@ function selectionAnchor(
 }
 
 export function PrivateFictionReader() {
+  const params = useSearchParams();
+  return (
+    <ScopedPrivateFictionReader
+      key={`${params.get("work") ?? "reality-error"}:${params.get("edition") ?? "active"}`}
+    />
+  );
+}
+
+function ScopedPrivateFictionReader() {
   const pathname = usePathname() ?? "/private/fictions/";
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -483,6 +545,8 @@ export function PrivateFictionReader() {
     .replace(/^.*\/private\/fictions\/?/, "")
     .replace(/\/+$/, "");
   const requestedEpisode = searchParams.get("episode");
+  const requestedWorkId = searchParams.get("work");
+  const requestedEditionId = searchParams.get("edition");
   const requestedPosition = searchParams.get("position");
   const routePositionOverride =
     requestedPosition === "start" || requestedPosition === "end"
@@ -492,6 +556,17 @@ export function PrivateFictionReader() {
   const routeEpisode = requestedEpisode ? Number(requestedEpisode) : undefined;
   const isEpisodeRoute = routeEpisode !== undefined;
   const isListRoute = routePart === "list";
+  const isCatalogRoute = !isEpisodeRoute && !isListRoute && !requestedWorkId;
+  const workId = requestedWorkId ?? "reality-error";
+  const [catalog, setCatalog] = useState<PrivateFictionCatalog>({
+    etag: null,
+    works: [],
+  });
+  const [editionId, setEditionId] = useState(requestedEditionId ?? "current");
+  const [newWorkTitle, setNewWorkTitle] = useState("");
+  const [newWorkFile, setNewWorkFile] = useState<File>();
+  const [newEditionLabel, setNewEditionLabel] = useState("");
+  const [newEditionFile, setNewEditionFile] = useState<File>();
   const [authenticated, setAuthenticated] = useState(false);
   const [manuscript, setManuscript] = useState<Manuscript>();
   const [lastReadSectionId, setLastReadSectionId] = useState<string>();
@@ -559,7 +634,9 @@ export function PrivateFictionReader() {
       );
       return;
     }
-    const cached = readCachedPrivateManuscript();
+    const cachedWorkId = requestedWorkId ?? "reality-error";
+    const cachedEditionId = requestedEditionId ?? "current";
+    const cached = readCachedPrivateManuscript(cachedWorkId, cachedEditionId);
     if (cached) {
       setManuscript(cached);
       setAuthenticated(true);
@@ -569,37 +646,79 @@ export function PrivateFictionReader() {
     }
     setBusy(true);
     try {
+      const catalogResponse = await authorizedBeatAdminRequest(
+        "/admin/private-fictions",
+        { cache: "no-store" },
+      );
+      if (catalogResponse.status === 401) {
+        setAuthenticated(false);
+        setManuscript(undefined);
+        clearCachedPrivateManuscript(cachedWorkId, cachedEditionId);
+        setMessage("로그인이 만료되었습니다. 다시 로그인해 주세요.");
+        return;
+      }
+      if (!catalogResponse.ok)
+        throw new Error("비공개 작품 목록을 불러오지 못했습니다.");
+      const latestCatalog =
+        (await catalogResponse.json()) as PrivateFictionCatalog;
+      setCatalog(latestCatalog);
+      if (isCatalogRoute) {
+        setAuthenticated(true);
+        setManuscript(undefined);
+        setMessage("읽을 작품을 선택해 주세요.");
+        return;
+      }
+      const requestedWork = latestCatalog.works.find(
+        (work) => work.id === cachedWorkId,
+      );
+      const selectedWork =
+        requestedWork ??
+        (!requestedWorkId ? latestCatalog.works[0] : undefined);
+      if (!selectedWork) {
+        setAuthenticated(true);
+        setManuscript(undefined);
+        setMessage("아직 보관된 작품이 없습니다. 새 작품을 추가해 주세요.");
+        return;
+      }
+      const selectedEditionId =
+        requestedEditionId ?? selectedWork.activeEditionId;
+      setEditionId(selectedEditionId);
       const response = await authorizedBeatAdminRequest(
-        "/admin/private-fiction",
+        `/admin/private-fictions/${encodeURIComponent(selectedWork.id)}/editions/${encodeURIComponent(selectedEditionId)}`,
         { cache: "no-store" },
       );
       if (response.status === 401) {
         setAuthenticated(false);
         setManuscript(undefined);
-        clearCachedPrivateManuscript();
+        clearCachedPrivateManuscript(selectedWork.id, selectedEditionId);
         setMessage("로그인이 만료되었습니다. 다시 로그인해 주세요.");
         return;
       }
       if (response.status === 404) {
         setAuthenticated(true);
         setMessage(
-          "아직 보관된 원고가 없습니다. 로컬 파일을 선택해 처음 저장할 수 있습니다.",
+          "이 작품 판본에는 아직 저장된 원고가 없습니다. 작품 목차에서 Markdown을 저장해 주세요.",
         );
         setManuscript(undefined);
-        clearCachedPrivateManuscript();
         return;
       }
       if (!response.ok) throw new Error("비공개 원고를 불러오지 못했습니다.");
       const latest = (await response.json()) as Manuscript;
-      cachePrivateManuscript(latest);
-      setManuscript(latest);
+      const loaded = {
+        ...latest,
+        workId: selectedWork.id,
+        workTitle: selectedWork.title,
+        editionId: selectedEditionId,
+      };
+      cachePrivateManuscript(loaded, selectedWork.id, selectedEditionId);
+      setManuscript(loaded);
       setAuthenticated(true);
       setMessage("최신 원고를 불러와 이 기기에 저장했습니다.");
     } catch (error) {
       if (cached && hasPersistentBeatAdminSession()) {
         setAuthenticated(true);
         setMessage(
-          "서버에 연결하지 못해 이 기기에 저장된 원고를 표시하고 있습니다.",
+          "서버에 연결하지 못해 이 기기에 저장된 작품 판본을 표시하고 있습니다.",
         );
       } else {
         setAuthenticated(false);
@@ -612,14 +731,14 @@ export function PrivateFictionReader() {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [requestedWorkId, requestedEditionId, isCatalogRoute]);
 
   const refreshFeedback = useCallback(async () => {
     if (!hasPersistentBeatAdminSession()) return;
     setFeedbackBusy(true);
     try {
       const response = await authorizedBeatAdminRequest(
-        "/admin/private-fiction/annotations",
+        `/admin/private-fictions/${encodeURIComponent(workId)}/editions/${encodeURIComponent(editionId)}/annotations`,
         { cache: "no-store" },
       );
       if (response.status === 401) {
@@ -639,7 +758,7 @@ export function PrivateFictionReader() {
     } finally {
       setFeedbackBusy(false);
     }
-  }, []);
+  }, [workId, editionId]);
 
   useEffect(() => {
     void load();
@@ -655,8 +774,8 @@ export function PrivateFictionReader() {
   }, [load]);
 
   useEffect(() => {
-    if (authenticated) void refreshFeedback();
-  }, [authenticated, refreshFeedback]);
+    if (authenticated && manuscript && !isCatalogRoute) void refreshFeedback();
+  }, [authenticated, manuscript, isCatalogRoute, refreshFeedback]);
 
   const parsed = useMemo(
     () => (manuscript ? parseManuscript(manuscript.source) : undefined),
@@ -708,7 +827,9 @@ export function PrivateFictionReader() {
   useEffect(() => {
     if (isEpisodeRoute || isListRoute) return;
     if (!readingOrder.length) return;
-    const savedId = window.localStorage.getItem("private-fiction-book-section");
+    const savedId = window.localStorage.getItem(
+      sectionStorageKey(workId, editionId),
+    );
     const savedSection = readingOrder.find((section) => section.id === savedId);
     if (!selectedId || !sections.some((section) => section.id === selectedId)) {
       setSelectedId(
@@ -717,13 +838,21 @@ export function PrivateFictionReader() {
           readingOrder[0]?.id,
       );
     }
-  }, [isEpisodeRoute, isListRoute, readingOrder, sections, selectedId]);
+  }, [
+    editionId,
+    isEpisodeRoute,
+    isListRoute,
+    readingOrder,
+    sections,
+    selectedId,
+    workId,
+  ]);
 
   useEffect(() => {
     if (isEpisodeRoute && selected?.kind === "episode") {
       try {
         window.localStorage.setItem(
-          "private-fiction-book-section",
+          sectionStorageKey(workId, editionId),
           selected.id,
         );
       } catch {
@@ -735,13 +864,20 @@ export function PrivateFictionReader() {
     if (isListRoute) return;
     try {
       setLastReadSectionId(
-        window.localStorage.getItem("private-fiction-book-section") ??
+        window.localStorage.getItem(sectionStorageKey(workId, editionId)) ??
           undefined,
       );
     } catch {
       setLastReadSectionId(undefined);
     }
-  }, [isEpisodeRoute, isListRoute, selected?.id, selected?.kind]);
+  }, [
+    editionId,
+    isEpisodeRoute,
+    isListRoute,
+    selected?.id,
+    selected?.kind,
+    workId,
+  ]);
 
   useEffect(() => {
     if (!selected?.id) return;
@@ -826,6 +962,8 @@ export function PrivateFictionReader() {
         (key) =>
           key.startsWith("beat-fiction-v1-book-position-") ||
           key === "private-fiction-book-section" ||
+          (key.startsWith("private-fiction-") &&
+            key.endsWith("-book-section")) ||
           key === "beat-fiction-v1-last",
       );
       for (const key of keys) localStorage.removeItem(key);
@@ -851,7 +989,7 @@ export function PrivateFictionReader() {
     if (!isEpisodeRoute) {
       try {
         const lastReadId = window.localStorage.getItem(
-          "private-fiction-book-section",
+          sectionStorageKey(workId, editionId),
         );
         previousSection =
           readingOrder.find((item) => item.id === lastReadId) ?? selected;
@@ -879,7 +1017,9 @@ export function PrivateFictionReader() {
     if (destinationPosition !== "saved" && section) {
       const positionKey =
         section.kind === "episode" && section.episode
-          ? `private-fiction-episode-${section.episode}`
+          ? workId === "reality-error" && editionId === "current"
+            ? `private-fiction-episode-${section.episode}`
+            : `private-fiction-${workId}-${editionId}-episode-${section.episode}`
           : section.id;
       try {
         localStorage.setItem(
@@ -895,6 +1035,9 @@ export function PrivateFictionReader() {
       const destination = new URLSearchParams({
         episode: String(section.episode),
       });
+      if (workId !== "reality-error") destination.set("work", workId);
+      if (workId !== "reality-error" || editionId !== "current")
+        destination.set("edition", editionId);
       if (destinationPosition !== "saved")
         destination.set("position", destinationPosition);
       router.push(`/private/fictions/?${destination.toString()}`, {
@@ -947,7 +1090,7 @@ export function PrivateFictionReader() {
     try {
       const source = await file.text();
       const response = await authorizedBeatAdminRequest(
-        "/admin/private-fiction",
+        `/admin/private-fictions/${encodeURIComponent(workId)}/editions/${encodeURIComponent(editionId)}`,
         {
           body: JSON.stringify({
             expectedEtag: manuscript?.etag ?? null,
@@ -965,8 +1108,14 @@ export function PrivateFictionReader() {
         Manuscript,
         "etag" | "updatedAt"
       >;
-      const updated = { ...saved, source };
-      cachePrivateManuscript(updated);
+      const updated = {
+        ...saved,
+        source,
+        workId,
+        editionId,
+        workTitle: catalog.works.find((work) => work.id === workId)?.title,
+      };
+      cachePrivateManuscript(updated, workId, editionId);
       setManuscript(updated);
       setSelectedId(undefined);
       setMessage("원고를 비공개 보관함에 저장했습니다.");
@@ -979,11 +1128,139 @@ export function PrivateFictionReader() {
     }
   }
 
+  async function createWork(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!newWorkTitle.trim() || !newWorkFile) {
+      setMessage("작품 제목과 Markdown 원고를 선택해 주세요.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const source = await newWorkFile.text();
+      const id = `work-${crypto.randomUUID().slice(0, 8)}`;
+      const response = await authorizedBeatAdminRequest(
+        "/admin/private-fictions",
+        {
+          body: JSON.stringify({
+            expectedCatalogEtag: catalog.etag,
+            id,
+            title: newWorkTitle.trim(),
+            editionId: "first",
+            editionLabel: "초판",
+            source,
+          }),
+          method: "POST",
+        },
+      );
+      if (response.status === 409)
+        throw new Error(
+          "작품 목록이 바뀌었습니다. 새로고침한 뒤 다시 저장해 주세요.",
+        );
+      if (!response.ok) throw new Error("새 작품을 저장하지 못했습니다.");
+      const created = (await response.json()) as {
+        work: PrivateFictionWork;
+        catalogEtag: string;
+        etag: string;
+        updatedAt: string;
+      };
+      setCatalog((current) => ({
+        etag: created.catalogEtag,
+        works: [...current.works, created.work],
+      }));
+      cachePrivateManuscript(
+        {
+          etag: created.etag,
+          updatedAt: created.updatedAt,
+          source,
+          workId: id,
+          workTitle: created.work.title,
+          editionId: "first",
+        },
+        id,
+        "first",
+      );
+      setNewWorkTitle("");
+      setNewWorkFile(undefined);
+      setMessage("새 작품을 소유자 전용 보관함에 추가했습니다.");
+      router.push(workUrl(id, "first"), { scroll: false });
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "새 작품 저장에 실패했습니다.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createEdition(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!activeWork || !newEditionLabel.trim() || !newEditionFile) {
+      setMessage("판본 이름과 Markdown 원고를 선택해 주세요.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const source = await newEditionFile.text();
+      const id = `edition-${crypto.randomUUID().slice(0, 8)}`;
+      const response = await authorizedBeatAdminRequest(
+        `/admin/private-fictions/${encodeURIComponent(workId)}/editions`,
+        {
+          body: JSON.stringify({
+            expectedCatalogEtag: catalog.etag,
+            id,
+            label: newEditionLabel.trim(),
+            source,
+          }),
+          method: "POST",
+        },
+      );
+      if (response.status === 409)
+        throw new Error(
+          "작품 목록이 바뀌었습니다. 새로고침한 뒤 다시 저장해 주세요.",
+        );
+      if (!response.ok) throw new Error("새 판본을 저장하지 못했습니다.");
+      const created = (await response.json()) as {
+        work: PrivateFictionWork;
+        catalogEtag: string;
+        etag: string;
+        updatedAt: string;
+      };
+      setCatalog((current) => ({
+        etag: created.catalogEtag,
+        works: current.works.map((work) =>
+          work.id === workId ? created.work : work,
+        ),
+      }));
+      cachePrivateManuscript(
+        {
+          etag: created.etag,
+          updatedAt: created.updatedAt,
+          source,
+          workId,
+          workTitle: activeWork.title,
+          editionId: id,
+        },
+        workId,
+        id,
+      );
+      setNewEditionLabel("");
+      setNewEditionFile(undefined);
+      setMessage("새 판본을 작품에 추가했습니다.");
+      router.push(workUrl(workId, id), { scroll: false });
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "새 판본 저장에 실패했습니다.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function persistFeedback(annotations: FictionAnnotation[]) {
     setFeedbackBusy(true);
     try {
       const response = await authorizedBeatAdminRequest(
-        "/admin/private-fiction/annotations",
+        `/admin/private-fictions/${encodeURIComponent(workId)}/editions/${encodeURIComponent(editionId)}/annotations`,
         {
           body: JSON.stringify({
             expectedEtag: feedbackDocument.etag,
@@ -1045,8 +1322,9 @@ export function PrivateFictionReader() {
     );
   }
 
+  const activeWork = catalog.works.find((work) => work.id === workId);
   const viewerContent = authenticated && manuscript && parsed && selected;
-  if (!authenticated || !manuscript || !parsed) {
+  if (!authenticated) {
     return (
       <section className="private-fiction-shell">
         <header className="private-fiction-header">
@@ -1068,6 +1346,113 @@ export function PrivateFictionReader() {
     );
   }
 
+  if (isCatalogRoute) {
+    return (
+      <section className="private-fiction-shell">
+        <header className="private-fiction-header">
+          <div>
+            <p className="private-fiction-eyebrow">개인 열람 · 검색 비노출</p>
+            <h1>비공개 소설</h1>
+            <p className="private-fiction-status" role="status">
+              {message}
+            </p>
+          </div>
+          <button disabled={busy} onClick={() => void load()} type="button">
+            새로고침
+          </button>
+          <button onClick={resetReadingHistory} type="button">
+            읽은 기록 전부 리셋하기
+          </button>
+        </header>
+        <div className="private-fiction-library">
+          {catalog.works.length ? (
+            <ul className="private-fiction-work-list">
+              {catalog.works.map((work) => (
+                <li className="private-fiction-work-card" key={work.id}>
+                  <div>
+                    <p className="private-fiction-eyebrow">비공개 작품</p>
+                    <h2>{work.title}</h2>
+                    <p>
+                      {work.editions.length}개 판본 ·{" "}
+                      {work.editions.find(
+                        (edition) => edition.id === work.activeEditionId,
+                      )?.label ?? "판본"}
+                    </p>
+                  </div>
+                  <div className="private-fiction-library-actions">
+                    <Link href={workUrl(work.id, work.activeEditionId, true)}>
+                      작품 목차
+                    </Link>
+                    <Link href={workUrl(work.id, work.activeEditionId)}>
+                      작품 열기
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>
+              아직 보관된 작품이 없습니다. 아래에서 첫 작품을 추가할 수
+              있습니다.
+            </p>
+          )}
+          <form
+            className="private-fiction-new-work"
+            onSubmit={(event) => void createWork(event)}
+          >
+            <h2>새 작품 추가</h2>
+            <label>
+              <span>작품 제목</span>
+              <input
+                maxLength={120}
+                onChange={(event) => setNewWorkTitle(event.currentTarget.value)}
+                required
+                value={newWorkTitle}
+              />
+            </label>
+            <label className="private-fiction-upload">
+              첫 판본 Markdown 원고
+              <input
+                accept=".md,.mdx,text/markdown,text/plain"
+                onChange={(event) =>
+                  setNewWorkFile(event.currentTarget.files?.[0])
+                }
+                required
+                type="file"
+              />
+            </label>
+            <button
+              disabled={busy || !newWorkFile || !newWorkTitle.trim()}
+              type="submit"
+            >
+              소유자 전용으로 추가
+            </button>
+          </form>
+        </div>
+      </section>
+    );
+  }
+
+  if (!manuscript || !parsed) {
+    return (
+      <section className="private-fiction-shell">
+        <header className="private-fiction-header">
+          <div>
+            <p className="private-fiction-eyebrow">개인 열람 · 검색 비노출</p>
+            <h1>{activeWork?.title ?? "작품을 찾을 수 없습니다"}</h1>
+            <p className="private-fiction-status" role="status">
+              {message}
+            </p>
+          </div>
+          <Link href="/private/fictions/">작품 목록으로</Link>
+          <button disabled={busy} onClick={() => void load()} type="button">
+            새로고침
+          </button>
+        </header>
+      </section>
+    );
+  }
+
   if (!isEpisodeRoute) {
     return (
       <section className="private-fiction-shell">
@@ -1079,8 +1464,9 @@ export function PrivateFictionReader() {
               {message}
             </p>
           </div>
+          <Link href="/private/fictions/">작품 목록으로</Link>
           {isListRoute ? (
-            <Link href="/private/fictions/">작품으로 돌아가기</Link>
+            <Link href={workUrl(workId, editionId)}>작품으로 돌아가기</Link>
           ) : null}
           <button disabled={busy} onClick={() => void load()} type="button">
             새로고침
@@ -1091,7 +1477,9 @@ export function PrivateFictionReader() {
         </header>
         {isListRoute ? (
           <div className="private-fiction-library">
-            <p className="private-fiction-eyebrow">현실 오류 · 회차 목록</p>
+            <p className="private-fiction-eyebrow">
+              {activeWork?.title ?? "비공개 소설"} · 회차 목록
+            </p>
             <ol className="viewer-episode-list private-fiction-contents-list">
               {episodes.map((section) => (
                 <li key={section.id}>
@@ -1108,10 +1496,14 @@ export function PrivateFictionReader() {
         ) : (
           <div className="private-fiction-library-intro">
             <p>개인 보관 작품</p>
-            <h2>현실 오류</h2>
+            <h2>
+              {activeWork?.title ?? manuscript.workTitle ?? "비공개 소설"}
+            </h2>
             <p>회차를 골라 이어 읽을 수 있습니다.</p>
             <div className="private-fiction-library-actions">
-              <Link href="/private/fictions/list/">회차 목록 보기</Link>
+              <Link href={workUrl(workId, editionId, true)}>
+                회차 목록 보기
+              </Link>
               {episodes[0] ? (
                 <button
                   onClick={() => chooseSection(episodes[0]!.id, "start")}
@@ -1129,6 +1521,64 @@ export function PrivateFictionReader() {
                 </button>
               ) : null}
             </div>
+            {activeWork ? (
+              <section className="private-fiction-editions">
+                <h3>판본</h3>
+                <ul>
+                  {activeWork.editions.map((edition) => (
+                    <li key={edition.id}>
+                      <Link
+                        href={workUrl(workId, edition.id)}
+                        aria-current={
+                          edition.id === editionId ? "page" : undefined
+                        }
+                      >
+                        {edition.label}
+                        {edition.id === activeWork.activeEditionId
+                          ? " · 기본 판본"
+                          : ""}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <form
+                  className="private-fiction-new-edition"
+                  onSubmit={(event) => void createEdition(event)}
+                >
+                  <h3>판본 추가</h3>
+                  <label>
+                    <span>판본 이름</span>
+                    <input
+                      maxLength={120}
+                      onChange={(event) =>
+                        setNewEditionLabel(event.currentTarget.value)
+                      }
+                      required
+                      value={newEditionLabel}
+                    />
+                  </label>
+                  <label className="private-fiction-upload">
+                    새 판본 Markdown 원고
+                    <input
+                      accept=".md,.mdx,text/markdown,text/plain"
+                      onChange={(event) =>
+                        setNewEditionFile(event.currentTarget.files?.[0])
+                      }
+                      required
+                      type="file"
+                    />
+                  </label>
+                  <button
+                    disabled={
+                      busy || !newEditionFile || !newEditionLabel.trim()
+                    }
+                    type="submit"
+                  >
+                    판본 저장
+                  </button>
+                </form>
+              </section>
+            ) : null}
           </div>
         )}
       </section>
@@ -1140,7 +1590,9 @@ export function PrivateFictionReader() {
       <section className="private-fiction-shell">
         <header className="private-fiction-header">
           <h1>요청한 회차를 찾을 수 없습니다.</h1>
-          <Link href="/private/fictions/list/">회차 목록으로 돌아가기</Link>
+          <Link href={workUrl(workId, editionId, true)}>
+            작품 목차로 돌아가기
+          </Link>
         </header>
       </section>
     );
@@ -1148,7 +1600,7 @@ export function PrivateFictionReader() {
 
   const episodeLabel =
     selected.kind === "episode" && selected.episode
-      ? `현실 오류 · ${selected.episode}화`
+      ? `${activeWork?.title ?? "비공개 소설"} · ${selected.episode}화`
       : "작품 설정집";
 
   return (
@@ -1183,7 +1635,9 @@ export function PrivateFictionReader() {
         }}
         positionKey={
           selected.kind === "episode" && selected.episode
-            ? `private-fiction-episode-${selected.episode}`
+            ? workId === "reality-error" && editionId === "current"
+              ? `private-fiction-episode-${selected.episode}`
+              : `private-fiction-${workId}-${editionId}-episode-${selected.episode}`
             : selected.id
         }
         waitForLayout
@@ -1255,7 +1709,7 @@ export function PrivateFictionReader() {
               >
                 목차
               </button>
-              <Link href="/private/fictions/list/">회차 목록</Link>
+              <Link href={workUrl(workId, editionId, true)}>회차 목록</Link>
               <Link href="/admin/">Admin</Link>
               <button
                 type="button"
