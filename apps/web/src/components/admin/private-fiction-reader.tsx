@@ -820,7 +820,6 @@ function ScopedPrivateFictionReader() {
     pathname,
     routeEpisode,
     routePositionOverride,
-    router,
     searchQuery,
     selected?.episode,
     selected?.id,
