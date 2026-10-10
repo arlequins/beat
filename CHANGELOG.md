@@ -2,6 +2,14 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.78.1](https://github.com/arlequins/beat/compare/beat-v1.78.0...beat-v1.78.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* **web:** reliable private episode navigation and clean reading UI ([#382](https://github.com/arlequins/beat/issues/382)) ([f8b87d4](https://github.com/arlequins/beat/commit/f8b87d47c8b2d1f2f030d38c72c6e8938eadcc2b))
+* **web:** retain project-site paths in private reader URLs ([#385](https://github.com/arlequins/beat/issues/385)) ([da6376a](https://github.com/arlequins/beat/commit/da6376a78a0494ea1493268b685f6e97d1dabbbe))
+
 ## [1.78.0](https://github.com/arlequins/beat/compare/beat-v1.77.8...beat-v1.78.0) (2026-10-10)
 
 
