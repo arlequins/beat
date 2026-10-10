@@ -1709,7 +1709,7 @@ function ScopedPrivateFictionReader() {
               >
                 목차
               </button>
-              <Link href={workUrl(workId, editionId, true)}>작품 목차</Link>
+              <Link href={workUrl(workId, editionId, true)}>회차 목록</Link>
               <Link href="/admin/">Admin</Link>
               <button
                 type="button"
