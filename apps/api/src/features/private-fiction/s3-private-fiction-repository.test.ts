@@ -8,6 +8,60 @@ function client(send: (command: unknown) => Promise<unknown>) {
 }
 
 describe("private fiction S3 repository", () => {
+  it("initializes a missing catalog without overwriting the legacy work", async () => {
+    vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
+    const { getPrivateFictionCatalog } = await import(
+      "./s3-private-fiction-repository"
+    );
+    const send = vi.fn(async (command: unknown) => {
+      if (command instanceof GetObjectCommand) {
+        if (command.input.Key === "author-vault/catalog.json")
+          throw { name: "AccessDenied" };
+        return {
+          ETag: "legacy",
+          LastModified: new Date(),
+          Body: { transformToString: async () => "legacy text" },
+        };
+      }
+      expect(command).toBeInstanceOf(PutObjectCommand);
+      const input = (command as PutObjectCommand).input;
+      expect(input.Key).toBe("author-vault/catalog.json");
+      expect(input.IfNoneMatch).toBe("*");
+      expect(JSON.parse(String(input.Body)).works[0].id).toBe("reality-error");
+      return { ETag: "catalog" };
+    });
+    expect(
+      (await getPrivateFictionCatalog(client(send))).works[0]?.activeEditionId,
+    ).toBe("current");
+  });
+
+  it("uses separate conditional objects for editions and annotations", async () => {
+    vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
+    const { savePrivateFictionEdition, savePrivateFictionEditionAnnotations } =
+      await import("./s3-private-fiction-repository");
+    const send = vi.fn(async () => ({ ETag: "saved" }));
+    await savePrivateFictionEdition(
+      "book-a",
+      "first",
+      { expectedEtag: null, source: "Text" },
+      client(send),
+    );
+    await savePrivateFictionEditionAnnotations(
+      "book-b",
+      "second",
+      { expectedEtag: "previous", annotations: [] },
+      client(send),
+    );
+    expect((send.mock.calls[0]?.[0] as PutObjectCommand).input).toMatchObject({
+      Key: "author-vault/works/book-a/editions/first/outline.md",
+      IfNoneMatch: "*",
+    });
+    expect((send.mock.calls[1]?.[0] as PutObjectCommand).input).toMatchObject({
+      Key: "author-vault/works/book-b/editions/second/annotations.json",
+      IfMatch: "previous",
+    });
+  });
+
   it("initializes absent feedback when least-privilege S3 reads report 403", async () => {
     vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
     const { getPrivateFictionAnnotations } = await import(

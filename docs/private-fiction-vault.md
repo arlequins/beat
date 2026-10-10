@@ -30,20 +30,28 @@ the readback SHA-256 and byte count; the workflow compares both with the source
 it sent. An identical source is treated as a no-op, and conflicting writes
 fail rather than silently overwriting a newer version.
 
-The manuscript stays in a dedicated private S3 bucket at
-author-vault/reality-error/outline.md. The bucket has versioning,
-server-side encryption, enforced TLS, ownership controls, and S3 Block Public
-Access. The API Lambda role can read and write only this outline and the
-separate annotation object; it cannot list the bucket or delete either object.
-HTTP and S3 responses use private, no-store cache controls. The reader API
-still requires the configured Beat owner account.
+The manuscripts stay in a dedicated private S3 bucket. The existing work keeps
+its compatibility keys at `author-vault/reality-error/outline.md` and
+`author-vault/reality-error/annotations.json`. New works use
+`author-vault/works/{workId}/editions/{editionId}/outline.md`, with annotations
+next to each edition. The private catalog is stored at
+`author-vault/catalog.json` and contains work titles, edition labels, active
+edition pointers, and per-work allowed Beat subjects. It never contains
+manuscript text. The bucket has versioning, server-side encryption, enforced
+TLS, ownership controls, and S3 Block Public Access. The API Lambda role can
+read and write the catalog, the legacy objects, and objects under the works
+prefix; it cannot list the bucket or delete objects. HTTP and S3 responses use
+private, no-store cache controls. The reader API still requires the configured
+Beat owner account and then filters each work by its allowed-subject list.
 
-The API accepts at most 4,000,000 UTF-8 bytes, enough for the current
-multi-episode reading edition. To synchronize an update, commit that reading
-edition to the private manuscript repository's main branch. GitHub Actions
-will upload it and verify the S3 readback. The workflow can be manually
-rerun from GitHub Actions when needed. Refresh the private reader on the
-device to load the saved version.
+The API accepts at most 4,000,000 UTF-8 bytes per edition. The owner can add a
+work and its first Markdown edition in the authenticated library, then add
+further editions from that work's page. Work IDs and edition IDs are validated
+slugs, each edition has a separate conditional-write object, and reading
+positions and passage feedback are scoped to both IDs. The existing GitHub
+Actions OIDC workflow continues to synchronize the legacy Reality Error object
+and retains its exact repository and workflow trust checks. Refresh the
+private reader on the device to load the saved version.
 
 ## Reading titles, progress and passage feedback
 

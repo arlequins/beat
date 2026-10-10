@@ -69,11 +69,17 @@ import {
   registerPrivateFictionRoutes,
 } from "./features/private-fiction/interface/http/routes";
 import {
+  getPrivateFictionCatalog,
   getPrivateFictionAnnotations,
   getPrivateFictionDocument,
+  getPrivateFictionEdition,
+  getPrivateFictionEditionAnnotations,
   MAX_PRIVATE_FICTION_SOURCE_BYTES,
+  savePrivateFictionCatalog,
   savePrivateFictionAnnotations,
   savePrivateFictionDocument,
+  savePrivateFictionEdition,
+  savePrivateFictionEditionAnnotations,
 } from "./features/private-fiction/s3-private-fiction-repository";
 import { registerMcpRoutes } from "./mcp";
 import { registerOpenApiRoutes } from "./openapi";
@@ -308,6 +314,14 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     },
     {
       path: "/admin/private-fiction/*",
+      bodyLimitBytes: MAX_PRIVATE_FICTION_SOURCE_BYTES + 1_024,
+    },
+    {
+      path: "/admin/private-fictions",
+      bodyLimitBytes: MAX_PRIVATE_FICTION_SOURCE_BYTES + 1_024,
+    },
+    {
+      path: "/admin/private-fictions/*",
       bodyLimitBytes: MAX_PRIVATE_FICTION_SOURCE_BYTES + 1_024,
     },
     { path: "/api/gourmet/*" },
@@ -677,6 +691,20 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   });
   registerPrivateFictionRoutes(app, {
     store: {
+      getCatalog:
+        options.privateFiction?.getCatalog ?? getPrivateFictionCatalog,
+      saveCatalog:
+        options.privateFiction?.saveCatalog ?? savePrivateFictionCatalog,
+      getEdition:
+        options.privateFiction?.getEdition ?? getPrivateFictionEdition,
+      saveEdition:
+        options.privateFiction?.saveEdition ?? savePrivateFictionEdition,
+      getEditionAnnotations:
+        options.privateFiction?.getEditionAnnotations ??
+        getPrivateFictionEditionAnnotations,
+      saveEditionAnnotations:
+        options.privateFiction?.saveEditionAnnotations ??
+        savePrivateFictionEditionAnnotations,
       get: options.privateFiction?.get ?? getPrivateFictionDocument,
       save: options.privateFiction?.save ?? savePrivateFictionDocument,
       getAnnotations:
