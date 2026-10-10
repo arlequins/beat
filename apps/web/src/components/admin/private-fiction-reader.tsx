@@ -1035,14 +1035,17 @@ function ScopedPrivateFictionReader() {
       const destination = new URLSearchParams({
         episode: String(section.episode),
       });
-      if (workId !== "reality-error") destination.set("work", workId);
+      destination.set("work", workId);
       if (workId !== "reality-error" || editionId !== "current")
         destination.set("edition", editionId);
       if (destinationPosition !== "saved")
         destination.set("position", destinationPosition);
-      router.push(`/private/fictions/?${destination.toString()}`, {
-        scroll: false,
-      });
+      // Static hosting must open the episode URL even when client navigation is stale.
+      const readerPath = pathname.replace(
+        /\/private\/fictions(?:\/list)?\/?$/,
+        "/private/fictions/",
+      );
+      window.location.assign(`${readerPath}?${destination.toString()}`);
     } else {
       setSelectedId(id);
     }
@@ -1372,12 +1375,6 @@ function ScopedPrivateFictionReader() {
                   <div>
                     <p className="private-fiction-eyebrow">비공개 작품</p>
                     <h2>{work.title}</h2>
-                    <p>
-                      {work.editions.length}개 판본 ·{" "}
-                      {work.editions.find(
-                        (edition) => edition.id === work.activeEditionId,
-                      )?.label ?? "판본"}
-                    </p>
                   </div>
                   <div className="private-fiction-library-actions">
                     <Link href={workUrl(work.id, work.activeEditionId, true)}>
@@ -1522,10 +1519,10 @@ function ScopedPrivateFictionReader() {
               ) : null}
             </div>
             {activeWork ? (
-              <section className="private-fiction-editions">
-                <h3>판본</h3>
+              <details className="private-fiction-editions">
+                <summary>보관함 관리</summary>
                 <ul>
-                  {activeWork.editions.map((edition) => (
+                  {activeWork.editions.map((edition, index) => (
                     <li key={edition.id}>
                       <Link
                         href={workUrl(workId, edition.id)}
@@ -1533,10 +1530,7 @@ function ScopedPrivateFictionReader() {
                           edition.id === editionId ? "page" : undefined
                         }
                       >
-                        {edition.label}
-                        {edition.id === activeWork.activeEditionId
-                          ? " · 기본 판본"
-                          : ""}
+                        보관본 {index + 1}
                       </Link>
                     </li>
                   ))}
@@ -1577,7 +1571,7 @@ function ScopedPrivateFictionReader() {
                     판본 저장
                   </button>
                 </form>
-              </section>
+              </details>
             ) : null}
           </div>
         )}
