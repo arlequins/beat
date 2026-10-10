@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.78.0](https://github.com/arlequins/beat/compare/beat-v1.77.8...beat-v1.78.0) (2026-10-10)
+
+
+### Features
+
+* multiple private fiction works and editions ([#379](https://github.com/arlequins/beat/issues/379)) ([570fe10](https://github.com/arlequins/beat/commit/570fe104c66a8bf4b346e43e2139d82d95ee081e))
+
 ## [1.77.8](https://github.com/arlequins/beat/compare/beat-v1.77.7...beat-v1.77.8) (2026-10-08)
 
 
