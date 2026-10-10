@@ -816,12 +816,7 @@ function ScopedPrivateFictionReader() {
       "",
       query ? `${window.location.pathname}?${query}` : window.location.pathname,
     );
-  }, [
-    routeEpisode,
-    routePositionOverride,
-    selected?.episode,
-    selected?.id,
-  ]);
+  }, [routeEpisode, routePositionOverride, selected?.episode, selected?.id]);
 
   useEffect(() => {
     if (isEpisodeRoute || isListRoute) return;
