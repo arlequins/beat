@@ -814,7 +814,7 @@ function ScopedPrivateFictionReader() {
     window.history.replaceState(
       null,
       "",
-      query ? `${pathname}?${query}` : pathname,
+      query ? `${window.location.pathname}?${query}` : window.location.pathname,
     );
   }, [
     pathname,
@@ -1042,7 +1042,7 @@ function ScopedPrivateFictionReader() {
       if (destinationPosition !== "saved")
         destination.set("position", destinationPosition);
       // Keep the loaded reader and scroll position while changing static-hosted URLs.
-      const readerPath = pathname.replace(
+      const readerPath = window.location.pathname.replace(
         /\/private\/fictions(?:\/list)?\/?$/,
         "/private/fictions/",
       );
