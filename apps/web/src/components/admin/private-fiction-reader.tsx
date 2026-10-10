@@ -811,14 +811,15 @@ function ScopedPrivateFictionReader() {
     if (nextQuery.get("position") !== routePositionOverride) return;
     nextQuery.delete("position");
     const query = nextQuery.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, {
-      scroll: false,
-    });
+    window.history.replaceState(
+      null,
+      "",
+      query ? `${pathname}?${query}` : pathname,
+    );
   }, [
     pathname,
     routeEpisode,
     routePositionOverride,
-    router,
     searchQuery,
     selected?.episode,
     selected?.id,
@@ -1040,9 +1041,16 @@ function ScopedPrivateFictionReader() {
         destination.set("edition", editionId);
       if (destinationPosition !== "saved")
         destination.set("position", destinationPosition);
-      router.push(`/private/fictions/?${destination.toString()}`, {
-        scroll: false,
-      });
+      // Keep the loaded reader and scroll position while changing static-hosted URLs.
+      const readerPath = pathname.replace(
+        /\/private\/fictions(?:\/list)?\/?$/,
+        "/private/fictions/",
+      );
+      window.history.pushState(
+        null,
+        "",
+        `${readerPath}?${destination.toString()}`,
+      );
     } else {
       setSelectedId(id);
     }
@@ -1372,12 +1380,6 @@ function ScopedPrivateFictionReader() {
                   <div>
                     <p className="private-fiction-eyebrow">비공개 작품</p>
                     <h2>{work.title}</h2>
-                    <p>
-                      {work.editions.length}개 판본 ·{" "}
-                      {work.editions.find(
-                        (edition) => edition.id === work.activeEditionId,
-                      )?.label ?? "판본"}
-                    </p>
                   </div>
                   <div className="private-fiction-library-actions">
                     <Link href={workUrl(work.id, work.activeEditionId, true)}>
@@ -1522,10 +1524,10 @@ function ScopedPrivateFictionReader() {
               ) : null}
             </div>
             {activeWork ? (
-              <section className="private-fiction-editions">
-                <h3>판본</h3>
+              <details className="private-fiction-editions">
+                <summary>보관함 관리</summary>
                 <ul>
-                  {activeWork.editions.map((edition) => (
+                  {activeWork.editions.map((edition, index) => (
                     <li key={edition.id}>
                       <Link
                         href={workUrl(workId, edition.id)}
@@ -1533,10 +1535,7 @@ function ScopedPrivateFictionReader() {
                           edition.id === editionId ? "page" : undefined
                         }
                       >
-                        {edition.label}
-                        {edition.id === activeWork.activeEditionId
-                          ? " · 기본 판본"
-                          : ""}
+                        보관본 {index + 1}
                       </Link>
                     </li>
                   ))}
@@ -1577,7 +1576,7 @@ function ScopedPrivateFictionReader() {
                     판본 저장
                   </button>
                 </form>
-              </section>
+              </details>
             ) : null}
           </div>
         )}
