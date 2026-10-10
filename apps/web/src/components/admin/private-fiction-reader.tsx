@@ -552,7 +552,6 @@ function ScopedPrivateFictionReader() {
     requestedPosition === "start" || requestedPosition === "end"
       ? requestedPosition
       : undefined;
-  const searchQuery = searchParams.toString();
   const routeEpisode = requestedEpisode ? Number(requestedEpisode) : undefined;
   const isEpisodeRoute = routeEpisode !== undefined;
   const isListRoute = routePart === "list";
@@ -807,7 +806,8 @@ function ScopedPrivateFictionReader() {
     if (sectionPositionOverride.current?.sectionId === selected?.id)
       sectionPositionOverride.current = undefined;
     if (!routePositionOverride || selected?.episode !== routeEpisode) return;
-    const nextQuery = new URLSearchParams(searchQuery);
+    const nextQuery = new URLSearchParams(window.location.search);
+    if (nextQuery.get("episode") !== String(routeEpisode)) return;
     if (nextQuery.get("position") !== routePositionOverride) return;
     nextQuery.delete("position");
     const query = nextQuery.toString();
@@ -819,7 +819,6 @@ function ScopedPrivateFictionReader() {
   }, [
     routeEpisode,
     routePositionOverride,
-    searchQuery,
     selected?.episode,
     selected?.id,
   ]);
