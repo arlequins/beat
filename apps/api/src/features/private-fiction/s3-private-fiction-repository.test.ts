@@ -39,7 +39,7 @@ describe("private fiction S3 repository", () => {
     vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
     const { savePrivateFictionEdition, savePrivateFictionEditionAnnotations } =
       await import("./s3-private-fiction-repository");
-    const send = vi.fn(async () => ({ ETag: "saved" }));
+    const send = vi.fn(async (_command: unknown) => ({ ETag: "saved" }));
     await savePrivateFictionEdition(
       "book-a",
       "first",
@@ -52,11 +52,11 @@ describe("private fiction S3 repository", () => {
       { expectedEtag: "previous", annotations: [] },
       client(send),
     );
-    expect((send.mock.calls[0]?.[0] as PutObjectCommand).input).toMatchObject({
+    expect((send.mock.calls[0]![0] as PutObjectCommand).input).toMatchObject({
       Key: "author-vault/works/book-a/editions/first/outline.md",
       IfNoneMatch: "*",
     });
-    expect((send.mock.calls[1]?.[0] as PutObjectCommand).input).toMatchObject({
+    expect((send.mock.calls[1]![0] as PutObjectCommand).input).toMatchObject({
       Key: "author-vault/works/book-b/editions/second/annotations.json",
       IfMatch: "previous",
     });

@@ -69,14 +69,14 @@ import {
   registerPrivateFictionRoutes,
 } from "./features/private-fiction/interface/http/routes";
 import {
-  getPrivateFictionCatalog,
   getPrivateFictionAnnotations,
+  getPrivateFictionCatalog,
   getPrivateFictionDocument,
   getPrivateFictionEdition,
   getPrivateFictionEditionAnnotations,
   MAX_PRIVATE_FICTION_SOURCE_BYTES,
-  savePrivateFictionCatalog,
   savePrivateFictionAnnotations,
+  savePrivateFictionCatalog,
   savePrivateFictionDocument,
   savePrivateFictionEdition,
   savePrivateFictionEditionAnnotations,
