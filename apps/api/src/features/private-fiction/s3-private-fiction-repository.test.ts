@@ -8,6 +8,145 @@ function client(send: (command: unknown) => Promise<unknown>) {
 }
 
 describe("private fiction S3 repository", () => {
+  it("round trips multiple editions and initializes their independent feedback", async () => {
+    vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
+    const {
+      getPrivateFictionCatalog,
+      savePrivateFictionCatalog,
+      getPrivateFictionEdition,
+      savePrivateFictionEdition,
+      getPrivateFictionEditionAnnotations,
+    } = await import("./s3-private-fiction-repository");
+    const objects = new Map<string, string>();
+    const send = async (command: unknown) => {
+      if (command instanceof GetObjectCommand) {
+        const body = objects.get(command.input.Key!);
+        if (body === undefined) throw { name: "AccessDenied" };
+        return {
+          ETag: "etag",
+          LastModified: new Date(),
+          Body: { transformToString: async () => body },
+        };
+      }
+      const input = (command as PutObjectCommand).input;
+      objects.set(input.Key!, String(input.Body));
+      return { ETag: "etag" };
+    };
+    const s3 = client(send);
+    const work = {
+      id: "book",
+      title: "Book",
+      activeEditionId: "first",
+      editions: [{ id: "first", label: "First" }],
+      allowedSubjects: ["owner"],
+      createdAt: "now",
+      updatedAt: "now",
+    };
+    await savePrivateFictionCatalog(
+      { expectedEtag: "before", works: [work] },
+      s3,
+    );
+    expect((await getPrivateFictionCatalog(s3)).works).toEqual([work]);
+    await savePrivateFictionEdition(
+      "book",
+      "first",
+      { expectedEtag: "before", source: "First" },
+      s3,
+    );
+    expect((await getPrivateFictionEdition("book", "first", s3))?.source).toBe(
+      "First",
+    );
+    await savePrivateFictionEdition(
+      "reality-error",
+      "current",
+      { expectedEtag: null, source: "Legacy" },
+      s3,
+    );
+    expect(
+      (await getPrivateFictionEdition("reality-error", "current", s3))?.source,
+    ).toBe("Legacy");
+    expect(
+      (await getPrivateFictionEditionAnnotations("book", "first", s3))
+        ?.annotations,
+    ).toEqual([]);
+    expect(
+      (await getPrivateFictionEditionAnnotations("book", "first", s3))?.etag,
+    ).toBe("etag");
+    expect(
+      (
+        await getPrivateFictionEditionAnnotations(
+          "reality-error",
+          "current",
+          s3,
+        )
+      )?.annotations,
+    ).toEqual([]);
+  });
+
+  it.each(["catalog", "edition"])(
+    "keeps missing, conflicting, and failed %s storage distinct",
+    async (kind) => {
+      vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
+      const {
+        getPrivateFictionCatalog,
+        savePrivateFictionCatalog,
+        getPrivateFictionEdition,
+        savePrivateFictionEdition,
+      } = await import("./s3-private-fiction-repository");
+      for (const status of [412, 500]) {
+        const s3 = client(async () => {
+          throw { $metadata: { httpStatusCode: status } };
+        });
+        const promise =
+          kind === "catalog"
+            ? savePrivateFictionCatalog({ expectedEtag: null, works: [] }, s3)
+            : savePrivateFictionEdition(
+                "book",
+                "first",
+                { expectedEtag: null, source: "Text" },
+                s3,
+              );
+        await expect(promise).rejects.toMatchObject({
+          code: status === 412 ? "conflict" : "storage_unavailable",
+        });
+      }
+      const s3 = client(async () => ({}));
+      await expect(
+        kind === "catalog"
+          ? getPrivateFictionCatalog(s3)
+          : getPrivateFictionEdition("book", "first", s3),
+      ).rejects.toMatchObject({ code: "storage_unavailable" });
+      await expect(
+        kind === "catalog"
+          ? savePrivateFictionCatalog({ expectedEtag: null, works: [] }, s3)
+          : savePrivateFictionEdition(
+              "book",
+              "first",
+              { expectedEtag: null, source: "Text" },
+              s3,
+            ),
+      ).rejects.toMatchObject({ code: "storage_unavailable" });
+      await expect(
+        getPrivateFictionEdition(
+          "book",
+          "absent",
+          client(async () => {
+            throw { name: "NoSuchKey" };
+          }),
+        ),
+      ).resolves.toBeUndefined();
+      await expect(
+        getPrivateFictionEdition(
+          "book",
+          "absent",
+          client(async () => {
+            throw { name: "AccessDenied" };
+          }),
+        ),
+      ).rejects.toMatchObject({ code: "storage_unavailable" });
+    },
+  );
+
   it("initializes a missing catalog without overwriting the legacy work", async () => {
     vi.stubEnv("PRIVATE_FICTION_BUCKET", "private-vault-bucket");
     const { getPrivateFictionCatalog } = await import(
