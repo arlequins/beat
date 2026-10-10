@@ -811,9 +811,11 @@ function ScopedPrivateFictionReader() {
     if (nextQuery.get("position") !== routePositionOverride) return;
     nextQuery.delete("position");
     const query = nextQuery.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, {
-      scroll: false,
-    });
+    window.history.replaceState(
+      null,
+      "",
+      query ? `${pathname}?${query}` : pathname,
+    );
   }, [
     pathname,
     routeEpisode,
@@ -1035,18 +1037,21 @@ function ScopedPrivateFictionReader() {
       const destination = new URLSearchParams({
         episode: String(section.episode),
       });
-      if (requestedWorkId || workId !== "reality-error")
-        destination.set("work", workId);
+      if (workId !== "reality-error") destination.set("work", workId);
       if (workId !== "reality-error" || editionId !== "current")
         destination.set("edition", editionId);
       if (destinationPosition !== "saved")
         destination.set("position", destinationPosition);
-      // Static hosting must open the episode URL even when client navigation is stale.
+      // Keep the loaded reader and scroll position while changing static-hosted URLs.
       const readerPath = pathname.replace(
         /\/private\/fictions(?:\/list)?\/?$/,
         "/private/fictions/",
       );
-      window.location.assign(`${readerPath}?${destination.toString()}`);
+      window.history.pushState(
+        null,
+        "",
+        `${readerPath}?${destination.toString()}`,
+      );
     } else {
       setSelectedId(id);
     }
