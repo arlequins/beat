@@ -552,7 +552,6 @@ function ScopedPrivateFictionReader() {
     requestedPosition === "start" || requestedPosition === "end"
       ? requestedPosition
       : undefined;
-  const searchQuery = searchParams.toString();
   const routeEpisode = requestedEpisode ? Number(requestedEpisode) : undefined;
   const isEpisodeRoute = routeEpisode !== undefined;
   const isListRoute = routePart === "list";
@@ -807,23 +806,17 @@ function ScopedPrivateFictionReader() {
     if (sectionPositionOverride.current?.sectionId === selected?.id)
       sectionPositionOverride.current = undefined;
     if (!routePositionOverride || selected?.episode !== routeEpisode) return;
-    const nextQuery = new URLSearchParams(searchQuery);
+    const nextQuery = new URLSearchParams(window.location.search);
+    if (nextQuery.get("episode") !== String(routeEpisode)) return;
     if (nextQuery.get("position") !== routePositionOverride) return;
     nextQuery.delete("position");
     const query = nextQuery.toString();
     window.history.replaceState(
       null,
       "",
-      query ? `${pathname}?${query}` : pathname,
+      query ? `${window.location.pathname}?${query}` : window.location.pathname,
     );
-  }, [
-    pathname,
-    routeEpisode,
-    routePositionOverride,
-    searchQuery,
-    selected?.episode,
-    selected?.id,
-  ]);
+  }, [routeEpisode, routePositionOverride, selected?.episode, selected?.id]);
 
   useEffect(() => {
     if (isEpisodeRoute || isListRoute) return;
@@ -1042,7 +1035,7 @@ function ScopedPrivateFictionReader() {
       if (destinationPosition !== "saved")
         destination.set("position", destinationPosition);
       // Keep the loaded reader and scroll position while changing static-hosted URLs.
-      const readerPath = pathname.replace(
+      const readerPath = window.location.pathname.replace(
         /\/private\/fictions(?:\/list)?\/?$/,
         "/private/fictions/",
       );
