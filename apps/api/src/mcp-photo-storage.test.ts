@@ -146,6 +146,7 @@ async function importPhotos(
   app: Awaited<ReturnType<typeof harness>>["app"],
   photos: Buffer[],
   attempt = 0,
+  downloadHost = "files.oaiusercontent.com",
 ) {
   vi.stubGlobal(
     "fetch",
@@ -182,7 +183,7 @@ async function importPhotos(
           ],
           sourceConversation: "photo-storage-regression",
           images: photos.map((_, index) => ({
-            download_url: `https://files.oaiusercontent.com/${index}?attempt=${attempt}`,
+            download_url: `https://${downloadHost}/${index}?attempt=${attempt}`,
             file_id: `file-${index}-${attempt}`,
             ...(index === 0
               ? {}
@@ -204,10 +205,18 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("MCP photo storage round trip", () => {
+describe.each([
+  "files.oaiusercontent.com",
+  "sdmntprjapaneast.oaiusercontent.com",
+])("MCP photo storage round trip (%s)", (downloadHost) => {
   it("saves three portrait JPEGs as WebP attachments in one draft", async () => {
     const { app, storage } = await harness();
-    const body = await importPhotos(app, await fixturePhotos());
+    const body = await importPhotos(
+      app,
+      await fixturePhotos(),
+      0,
+      downloadHost,
+    );
     expect(body.result.structuredContent).toMatchObject({
       status: "saved",
       imageCount: 3,
@@ -235,7 +244,7 @@ describe("MCP photo storage round trip", () => {
     const { app, storage } = await harness();
     const photos = await fixturePhotos();
     storage.failImageWrite(2);
-    const failed = await importPhotos(app, photos);
+    const failed = await importPhotos(app, photos, 0, downloadHost);
     expect(failed.result).toMatchObject({
       isError: true,
       structuredContent: {
@@ -244,7 +253,7 @@ describe("MCP photo storage round trip", () => {
       },
     });
     expect(storage.entries()[0]?.images).toHaveLength(1);
-    const retried = await importPhotos(app, photos, 1);
+    const retried = await importPhotos(app, photos, 1, downloadHost);
     expect(retried.result.structuredContent).toMatchObject({
       status: "saved",
       imageCount: 3,

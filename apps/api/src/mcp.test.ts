@@ -494,6 +494,154 @@ describe("Beat Gourmet MCP", () => {
     });
   });
 
+  it.each([
+    "https://files.oaiusercontent.com/photo",
+    "https://sdmntprjapaneast.oaiusercontent.com/photo",
+    "https://SDMNTPRJAPANEAST.OAIUSERCONTENT.COM/photo",
+    "https://sdmntprjapaneast.oaiusercontent.com:443/photo",
+  ])("accepts the exact verified file origin %s", async (url) => {
+    const { app, create, attachImage } = appHarness();
+    const photo = await smallPhoto();
+    const fetchMock = vi.fn(async () => new Response(asArrayBuffer(photo)));
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput(url)],
+    });
+    expect((await response.json()).result.structuredContent).toMatchObject({
+      status: "saved",
+      imageCount: 1,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL(url),
+      expect.objectContaining({ redirect: "manual" }),
+    );
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(attachImage).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    "http://sdmntprjapaneast.oaiusercontent.com/photo",
+    "https://user:password@sdmntprjapaneast.oaiusercontent.com/photo",
+    "https://sdmntprjapaneast.oaiusercontent.com:444/photo",
+    "https://sdmntprjapaneast.oaiusercontent.com:80/photo",
+    "https://oaiusercontent.com/photo",
+    "https://evil.sdmntprjapaneast.oaiusercontent.com/photo",
+    "https://sdmntprjapaneast.oaiusercontent.com.attacker.example/photo",
+    "https://sdmntprjapaneast-oaiusercontent.com/photo",
+    "https://sdmntprjapanwest.oaiusercontent.com/photo",
+    "https://sdmntprjapaneast.oaiusercontent.com./photo",
+    "https://sdmntprjapaneast.blob.core.windows.net/photo",
+    "https://bucket.s3.amazonaws.com/photo",
+    "https://127.0.0.1/photo",
+    "https://[::1]/photo",
+    "https://169.254.169.254/photo",
+    "https://localhost/photo",
+  ])(
+    "blocks unverified origins on initial requests and redirects: %s",
+    async (url) => {
+      const { app, create, attachImage } = appHarness();
+      const fetchMock = vi.fn(
+        async () =>
+          new Response(null, {
+            headers: { location: url },
+            status: 302,
+          }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const initial = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [record],
+        images: [fileInput(url)],
+      });
+      expect((await initial.json()).result.structuredContent).toMatchObject({
+        error: { code: "IMAGE_URL_UNTRUSTED" },
+        saveState: "not_started",
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+      const redirect = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [record],
+        images: [
+          fileInput("https://sdmntprjapaneast.oaiusercontent.com/photo"),
+        ],
+      });
+      expect((await redirect.json()).result.structuredContent).toMatchObject({
+        error: { code: "IMAGE_URL_UNTRUSTED" },
+        saveState: "not_started",
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(create).not.toHaveBeenCalled();
+      expect(attachImage).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([301, 302, 303, 307, 308])(
+    "validates both exact file origins across a %s redirect",
+    async (status) => {
+      const { app, create } = appHarness();
+      const photo = await smallPhoto();
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(null, {
+            status,
+            headers: {
+              location: "https://sdmntprjapaneast.oaiusercontent.com/second",
+            },
+          }),
+        )
+        .mockResolvedValueOnce(
+          new Response(null, {
+            status,
+            headers: { location: "https://files.oaiusercontent.com/final" },
+          }),
+        )
+        .mockResolvedValueOnce(new Response(asArrayBuffer(photo)));
+      vi.stubGlobal("fetch", fetchMock);
+      const response = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [record],
+        images: [fileInput()],
+      });
+      expect((await response.json()).result.structuredContent.status).toBe(
+        "saved",
+      );
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        new URL("https://sdmntprjapaneast.oaiusercontent.com/second"),
+        expect.objectContaining({ redirect: "manual" }),
+      );
+      expect(create).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("keeps the redirect cap for the regional file origin", async () => {
+    const { app, create } = appHarness();
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(null, {
+          status: 302,
+          headers: { location: "/next" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput("https://sdmntprjapaneast.oaiusercontent.com/photo")],
+    });
+    expect((await response.json()).result.structuredContent).toMatchObject({
+      error: { code: "IMAGE_REDIRECT_INVALID" },
+      saveState: "not_started",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it("rejects untrusted downloads and redirects before creating a draft", async () => {
     const { app, create } = appHarness();
     const fetchMock = vi.fn(

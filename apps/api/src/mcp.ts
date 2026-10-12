@@ -22,7 +22,11 @@ const MAX_SOURCE_IMAGE_BYTES = 12 * 1024 * 1024;
 const MAX_TOTAL_SOURCE_IMAGE_BYTES = 30 * 1024 * 1024;
 const MAX_IMPORTED_IMAGES = 6;
 const MAX_OPTIMIZED_IMAGE_BYTES = 700 * 1024;
-const TRUSTED_OPENAI_FILE_HOST = "files.oaiusercontent.com";
+// Keep exact verified file-transport origins; do not trust arbitrary subdomains.
+const TRUSTED_OPENAI_FILE_HOSTS = new Set([
+  "files.oaiusercontent.com",
+  "sdmntprjapaneast.oaiusercontent.com",
+]);
 
 const importFailures = {
   IMAGE_INPUT_INVALID: {
@@ -272,7 +276,7 @@ const toolFileJsonSchema = {
 
 function validateOpenAIFileUrl(rawUrl: string) {
   const url = new URL(rawUrl);
-  const trustedHost = url.hostname === TRUSTED_OPENAI_FILE_HOST;
+  const trustedHost = TRUSTED_OPENAI_FILE_HOSTS.has(url.hostname);
   const urlRejectionReason =
     url.protocol !== "https:"
       ? "protocol"
