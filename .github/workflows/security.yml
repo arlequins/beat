@@ -53,6 +53,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./tooling/github/setup
+      - name: Verify patched image-processing runtime
+        run: pnpm security:images
       - name: Enforce license policy
         run: pnpm security:licenses
       - name: Generate SBOM
