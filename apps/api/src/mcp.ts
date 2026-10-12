@@ -84,10 +84,16 @@ const importFailures = {
   },
 } as const;
 
+type FileUrlDiagnostic = {
+  downloadHost?: string;
+  urlRejectionReason: "protocol" | "credentials" | "port" | "hostname";
+};
+
 class McpImportError extends Error {
   constructor(
     readonly code: keyof typeof importFailures,
     readonly httpStatus?: number,
+    readonly urlDiagnostic?: FileUrlDiagnostic,
   ) {
     super(importFailures[code].message);
     this.name = "McpImportError";
@@ -267,14 +273,31 @@ const toolFileJsonSchema = {
 function validateOpenAIFileUrl(rawUrl: string) {
   const url = new URL(rawUrl);
   const trustedHost = url.hostname === TRUSTED_OPENAI_FILE_HOST;
-  if (
-    url.protocol !== "https:" ||
-    url.username ||
-    url.password ||
-    (url.port && url.port !== "443") ||
-    !trustedHost
-  )
-    throw new McpImportError("IMAGE_URL_UNTRUSTED");
+  const urlRejectionReason =
+    url.protocol !== "https:"
+      ? "protocol"
+      : url.username || url.password
+        ? "credentials"
+        : url.port && url.port !== "443"
+          ? "port"
+          : !trustedHost
+            ? "hostname"
+            : undefined;
+  if (urlRejectionReason) {
+    // Report only bounded, parsed ASCII DNS names. Never include the URL,
+    // credentials, path, query, fragment, or an opaque/non-DNS host value.
+    const downloadHost =
+      url.hostname.length <= 253 &&
+      url.hostname
+        .split(".")
+        .every((label) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label))
+        ? url.hostname
+        : undefined;
+    throw new McpImportError("IMAGE_URL_UNTRUSTED", undefined, {
+      ...(downloadHost === undefined ? {} : { downloadHost }),
+      urlRejectionReason,
+    });
+  }
   return url;
 }
 
@@ -909,6 +932,7 @@ export function registerMcpRoutes(
         const details = {
           code: error.code,
           stage: failure.stage,
+          ...error.urlDiagnostic,
           requestId: context.get("requestId"),
           ...(importImageIndex === undefined
             ? {}
@@ -918,7 +942,7 @@ export function registerMcpRoutes(
             : { httpStatus: error.httpStatus }),
         };
         const saveState = writesStarted ? "possibly_partial" : "not_started";
-        // Deliberately omit raw exceptions and all user-supplied file details.
+        // Omit raw exceptions and file details, except a sanitized rejected host.
         log?.warn("mcp.gourmet.import_failed", { ...details, saveState });
         return context.json(
           jsonRpcResult(id, {

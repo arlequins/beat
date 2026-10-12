@@ -536,6 +536,216 @@ describe("Beat Gourmet MCP", () => {
     });
   });
 
+  it.each([
+    [
+      "https://unexpected-files.example",
+      "unexpected-files.example",
+      "hostname",
+    ],
+    [
+      "https://sub.files.oaiusercontent.com",
+      "sub.files.oaiusercontent.com",
+      "hostname",
+    ],
+    [
+      "https://files.oaiusercontent.com.attacker.example",
+      "files.oaiusercontent.com.attacker.example",
+      "hostname",
+    ],
+    [
+      "https://UNEXPECTED-FILES.EXAMPLE",
+      "unexpected-files.example",
+      "hostname",
+    ],
+    ["https://bücher.example", "xn--bcher-kva.example", "hostname"],
+    ["http://files.oaiusercontent.com", "files.oaiusercontent.com", "protocol"],
+    [
+      "https://private-user:private-password@files.oaiusercontent.com",
+      "files.oaiusercontent.com",
+      "credentials",
+    ],
+    [
+      "https://files.oaiusercontent.com:8443",
+      "files.oaiusercontent.com",
+      "port",
+    ],
+  ])(
+    "reports only a sanitized rejected hostname and reason for %s",
+    async (origin, downloadHost, urlRejectionReason) => {
+      const { app, create, attachImage, logs } = appHarness();
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      const response = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [{ ...record, summary: "private meal summary" }],
+        images: [
+          {
+            ...fileInput(
+              `${origin}/private-file-path?sig=private-signature#private-fragment`,
+            ),
+            file_id: "private-file-id",
+            file_name: "private-photo-name.jpg",
+          },
+        ],
+      });
+      const body = await response.json();
+      const error = body.result.structuredContent.error;
+      expect(error).toMatchObject({
+        code: "IMAGE_URL_UNTRUSTED",
+        stage: "image_download",
+        downloadHost,
+        urlRejectionReason,
+        imageIndex: 0,
+      });
+      expect(body.result.structuredContent.saveState).toBe("not_started");
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(create).not.toHaveBeenCalled();
+      expect(attachImage).not.toHaveBeenCalled();
+      expect(logs).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: "mcp.gourmet.import_failed",
+            downloadHost,
+            urlRejectionReason,
+            requestId: error.requestId,
+          }),
+        ]),
+      );
+      const diagnostics = JSON.stringify({ body, logs });
+      for (const value of [
+        "private-user",
+        "private-password",
+        "private-file-path",
+        "private-signature",
+        "private-fragment",
+        "private-file-id",
+        "private-photo-name.jpg",
+        "private meal summary",
+        ":8443",
+      ])
+        expect(diagnostics).not.toContain(value);
+    },
+  );
+
+  it("reports a rejected redirect hostname without exposing either signed URL", async () => {
+    const { app, create, logs } = appHarness();
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(null, {
+          headers: {
+            location:
+              "https://redirect-files.example/private-target?sig=private-target-token",
+          },
+          status: 302,
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [
+        fileInput(
+          "https://files.oaiusercontent.com/private-source?sig=private-source-token",
+        ),
+      ],
+    });
+    const body = await response.json();
+    expect(body.result.structuredContent.error).toMatchObject({
+      code: "IMAGE_URL_UNTRUSTED",
+      downloadHost: "redirect-files.example",
+      urlRejectionReason: "hostname",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(create).not.toHaveBeenCalled();
+    const diagnostics = JSON.stringify({ body, logs });
+    for (const value of [
+      "private-target",
+      "private-source",
+      "files.oaiusercontent.com",
+    ])
+      expect(diagnostics).not.toContain(value);
+  });
+
+  it.each([
+    "data:image/jpeg;base64,private-image-data",
+    `https://${"a".repeat(254)}.example/private-file?sig=private-signature`,
+    "https://unsafe_host.example/private-file?sig=private-signature",
+  ])("omits unsafe or absent diagnostic hostnames for %s", async (url) => {
+    const { app, create, logs } = appHarness();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput(url)],
+    });
+    const body = await response.json();
+    expect(body.result.structuredContent.error.code).toBe(
+      "IMAGE_URL_UNTRUSTED",
+    );
+    expect(body.result.structuredContent.error).not.toHaveProperty(
+      "downloadHost",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+    const diagnostics = JSON.stringify({ body, logs });
+    for (const value of [
+      "private-image-data",
+      "private-file",
+      "private-signature",
+      "unsafe_host",
+      "a".repeat(254),
+    ])
+      expect(diagnostics).not.toContain(value);
+  });
+
+  it("still accepts an uppercase spelling of the exact trusted hostname", async () => {
+    const { app, create, attachImage } = appHarness();
+    const photo = await smallPhoto();
+    const fetchMock = vi.fn(async () => new Response(asArrayBuffer(photo)));
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput("https://FILES.OAIUSERCONTENT.COM/image")],
+    });
+    expect((await response.json()).result.structuredContent.status).toBe(
+      "saved",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(attachImage).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    "not-a-url/private-path?sig=private-signature",
+    "https://[invalid-host/private-path?sig=private-signature",
+  ])(
+    "rejects malformed file URLs without exposing their contents",
+    async (url) => {
+      const { app, create, logs } = appHarness();
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      const response = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [record],
+        images: [fileInput(url)],
+      });
+      const body = await response.json();
+      expect(body.result.structuredContent.error.code).toBe(
+        "IMAGE_INPUT_INVALID",
+      );
+      expect(body.result.structuredContent.error).not.toHaveProperty(
+        "downloadHost",
+      );
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(create).not.toHaveBeenCalled();
+      const diagnostics = JSON.stringify({ body, logs });
+      for (const value of ["private-path", "private-signature", "invalid-host"])
+        expect(diagnostics).not.toContain(value);
+    },
+  );
+
   it.each([401, 403, 404, 410, 500])(
     "reports photo download HTTP %s without leaking file details",
     async (status) => {
