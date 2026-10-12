@@ -76,5 +76,7 @@ onlyBuiltDependencies:
   - esbuild
 
 overrides:
+  # Next also pulls Sharp; keep every image decoder on the security-fixed release.
+  'sharp@<0.35.5': 0.35.5
   '@types/minimatch': 6.0.0
   lightningcss: 1.32.0
