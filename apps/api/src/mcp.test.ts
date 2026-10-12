@@ -52,6 +52,7 @@ function rpc(id: string, method: string, params?: Record<string, unknown>) {
 }
 
 function appHarness(scopes = ["gourmet:read", "gourmet:write"]) {
+  const logs: unknown[] = [];
   const create = vi.fn(
     async (
       input: Parameters<GourmetPort["create"]>[0],
@@ -95,14 +96,17 @@ function appHarness(scopes = ["gourmet:read", "gourmet:write"]) {
       list: vi.fn(),
       update: vi.fn(),
     },
-    logger: createLogger({ service: "api", sink: () => {} }),
+    logger: createLogger({
+      service: "api",
+      sink: (record) => logs.push(record),
+    }),
     mcp: {
       issuer: "https://api.example.com/auth",
       resource: "https://api.example.com/mcp",
     },
     rateLimiter: false,
   });
-  return { app, attachImage, context, create };
+  return { app, attachImage, context, create, logs };
 }
 
 function asArrayBuffer(value: Uint8Array) {
@@ -119,6 +123,19 @@ function fileInput(downloadUrl = "https://files.oaiusercontent.com/file-1") {
     file_name: "lunch.jpg",
     mime_type: "image/jpeg",
   };
+}
+
+async function smallPhoto(format: "png" | "gif" = "png") {
+  return sharp({
+    create: {
+      background: { alpha: 1, b: 30, g: 120, r: 190 },
+      channels: 3,
+      height: 24,
+      width: 24,
+    },
+  })
+    .toFormat(format)
+    .toBuffer();
 }
 
 async function confirmWithImages(
@@ -461,7 +478,19 @@ describe("Beat Gourmet MCP", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(create).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toMatchObject({
-      error: { code: -32000 },
+      result: {
+        isError: true,
+        structuredContent: {
+          error: {
+            code: "IMAGE_TOO_LARGE",
+            stage: "image_download",
+            imageIndex: 0,
+            requestId: expect.any(String),
+          },
+          saveState: "not_started",
+          status: "failed",
+        },
+      },
     });
   });
 
@@ -484,6 +513,12 @@ describe("Beat Gourmet MCP", () => {
     expect(initialUrl.status).toBe(200);
     expect(fetchMock).not.toHaveBeenCalled();
     expect(create).not.toHaveBeenCalled();
+    await expect(initialUrl.json()).resolves.toMatchObject({
+      result: {
+        isError: true,
+        structuredContent: { error: { code: "IMAGE_URL_UNTRUSTED" } },
+      },
+    });
 
     const redirect = await confirmWithImages(app, {
       confirmed: true,
@@ -493,6 +528,296 @@ describe("Beat Gourmet MCP", () => {
     expect(redirect.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(create).not.toHaveBeenCalled();
+    await expect(redirect.json()).resolves.toMatchObject({
+      result: {
+        isError: true,
+        structuredContent: { error: { code: "IMAGE_URL_UNTRUSTED" } },
+      },
+    });
+  });
+
+  it.each([401, 403, 404, 410, 500])(
+    "reports photo download HTTP %s without leaking file details",
+    async (status) => {
+      const { app, create, logs } = appHarness();
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response("private response", { status })),
+      );
+      const response = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [{ ...record, summary: "private meal summary" }],
+        images: [
+          {
+            ...fileInput(
+              "https://files.oaiusercontent.com/private-file?sig=secret-signature",
+            ),
+            file_id: "private-file-id",
+            file_name: "private-photo-name.jpg",
+          },
+        ],
+      });
+      const body = await response.json();
+      expect(body).toMatchObject({
+        result: {
+          isError: true,
+          structuredContent: {
+            error: {
+              code:
+                status === 500
+                  ? "IMAGE_DOWNLOAD_FAILED"
+                  : "IMAGE_DOWNLOAD_UNAVAILABLE",
+              httpStatus: status,
+              stage: "image_download",
+              imageIndex: 0,
+            },
+            saveState: "not_started",
+          },
+        },
+      });
+      expect(create).not.toHaveBeenCalled();
+      expect(logs).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: "mcp.gourmet.import_failed",
+            stage: "image_download",
+            httpStatus: status,
+            requestId: body.result.structuredContent.error.requestId,
+          }),
+        ]),
+      );
+      const diagnostics = JSON.stringify({ body, logs });
+      for (const privateValue of [
+        "private response",
+        "private meal summary",
+        "files.oaiusercontent.com",
+        "secret-signature",
+        "private-file-id",
+        "private-photo-name.jpg",
+      ])
+        expect(diagnostics).not.toContain(privateValue);
+    },
+  );
+
+  it.each([
+    [new Error("private download URL or token"), "IMAGE_DOWNLOAD_FAILED"],
+    [
+      new DOMException("private timeout details", "TimeoutError"),
+      "IMAGE_DOWNLOAD_TIMEOUT",
+    ],
+  ])("sanitizes download exceptions as %s", async (error, code) => {
+    const { app, create, logs } = appHarness();
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(error));
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput()],
+    });
+    const body = await response.json();
+    expect(body).toMatchObject({
+      result: {
+        isError: true,
+        structuredContent: {
+          error: { code, stage: "image_download" },
+          saveState: "not_started",
+        },
+      },
+    });
+    expect(JSON.stringify({ body, logs })).not.toContain(error.message);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it.each(["invalid", "excessive"])(
+    "reports %s photo redirects before saving",
+    async (kind) => {
+      const { app, create } = appHarness();
+      const fetchMock = vi.fn(
+        async () =>
+          new Response(null, {
+            status: 302,
+            headers: {
+              location:
+                kind === "invalid"
+                  ? "https://[invalid"
+                  : "https://files.oaiusercontent.com/loop",
+            },
+          }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const response = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [record],
+        images: [fileInput()],
+      });
+      await expect(response.json()).resolves.toMatchObject({
+        result: {
+          isError: true,
+          structuredContent: {
+            error: { code: "IMAGE_REDIRECT_INVALID" },
+            saveState: "not_started",
+          },
+        },
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(kind === "invalid" ? 1 : 3);
+      expect(create).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["empty", "invalid", "unsupported"])(
+    "reports %s photo content before saving",
+    async (kind) => {
+      const { app, create, attachImage } = appHarness();
+      const bytes =
+        kind === "unsupported"
+          ? await smallPhoto("gif")
+          : Buffer.from(kind === "empty" ? "" : "not image bytes");
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response(asArrayBuffer(bytes))),
+      );
+      const response = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [record],
+        images: [fileInput()],
+      });
+      await expect(response.json()).resolves.toMatchObject({
+        result: {
+          isError: true,
+          structuredContent: {
+            error: {
+              code:
+                kind === "empty"
+                  ? "IMAGE_EMPTY"
+                  : kind === "invalid"
+                    ? "IMAGE_PROCESSING_FAILED"
+                    : "IMAGE_UNSUPPORTED_FORMAT",
+              imageIndex: 0,
+            },
+            saveState: "not_started",
+          },
+        },
+      });
+      expect(create).not.toHaveBeenCalled();
+      expect(attachImage).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["draft_save", "image_attachment"])(
+    "reports %s failures as potentially partial and sanitizes storage errors",
+    async (stage) => {
+      const { app, create, attachImage, logs } = appHarness();
+      const bytes = await smallPhoto();
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response(asArrayBuffer(bytes))),
+      );
+      const privateError = new Error("private S3 key and credential");
+      if (stage === "draft_save") create.mockRejectedValue(privateError);
+      else attachImage.mockRejectedValue(privateError);
+      const response = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [record],
+        images: [fileInput()],
+      });
+      const body = await response.json();
+      expect(body).toMatchObject({
+        result: {
+          isError: true,
+          structuredContent: {
+            error: {
+              code:
+                stage === "draft_save"
+                  ? "DRAFT_SAVE_FAILED"
+                  : "IMAGE_ATTACHMENT_FAILED",
+              stage,
+            },
+            saveState: "possibly_partial",
+          },
+        },
+      });
+      expect(body.result.structuredContent.error.message).toContain(
+        "same meal details and source conversation",
+      );
+      expect(JSON.stringify({ body, logs })).not.toContain(
+        privateError.message,
+      );
+      expect(create).toHaveBeenCalledTimes(1);
+      expect(attachImage).toHaveBeenCalledTimes(stage === "draft_save" ? 0 : 1);
+    },
+  );
+
+  it("identifies a second-photo download failure before creating any drafts", async () => {
+    const { app, create, attachImage } = appHarness();
+    const bytes = await smallPhoto();
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(asArrayBuffer(bytes)))
+        .mockResolvedValueOnce(
+          new Response(
+            new ReadableStream({
+              start(controller) {
+                controller.error(
+                  new DOMException("private stream error", "TimeoutError"),
+                );
+              },
+            }),
+          ),
+        ),
+    );
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput(), { ...fileInput(), file_id: "file-2" }],
+    });
+    await expect(response.json()).resolves.toMatchObject({
+      result: {
+        isError: true,
+        structuredContent: {
+          error: {
+            code: "IMAGE_DOWNLOAD_TIMEOUT",
+            imageIndex: 1,
+            stage: "image_download",
+          },
+          saveState: "not_started",
+        },
+      },
+    });
+    expect(create).not.toHaveBeenCalled();
+    expect(attachImage).not.toHaveBeenCalled();
+  });
+
+  it("identifies a second-photo storage failure after the first attachment succeeds", async () => {
+    const { app, create, attachImage } = appHarness();
+    const bytes = await smallPhoto();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(asArrayBuffer(bytes))),
+    );
+    attachImage
+      .mockResolvedValueOnce(entry)
+      .mockRejectedValueOnce(new Error("private storage exception"));
+    const response = await confirmWithImages(app, {
+      confirmed: true,
+      entries: [record],
+      images: [fileInput(), { ...fileInput(), file_id: "file-2" }],
+    });
+    await expect(response.json()).resolves.toMatchObject({
+      result: {
+        isError: true,
+        structuredContent: {
+          error: {
+            code: "IMAGE_ATTACHMENT_FAILED",
+            imageIndex: 1,
+            stage: "image_attachment",
+          },
+          saveState: "possibly_partial",
+        },
+      },
+    });
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(attachImage).toHaveBeenCalledTimes(2);
   });
 
   it("requires an unambiguous photo-to-meal map before downloading files", async () => {
@@ -505,11 +830,55 @@ describe("Beat Gourmet MCP", () => {
       images: [fileInput()],
     });
     await expect(response.json()).resolves.toMatchObject({
-      error: { code: -32602 },
+      result: {
+        isError: true,
+        structuredContent: {
+          error: { code: "IMAGE_INPUT_INVALID", stage: "image_input" },
+          saveState: "not_started",
+        },
+      },
     });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(create).not.toHaveBeenCalled();
   });
+
+  it.each([
+    { images: ["/private/photo.jpg"] },
+    { images: ["file-123"] },
+    {
+      images: [
+        { download_url: "https://files.oaiusercontent.com/private?sig=secret" },
+      ],
+    },
+    { images: Array.from({ length: 7 }, () => fileInput()) },
+  ])(
+    "reports invalid file transport without saving or leaking the input (%#)",
+    async ({ images }) => {
+      const { app, create, attachImage, logs } = appHarness();
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      const response = await confirmWithImages(app, {
+        confirmed: true,
+        entries: [record],
+        images,
+      });
+      const body = await response.json();
+      expect(body).toMatchObject({
+        result: {
+          isError: true,
+          structuredContent: {
+            error: { code: "IMAGE_INPUT_INVALID", stage: "image_input" },
+            saveState: "not_started",
+          },
+        },
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(create).not.toHaveBeenCalled();
+      expect(attachImage).not.toHaveBeenCalled();
+      for (const value of ["/private/photo.jpg", "file-123", "sig=secret"])
+        expect(JSON.stringify({ body, logs })).not.toContain(value);
+    },
+  );
 
   it("attaches each photo to its explicitly mapped meal", async () => {
     const { app, attachImage, create } = appHarness();

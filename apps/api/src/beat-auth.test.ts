@@ -128,6 +128,188 @@ afterEach(() => {
 });
 
 describe("Beat S3 authentication", () => {
+  describe.each(["tiret.rouge@gmail.com", "beat.lumen@gmail.com"])(
+    "Google administrator %s",
+    (email) => {
+      it("provisions once and requires the same bound Google subject", async () => {
+        const harness = s3Harness();
+        const { auth } = await loadAuth();
+        const administrator = await auth.authenticateBeatGoogleAdmin(
+          ` \t${email.toUpperCase()}\n`,
+          "google-subject",
+          harness.client,
+        );
+        expect(administrator).toMatchObject({
+          credentialVersion: 1,
+          email,
+          identityProvider: "google",
+          identitySubject: "google-subject",
+          role: "admin",
+          status: "active",
+        });
+        const originalObjects = [...harness.objects.entries()];
+        await expect(
+          auth.authenticateBeatGoogleAdmin(
+            email,
+            "google-subject",
+            harness.client,
+          ),
+        ).resolves.toEqual(administrator);
+        await expect(
+          auth.authenticateBeatGoogleAdmin(
+            email,
+            "different-subject",
+            harness.client,
+          ),
+        ).resolves.toBeUndefined();
+        expect([...harness.objects.entries()]).toEqual(originalObjects);
+        expect(
+          [...harness.objects.keys()].filter((key) =>
+            key.includes("/admins/by-email/"),
+          ),
+        ).toHaveLength(1);
+      });
+
+      it("binds an existing administrator without replacing its identity or password", async () => {
+        const harness = s3Harness();
+        const { auth } = await loadAuth();
+        await auth.createBeatAdmin(
+          email,
+          "correct horse battery staple",
+          harness.client,
+        );
+        const existing = await auth.authenticateBeatAdmin(
+          email,
+          "correct horse battery staple",
+          harness.client,
+        );
+        const administrator = await auth.authenticateBeatGoogleAdmin(
+          email,
+          "google-subject",
+          harness.client,
+        );
+        expect(administrator).toMatchObject({
+          adminKey: existing!.adminKey,
+          credentialVersion: existing!.credentialVersion,
+          email,
+          identityProvider: "google",
+          identitySubject: "google-subject",
+          passwordHash: existing!.passwordHash,
+          revision: 2,
+          subject: existing!.subject,
+        });
+        const originalObjects = [...harness.objects.entries()];
+        await expect(
+          auth.authenticateBeatGoogleAdmin(
+            email,
+            "google-subject",
+            harness.client,
+          ),
+        ).resolves.toEqual(administrator);
+        await expect(
+          auth.authenticateBeatGoogleAdmin(
+            email,
+            "different-subject",
+            harness.client,
+          ),
+        ).resolves.toBeUndefined();
+        expect([...harness.objects.entries()]).toEqual(originalObjects);
+        expect(
+          harness.commands.filter(
+            (command) =>
+              command instanceof PutObjectCommand &&
+              command.input.Bucket === "beat-auth-ledger" &&
+              String(command.input.Body).includes("google-identity-linked"),
+          ),
+        ).toHaveLength(1);
+      });
+
+      it.each([false, true])(
+        "rejects disabled administrators (Google-bound: %s)",
+        async (linked) => {
+          const harness = s3Harness();
+          const { auth } = await loadAuth();
+          await auth.createBeatAdmin(
+            email,
+            "correct horse battery staple",
+            harness.client,
+            linked
+              ? { provider: "google", subject: "google-subject" }
+              : undefined,
+          );
+          await auth.disableBeatAdmin(email, harness.client);
+          const originalObjects = [...harness.objects.entries()];
+          await expect(
+            auth.authenticateBeatGoogleAdmin(
+              email,
+              "google-subject",
+              harness.client,
+            ),
+          ).resolves.toBeUndefined();
+          expect([...harness.objects.entries()]).toEqual(originalObjects);
+        },
+      );
+    },
+  );
+
+  it("keeps the two allowlisted Google administrators independent", async () => {
+    const harness = s3Harness();
+    const { auth } = await loadAuth();
+    const owner = await auth.authenticateBeatGoogleAdmin(
+      "tiret.rouge@gmail.com",
+      "owner-google-subject",
+      harness.client,
+    );
+    const lumen = await auth.authenticateBeatGoogleAdmin(
+      "beat.lumen@gmail.com",
+      "lumen-google-subject",
+      harness.client,
+    );
+    expect(owner!.adminKey).not.toBe(lumen!.adminKey);
+    expect(owner!.subject).not.toBe(lumen!.subject);
+    await expect(
+      auth.authenticateBeatGoogleAdmin(
+        "beat.lumen@gmail.com",
+        "owner-google-subject",
+        harness.client,
+      ),
+    ).resolves.toBeUndefined();
+    await auth.disableBeatAdmin("beat.lumen@gmail.com", harness.client);
+    await expect(
+      auth.authenticateBeatGoogleAdmin(
+        "tiret.rouge@gmail.com",
+        "owner-google-subject",
+        harness.client,
+      ),
+    ).resolves.toEqual(owner);
+  });
+
+  it.each([
+    "someone-else@example.com",
+    "tiret.rouge+test@gmail.com",
+    "beat.lumen+test@gmail.com",
+    "tiretrouge@gmail.com",
+    "beatlumen@gmail.com",
+    "tiret.rouge@googlemail.com",
+    "beat.lumen@googlemail.com",
+    "beat.lumen@gmail.com.example.com",
+    "beat. lumen@gmail.com",
+  ])(
+    "rejects %s before looking up or provisioning an administrator",
+    async (email) => {
+      const harness = s3Harness();
+      const { auth } = await loadAuth();
+      await expect(
+        auth.authenticateBeatGoogleAdmin(
+          email,
+          "google-subject",
+          harness.client,
+        ),
+      ).resolves.toBeUndefined();
+      expect(harness.send).not.toHaveBeenCalled();
+    },
+  );
+
   it("keeps a remembered device signed in for 90 days by default", async () => {
     const harness = s3Harness();
     const { auth } = await loadAuth(null);

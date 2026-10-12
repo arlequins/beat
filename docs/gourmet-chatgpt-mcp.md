@@ -77,6 +77,41 @@ image keys, so it fills missing media without adding duplicate drafts or
 images. The administrator can also remove or rearrange images using existing
 Gourmet controls.
 
+### Diagnosing a photo import failure
+
+Photo download, processing, and storage failures return an MCP tool result with
+`isError: true`. Its `structuredContent.error` includes a stable `code`, `stage`,
+and `requestId`, plus a zero-based `imageIndex` when a specific photo failed and
+an `httpStatus` when a download server returned an error. These safe fields are
+also logged as `mcp.gourmet.import_failed`; raw exceptions, signed URLs, file
+IDs, filenames, image bytes, and meal text are not included.
+
+- `image_input`: the attachment did not reach Beat as a supported file object,
+  too many photos were supplied, or the meal mapping is invalid. Reattach the
+  requested photos; do not silently downgrade to a text-only save.
+- `image_download`: distinguish an unsupported host, unavailable download,
+  timeout, invalid redirect, empty file, or size limit. An unavailable link may
+  have expired; request a fresh attachment instead of inventing a download URL.
+- `image_processing`: check for a valid JPEG, PNG, or WebP of at most 40
+  megapixels. An image that cannot be reduced below the output limit needs a
+  smaller source.
+- `draft_save` or `image_attachment`: inspect the request ID and administrator
+  record. Do not silently retry as a new text-only import.
+
+`saveState: "not_started"` means this request failed before creating any meal
+drafts. `saveState: "possibly_partial"` means some writes may have succeeded;
+retry with the same meal details and `sourceConversation` to preserve the
+existing idempotency key. Non-photo argument-validation and protocol errors retain their JSON-RPC error
+responses. Invalid photo inputs return a recoverable `IMAGE_INPUT_INVALID` tool
+error without logging the rejected payload.
+
+A successful response with `imageCount: 0` means no photos were supplied to the
+tool. It does not prove that ChatGPT transferred an attachment successfully.
+Check the actual tool invocation before attributing a missing photo to S3 or
+the downloader. The file-input contract does not specify an exhaustive host
+allowlist: verify the failing stage and an authentic download host before
+changing Beat's SSRF restrictions.
+
 ## ChatGPT setup and current availability
 
 1. Open ChatGPT on the web and add the public HTTPS MCP server URL.
@@ -93,9 +128,9 @@ says full MCP write support is rolling out to Business, Enterprise, and Edu
 plans; Pro supports read/fetch only. This is a platform availability statement,
 not a determination of the account or connector used for a particular Beat
 setup. MCP apps are currently web-only.
-The current Codex task has no Beat MCP connector tools, so it cannot verify the
-user's production ChatGPT connector or upload a real conversation photo. Verify
-that path in ChatGPT itself after deployment.
+Local photo-storage tests exercise decoding, attachment writes, and partial-save
+retries against in-memory storage. They do not verify ChatGPT's file transfer or
+the deployed API. Verify that path in ChatGPT itself after deployment.
 
 ChatGPT keeps a snapshot of approved tool definitions. After adding the
 `images` file parameter, refresh the connector's tools/actions in ChatGPT and

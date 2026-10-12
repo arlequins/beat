@@ -16,7 +16,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { decodeJwt, importJWK, jwtVerify, SignJWT } from "jose";
-import { GOOGLE_ALLOWED_EMAIL } from "./beat-google";
+import { isAllowedGoogleEmail } from "./beat-google";
 
 const ACCESS_TOKEN_TTL_SECONDS = 10 * 60;
 const DEFAULT_REFRESH_TOKEN_TTL_SECONDS = 90 * 24 * 60 * 60;
@@ -634,7 +634,7 @@ export async function authenticateBeatAdmin(
 }
 
 /**
- * Authenticate the one explicitly allowed Google identity and bind its
+ * Authenticate an explicitly allowed Google identity and bind its
  * stable subject to the existing S3 administrator record on first use.
  */
 export async function authenticateBeatGoogleAdmin(
@@ -644,7 +644,7 @@ export async function authenticateBeatGoogleAdmin(
 ): Promise<ActiveAdmin | undefined> {
   const authConfig = config();
   const normalizedEmail = normalizeEmail(email);
-  if (normalizedEmail !== GOOGLE_ALLOWED_EMAIL) return undefined;
+  if (!isAllowedGoogleEmail(normalizedEmail)) return undefined;
   const key = adminKey(normalizedEmail, authConfig);
   let stored = await readAdminByKey(key, client, authConfig);
   if (!stored) {

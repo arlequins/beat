@@ -33,6 +33,20 @@ async function loadGoogle() {
   return import("./beat-google");
 }
 
+async function loadGoogleWithClaims(payload: Record<string, unknown>) {
+  const jwtVerify = vi.fn(async () => ({ payload }));
+  vi.doMock("jose", () => ({
+    createRemoteJWKSet: vi.fn(() => "jwks"),
+    jwtVerify,
+  }));
+  const google = await loadGoogle();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json({ id_token: "id-token" })),
+  );
+  return { google, jwtVerify };
+}
+
 function signedState(payload: unknown) {
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const signature = createHmac(
@@ -45,6 +59,11 @@ function signedState(payload: unknown) {
 }
 
 describe("Beat Google SSO", () => {
+  it("preserves the separate private-fiction owner identity", async () => {
+    const google = await loadGoogle();
+    expect(google.GOOGLE_ALLOWED_EMAIL).toBe("tiret.rouge@gmail.com");
+  });
+
   it("creates a signed Google authorization URL and round-trips its state", async () => {
     const google = await loadGoogle();
     const authorizationUrl = new URL(
@@ -171,52 +190,124 @@ describe("Beat Google SSO", () => {
     ).rejects.toThrow("Google token response did not include an ID token");
   });
 
-  it("verifies Google token claims and enforces the exact account allowlist", async () => {
-    let payload: Record<string, unknown> = {
-      email: "TIRET.ROUGE@gmail.com",
+  it.each(["tiret.rouge@gmail.com", "beat.lumen@gmail.com"])(
+    "accepts %s with case and surrounding whitespace normalization only",
+    async (email) => {
+      const { google, jwtVerify } = await loadGoogleWithClaims({
+        email: ` \t${email.toUpperCase()}\n`,
+        email_verified: true,
+        nonce: "nonce",
+        sub: "google-subject",
+      });
+      await expect(
+        google.exchangeGoogleAuthorizationCode("code", "nonce"),
+      ).resolves.toEqual({ email, subject: "google-subject" });
+      expect(jwtVerify).toHaveBeenCalledWith("id-token", "jwks", {
+        algorithms: ["RS256"],
+        audience: "google-client-id",
+        issuer: ["https://accounts.google.com", "accounts.google.com"],
+      });
+    },
+  );
+
+  it.each([
+    "someone-else@example.com",
+    "tiret.rouge+test@gmail.com",
+    "beat.lumen+test@gmail.com",
+    "tiretrouge@gmail.com",
+    "beatlumen@gmail.com",
+    "tiret.rouge@googlemail.com",
+    "beat.lumen@googlemail.com",
+    "beat.lumen@gmail.com.example.com",
+    "beat. lumen@gmail.com",
+  ])("rejects non-allowlisted accounts and aliases: %s", async (email) => {
+    const { google } = await loadGoogleWithClaims({
+      email,
       email_verified: true,
       nonce: "nonce",
       sub: "google-subject",
-    };
-    vi.doMock("jose", () => ({
-      createRemoteJWKSet: vi.fn(() => "jwks"),
-      jwtVerify: vi.fn(async () => ({ payload })),
-    }));
-    const google = await loadGoogle();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => Response.json({ id_token: "id-token" })),
-    );
-    await expect(
-      google.exchangeGoogleAuthorizationCode("code", "nonce"),
-    ).resolves.toEqual({
-      email: "tiret.rouge@gmail.com",
-      subject: "google-subject",
     });
-
-    payload = { ...payload, email: "someone-else@example.com" };
     await expect(
       google.exchangeGoogleAuthorizationCode("code", "nonce"),
     ).rejects.toThrow("Google account is not allowed for this Beat");
-    payload = {
-      ...payload,
-      email: "tiret.rouge@gmail.com",
-      email_verified: false,
-    };
-    await expect(
-      google.exchangeGoogleAuthorizationCode("code", "nonce"),
-    ).rejects.toThrow("Google identity verification failed");
-    payload = { ...payload, email_verified: true, nonce: "different" };
-    await expect(
-      google.exchangeGoogleAuthorizationCode("code", "nonce"),
-    ).rejects.toThrow("Google identity verification failed");
-    payload = {
-      email: "tiret.rouge@gmail.com",
-      email_verified: true,
-      nonce: "nonce",
-    };
-    await expect(
-      google.exchangeGoogleAuthorizationCode("code", "nonce"),
-    ).rejects.toThrow("Google identity verification failed");
+  });
+
+  it.each(["tiret.rouge@gmail.com", "beat.lumen@gmail.com"])(
+    "requires verified email, nonce, and subject claims for %s",
+    async (email) => {
+      const payload = {
+        email,
+        email_verified: true,
+        nonce: "nonce",
+        sub: "google-subject",
+      };
+      const { google, jwtVerify } = await loadGoogleWithClaims(payload);
+      for (const invalidClaims of [
+        { email_verified: false },
+        { email_verified: "true" },
+        { email_verified: undefined },
+        { nonce: "different" },
+        { nonce: undefined },
+        { sub: undefined },
+        { sub: 123 },
+        { email: undefined },
+        { email: 123 },
+      ]) {
+        jwtVerify.mockResolvedValueOnce({
+          payload: { ...payload, ...invalidClaims },
+        });
+        await expect(
+          google.exchangeGoogleAuthorizationCode("code", "nonce"),
+        ).rejects.toThrow("Google identity verification failed");
+      }
+    },
+  );
+
+  it("rejects signed tokens with the wrong issuer or audience", async () => {
+    const jose = await vi.importActual<typeof import("jose")>("jose");
+    const { privateKey, publicKey } = await jose.generateKeyPair("RS256");
+    vi.doMock("jose", () => ({
+      ...jose,
+      createRemoteJWKSet: vi.fn(() => publicKey),
+    }));
+    const google = await loadGoogle();
+    for (const email of ["tiret.rouge@gmail.com", "beat.lumen@gmail.com"]) {
+      for (const [issuer, audience, accepted] of [
+        ["https://accounts.google.com", "google-client-id", true],
+        ["accounts.google.com", "google-client-id", true],
+        ["https://wrong-issuer.example.com", "google-client-id", false],
+        ["https://accounts.google.com", "wrong-client-id", false],
+      ] as const) {
+        const idToken = await new jose.SignJWT({
+          email,
+          email_verified: true,
+          nonce: "nonce",
+        })
+          .setProtectedHeader({ alg: "RS256" })
+          .setSubject("google-subject")
+          .setIssuer(issuer)
+          .setAudience(audience)
+          .setIssuedAt()
+          .setExpirationTime("5m")
+          .sign(privateKey);
+        vi.stubGlobal(
+          "fetch",
+          vi.fn(async () => Response.json({ id_token: idToken })),
+        );
+        const exchange = google.exchangeGoogleAuthorizationCode(
+          "code",
+          "nonce",
+        );
+        if (accepted)
+          await expect(exchange).resolves.toEqual({
+            email,
+            subject: "google-subject",
+          });
+        else
+          await expect(exchange).rejects.toMatchObject({
+            code: "ERR_JWT_CLAIM_VALIDATION_FAILED",
+          });
+      }
+    }
   });
 });

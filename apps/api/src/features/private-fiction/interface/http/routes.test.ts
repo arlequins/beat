@@ -7,36 +7,38 @@ import { PrivateFictionStorageError } from "../../s3-private-fiction-repository"
 afterEach(() => vi.unstubAllEnvs());
 
 describe("private fiction routes", () => {
-  it("requires a verified owner account and never touches storage for other accounts", async () => {
-    const store = { get: vi.fn(), save: vi.fn() };
-    const app = createApiApp({
-      corsOrigins: [],
-      logger: createLogger({ service: "api", sink: () => {} }),
-      privateFiction: store,
-      rateLimiter: false,
-      beatAuth: {
-        authenticate: vi.fn(),
-        issueTokenPair: vi.fn(),
-        jwks: vi.fn(async () => ({ keys: [] })),
-        refreshTokenPair: vi.fn(),
-        revokeRefreshToken: vi.fn(),
-        verifyAccessToken: vi.fn(async (token) => {
-          if (token === "other")
-            return { email: "other@example.com", subject: "account-2" };
-          return { email: GOOGLE_ALLOWED_EMAIL, subject: "account-1" };
-        }),
-      },
-    });
+  it.each(["other@example.com", "beat.lumen@gmail.com"])(
+    "denies private-fiction storage access to %s",
+    async (email) => {
+      const store = { get: vi.fn(), save: vi.fn() };
+      const app = createApiApp({
+        corsOrigins: [],
+        logger: createLogger({ service: "api", sink: () => {} }),
+        privateFiction: store,
+        rateLimiter: false,
+        beatAuth: {
+          authenticate: vi.fn(),
+          issueTokenPair: vi.fn(),
+          jwks: vi.fn(async () => ({ keys: [] })),
+          refreshTokenPair: vi.fn(),
+          revokeRefreshToken: vi.fn(),
+          verifyAccessToken: vi.fn(async (token) => {
+            if (token === "other") return { email, subject: "account-2" };
+            return { email: GOOGLE_ALLOWED_EMAIL, subject: "account-1" };
+          }),
+        },
+      });
 
-    const anonymous = await app.request("/admin/private-fiction");
-    const otherAccount = await app.request("/admin/private-fiction", {
-      headers: { Authorization: "Bearer other" },
-    });
-    expect(anonymous.status).toBe(401);
-    expect(otherAccount.status).toBe(404);
-    expect(store.get).not.toHaveBeenCalled();
-    expect(store.save).not.toHaveBeenCalled();
-  });
+      const anonymous = await app.request("/admin/private-fiction");
+      const otherAccount = await app.request("/admin/private-fiction", {
+        headers: { Authorization: "Bearer other" },
+      });
+      expect(anonymous.status).toBe(401);
+      expect(otherAccount.status).toBe(404);
+      expect(store.get).not.toHaveBeenCalled();
+      expect(store.save).not.toHaveBeenCalled();
+    },
+  );
 
   it("serves private source without cache and accepts a conditional owner save", async () => {
     const document = {
