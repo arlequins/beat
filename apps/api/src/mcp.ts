@@ -24,6 +24,76 @@ const MAX_IMPORTED_IMAGES = 6;
 const MAX_OPTIMIZED_IMAGE_BYTES = 700 * 1024;
 const TRUSTED_OPENAI_FILE_HOST = "files.oaiusercontent.com";
 
+const importFailures = {
+  IMAGE_INPUT_INVALID: {
+    stage: "image_input",
+    message:
+      "The photo attachments or meal mapping are invalid. Use the tool's attachment upload field for up to six images so ChatGPT supplies Beat with download_url and file_id objects. For multiple meals, include one valid imageEntryIndexes value per photo. Reattach the photos and retry with the same meal details; do not retry without the requested photos.",
+  },
+  IMAGE_URL_UNTRUSTED: {
+    stage: "image_download",
+    message: "The photo download host is not supported by Beat.",
+  },
+  IMAGE_REDIRECT_INVALID: {
+    stage: "image_download",
+    message: "The photo download returned an invalid or excessive redirect.",
+  },
+  IMAGE_DOWNLOAD_UNAVAILABLE: {
+    stage: "image_download",
+    message:
+      "The photo download is unavailable. Reattach the photo and try again.",
+  },
+  IMAGE_DOWNLOAD_FAILED: {
+    stage: "image_download",
+    message: "The photo could not be downloaded. Try the same import again.",
+  },
+  IMAGE_DOWNLOAD_TIMEOUT: {
+    stage: "image_download",
+    message: "The photo download timed out. Try the same import again.",
+  },
+  IMAGE_TOO_LARGE: {
+    stage: "image_download",
+    message: "Photos must be at most 12 MiB each and 30 MiB in total.",
+  },
+  IMAGE_EMPTY: {
+    stage: "image_download",
+    message: "The photo download contained no image data. Reattach the photo.",
+  },
+  IMAGE_UNSUPPORTED_FORMAT: {
+    stage: "image_processing",
+    message: "Only JPEG, PNG, and WebP photos are supported.",
+  },
+  IMAGE_PROCESSING_FAILED: {
+    stage: "image_processing",
+    message:
+      "The photo could not be decoded or resized. Use a valid JPEG, PNG, or WebP image of at most 40 megapixels.",
+  },
+  IMAGE_OPTIMIZATION_FAILED: {
+    stage: "image_processing",
+    message:
+      "The photo could not be reduced to a safe size. Try a smaller image.",
+  },
+  DRAFT_SAVE_FAILED: {
+    stage: "draft_save",
+    message: "Beat could not finish saving the meal drafts.",
+  },
+  IMAGE_ATTACHMENT_FAILED: {
+    stage: "image_attachment",
+    message:
+      "Beat saved the meal draft but could not finish attaching its photos.",
+  },
+} as const;
+
+class McpImportError extends Error {
+  constructor(
+    readonly code: keyof typeof importFailures,
+    readonly httpStatus?: number,
+  ) {
+    super(importFailures[code].message);
+    this.name = "McpImportError";
+  }
+}
+
 type McpPrincipal = {
   email: string;
   scopes?: string[];
@@ -204,15 +274,15 @@ function validateOpenAIFileUrl(rawUrl: string) {
     (url.port && url.port !== "443") ||
     !trustedHost
   )
-    throw new Error("Untrusted ChatGPT file download URL");
+    throw new McpImportError("IMAGE_URL_UNTRUSTED");
   return url;
 }
 
 async function readBoundedResponse(response: Response, maximumBytes: number) {
   const length = Number(response.headers.get("content-length"));
   if (Number.isFinite(length) && length > maximumBytes)
-    throw new Error("ChatGPT image is too large");
-  if (!response.body) throw new Error("ChatGPT image has no content");
+    throw new McpImportError("IMAGE_TOO_LARGE");
+  if (!response.body) throw new McpImportError("IMAGE_EMPTY");
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
@@ -222,11 +292,11 @@ async function readBoundedResponse(response: Response, maximumBytes: number) {
     total += value.byteLength;
     if (total > maximumBytes) {
       await reader.cancel();
-      throw new Error("ChatGPT image is too large");
+      throw new McpImportError("IMAGE_TOO_LARGE");
     }
     chunks.push(value);
   }
-  if (!total) throw new Error("ChatGPT image has no content");
+  if (!total) throw new McpImportError("IMAGE_EMPTY");
   return Buffer.concat(chunks, total);
 }
 
@@ -234,9 +304,25 @@ async function downloadOpenAIFile(
   file: z.infer<typeof openAIFileSchema>,
   remainingSourceBytes: number,
 ) {
+  try {
+    return await downloadOpenAIFileResponse(file, remainingSourceBytes);
+  } catch (error) {
+    if (error instanceof McpImportError) throw error;
+    throw new McpImportError(
+      error instanceof Error &&
+        ["TimeoutError", "AbortError"].includes(error.name)
+        ? "IMAGE_DOWNLOAD_TIMEOUT"
+        : "IMAGE_DOWNLOAD_FAILED",
+    );
+  }
+}
+
+async function downloadOpenAIFileResponse(
+  file: z.infer<typeof openAIFileSchema>,
+  remainingSourceBytes: number,
+) {
   const maximumBytes = Math.min(MAX_SOURCE_IMAGE_BYTES, remainingSourceBytes);
-  if (maximumBytes <= 0)
-    throw new Error("Total ChatGPT image size is too large");
+  if (maximumBytes <= 0) throw new McpImportError("IMAGE_TOO_LARGE");
   let url = validateOpenAIFileUrl(file.download_url);
   for (let redirectCount = 0; redirectCount <= 2; redirectCount += 1) {
     const response = await fetch(url, {
@@ -247,14 +333,26 @@ async function downloadOpenAIFile(
       await response.body?.cancel();
       const location = response.headers.get("location");
       if (!location || redirectCount === 2)
-        throw new Error("ChatGPT image redirect is invalid");
-      url = validateOpenAIFileUrl(new URL(location, url).toString());
+        throw new McpImportError("IMAGE_REDIRECT_INVALID");
+      let redirectedUrl: URL;
+      try {
+        redirectedUrl = new URL(location, url);
+      } catch {
+        throw new McpImportError("IMAGE_REDIRECT_INVALID");
+      }
+      url = validateOpenAIFileUrl(redirectedUrl.toString());
       continue;
     }
-    if (!response.ok) throw new Error("ChatGPT image download failed");
+    if (!response.ok)
+      throw new McpImportError(
+        [401, 403, 404, 410].includes(response.status)
+          ? "IMAGE_DOWNLOAD_UNAVAILABLE"
+          : "IMAGE_DOWNLOAD_FAILED",
+        response.status,
+      );
     return readBoundedResponse(response, maximumBytes);
   }
-  throw new Error("ChatGPT image download failed");
+  throw new McpImportError("IMAGE_DOWNLOAD_FAILED");
 }
 
 async function optimizeImportedImage(
@@ -262,15 +360,27 @@ async function optimizeImportedImage(
   remainingSourceBytes: number,
 ) {
   const input = await downloadOpenAIFile(file, remainingSourceBytes);
+  try {
+    return await normalizeImportedImage(file, input);
+  } catch (error) {
+    if (error instanceof McpImportError) throw error;
+    throw new McpImportError("IMAGE_PROCESSING_FAILED");
+  }
+}
+
+async function normalizeImportedImage(
+  file: z.infer<typeof openAIFileSchema>,
+  input: Buffer,
+) {
   const source = sharp(input, {
     failOn: "error",
     limitInputPixels: 40_000_000,
   });
   const metadata = await source.metadata();
   if (!metadata.width || !metadata.height)
-    throw new Error("ChatGPT file is not a supported image");
+    throw new McpImportError("IMAGE_PROCESSING_FAILED");
   if (!metadata.format || !["jpeg", "png", "webp"].includes(metadata.format))
-    throw new Error("Only JPEG, PNG, and WebP images are supported");
+    throw new McpImportError("IMAGE_UNSUPPORTED_FORMAT");
 
   let longestEdge = 1_600;
   let quality = 84;
@@ -307,7 +417,7 @@ async function optimizeImportedImage(
     quality = Math.max(50, quality - 6);
     if (attempt % 3 === 2) longestEdge = Math.floor(longestEdge * 0.8);
   }
-  throw new Error("ChatGPT image could not be optimized to a safe size");
+  throw new McpImportError("IMAGE_OPTIMIZATION_FAILED");
 }
 
 function bearer(value: string | undefined) {
@@ -442,7 +552,7 @@ function tools() {
         readOnlyHint: false,
       },
       description:
-        "Save meal records and any attached ChatGPT images as Beat Gourmet drafts. Call only when the user has asked to save or import the meal; never publish. If the meal details are uncertain, preview them first and wait for the user's confirmation.",
+        "Save meal records and any attached ChatGPT images as Beat Gourmet drafts. Call only when the user has asked to save or import the meal; never publish. If the meal details are uncertain, preview them first and wait for the user's confirmation. Include every photo the user asked to save. If a photo fails, report it and retain the same meal details and sourceConversation for a retry; never silently retry as text-only.",
       inputSchema: {
         additionalProperties: false,
         properties: {
@@ -632,6 +742,7 @@ export function registerMcpRoutes(
         400,
       );
 
+    let importImageIndex: number | undefined;
     try {
       if (name === "gourmet_get_context") {
         if (!scopesFor(principal, MCP_SCOPE_READ))
@@ -688,7 +799,17 @@ export function registerMcpRoutes(
             ),
             200,
           );
-        const input = confirmSchema.parse(rawArguments);
+        const parsed = confirmSchema.safeParse(rawArguments);
+        if (!parsed.success) {
+          if (
+            parsed.error.issues.some((issue) =>
+              ["images", "imageEntryIndexes"].includes(String(issue.path[0])),
+            )
+          )
+            throw new McpImportError("IMAGE_INPUT_INVALID");
+          throw parsed.error;
+        }
+        const input = parsed.data;
         const images: Array<{
           entryIndex: number;
           input: Omit<
@@ -700,6 +821,7 @@ export function registerMcpRoutes(
         const imageEntryIndexes =
           input.imageEntryIndexes ?? (input.images ?? []).map(() => 0);
         for (const [index, file] of (input.images ?? []).entries()) {
+          importImageIndex = index;
           const image = await optimizeImportedImage(
             file,
             MAX_TOTAL_SOURCE_IMAGE_BYTES - totalSourceBytes,
@@ -712,6 +834,7 @@ export function registerMcpRoutes(
           });
         }
 
+        importImageIndex = undefined;
         const entryOccurrences = new Map<string, number>();
         const importedEntries = await Promise.all(
           input.entries.map(async (entry) => {
@@ -734,18 +857,25 @@ export function registerMcpRoutes(
             );
             return { detailUrl: detailUrl(created), entry: created };
           }),
-        );
-        for (const image of images) {
+        ).catch(() => {
+          throw new McpImportError("DRAFT_SAVE_FAILED");
+        });
+        for (const [index, image] of images.entries()) {
+          importImageIndex = index;
           const imported = importedEntries[image.entryIndex];
           if (!imported) throw new Error("Image meal mapping is invalid");
-          const attached = await gourmet.attachImage(
-            imported.entry.id,
-            {
-              ...image.input,
-              altText: `${imported.entry.restaurantName} ${imported.entry.menuName}`,
-            },
-            principal.subject,
-          );
+          const attached = await gourmet
+            .attachImage(
+              imported.entry.id,
+              {
+                ...image.input,
+                altText: `${imported.entry.restaurantName} ${imported.entry.menuName}`,
+              },
+              principal.subject,
+            )
+            .catch(() => {
+              throw new McpImportError("IMAGE_ATTACHMENT_FAILED");
+            });
           importedEntries[image.entryIndex] = {
             detailUrl: detailUrl(attached),
             entry: attached,
@@ -771,6 +901,44 @@ export function registerMcpRoutes(
 
       return context.json(jsonRpcError(id, -32601, "Tool not found"), 404);
     } catch (error) {
+      if (error instanceof McpImportError) {
+        const failure = importFailures[error.code];
+        const writesStarted =
+          failure.stage === "draft_save" ||
+          failure.stage === "image_attachment";
+        const details = {
+          code: error.code,
+          stage: failure.stage,
+          requestId: context.get("requestId"),
+          ...(importImageIndex === undefined
+            ? {}
+            : { imageIndex: importImageIndex }),
+          ...(error.httpStatus === undefined
+            ? {}
+            : { httpStatus: error.httpStatus }),
+        };
+        const saveState = writesStarted ? "possibly_partial" : "not_started";
+        // Deliberately omit raw exceptions and all user-supplied file details.
+        log?.warn("mcp.gourmet.import_failed", { ...details, saveState });
+        return context.json(
+          jsonRpcResult(id, {
+            ...textResult({
+              error: {
+                ...details,
+                message: `${failure.message} ${
+                  writesStarted
+                    ? "Some data may already be saved. Retry with the same meal details and source conversation to reuse existing drafts and photos."
+                    : "This request did not create any meal drafts."
+                }`,
+              },
+              saveState,
+              status: "failed",
+            }),
+            isError: true,
+          }),
+          200,
+        );
+      }
       if (error instanceof z.ZodError)
         return context.json(
           jsonRpcError(id, -32602, "Invalid tool arguments"),

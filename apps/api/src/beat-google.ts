@@ -10,7 +10,16 @@ const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const GOOGLE_JWKS_URI = "https://www.googleapis.com/oauth2/v3/certs";
 const GOOGLE_ISSUERS = ["https://accounts.google.com", "accounts.google.com"];
 const STATE_TTL_SECONDS = 10 * 60;
+// Owner-only features keep this narrower identity check than Google SSO.
 export const GOOGLE_ALLOWED_EMAIL = "tiret.rouge@gmail.com";
+const GOOGLE_SSO_ALLOWED_EMAILS = new Set([
+  GOOGLE_ALLOWED_EMAIL,
+  "beat.lumen@gmail.com",
+]);
+
+export function isAllowedGoogleEmail(email: string) {
+  return GOOGLE_SSO_ALLOWED_EMAILS.has(email.trim().toLowerCase());
+}
 
 type GoogleStateRequest = Pick<
   BeatAuthorizationRequest,
@@ -205,7 +214,7 @@ export async function exchangeGoogleAuthorizationCode(
   )
     throw new Error("Google identity verification failed");
   const email = payload.email.trim().toLowerCase();
-  if (email !== GOOGLE_ALLOWED_EMAIL)
+  if (!isAllowedGoogleEmail(email))
     throw new Error("Google account is not allowed for this Beat");
   return { email, subject: payload.sub };
 }
