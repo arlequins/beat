@@ -61,6 +61,38 @@ async function mockPrivateReader(
   );
 }
 
+test("reads an edition when owner-only feedback is denied", async ({
+  page,
+}) => {
+  await mockPrivateReader(
+    page,
+    "# 1화. Reader access\n\nRead-only edition body.",
+  );
+  await page.route(
+    "**/admin/private-fictions/reality-error/editions/current/annotations",
+    (route) => route.fulfill({ status: 404, json: { error: "Not found" } }),
+  );
+  const feedbackDenied = () =>
+    page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/annotations") && response.status() === 404,
+    );
+  const firstDenial = feedbackDenied();
+  await page.goto(
+    "/private/fictions/?work=reality-error&edition=current&episode=1",
+  );
+  await firstDenial;
+  await expect(
+    page.getByText("Read-only edition body.", { exact: true }),
+  ).toBeVisible();
+  const reloadDenial = feedbackDenied();
+  await page.reload();
+  await reloadDenial;
+  await expect(
+    page.getByText("Read-only edition body.", { exact: true }),
+  ).toBeVisible();
+});
+
 test("keeps cover arc titles and resets numbering at the next arc", async ({
   page,
 }) => {

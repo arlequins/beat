@@ -16,6 +16,8 @@ import {
   type PrivateFictionWork,
 } from "../../s3-private-fiction-repository";
 
+const PRIVATE_FICTION_READER_EMAIL = "beat.lumen@gmail.com";
+
 const saveSchema = z.object({
   expectedEtag: z.string().max(256).nullable(),
   source: z.string().min(1).max(MAX_PRIVATE_FICTION_SOURCE_BYTES),
@@ -75,7 +77,9 @@ const createEditionSchema = z.object({
 });
 
 export type PrivateFictionPort = {
-  getCatalog: () => Promise<PrivateFictionCatalog>;
+  getCatalog: (options?: {
+    initializeIfMissing?: boolean;
+  }) => Promise<PrivateFictionCatalog>;
   saveCatalog: (input: {
     expectedEtag: string | null;
     works: PrivateFictionWork[];
@@ -130,17 +134,22 @@ export function registerPrivateFictionRoutes(
     ) => Promise<PrivateFictionGitHubActionsIdentity>;
   },
 ) {
-  async function owner(context: Context<ApiBindings>) {
+  async function accountAccess(
+    context: Context<ApiBindings>,
+    permission: "owner" | "read" = "owner",
+  ) {
     const token = bearer(context.req.header("authorization"));
     if (!token)
       return { response: context.json({ error: "Unauthorized" }, 401) };
     try {
       const identity = await options.verifyAccessToken(token);
-      // The signed Beat subject is the stable account ID. Its email is also
-      // checked against Beat's sole configured Google account as defense in depth.
+      // Require a verified Beat identity. The dedicated reader is allowed only
+      // on the catalog and edition-body reads that explicitly request "read".
+      const email = identity.email.trim().toLowerCase();
       if (
         !identity.subject.trim() ||
-        identity.email.trim().toLowerCase() !== GOOGLE_ALLOWED_EMAIL
+        (email !== GOOGLE_ALLOWED_EMAIL &&
+          (permission !== "read" || email !== PRIVATE_FICTION_READER_EMAIL))
       )
         return { response: context.json({ error: "Not found" }, 404) };
       return { identity };
@@ -149,13 +158,20 @@ export function registerPrivateFictionRoutes(
     }
   }
 
-  async function workAccess(context: Context<ApiBindings>, workId: string) {
+  async function workAccess(
+    context: Context<ApiBindings>,
+    workId: string,
+    permission: "owner" | "read" = "owner",
+  ) {
     if (!/^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/.test(workId))
       return { response: context.json({ error: "Not found" }, 404) };
-    const access = await owner(context);
+    const access = await accountAccess(context, permission);
     if (access.response) return access;
     try {
-      const catalog = await options.store.getCatalog();
+      const catalog = await options.store.getCatalog({
+        initializeIfMissing:
+          access.identity.email.trim().toLowerCase() === GOOGLE_ALLOWED_EMAIL,
+      });
       const work = catalog.works.find((entry) => entry.id === workId);
       if (
         !work ||
@@ -174,10 +190,13 @@ export function registerPrivateFictionRoutes(
   app.get("/admin/private-fictions", async (context) => {
     context.header("Cache-Control", "private, no-store, max-age=0");
     context.header("Vary", "Authorization");
-    const access = await owner(context);
+    const access = await accountAccess(context, "read");
     if (access.response) return access.response;
     try {
-      const catalog = await options.store.getCatalog();
+      const catalog = await options.store.getCatalog({
+        initializeIfMissing:
+          access.identity.email.trim().toLowerCase() === GOOGLE_ALLOWED_EMAIL,
+      });
       return context.json({
         etag: catalog.etag,
         works: catalog.works.filter(
@@ -194,7 +213,7 @@ export function registerPrivateFictionRoutes(
   app.post("/admin/private-fictions", async (context) => {
     context.header("Cache-Control", "private, no-store, max-age=0");
     context.header("Vary", "Authorization");
-    const access = await owner(context);
+    const access = await accountAccess(context);
     if (access.response) return access.response;
     const parsed = createWorkSchema.safeParse(
       await context.req.json().catch(() => null),
@@ -317,7 +336,7 @@ export function registerPrivateFictionRoutes(
       context.header("Vary", "Authorization");
       const workId = context.req.param("workId");
       const editionId = context.req.param("editionId");
-      const access = await workAccess(context, workId);
+      const access = await workAccess(context, workId, "read");
       if (access.response) return access.response;
       if (!access.work.editions.some((edition) => edition.id === editionId))
         return context.json({ error: "Not found" }, 404);
@@ -449,7 +468,7 @@ export function registerPrivateFictionRoutes(
   app.get("/admin/private-fiction", async (context) => {
     context.header("Cache-Control", "private, no-store, max-age=0");
     context.header("Vary", "Authorization");
-    const access = await owner(context);
+    const access = await accountAccess(context);
     if (access.response) return access.response;
     try {
       const document = await options.store.get();
@@ -463,7 +482,7 @@ export function registerPrivateFictionRoutes(
   app.put("/admin/private-fiction", async (context) => {
     context.header("Cache-Control", "private, no-store, max-age=0");
     context.header("Vary", "Authorization");
-    const access = await owner(context);
+    const access = await accountAccess(context);
     if (access.response) return access.response;
     const parsed = saveSchema.safeParse(
       await context.req.json().catch(() => null),
@@ -643,7 +662,7 @@ export function registerPrivateFictionRoutes(
   app.get("/admin/private-fiction/annotations", async (context) => {
     context.header("Cache-Control", "private, no-store, max-age=0");
     context.header("Vary", "Authorization");
-    const access = await owner(context);
+    const access = await accountAccess(context);
     if (access.response) return access.response;
     try {
       const document = await options.store.getAnnotations();
@@ -658,7 +677,7 @@ export function registerPrivateFictionRoutes(
   app.put("/admin/private-fiction/annotations", async (context) => {
     context.header("Cache-Control", "private, no-store, max-age=0");
     context.header("Vary", "Authorization");
-    const access = await owner(context);
+    const access = await accountAccess(context);
     if (access.response) return access.response;
     const parsed = saveAnnotationsSchema.safeParse(
       await context.req.json().catch(() => null),
