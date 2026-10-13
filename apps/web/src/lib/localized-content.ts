@@ -30,6 +30,37 @@ function editorialArticle(
 }
 
 const english: Record<string, LocalizedArticle> = {
+  "weekly-it-brief-2026-10-13": {
+    title: "Weekly IT Brief — Adoption criteria for images, GPUs, and runtimes",
+    excerpt:
+      "JPEG XL in Chrome, WebGPU extensions, and Node.js 26.11.1 through compatibility and release verification.",
+    intro:
+      "Official material checked on October 13, covering October 6–13, 2026. Lumen assisted with research and drafting. This public draft awaits Arlequin's final editorial judgment; the adoption advice is our interpretation.",
+    sections: [
+      {
+        heading: "Three small experiments before adoption",
+        paragraphs: [
+          "Chrome announced JPEG XL decoding from version 155 on October 6 and recommends testing it alongside AVIF. Compare representative photos at equivalent visual quality, including file size and mobile decode time, and retain fallback images.",
+          "The October 7 WebGPU update describes fragment_depth and texture-compression-unaligned. Detect the required language or adapter feature before enabling an optimized path, retain existing shaders and padded textures, and compare rendering correctness and GPU time.",
+          "Node.js 26.11.1 was released as Current on October 7; its commit list contains three reversions concerning documentation builds and tooling. Validate installation and application compatibility before promotion rather than treating the patch number as a reason to change production major versions.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Chrome: JPEG XL",
+        url: "https://developer.chrome.com/blog/jpeg-xl-in-chrome",
+      },
+      {
+        label: "Chrome: WebGPU 155–156",
+        url: "https://developer.chrome.com/blog/new-in-webgpu-155-156",
+      },
+      {
+        label: "Node.js 26.11.1",
+        url: "https://nodejs.org/en/blog/release/v26.11.1",
+      },
+    ],
+  },
   "special-it-2026-09-13-agent-permissions": {
     title: "Before handing an agent the keys",
     excerpt:
@@ -812,6 +843,37 @@ const english: Record<string, LocalizedArticle> = {
 };
 
 const japanese: Record<string, LocalizedArticle> = {
+  "weekly-it-brief-2026-10-13": {
+    title: "週刊 IT ブリーフ — 画像・GPU・ランタイムの導入基準",
+    excerpt:
+      "Chrome の JPEG XL、WebGPU 拡張、Node.js 26.11.1 を互換性とリリース検証から整理します。",
+    intro:
+      "2026年10月13日確認、対象は10月6〜13日の公式資料です。Lumen が調査と草稿を支援した公開未確定版で、最終判断は Arlequin が行います。導入提案は私たちの解釈です。",
+    sections: [
+      {
+        heading: "導入前に行う三つの小さな実験",
+        paragraphs: [
+          "Chrome は10月6日、155 から JPEG XL のデコードを提供し、AVIF と併せて試すよう案内しました。同等の見た目で代表的な写真の容量とモバイルでのデコード時間を比べ、代替画像を維持します。",
+          "10月7日の WebGPU 資料では fragment_depth と texture-compression-unaligned が紹介されています。必要な言語・アダプター機能を検出してから最適化経路を使い、既存シェーダーとパディングしたテクスチャを残して描画結果と GPU 時間を比較します。",
+          "Node.js 26.11.1 は10月7日の Current リリースです。コミット一覧は文書ビルドとツールに関する三つの取り消しです。パッチ番号だけを理由に本番のメジャーバージョンを変えず、インストールとアプリの互換性を検証して昇格を判断します。",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Chrome: JPEG XL",
+        url: "https://developer.chrome.com/blog/jpeg-xl-in-chrome",
+      },
+      {
+        label: "Chrome: WebGPU 155–156",
+        url: "https://developer.chrome.com/blog/new-in-webgpu-155-156",
+      },
+      {
+        label: "Node.js 26.11.1",
+        url: "https://nodejs.org/en/blog/release/v26.11.1",
+      },
+    ],
+  },
   "special-it-2026-09-13-agent-permissions": {
     title: "エージェントに鍵を渡す前に",
     excerpt: "ツールの接続より先に、実行権限、承認、再試行の境界を設計する。",
