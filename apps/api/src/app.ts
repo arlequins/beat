@@ -692,7 +692,9 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   registerPrivateFictionRoutes(app, {
     store: {
       getCatalog:
-        options.privateFiction?.getCatalog ?? getPrivateFictionCatalog,
+        options.privateFiction?.getCatalog ??
+        ((catalogOptions) =>
+          getPrivateFictionCatalog(undefined, catalogOptions)),
       saveCatalog:
         options.privateFiction?.saveCatalog ?? savePrivateFictionCatalog,
       getEdition:

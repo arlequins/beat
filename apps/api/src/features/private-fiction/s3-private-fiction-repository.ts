@@ -87,7 +87,10 @@ async function getJsonObject<T>(key: string, client: S3Client) {
   }
 }
 
-export async function getPrivateFictionCatalog(client = new S3Client({})) {
+export async function getPrivateFictionCatalog(
+  client = new S3Client({}),
+  options: { initializeIfMissing?: boolean } = {},
+) {
   let stored:
     | { etag: string; value: { works?: PrivateFictionWork[] } }
     | undefined;
@@ -98,6 +101,8 @@ export async function getPrivateFictionCatalog(client = new S3Client({})) {
     );
   } catch (error) {
     if (!isAccessDenied(error)) throw error;
+    if (options.initializeIfMissing === false)
+      throw new PrivateFictionStorageError("storage_unavailable");
     // Missing S3 keys return 403 without ListBucket. Conditional creation below
     // distinguishes absence from an unreadable existing catalog safely.
   }
@@ -124,6 +129,10 @@ export async function getPrivateFictionCatalog(client = new S3Client({})) {
       throw new PrivateFictionStorageError("storage_unavailable");
     return { etag: stored.etag, works: stored.value.works };
   }
+  // A reader must never probe a missing catalog with a conditional write or
+  // initialize it from the legacy manuscript. Only the owner keeps that path.
+  if (options.initializeIfMissing === false)
+    return { etag: null, works: [] } satisfies PrivateFictionCatalog;
   // The old single-work object remains the source for existing readers until
   // the owner explicitly migrates it into the multi-work catalog.
   const legacy = await getPrivateFictionDocument(client);

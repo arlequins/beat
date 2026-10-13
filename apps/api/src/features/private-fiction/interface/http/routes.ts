@@ -77,7 +77,9 @@ const createEditionSchema = z.object({
 });
 
 export type PrivateFictionPort = {
-  getCatalog: () => Promise<PrivateFictionCatalog>;
+  getCatalog: (options?: {
+    initializeIfMissing?: boolean;
+  }) => Promise<PrivateFictionCatalog>;
   saveCatalog: (input: {
     expectedEtag: string | null;
     works: PrivateFictionWork[];
@@ -166,7 +168,10 @@ export function registerPrivateFictionRoutes(
     const access = await accountAccess(context, permission);
     if (access.response) return access;
     try {
-      const catalog = await options.store.getCatalog();
+      const catalog = await options.store.getCatalog({
+        initializeIfMissing:
+          access.identity.email.trim().toLowerCase() === GOOGLE_ALLOWED_EMAIL,
+      });
       const work = catalog.works.find((entry) => entry.id === workId);
       if (
         !work ||
@@ -188,7 +193,10 @@ export function registerPrivateFictionRoutes(
     const access = await accountAccess(context, "read");
     if (access.response) return access.response;
     try {
-      const catalog = await options.store.getCatalog();
+      const catalog = await options.store.getCatalog({
+        initializeIfMissing:
+          access.identity.email.trim().toLowerCase() === GOOGLE_ALLOWED_EMAIL,
+      });
       return context.json({
         etag: catalog.etag,
         works: catalog.works.filter(
