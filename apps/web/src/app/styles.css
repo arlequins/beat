@@ -3325,6 +3325,9 @@
   padding-left: 0.2em;
   margin: 0.35em 0;
 }
+.private-fiction-prose .private-fiction-epigraph {
+  white-space: pre-line;
+}
 .private-fiction-prose blockquote {
   margin: 1.35em 0;
   padding: 0.2em 0 0.2em 1.15em;
