@@ -153,34 +153,39 @@ function sectionStorageKey(workId: string, editionId: string) {
 
 function annotationRange(text: string, annotation: FictionAnnotation) {
   const { startOffset, endOffset, quote } = annotation;
+  // A preserved soft line break replaces one old space, so offsets stay stable.
+  const matchingText = text.replaceAll("\n", " ");
+  const matchingQuote = quote.replaceAll("\n", " ");
   if (
     startOffset >= 0 &&
     endOffset <= text.length &&
-    text.slice(startOffset, endOffset) === quote
+    matchingText.slice(startOffset, endOffset) === matchingQuote
   )
     return { start: startOffset, end: endOffset };
 
   const matches: number[] = [];
   let cursor = 0;
   while (cursor < text.length) {
-    const index = text.indexOf(quote, cursor);
+    const index = matchingText.indexOf(matchingQuote, cursor);
     if (index < 0) break;
     matches.push(index);
     cursor = index + Math.max(1, quote.length);
   }
   if (!matches.length) return undefined;
-  const prefixNeedle = annotation.prefix.slice(-32);
-  const suffixNeedle = annotation.suffix.slice(0, 32);
+  const prefixNeedle = annotation.prefix.slice(-32).replaceAll("\n", " ");
+  const suffixNeedle = annotation.suffix.slice(0, 32).replaceAll("\n", " ");
   matches.sort((left, right) => {
     const score = (index: number) =>
       Number(
         Boolean(prefixNeedle) &&
-          text.slice(Math.max(0, index - prefixNeedle.length), index) ===
-            prefixNeedle,
+          matchingText.slice(
+            Math.max(0, index - prefixNeedle.length),
+            index,
+          ) === prefixNeedle,
       ) +
       Number(
         Boolean(suffixNeedle) &&
-          text.slice(
+          matchingText.slice(
             index + quote.length,
             index + quote.length + suffixNeedle.length,
           ) === suffixNeedle,
@@ -290,13 +295,22 @@ function MarkdownBlocks({
   let code: string[] = [];
   let inCode = false;
   let feedbackBlockIndex = 0;
+  let inCover = lines.some((line) => line.trim() === "<!-- PAGE_BREAK -->");
 
   const flushParagraph = () => {
     if (!paragraph.length) return;
     const blockIndex = feedbackBlockIndex++;
     blocks.push(
-      <p data-feedback-block-index={blockIndex} key={`p-${blocks.length}`}>
-        {inlineMarkdown(paragraph.join(" "), annotations, blockIndex)}
+      <p
+        className={inCover ? "private-fiction-epigraph" : undefined}
+        data-feedback-block-index={blockIndex}
+        key={`p-${blocks.length}`}
+      >
+        {inlineMarkdown(
+          paragraph.join(inCover ? "\n" : " "),
+          annotations,
+          blockIndex,
+        )}
       </p>,
     );
     paragraph = [];
@@ -351,6 +365,7 @@ function MarkdownBlocks({
   for (const line of lines) {
     if (line.trim() === "<!-- PAGE_BREAK -->") {
       flushTextBlocks();
+      inCover = false;
       blocks.push(
         <div
           aria-hidden="true"

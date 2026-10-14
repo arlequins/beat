@@ -1206,3 +1206,56 @@ test("opens two private works with separate text and reading positions", async (
     0,
   );
 });
+
+const epigraphLayoutFixture =
+  "# Test cover\n\nFirst supplied line.\nSecond supplied line.\n\n— Test Author, Test Book\n\n<!-- PAGE_BREAK -->\n\n# 1화. Test cover - 1\n\n## Body\n\nOrdinary wrapped\nbody stays joined.";
+
+test("preserves cover epigraph lines without changing body blocks", async ({
+  page,
+}) => {
+  await mockPrivateReader(page, epigraphLayoutFixture);
+  await page.goto(
+    "/private/fictions/?work=reality-error&edition=current&episode=1",
+  );
+  const epigraph = page.locator(".private-fiction-epigraph").first();
+  await expect(epigraph).toHaveCSS("white-space", "pre-line");
+  expect(await epigraph.textContent()).toBe(
+    "First supplied line.\nSecond supplied line.",
+  );
+  expect(
+    await page
+      .locator('p[data-feedback-block-index="4"]')
+      .first()
+      .textContent(),
+  ).toBe("Ordinary wrapped body stays joined.");
+});
+
+test("keeps saved epigraph annotation offsets after preserving soft breaks", async ({
+  page,
+}) => {
+  const quote = "First supplied line. Second supplied line.";
+  await mockPrivateReader(page, epigraphLayoutFixture, [
+    {
+      id: "old-cover-comment",
+      episode: 1,
+      blockIndex: 1,
+      startOffset: 0,
+      endOffset: quote.length,
+      quote,
+      prefix: "",
+      suffix: "",
+      comment: "Saved before line preservation",
+      createdAt: "2026-10-14T00:00:00Z",
+    },
+  ]);
+  await page.goto(
+    "/private/fictions/?work=reality-error&edition=current&episode=1",
+  );
+  const highlight = page
+    .locator('[data-feedback-highlight="old-cover-comment"]')
+    .first();
+  await expect(highlight).toBeAttached();
+  expect(await highlight.textContent()).toBe(
+    "First supplied line.\nSecond supplied line.",
+  );
+});
