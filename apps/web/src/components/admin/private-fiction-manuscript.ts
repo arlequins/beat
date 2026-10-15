@@ -7,7 +7,16 @@ export type ManuscriptSection = {
 };
 
 export function parseManuscript(source: string) {
-  const headings = [...source.matchAll(/^#\s+(.+?)\s*$/gm)];
+  const boundarySequence =
+    /^# 《각자의 현실》\r?\n(?:\r?\n)?## Reality Error: Boundary(?:\r?\n|$)/u.test(
+      source,
+    );
+  const headings = [
+    ...source.matchAll(/^#\s+(.+?)\s*$/gm),
+    ...(boundarySequence
+      ? [...source.matchAll(/^##\s+(\d+\s*화(?:\s*[.．—–:-]\s*.+)?)\s*$/gm)]
+      : []),
+  ].sort((left, right) => (left.index ?? 0) - (right.index ?? 0));
   const sections: ManuscriptSection[] = [];
   let introduction = "";
   let arcTitle = "";
@@ -39,19 +48,22 @@ export function parseManuscript(source: string) {
     const followingEpisode = followingTitle?.match(
       /^\d+\s*화\s*[.．—–:-]\s*(.+)$/,
     )?.[1];
+    const coverStoryTitle = title.replace(/^\d+\s*장[.．]\s*/u, "");
     // Original book covers precede their episode H1. Keep the epigraph in that
     // episode's rendered content without changing the stored manuscript bytes.
     if (
       kind === "document" &&
       content.endsWith("<!-- PAGE_BREAK -->") &&
-      (followingEpisode === title || followingEpisode === `${title} - 1`)
+      (followingEpisode === coverStoryTitle ||
+        followingEpisode === `${coverStoryTitle} - 1`)
     ) {
       pendingCover = `## ${title}\n\n${content}\n\n`;
       continue;
     }
     let sectionTitle = title.replace(/^《현실 오류》\s*/, "");
     if (episodeMatch) {
-      const explicitTitle = episodeMatch[2]?.trim();
+      const explicitTitle =
+        episodeMatch[2]?.trim() ?? content.match(/^##\s+(.+)$/m)?.[1]?.trim();
       const numberedTitle = explicitTitle?.match(/^(.+?)\s+(?:-\s*)?(\d+)$/);
       const coverTitle = content.includes("<!-- PAGE_BREAK -->")
         ? content

@@ -63,3 +63,60 @@ test("unrelated documents, introductions and guides remain separate", () => {
   );
   assert.equal(sections[2].content, "본문.");
 });
+
+test("numbered large-chapter covers preserve their epigraphs without extra reader sections", () => {
+  const source = [
+    "# 5장. 도착하지 않은 도시 2",
+    "상징문.\n\n— 강오희, 『빌려온 주소』\n\n<!-- PAGE_BREAK -->",
+    "# 13화. 도착하지 않은 도시 2 - 1",
+    "첫 본문.",
+    "# 14화. 도착하지 않은 도시 2 - 2",
+    "다음 본문.",
+    "# 8장. 벽에도 이웃이 있다",
+    "다른 상징문.\n\n<!-- PAGE_BREAK -->",
+    "# 24화. 벽에도 이웃이 있다",
+    "단편 본문.",
+  ].join("\n\n");
+  const { sections } = parseManuscript(source);
+  assert.deepEqual(
+    sections.map((s) => s.title),
+    [
+      "도착하지 않은 도시 2 - 1",
+      "도착하지 않은 도시 2 - 2",
+      "벽에도 이웃이 있다",
+    ],
+  );
+  assert.match(
+    sections[0].content,
+    /5장\. 도착하지 않은 도시 2[\s\S]*상징문\.[\s\S]*첫 본문\./,
+  );
+  assert.equal(sections[2].title, "벽에도 이웃이 있다");
+});
+test("the exact Boundary H2 sequence is readable without changing stored source bytes", () => {
+  const source =
+    "# 《각자의 현실》\n## Reality Error: Boundary\n\n## 1화. 첫 이야기 - 1\n\n첫 본문.\n\n## 2화. 첫 이야기 - 2\n\n둘째 본문.\n";
+  const original = source;
+  const { sections } = parseManuscript(source);
+  const episodes = sections.filter((s) => s.kind === "episode");
+  assert.deepEqual(
+    episodes.map((s) => [s.episode, s.title]),
+    [
+      [1, "첫 이야기 - 1"],
+      [2, "첫 이야기 - 2"],
+    ],
+  );
+  assert.equal(episodes[0].content, "첫 본문.");
+  assert.equal(episodes[1].content, "둘째 본문.");
+  assert.match(sections[0].content, /Reality Error: Boundary/);
+  assert.equal(source, original);
+});
+test("raw MAIN subheadings supply each actual arc title, including a new singleton", () => {
+  const { sections } = parseManuscript(
+    "# 1화\n\n## 첫 아크 -1\n\n첫 본문.\n\n# 2화\n\n## 독립 이야기\n\n단편.\n",
+  );
+  assert.deepEqual(
+    sections.map((s) => s.title),
+    ["첫 아크 - 1", "독립 이야기 - 1"],
+  );
+  assert.match(sections[1].content, /단편\./);
+});
