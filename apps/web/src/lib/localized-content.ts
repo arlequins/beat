@@ -30,6 +30,38 @@ function editorialArticle(
 }
 
 const english: Record<string, LocalizedArticle> = {
+  "weekly-it-brief-2026-10-19": {
+    title:
+      "Weekly IT Brief — Record what runs and why dependencies are accepted",
+    excerpt:
+      "Prepare for the Node.js security release, pilot Actions lockfiles, and connect license policies to dependency review.",
+    intro:
+      "Official announcements from October 14–19, checked on October 19, 2026. Lumen assisted with research and drafting. This public draft awaits Arlequin's final editorial judgment; the suggested actions are Lumen's interpretation.",
+    sections: [
+      {
+        heading: "Three preparations for the next dependency change",
+        paragraphs: [
+          "Node.js announced security releases for 26.x, 24.x, and 22.x on or shortly after October 21, with HIGH as the highest severity in each line. These are upcoming releases, not published fixes at this writing. Inventory deployed versions and owners, then reassess the exact fixes when released.",
+          "GitHub's October 14 public preview locks workflow dependencies to reviewed commits while retaining tag or branch references. Pilot one low-privilege workflow, review the generated actions.lock, and verify dependency updates also refresh its entries. Locking does not establish that a dependency is safe.",
+          "The October 16 license-compliance release targets GitHub Enterprise Cloud repositories with Code Security enabled. Its ruleset checks and package-policy API can support review at recommendation and PR stages. Define policy owners and record the reason for each approved exception.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Node.js security release announcement",
+        url: "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases",
+      },
+      {
+        label: "GitHub Actions workflow lockfiles",
+        url: "https://github.blog/changelog/2026-10-14-github-actions-workflow-lockfiles-in-public-preview/",
+      },
+      {
+        label: "GitHub license compliance",
+        url: "https://github.blog/changelog/2026-10-16-open-source-license-compliance-generally-available/",
+      },
+    ],
+  },
   "weekly-it-brief-2026-10-13": {
     title: "Weekly IT Brief — Adoption criteria for images, GPUs, and runtimes",
     excerpt:
@@ -843,6 +875,37 @@ const english: Record<string, LocalizedArticle> = {
 };
 
 const japanese: Record<string, LocalizedArticle> = {
+  "weekly-it-brief-2026-10-19": {
+    title: "週刊 IT ブリーフ — 実行コードと依存関係の採用根拠を残す",
+    excerpt:
+      "Node.js のセキュリティ更新予告、Actions のロックファイル、ライセンス方針チェックを開発手順につなげます。",
+    intro:
+      "2026年10月19日確認、対象は10月14〜19日の公式発表です。Lumen が調査と草稿を支援した公開未確定版で、最終判断は Arlequin が行います。次の行動は Lumen の提案です。",
+    sections: [
+      {
+        heading: "次の依存関係変更に備える三つの準備",
+        paragraphs: [
+          "Node.js は26.x・24.x・22.x のセキュリティ更新を10月21日またはその直後に予定し、各系統の最高深刻度を HIGH としています。執筆時点では修正版の公開前です。稼働バージョンと担当者を一覧化し、公開後に修正内容を確認します。",
+          "10月14日の GitHub 公開プレビューでは、タグやブランチ参照を維持しながらワークフロー依存関係を記録したコミットで実行できます。権限の小さい処理で試し、actions.lock と更新 PR を確認します。固定だけで依存先の安全性は判断できません。",
+          "10月16日のライセンス準拠機能は、Code Security を有効にした GitHub Enterprise Cloud のリポジトリが対象です。Ruleset とパッケージ方針確認 API を推薦時・PR 時の検査につなげ、方針の担当者と例外の承認根拠を残す手順を提案します。",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Node.js セキュリティ更新予告",
+        url: "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases",
+      },
+      {
+        label: "GitHub Actions workflow lockfiles",
+        url: "https://github.blog/changelog/2026-10-14-github-actions-workflow-lockfiles-in-public-preview/",
+      },
+      {
+        label: "GitHub license compliance",
+        url: "https://github.blog/changelog/2026-10-16-open-source-license-compliance-generally-available/",
+      },
+    ],
+  },
   "weekly-it-brief-2026-10-13": {
     title: "週刊 IT ブリーフ — 画像・GPU・ランタイムの導入基準",
     excerpt:
