@@ -120,3 +120,134 @@ test("raw MAIN subheadings supply each actual arc title, including a new singlet
   );
   assert.match(sections[1].content, /단편\./);
 });
+
+test("arc H1 and consecutive episode H2 need no book cover marker", () => {
+  const source = `${[
+    "# 유리 정원",
+    "## 1화. 유리 정원 - 1",
+    "### 입구",
+    "첫 문장.",
+    "## 2화. 유리 정원 - 2",
+    "### 출구",
+    "둘째 문장.",
+    "# 저녁 열차",
+    "## 3화. 저녁 열차",
+    "셋째 문장.",
+  ].join("\n\n")}\n`;
+  const original = source;
+  const { sections } = parseManuscript(source);
+  assert.deepEqual(
+    sections.map((s) => [s.kind, s.episode, s.title]),
+    [
+      ["episode", 1, "유리 정원 - 1"],
+      ["episode", 2, "유리 정원 - 2"],
+      ["episode", 3, "저녁 열차"],
+    ],
+  );
+  assert.match(sections[0].content, /첫 문장/);
+  assert.match(sections[1].content, /둘째 문장/);
+  assert.match(sections[2].content, /셋째 문장/);
+  assert.equal(source, original);
+});
+
+test("arc epigraphs stay with the first episode and do not add sections", () => {
+  const source = [
+    "# 유리 정원",
+    "> 합성 인용문.\n>\n> — 가상의 저자",
+    "## 1화. 유리 정원 - 1",
+    "첫 본문.",
+    "## 2화. 유리 정원 - 2",
+    "둘째 본문.",
+    "# 저녁 열차",
+    "> 다른 합성 인용문.",
+    "## 3화. 저녁 열차 - 1",
+    "셋째 본문.",
+  ].join("\n\n");
+  const { sections } = parseManuscript(source);
+  assert.equal(sections.length, 3);
+  assert.ok(sections.every((s) => s.kind === "episode"));
+  assert.match(sections[0].content, /합성 인용문[\s\S]*첫 본문/);
+  assert.doesNotMatch(sections[1].content, /합성 인용문/);
+  assert.match(sections[2].content, /다른 합성 인용문[\s\S]*셋째 본문/);
+});
+
+test("missing, repeated, reordered and mismatched H2 headings remain documents", () => {
+  const valid =
+    "# 유리 정원\n\n## 1화. 유리 정원 - 1\n\n첫 문장.\n\n## 2화. 유리 정원 - 2\n\n다음 문장.\n";
+  const invalid = [
+    valid.replace("## 2화.", "## 3화."),
+    valid.replace("## 2화.", "## 1화."),
+    valid
+      .replace("## 1화.", "## 2화.")
+      .replace("## 2화. 유리 정원 - 2", "## 1화. 유리 정원 - 2"),
+    valid.replace("## 2화. 유리 정원 - 2", "## 2화. 다른 제목 - 2"),
+    valid.replace("## 2화. 유리 정원 - 2", "## 2화. 유리 정원 - 3"),
+    `${valid}\n# 별도 문서\n\n설명.\n`,
+    `${valid}\n## 일반 부록\n\n설명.\n`,
+  ];
+  for (const source of invalid) {
+    assert.equal(
+      parseManuscript(source).sections.filter((s) => s.kind === "episode")
+        .length,
+      0,
+    );
+  }
+});
+
+test("ordinary documents and MAIN H2 subheadings are not reclassified", () => {
+  const source = "# 보고서\n\n## 1화. 예시\n\n자료.\n\n## 2화. 설명\n\n자료.\n";
+  assert.equal(
+    parseManuscript(source).sections.filter((s) => s.kind === "episode").length,
+    0,
+  );
+  const main =
+    "# 1화\n\n## 유리 정원 -1\n\n### 장면\n\n첫 본문.\n\n# 2화\n\n## 유리 정원 -2\n\n다음 본문.\n";
+  const sections = parseManuscript(main).sections;
+  assert.deepEqual(
+    sections.map((s) => s.episode),
+    [1, 2],
+  );
+  assert.deepEqual(
+    sections.map((s) => s.title),
+    ["유리 정원 - 1", "유리 정원 - 2"],
+  );
+});
+
+test("numbered arc covers and CRLF preserve the same H2 sequence", () => {
+  const source =
+    "# 1장. 유리 정원\r\n\r\n## 1화. 유리 정원 - 1\r\n\r\n첫 본문.\r\n\r\n## 2화. 유리 정원 - 2\r\n\r\n둘째 본문.\r\n";
+  const { sections } = parseManuscript(source);
+  assert.deepEqual(
+    sections.map((s) => [s.episode, s.title]),
+    [
+      [1, "유리 정원 - 1"],
+      [2, "유리 정원 - 2"],
+    ],
+  );
+});
+
+test("legacy banner section IDs and saved annotation spans remain stable", () => {
+  const body = "앞 문장. 인용할 문장. 뒤 문장.";
+  const source = [
+    "# 《각자의 현실》",
+    "## Reality Error: Boundary",
+    "## 1화. 유리 정원 - 1",
+    body,
+    "## 2화. 유리 정원 - 2",
+    "다음 본문.",
+  ].join("\n\n");
+  const { sections } = parseManuscript(source);
+  assert.deepEqual(
+    sections.map(({ id, kind, episode }) => ({ id, kind, episode })),
+    [
+      { id: "section-1", kind: "document", episode: undefined },
+      { id: "section-2", kind: "episode", episode: 1 },
+      { id: "section-3", kind: "episode", episode: 2 },
+    ],
+  );
+  const restored = sections.find((section) => section.id === "section-2");
+  assert.equal(restored.content, body);
+  const quote = "인용할 문장.";
+  const offset = body.indexOf(quote);
+  assert.equal(restored.content.slice(offset, offset + quote.length), quote);
+});

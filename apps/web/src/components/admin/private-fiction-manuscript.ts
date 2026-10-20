@@ -6,16 +6,68 @@ export type ManuscriptSection = {
   kind: "guide" | "episode" | "document";
 };
 
+function hasArcEpisodeSequence(
+  source: string,
+  arcs: RegExpMatchArray[],
+  episodes: RegExpMatchArray[],
+) {
+  if (
+    episodes.length < 2 ||
+    arcs.length === 0 ||
+    [...source.matchAll(/^##\s+(.+?)\s*$/gm)].length !== episodes.length ||
+    episodes.some(
+      (heading, index) =>
+        Number(heading[1]?.match(/^(\d+)/)?.[1]) !== index + 1,
+    ) ||
+    arcs.some((heading) =>
+      /^\d+\s*화(?:\s*[.．—–:-]|$)/u.test(heading[1] ?? ""),
+    )
+  ) {
+    return false;
+  }
+
+  let consumed = 0;
+  for (const [index, arc] of arcs.entries()) {
+    const start = arc.index ?? 0;
+    const end = arcs[index + 1]?.index ?? source.length;
+    const title = (arc[1] ?? "").trim().replace(/^\d+\s*장[.．]\s*/u, "");
+    const parts = episodes.filter(
+      (heading) => (heading.index ?? 0) > start && (heading.index ?? 0) < end,
+    );
+    if (!title || parts.length === 0) return false;
+    for (const [partIndex, heading] of parts.entries()) {
+      const explicitTitle = heading[1]?.match(
+        /^\d+\s*화\s*[.．—–:-]\s*(.+)$/u,
+      )?.[1];
+      if (parts.length === 1 && explicitTitle === title) continue;
+      const part = explicitTitle?.match(/^(.+?)\s+-\s*(\d+)$/u);
+      if (part?.[1]?.trim() !== title || Number(part?.[2]) !== partIndex + 1) {
+        return false;
+      }
+    }
+    consumed += parts.length;
+  }
+  return consumed === episodes.length;
+}
+
 export function parseManuscript(source: string) {
+  const arcHeadings = [...source.matchAll(/^#\s+(.+?)\s*$/gm)];
+  const episodeHeadings = [
+    ...source.matchAll(/^##\s+(\d+\s*화(?:\s*[.．—–:-]\s*.+)?)\s*$/gm),
+  ];
+  const arcEpisodeSequence = hasArcEpisodeSequence(
+    source,
+    arcHeadings,
+    episodeHeadings,
+  );
   const boundarySequence =
+    arcEpisodeSequence ||
     /^# 《각자의 현실》\r?\n(?:\r?\n)?## Reality Error: Boundary(?:\r?\n|$)/u.test(
       source,
     );
   const headings = [
-    ...source.matchAll(/^#\s+(.+?)\s*$/gm),
-    ...(boundarySequence
-      ? [...source.matchAll(/^##\s+(\d+\s*화(?:\s*[.．—–:-]\s*.+)?)\s*$/gm)]
-      : []),
+    ...arcHeadings,
+    ...(boundarySequence ? episodeHeadings : []),
   ].sort((left, right) => (left.index ?? 0) - (right.index ?? 0));
   const sections: ManuscriptSection[] = [];
   let introduction = "";
@@ -53,7 +105,7 @@ export function parseManuscript(source: string) {
     // episode's rendered content without changing the stored manuscript bytes.
     if (
       kind === "document" &&
-      content.endsWith("<!-- PAGE_BREAK -->") &&
+      (arcEpisodeSequence || content.endsWith("<!-- PAGE_BREAK -->")) &&
       (followingEpisode === coverStoryTitle ||
         followingEpisode === `${coverStoryTitle} - 1`)
     ) {
@@ -81,7 +133,7 @@ export function parseManuscript(source: string) {
         arcPart += 1;
       }
       sectionTitle =
-        pendingCover && explicitTitle && !numberedTitle
+        (pendingCover || arcEpisodeSequence) && explicitTitle && !numberedTitle
           ? explicitTitle
           : arcTitle
             ? `${arcTitle} - ${arcPart}`
