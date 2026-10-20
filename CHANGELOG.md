@@ -2,6 +2,18 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.78.2](https://github.com/arlequins/beat/compare/beat-v1.78.1...beat-v1.78.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* accept verified OpenAI Japan East file download host ([#392](https://github.com/arlequins/beat/issues/392)) ([7dfc3c7](https://github.com/arlequins/beat/commit/7dfc3c784a543cb75ffabddf1393d814c14a4a40))
+* allow approved Beat SSO account and clarify photo import failures ([#388](https://github.com/arlequins/beat/issues/388)) ([d8b6529](https://github.com/arlequins/beat/commit/d8b6529b22524548bee9218c9891f1d4d928d151))
+* expose safe file-download rejection diagnostics ([#391](https://github.com/arlequins/beat/issues/391)) ([854480b](https://github.com/arlequins/beat/commit/854480b64542c5bdc9d7482e40924bd42ca3473f))
+* grant dedicated account read-only private fiction access ([#394](https://github.com/arlequins/beat/issues/394)) ([161c813](https://github.com/arlequins/beat/commit/161c8132f1c8b4d014e8fab5e1b17cae23ad6515))
+* **reader:** preserve original cover epigraphs and singleton titles ([#386](https://github.com/arlequins/beat/issues/386)) ([0bd5a93](https://github.com/arlequins/beat/commit/0bd5a93e8d8a0fe5050c2fd13cb6540993175b13))
+* upgrade Sharp native image runtime and guard patched versions ([#389](https://github.com/arlequins/beat/issues/389)) ([6f0bd38](https://github.com/arlequins/beat/commit/6f0bd382594e7810f9961eb6926fb483cb87ee62))
+
 ## [1.78.1](https://github.com/arlequins/beat/compare/beat-v1.78.0...beat-v1.78.1) (2026-10-10)
 
 
