@@ -251,3 +251,61 @@ test("legacy banner section IDs and saved annotation spans remain stable", () =>
   const offset = body.indexOf(quote);
   assert.equal(restored.content.slice(offset, offset + quote.length), quote);
 });
+
+test("compact arc part titles attach their epigraph exactly once", () => {
+  const source =
+    "# Arc\n\n> quote\n\n## 1화. Arc -1\n\nFirst\n\n## 2화. Arc -2\n\nSecond\n";
+  const { sections } = parseManuscript(source);
+  assert.equal(sections.length, 2);
+  assert.ok(sections.every((section) => section.kind === "episode"));
+  assert.deepEqual(
+    sections.map((section) => [section.episode, section.title]),
+    [
+      [1, "Arc - 1"],
+      [2, "Arc - 2"],
+    ],
+  );
+  assert.equal(sections[0].content.match(/quote/g)?.length, 1);
+  assert.match(sections[0].content, /First/);
+  assert.doesNotMatch(sections[1].content, /quote/);
+  assert.equal(sections[1].content, "Second");
+});
+
+for (const title of ["City 2", "City - 2"]) {
+  test(`singleton arc title stays exact: ${title}`, () => {
+    const source = [
+      `# ${title}`,
+      `## 1화. ${title}`,
+      "First",
+      "# Other",
+      "## 2화. Other",
+      "Second",
+    ].join("\n\n");
+    const { sections } = parseManuscript(source);
+    assert.deepEqual(
+      sections.map(({ id, kind, episode, title, content }) => ({
+        id,
+        kind,
+        episode,
+        title,
+        content,
+      })),
+      [
+        {
+          id: "section-1",
+          kind: "episode",
+          episode: 1,
+          title,
+          content: "First",
+        },
+        {
+          id: "section-2",
+          kind: "episode",
+          episode: 2,
+          title: "Other",
+          content: "Second",
+        },
+      ],
+    );
+  });
+}

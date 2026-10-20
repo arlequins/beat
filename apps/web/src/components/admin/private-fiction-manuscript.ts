@@ -6,6 +6,8 @@ export type ManuscriptSection = {
   kind: "guide" | "episode" | "document";
 };
 
+const arcPartPattern = /^(.+?)\s+-\s*(\d+)$/u;
+
 function hasArcEpisodeSequence(
   source: string,
   arcs: RegExpMatchArray[],
@@ -40,7 +42,7 @@ function hasArcEpisodeSequence(
         /^\d+\s*화\s*[.．—–:-]\s*(.+)$/u,
       )?.[1];
       if (parts.length === 1 && explicitTitle === title) continue;
-      const part = explicitTitle?.match(/^(.+?)\s+-\s*(\d+)$/u);
+      const part = explicitTitle?.match(arcPartPattern);
       if (part?.[1]?.trim() !== title || Number(part?.[2]) !== partIndex + 1) {
         return false;
       }
@@ -74,6 +76,7 @@ export function parseManuscript(source: string) {
   let arcTitle = "";
   let arcPart = 0;
   let pendingCover = "";
+  let sequenceArcTitle = "";
 
   for (let index = 0; index < headings.length; index += 1) {
     const heading = headings[index];
@@ -83,6 +86,10 @@ export function parseManuscript(source: string) {
     const end = headings[index + 1]?.index ?? source.length;
     const title = (heading[1] ?? "").trim();
     let content = source.slice(bodyStart, end).trim();
+
+    if (arcEpisodeSequence && /^#\s/u.test(heading[0])) {
+      sequenceArcTitle = title.replace(/^\d+\s*장[.．]\s*/u, "");
+    }
 
     if (index === 0 && title.includes("비공개 열람본")) {
       introduction = content;
@@ -101,13 +108,21 @@ export function parseManuscript(source: string) {
       /^\d+\s*화\s*[.．—–:-]\s*(.+)$/,
     )?.[1];
     const coverStoryTitle = title.replace(/^\d+\s*장[.．]\s*/u, "");
+    const followingPart = arcEpisodeSequence
+      ? followingEpisode?.match(arcPartPattern)
+      : undefined;
+    const coverMatches = arcEpisodeSequence
+      ? followingEpisode === coverStoryTitle ||
+        (followingPart?.[1]?.trim() === coverStoryTitle &&
+          Number(followingPart?.[2]) === 1)
+      : followingEpisode === coverStoryTitle ||
+        followingEpisode === `${coverStoryTitle} - 1`;
     // Original book covers precede their episode H1. Keep the epigraph in that
     // episode's rendered content without changing the stored manuscript bytes.
     if (
       kind === "document" &&
       (arcEpisodeSequence || content.endsWith("<!-- PAGE_BREAK -->")) &&
-      (followingEpisode === coverStoryTitle ||
-        followingEpisode === `${coverStoryTitle} - 1`)
+      coverMatches
     ) {
       pendingCover = `## ${title}\n\n${content}\n\n`;
       continue;
@@ -116,7 +131,13 @@ export function parseManuscript(source: string) {
     if (episodeMatch) {
       const explicitTitle =
         episodeMatch[2]?.trim() ?? content.match(/^##\s+(.+)$/m)?.[1]?.trim();
-      const numberedTitle = explicitTitle?.match(/^(.+?)\s+(?:-\s*)?(\d+)$/);
+      const sequenceSingleton =
+        arcEpisodeSequence && explicitTitle === sequenceArcTitle;
+      const numberedTitle = sequenceSingleton
+        ? null
+        : explicitTitle?.match(
+            arcEpisodeSequence ? arcPartPattern : /^(.+?)\s+(?:-\s*)?(\d+)$/,
+          );
       const coverTitle = content.includes("<!-- PAGE_BREAK -->")
         ? content
             .split("<!-- PAGE_BREAK -->")[0]
