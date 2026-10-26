@@ -30,6 +30,38 @@ function editorialArticle(
 }
 
 const english: Record<string, LocalizedArticle> = {
+  "weekly-it-brief-2026-10-26": {
+    title:
+      "Weekly IT Brief — Apply patches and check installation and authentication paths",
+    excerpt:
+      "Node.js security fixes, GitHub package firewall preview, and expiring CLI credentials turn preparation into operational checks.",
+    intro:
+      "Official material from October 20–26, checked on October 26, 2026. Lumen assisted with research and drafting. This public draft awaits Arlequin's final editorial judgment; suggested actions are Lumen's interpretation.",
+    sections: [
+      {
+        heading: "Three checks on what actually runs",
+        paragraphs: [
+          "The Node.js security announcement now lists fixes in 22.23.4, 24.22.1, and 26.12.1, including the HIGH-severity Brotli issue CVE-2026-111497. Move beyond last week's release preparation: rebuild artifacts, verify the deployed runtime, and check decompression paths alongside the full advisory.",
+          "GitHub's October 20 package firewall preview targets Enterprise Cloud and currently supports npm packages. Pilot actual metadata and download requests through the policy gate, including blocked requests and exceptions; do not assume every endpoint is covered merely because the feature is enabled.",
+          "GitHub CLI 2.103.0 adds opt-in expiring OAuth credentials with automatic refresh. Inventory scripts that copy a token once, then test authentication after expiry before changing long-running automation. Existing sign-ins and manually supplied tokens are unchanged.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Node.js security releases",
+        url: "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases",
+      },
+      {
+        label: "GitHub package firewall",
+        url: "https://github.blog/changelog/2026-10-20-github-package-firewall-in-public-preview/",
+      },
+      {
+        label: "GitHub CLI expiring OAuth credentials",
+        url: "https://github.blog/changelog/2026-10-21-github-cli-opt-in-to-expiring-auto-refreshing-oauth-tokens/",
+      },
+    ],
+  },
   "weekly-it-brief-2026-10-19": {
     title:
       "Weekly IT Brief — Record what runs and why dependencies are accepted",
@@ -875,6 +907,37 @@ const english: Record<string, LocalizedArticle> = {
 };
 
 const japanese: Record<string, LocalizedArticle> = {
+  "weekly-it-brief-2026-10-26": {
+    title: "週刊 IT ブリーフ — パッチ適用とインストール・認証経路の点検",
+    excerpt:
+      "Node.js の修正版、GitHub パッケージファイアウォール、CLI の有効期限付き認証情報を実行環境の検証につなげます。",
+    intro:
+      "2026年10月26日確認、対象は10月20〜26日の公式資料です。Lumen が調査と草稿を支援した公開未確定版で、最終判断は Arlequin が行います。次の行動は Lumen の提案です。",
+    sections: [
+      {
+        heading: "実際の実行経路を確認する三つの点検",
+        paragraphs: [
+          "Node.js のセキュリティ告知は22.23.4・24.22.1・26.12.1 を案内し、HIGH の Brotli 問題 CVE-2026-111497 を含みます。先週の準備から適用に進み、成果物を再ビルドして稼働版を確認し、告知全体と圧縮解除経路を点検します。",
+          "10月20日の GitHub パッケージファイアウォール公開プレビューは Enterprise Cloud 向けで、現在は npm パッケージが対象です。実際のメタデータ取得・ダウンロードを通し、遮断と例外申請も試します。有効化だけで全端末が対象になるとは想定しません。",
+          "GitHub CLI 2.103.0 は、有効期限と自動更新を持つ OAuth 認証情報を選択できるようになりました。トークンを一度だけコピーするスクリプトを棚卸しし、期限後の動作を検証してから長時間の自動処理へ適用します。既存ログインや手動指定トークンは変わりません。",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Node.js セキュリティリリース",
+        url: "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases",
+      },
+      {
+        label: "GitHub package firewall",
+        url: "https://github.blog/changelog/2026-10-20-github-package-firewall-in-public-preview/",
+      },
+      {
+        label: "GitHub CLI 有効期限付き OAuth 認証",
+        url: "https://github.blog/changelog/2026-10-21-github-cli-opt-in-to-expiring-auto-refreshing-oauth-tokens/",
+      },
+    ],
+  },
   "weekly-it-brief-2026-10-19": {
     title: "週刊 IT ブリーフ — 実行コードと依存関係の採用根拠を残す",
     excerpt:
