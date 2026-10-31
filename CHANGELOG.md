@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.78.3](https://github.com/arlequins/beat/compare/beat-v1.78.2...beat-v1.78.3) (2026-10-31)
+
+
+### Bug Fixes
+
+* **api:** preserve the state prefix default in recovery checks ([#401](https://github.com/arlequins/beat/issues/401)) ([5a81820](https://github.com/arlequins/beat/commit/5a81820d417cbbec4f0ad5624fe8b95277a1e1b2))
+
 ## [1.78.2](https://github.com/arlequins/beat/compare/beat-v1.78.1...beat-v1.78.2) (2026-10-26)
 
 
