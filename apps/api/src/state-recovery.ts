@@ -1,4 +1,4 @@
-import { serverEnv } from "@arlequins/env/server-env";
+import { beatAuthStatePrefix, serverEnv } from "@arlequins/env/server-env";
 import {
   GetObjectCommand,
   ListObjectVersionsCommand,
@@ -43,10 +43,8 @@ export async function recoverBeatStateVersion(
     serverEnv.BEAT_AUTH_STATE_BUCKET,
     "BEAT_AUTH_STATE_BUCKET",
   );
-  const sourceKey = safeSourceKey(
-    input.sourceKey,
-    serverEnv.BEAT_AUTH_STATE_PREFIX,
-  );
+  const prefix = beatAuthStatePrefix();
+  const sourceKey = safeSourceKey(input.sourceKey, prefix);
   const source = await client.send(
     new GetObjectCommand({
       Bucket: bucket,
@@ -59,7 +57,7 @@ export async function recoverBeatStateVersion(
   const body = await source.Body.transformToByteArray();
   const destinationKey = recoveryKey(
     sourceKey,
-    serverEnv.BEAT_AUTH_STATE_PREFIX,
+    prefix,
     now,
   );
   await client.send(
@@ -93,7 +91,7 @@ export async function inspectBeatStateRecoveryReadiness(
     serverEnv.BEAT_AUTH_STATE_BUCKET,
     "BEAT_AUTH_STATE_BUCKET",
   );
-  const prefix = serverEnv.BEAT_AUTH_STATE_PREFIX.replace(/^\/|\/$/g, "");
+  const prefix = beatAuthStatePrefix().replace(/^\/|\/$/g, "");
   const response = await client.send(
     new ListObjectVersionsCommand({
       Bucket: bucket,
