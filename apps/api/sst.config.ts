@@ -273,15 +273,6 @@ export default $config({
       comparisonOperator: "GreaterThanOrEqualToThreshold",
       alarmActions,
     });
-    new aws.cloudwatch.MetricAlarm("ApiLatency", {
-      name: alarmName("ApiLatency"),
-      ...metric("RequestDuration"),
-      statistic: "Average",
-      evaluationPeriods: 2,
-      threshold: 2_000,
-      comparisonOperator: "GreaterThanThreshold",
-      alarmActions,
-    });
     new aws.cloudwatch.Dashboard("ApiDashboard", {
       dashboardName: `${$app.name}-${$app.stage}`,
       dashboardBody: JSON.stringify({
@@ -314,7 +305,6 @@ export default $config({
     });
     for (const [name, metricName, threshold] of [
       ["ReconciliationFailures", "ReconciliationFailure", 1],
-      ["ReconciliationBacklog", "ReconciliationBacklog", 1],
       ["UnexpectedStateDeletes", "UnexpectedDeleteMarker", 1],
     ] as const) {
       new aws.cloudwatch.MetricAlarm(name, {
@@ -329,7 +319,6 @@ export default $config({
     }
     for (const [name, metricName, threshold] of [
       ["AuthenticationFailures", "AuthenticationFailure", 5],
-      ["ConditionalWriteConflicts", "ConditionalWriteConflict", 5],
     ] as const) {
       new aws.cloudwatch.MetricAlarm(name, {
         name: alarmName(name),
