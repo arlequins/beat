@@ -55,11 +55,7 @@ export async function recoverBeatStateVersion(
   if (!source.Body || !("transformToByteArray" in source.Body))
     throw new Error("Recovery source body is unavailable");
   const body = await source.Body.transformToByteArray();
-  const destinationKey = recoveryKey(
-    sourceKey,
-    prefix,
-    now,
-  );
+  const destinationKey = recoveryKey(sourceKey, prefix, now);
   await client.send(
     new PutObjectCommand({
       Body: body,
