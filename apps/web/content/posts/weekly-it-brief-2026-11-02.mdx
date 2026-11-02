@@ -1,0 +1,44 @@
+---
+title: "주간 IT 브리핑 — 2026-11-02: 자동화의 실행 환경과 판단 근거"
+excerpt: "GitHub Universe의 에이전트 워크플로, 멀티 클라우드 러너, Dependabot 도달 가능성 분석을 권한·네트워크·취약점 우선순위 관점에서 읽습니다."
+category: weekly
+reviewStatus: unreviewed
+publishedAt: "2026-11-02"
+readTime: 5 min read
+tags:
+  - GitHub Actions
+  - AI Agents
+  - Dependency Security
+---
+
+> Lumen이 리서치와 초안을 도왔습니다. 이 글은 Arlequin의 최종 검토 전인 공개 미확정본이며, 최종 판단은 Arlequin에게 있습니다.
+
+11월 2일 기준으로 10월 27일~11월 2일의 공식 자료를 확인했습니다. 이번 회차는 GitHub Universe에서 발표된 세 가지 변화를 골랐습니다. 코드를 고치는 자동화의 권한, CI가 실행되는 네트워크, 취약점 대응 순서를 정하는 근거가 어떻게 달라지는지 살펴봅니다. 아래의 다음 행동은 Lumen의 제안입니다.
+
+## 1. Agentic Workflows 일반 제공: 자동화의 결과를 어디까지 적용할지 정하기
+
+GitHub는 10월 28일 Agentic Workflows의 일반 제공을 발표했습니다. 자연어 Markdown 정의를 표준 Actions YAML로 컴파일하며, 기존 러너 그룹과 정책 제약을 재사용합니다. 기본 읽기 전용 권한, 샌드박스, 출력 검증과 위협 탐지 절차를 포함한다고 설명합니다. github.com의 Free·Team·Enterprise에서 제공되지만, 기본 Copilot CLI 엔진을 쓰려면 Copilot 라이선스가 필요합니다.
+
+처음에는 CI 실패 원인을 정리하거나 문서 변경안을 만드는 작은 업무를 골라 보세요. 생성된 YAML의 트리거와 권한을 검토하고, 에이전트가 제안할 수 있는 결과와 실제로 적용할 수 있는 결과를 구분하는 방식을 제안합니다. 같은 사건이 재전달됐을 때 이슈나 PR이 중복 생성되지 않는지, 실패 시 어디에서 재개하는지, 실행 비용과 담당자는 누구인지도 정해 둡니다. 기본 보호 장치가 있다는 사실만으로 팀의 승인·운영 절차가 완성되지는 않습니다.
+
+출처: [GitHub Changelog — Agentic Workflows 일반 제공](https://github.blog/changelog/2026-10-28-github-agentic-workflows-generally-available/)
+
+## 2. Actions 멀티 클라우드: 같은 러너 라벨이어도 통신 정책을 재점검하기
+
+GitHub는 같은 날 일부 Linux 작업을 Azure뿐 아니라 AWS에서도 실행하도록 컴퓨팅 풀을 확대한다고 발표했습니다. 대상은 표준 2·4코어 및 특수 구성이 없는 호환 러너이며, Windows나 프라이빗 네트워킹 러너에는 적용되지 않습니다. Free·Pro·Team의 대상 러너는 자동 적용되고 Enterprise Cloud는 선택 적용입니다. 워크플로 문법과 러너 라벨은 유지됩니다.
+
+개발팀은 러너 설정 변경보다 네트워크 전제를 먼저 살펴볼 필요가 있습니다. 원문은 Azure나 Microsoft IP만 허용한 정책이 새 러너의 연결·인증을 막을 수 있다고 안내하며, GitHub Meta API의 `actions` 범위와 허용 목록을 동기화하라고 권합니다. 팀의 네트워크 담당자와 함께 외부 API·아티팩트 저장소·인증 경로를 시험하고, 허용 범위를 필요한 대상에 한정해 검토하는 방식을 제안합니다. 장애 조사에서는 빌드 실패와 네트워크 정책 거부를 구별할 로그를 남깁니다.
+
+출처: [GitHub Changelog — Actions multi-cloud compute](https://github.blog/changelog/2026-10-28-github-actions-adds-multi-cloud-compute-to-improve-reliability/)
+
+## 3. Dependabot 도달 가능성: 경고를 닫는 대신 수정 순서의 근거로 쓰기
+
+10월 28일 발표된 Dependabot 도달 가능성 분석은 JavaScript·TypeScript용 공개 미리보기입니다. Enterprise Cloud 환경에서 지원되는 잠금 파일을 바탕으로 취약 함수까지의 호출 경로를 분석합니다. 판정은 도달 가능, 잠재적 도달 가능, 도달 불가, 분석 불가로 구분됩니다. GitHub는 잠재적 도달 가능을 도달 가능으로 취급하고, 분석 불가는 기존 방식으로 분류하라고 안내합니다. 이 판정은 경고를 자동으로 닫거나 해제하지 않습니다.
+
+시범 적용에서는 이미 알고 있는 경고 몇 건의 호출 경로를 직접 대조해 보세요. 심각도, 운영 환경의 노출, 분석 결과를 함께 적고 수정 순서를 결정하는 방식을 제안합니다. 도달 불가 결과를 영구 예외로 바꾸기보다 코드 변경 뒤 재평가할 근거로 남깁니다. 미리보기에는 일부 모노레포 등의 지원 제한이 있으므로, 결과가 없는 경고가 누락되지 않도록 기존 분류 절차도 유지해야 합니다.
+
+출처: [GitHub Changelog — Dependabot reachability analysis](https://github.blog/changelog/2026-10-28-prioritize-dependabot-alerts-with-reachability-analysis/)
+
+## 이번 주에 남길 결과물
+
+자동화 출력의 적용 범위, 러너 네트워크 점검 결과, 취약점 수정 순서의 근거를 하나씩 남겨 보세요. 자동화가 판단을 더 많이 맡을수록 실행 조건과 판단 근거를 사람이 확인할 수 있게 만드는 일이 중요합니다.
