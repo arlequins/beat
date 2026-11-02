@@ -30,6 +30,38 @@ function editorialArticle(
 }
 
 const english: Record<string, LocalizedArticle> = {
+  "weekly-it-brief-2026-11-02": {
+    title:
+      "Weekly IT Brief — Execution environments and evidence for automation",
+    excerpt:
+      "GitHub Universe updates through workflow permissions, runner networking, and dependency-remediation priorities.",
+    intro:
+      "Official material from October 27–November 2, checked on November 2, 2026. Lumen assisted with research and drafting. This public draft awaits Arlequin's final editorial judgment; the next actions are Lumen's suggestions.",
+    sections: [
+      {
+        heading: "Three checks before expanding automation",
+        paragraphs: [
+          "Agentic Workflows is generally available and compiles Markdown definitions into Actions YAML. Pilot a small task, review generated triggers and permissions, and distinguish proposed outputs from changes that may actually be applied. Test retries, ownership, and cost limits.",
+          "Eligible GitHub-hosted Linux jobs can now use AWS as well as Azure without changing runner labels. Review network assumptions and the published Actions IP ranges with the relevant owner; test connections and authentication rather than broadly relaxing access policies.",
+          "Dependabot reachability analysis is in public preview for JavaScript and TypeScript on Enterprise Cloud. Use call-path evidence alongside severity and production context. Treat potentially reachable findings as reachable, triage unavailable results normally, and do not interpret an unreachable verdict as permanent clearance.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "GitHub Agentic Workflows",
+        url: "https://github.blog/changelog/2026-10-28-github-agentic-workflows-generally-available/",
+      },
+      {
+        label: "GitHub Actions multi-cloud compute",
+        url: "https://github.blog/changelog/2026-10-28-github-actions-adds-multi-cloud-compute-to-improve-reliability/",
+      },
+      {
+        label: "Dependabot reachability analysis",
+        url: "https://github.blog/changelog/2026-10-28-prioritize-dependabot-alerts-with-reachability-analysis/",
+      },
+    ],
+  },
   "weekly-it-brief-2026-10-26": {
     title:
       "Weekly IT Brief — Apply patches and check installation and authentication paths",
@@ -907,6 +939,37 @@ const english: Record<string, LocalizedArticle> = {
 };
 
 const japanese: Record<string, LocalizedArticle> = {
+  "weekly-it-brief-2026-11-02": {
+    title: "週刊 IT ブリーフ — 自動化の実行環境と判断の根拠",
+    excerpt:
+      "GitHub Universe の更新を、ワークフロー権限、ランナーの通信、依存関係修正の優先順位から整理します。",
+    intro:
+      "2026年11月2日確認、対象は10月27日〜11月2日の公式資料です。Lumen が調査と草稿を支援した公開未確定版で、最終判断は Arlequin が行います。次の行動は Lumen の提案です。",
+    sections: [
+      {
+        heading: "自動化を広げる前の三つの点検",
+        paragraphs: [
+          "一般提供された Agentic Workflows は Markdown の定義を Actions YAML にコンパイルします。小さな業務で試し、生成されたトリガーと権限、提案と適用可能な変更の範囲を確認し、再試行・担当者・費用上限を決めます。",
+          "対象の GitHub ホスト型 Linux ジョブは、ラベルを変えずに Azure と AWS で実行されます。担当者と公開 Actions IP 範囲や通信の前提を確認し、許可範囲を広げる前に接続と認証を検証します。",
+          "Dependabot の到達可能性分析は Enterprise Cloud の JavaScript・TypeScript 向け公開プレビューです。呼び出し経路、深刻度、本番の状況を合わせて優先順位を決めます。潜在的に到達可能な警告は到達可能として扱い、分析不可は従来どおり分類し、到達不可を恒久的な免除とは解釈しません。",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "GitHub Agentic Workflows",
+        url: "https://github.blog/changelog/2026-10-28-github-agentic-workflows-generally-available/",
+      },
+      {
+        label: "GitHub Actions multi-cloud compute",
+        url: "https://github.blog/changelog/2026-10-28-github-actions-adds-multi-cloud-compute-to-improve-reliability/",
+      },
+      {
+        label: "Dependabot reachability analysis",
+        url: "https://github.blog/changelog/2026-10-28-prioritize-dependabot-alerts-with-reachability-analysis/",
+      },
+    ],
+  },
   "weekly-it-brief-2026-10-26": {
     title: "週刊 IT ブリーフ — パッチ適用とインストール・認証経路の点検",
     excerpt:
