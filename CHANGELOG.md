@@ -2,6 +2,13 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.78.4](https://github.com/arlequins/beat/compare/beat-v1.78.3...beat-v1.78.4) (2026-11-09)
+
+
+### Bug Fixes
+
+* **cache:** bypass oversized S3 cache writes ([#407](https://github.com/arlequins/beat/issues/407)) ([d1c780f](https://github.com/arlequins/beat/commit/d1c780fba9fd46ea85fc7083ff784a94ee16c94b))
+
 ## [1.78.3](https://github.com/arlequins/beat/compare/beat-v1.78.2...beat-v1.78.3) (2026-10-31)
 
 
